@@ -1,0 +1,14 @@
+version: '3'
+services:
+  ui:
+    build:
+      context: ./core-ui
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
