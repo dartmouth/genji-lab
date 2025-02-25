@@ -1,0 +1,26 @@
+[
+    {
+      "id": "TC1",
+      "title": "Washburn Translation",
+      "metadata": {
+        "created": "2025-02-24T10:51:38Z",
+        "modified": "2025-02-24T10:51:38Z",
+        "language": {
+          "source": "ja",
+          "target": "en"
+        },
+        "translator": {
+          "name": "Dennis Washburn",
+          "additionalInfo": {}
+        }
+      },
+      "hierarchyDefinition": {
+        "levels": [
+          {"name": "section", "order": 1},
+          {"name": "chapter", "order": 2},
+          {"name": "paragraph", "order": 3}
+        ]
+      },
+      "textDirection": "ltr"
+    }
+]

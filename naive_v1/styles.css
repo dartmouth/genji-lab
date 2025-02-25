@@ -1,0 +1,82 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    min-height: 100vh;
+}
+
+.main-content {
+    padding: 20px;
+}
+
+.comments-sidebar {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-left: 1px solid #ddd;
+}
+
+.annotatable-paragraph {
+    position: relative;
+    margin-bottom: 1em;
+}
+
+.comment-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 16px;
+    margin-bottom: 16px;
+    transition: background-color 0.2s ease;
+}
+
+.comment-card.highlighted {
+    background-color: #fff3cd;
+}
+
+.comment-header {
+    font-weight: bold;
+    color: #666;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.comment-body {
+    color: #333;
+    line-height: 1.4;
+}
+
+.loading, .error {
+    padding: 10px;
+    text-align: center;
+}
+
+.error {
+    color: red;
+}
+
+/* Add to your CSS file */
+.selection-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.selection-status.success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.selection-status.error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
