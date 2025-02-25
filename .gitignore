@@ -1,3 +1,4 @@
 .DS_Store
 core-ui/node_modules/*
 env
+api/env/*
