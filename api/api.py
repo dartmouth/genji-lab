@@ -84,11 +84,19 @@ class HealthCheckResource:
         resp.status = falcon.HTTP_200
         resp.media = {"status": "healthy"}
 
+class DocumentResource:
+    def on_get(self, req, resp):
+        """Handles GET requests"""
+        with open("data/content/CONTENT_TC1.json") as f:
+            content = json.load(f)
+        resp.status = falcon.HTTP_200
+        resp.media = content
 
 app = falcon.App()
 app.add_route("/", HealthCheckResource())
 app.add_route("/annotations", AnnotationResource())
 app.add_route("/annotations/{cid}", AnnotationResource())
+app.add_route("/documents", DocumentResource())
 
 if __name__ == '__main__':
     serve(app, host='0.0.0.0', port=3000)
