@@ -14,27 +14,22 @@
         "right_indent": 0,
         "first_line_indent": 0,
         "alignment": "left",
-        "text_styles": [
-          {
-            "start": 200,
-            "end": 217,
-            "type": [
-              "italic"
-            ]
-          }
-        ]
+        "text_styles": []
       }
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 1
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 1
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -57,14 +52,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 1
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 1
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -87,14 +85,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 2
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 2
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -117,14 +118,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 3
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 3
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -147,14 +151,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 3
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 3
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -177,14 +184,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 4
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 4
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -207,14 +217,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 4
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 4
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -237,14 +250,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 5
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 5
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -267,14 +283,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 6
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 6
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -297,14 +316,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 7
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 7
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -327,14 +349,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 8
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 8
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -357,14 +382,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 8
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 8
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -387,8 +415,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -419,8 +447,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -451,8 +479,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -483,8 +511,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -507,14 +535,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 8
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 8
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -537,14 +568,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 8
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 8
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -567,14 +601,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 9
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 9
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -597,14 +634,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 9
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 9
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -627,14 +667,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 10
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 10
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -657,14 +700,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 11
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 11
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -687,14 +733,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 11
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 11
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -717,14 +766,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 11
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 11
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -747,14 +799,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 12
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 12
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -777,14 +832,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 13
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 13
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -807,14 +865,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 14
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 14
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -837,14 +898,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 14
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 14
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -867,14 +931,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 15
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 15
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -912,14 +979,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 15
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 15
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -942,14 +1012,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 16
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 16
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -972,14 +1045,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 17
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 17
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1002,8 +1078,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1026,14 +1102,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 17
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 17
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1056,14 +1135,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 18
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 18
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1086,14 +1168,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 18
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 18
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1116,14 +1201,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 19
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 19
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1146,14 +1234,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 19
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 19
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1176,8 +1267,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1208,8 +1299,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1240,8 +1331,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1272,14 +1363,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 19
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 19
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1302,14 +1396,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 20
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 20
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1332,14 +1429,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 21
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 21
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1362,14 +1462,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 22
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 22
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1392,8 +1495,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1416,14 +1519,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 23
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 23
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1446,14 +1552,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 23
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 23
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1476,14 +1585,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 24
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 24
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1514,8 +1626,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1546,8 +1658,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1578,8 +1690,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1602,8 +1714,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1634,8 +1746,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1666,8 +1778,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1698,14 +1810,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 24
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 24
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1728,14 +1843,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 25
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 25
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1758,14 +1876,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 26
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 26
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1796,14 +1917,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 27
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 27
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1826,14 +1950,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 27
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 27
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1856,8 +1983,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1888,8 +2015,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1920,8 +2047,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1952,14 +2079,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 27
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 27
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -1982,14 +2112,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 28
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 28
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2012,14 +2145,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 29
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 29
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2050,8 +2186,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2082,8 +2218,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2114,8 +2250,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2146,14 +2282,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 30
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 30
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2184,14 +2323,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 31
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 31
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2214,14 +2356,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 32
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 32
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2244,8 +2389,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2276,8 +2421,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2308,8 +2453,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2347,14 +2492,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 32
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 32
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2377,14 +2525,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 33
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 33
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2407,8 +2558,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2431,14 +2582,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 33
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 33
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2461,14 +2615,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 34
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 34
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2491,14 +2648,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 34
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 34
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2521,14 +2681,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 35
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 35
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2551,14 +2714,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 36
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 36
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2581,14 +2747,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 36
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 36
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2611,14 +2780,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 36
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 36
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2641,14 +2813,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 37
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 37
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2671,14 +2846,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 38
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 38
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2701,14 +2879,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 38
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 38
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2731,14 +2912,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 39
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 39
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2761,14 +2945,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 40
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 40
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2791,14 +2978,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 41
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 41
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2821,14 +3011,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 41
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 41
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2859,14 +3052,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 41
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 41
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2889,14 +3085,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 42
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 42
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2919,14 +3118,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 42
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 42
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2949,14 +3151,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 42
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 42
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -2979,14 +3184,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 43
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 43
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3009,14 +3217,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 44
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 44
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3039,14 +3250,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 44
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 44
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3069,14 +3283,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 45
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 45
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3107,14 +3324,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 45
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 45
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3137,14 +3357,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 46
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 46
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3167,14 +3390,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 47
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 47
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3197,14 +3423,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 47
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 47
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3227,14 +3456,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 48
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 48
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3257,14 +3489,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 49
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 49
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3295,8 +3530,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3327,8 +3562,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3359,8 +3594,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3383,8 +3618,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3415,8 +3650,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3461,8 +3696,8 @@
     },
     "links": [],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3493,14 +3728,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 49
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 49
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3523,14 +3761,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 49
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 49
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3553,14 +3794,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 49
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 49
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3583,14 +3827,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 50
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 50
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3613,14 +3860,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 51
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 51
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3643,14 +3893,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 52
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 52
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3673,14 +3926,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 53
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 53
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   },
   {
@@ -3703,14 +3959,17 @@
     },
     "links": [
       {
-        "text_collection": "original",
-        "section": 1,
-        "paragraph": 54
+        "textCollectionId": "original",
+        "hierarchy": {
+          "section": 1,
+          "chapter": 1,
+          "paragraph": 54
+        }
       }
     ],
     "metadata": {
-      "created": "2025-02-27T14:41:45.027864",
-      "modified": "2025-02-27T14:41:45.027864"
+      "created": "2025-02-28T11:17:34.697440",
+      "modified": "2025-02-28T11:17:34.697440"
     }
   }
 ]

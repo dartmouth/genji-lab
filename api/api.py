@@ -52,20 +52,30 @@ class AnnotationCollection:
         return [annotation for annotation in self.annotations if annotation.content_id == content_id]
 
 class AnnotationResource:
+    # def __init__(self, db):
+        # self.db = db
     def on_get(self, req, resp, cid):
         """Handles GET requests"""
-        annotations = self.db.get_annotations(cid)
+        # annotations = self.db.get_annotations(cid)
+        with open("data/annotations/annotations.json") as f:
+            annotations = json.load(f)  
+        
+        for anno in annotations:
+            for target in anno['target']:
+                if target['selector'].get("value", None) == cid:
+                    resp.media = anno
+                    return
 
         resp.status = falcon.HTTP_200
-        resp.media = annotations
+        resp.media = {}
 
     def on_post(self, req, resp):
         """Handles POST requests"""
-        annotation = Annotation.load(req.media)
-        self.db.add_annotation(annotation)
+        # annotation = Annotation.load(req.media)
+        # self.db.add_annotation(annotation)
 
         resp.status = falcon.HTTP_201
-        resp.media = annotation
+        resp.media = {"annotation": "Hello World!"}
 
     def on_put(self, req, resp):
         """Handles PUT requests"""
@@ -92,6 +102,10 @@ class DocumentResource:
         resp.status = falcon.HTTP_200
         resp.media = content
 
+with open("data/annotations/annotations.json") as f:
+    annotations = json.load(f)
+
+db = AnnotationCollection([Annotation.load(annotation) for annotation in annotations])
 app = falcon.App()
 app.add_route("/", HealthCheckResource())
 app.add_route("/annotations", AnnotationResource())

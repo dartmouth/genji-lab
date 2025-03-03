@@ -10,7 +10,18 @@
 			"name": "documents",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/documents",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"documents"
+					]
+				}
 			},
 			"response": []
 		},
