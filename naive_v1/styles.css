@@ -6,6 +6,15 @@ body {
     min-height: 100vh;
 }
 
+.document-content-panel {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    min-height: 100vh;
+}
+
+
 .main-content {
     padding: 20px;
 }

@@ -1,42 +1,90 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+
+.document-panel {
+  display: flex;
+}
+
+.document-content-container {
+  /* margin: 0; */
+  /* padding: 0; */
+  grid-template-columns: 1fr 300px;
+  min-height: 100vh;
+}
+
+.document-panel {
+  padding: 20px;
+}
+
+.document-content-panel {
+  margin-right: 20px;
+}
+
+.comments-sidebar {
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-left: 1px solid #ddd;
+}
+
+.annotatable-paragraph {
+  position: relative;
+  margin-bottom: 1em;
+}
+
+.comment-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.comment-card.highlighted {
+  background-color: #fff3cd;
+}
+
+.comment-header {
+  font-weight: bold;
+  color: #666;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.comment-body {
+  color: #333;
+  line-height: 1.4;
+}
+
+.loading, .error {
+  padding: 10px;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.error {
+  color: red;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Add to your CSS file */
+.selection-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 1000;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.selection-status.success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.selection-status.error {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
 }
