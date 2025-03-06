@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Annotation } from './types/annotation'; // Assuming you've moved the Annotation interface to a types file
 
+
 interface HighlightProps {
   annotation: Annotation;
   position: {
@@ -13,6 +14,8 @@ interface HighlightProps {
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }
+
+
 
 const Highlight: React.FC<HighlightProps> = ({ position, onMouseEnter, onMouseLeave }) => {
   return (
@@ -34,19 +37,32 @@ const Highlight: React.FC<HighlightProps> = ({ position, onMouseEnter, onMouseLe
   );
 };
 
+interface SelectedTextInterface {
+  content_id: string;
+  start: number;
+  end: number;
+  text: string;
+  
+}
+
 interface HighlightedTextProps {
   text: string;
   annotations: Annotation[];
   paragraphId: string;
+  // add prop that is a function to set selected text state in parent component
+  setSelectedText: (selectedText: SelectedTextInterface) => void;
   onHighlightHover?: (annotationId: string | null, isHovering: boolean) => void;
 }
+
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
   annotations,
   paragraphId,
+  setSelectedText,
   onHighlightHover = () => {},
 }) => {
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [highlightPositions, setHighlightPositions] = useState<Map<string, Array<{ left: number; top: number; width: number; height: number }>>>(
     new Map()
@@ -114,10 +130,37 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [annotations, text, paragraphId]);
 
+  const handleMouseUp = () => {
+    const selection = window.getSelection();
+    if (!selection) return;
+    const range = selection.getRangeAt(0);
+    if (!range) return;
+    
+    // Only process if there's actually text selected
+    if (selection.toString().trim().length === 0) return;
+    
+    // Get all paragraphs in the selection
+    const startContainerParent = range.startContainer.parentElement;
+    const startParagraph = startContainerParent ? startContainerParent.closest('.annotatable-paragraph') : null;
+    if (!startParagraph) return;
+    const newSelectionInfo = {
+      content_id: startParagraph.id,
+      start: range.startOffset,
+      end: range.endOffset,
+      text: selection.toString()
+    };
+    setSelectedText(newSelectionInfo)
+    // console.log(selectionInfo);
+  };
+
   return (
     <div 
+      id={
+        paragraphId
+      }
       ref={containerRef} 
       className="annotatable-paragraph"
+      onMouseUp={handleMouseUp}
       style={{ position: 'relative' }}
     >
       {text}

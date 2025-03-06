@@ -1,0 +1,3 @@
+- Refactor App.tsx -- should not be passing annotations as props
+- Organize contents (subdirectories)
+- Evaluate -- in DocumentContentPanel, do we need a .document-content div to house the HighlightedText? Is it a problem that each instance of .document-content shares an ID with its child HighlightedText?
