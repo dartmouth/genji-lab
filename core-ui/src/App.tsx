@@ -1,6 +1,6 @@
 // App.tsx or your main component
 import React from 'react';
-import DocumentContentPanel from './DocumentContentPanel';
+import DocumentContentPanel from './components/DocumentContentPanel';
 import { Annotation } from './types/annotation';
 import './App.css';
 const App: React.FC = () => {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Annotation } from "./types/annotation";
+import { Annotation } from "../types/annotation";
 
 interface AnnotationCardProps {
     id: string;

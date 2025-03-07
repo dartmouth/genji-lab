@@ -1,6 +1,6 @@
 // components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { Annotation } from './types/annotation'; // Assuming you've moved the Annotation interface to a types file
+import { Annotation } from '../types/annotation'; // Assuming you've moved the Annotation interface to a types file
 
 
 interface HighlightProps {
