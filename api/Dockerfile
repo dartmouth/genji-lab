@@ -1,15 +1,9 @@
-# Use the official Python image from the Docker Hub
 FROM python:3.10-slim
-
-# Set the working directory in the container
+RUN apt update -qq && apt upgrade -y
 WORKDIR /app
-
+COPY requirements.txt requirements.txt
+RUN /usr/local/bin/python -m pip install --upgrade pip
+RUN pip install -r requirements.txt
+EXPOSE 8000
 COPY . .
-
-# Install the required packages
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Expose the port that the app runs on
-EXPOSE 3000
-
-CMD ["waitress-serve", "--port=3000", "api:app"]
+CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]

@@ -4,7 +4,7 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(255),
     last_name VARCHAR(255),
-    metadata JSONB
+    user_metadata JSONB
 );
 
 -- Create document_collections table
@@ -19,7 +19,7 @@ CREATE TABLE document_collections (
     modified_by_id INTEGER REFERENCES users(id),
     language VARCHAR(50),
     hierarchy JSONB,
-    metadata JSONB
+    collection_metadata JSONB
 );
 
 -- Create documents table
@@ -96,3 +96,8 @@ CREATE INDEX idx_document_elements_hierarchy ON document_elements USING GIN (hie
 CREATE INDEX idx_document_elements_content ON document_elements USING GIN (content);
 CREATE INDEX idx_annotations_body ON annotations USING GIN (body);
 CREATE INDEX idx_annotations_target ON annotations USING GIN (target);
+
+-- Create sequences for annotation IDs
+CREATE SEQUENCE annotation_id_seq START 1;
+CREATE SEQUENCE annotation_body_id_seq START 1;
+CREATE SEQUENCE annotation_target_id_seq START 1;

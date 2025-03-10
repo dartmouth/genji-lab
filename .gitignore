@@ -1,4 +1,9 @@
+api/__pycache__/*
+schemas/__pycache__/*
+models/__pycache__/*
+naive_v1/__pycache__/*
 .DS_Store
 core-ui/node_modules/*
 env
+.env
 api/env/*
