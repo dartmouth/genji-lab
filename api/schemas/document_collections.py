@@ -1,0 +1,46 @@
+from typing import Optional, Dict, Any, List
+from pydantic import BaseModel
+from datetime import datetime
+from users import User
+
+class DocumentCollectionBase(BaseModel):
+    title: Optional[str] = None
+    visibility: Optional[str] = None
+    text_direction: Optional[str] = None
+    language: Optional[str] = None
+    hierarchy: Optional[Dict[str, Any]] = None
+    collection_metadata: Optional[Dict[str, Any]] = None
+
+class DocumentCollectionCreate(DocumentCollectionBase):
+    created_by_id: int
+
+class DocumentCollectionUpdate(DocumentCollectionBase):
+    created_by_id: Optional[int] = None
+    modified_by_id: Optional[int] = None
+
+class DocumentCollectionPartialUpdate(BaseModel):
+    title: Optional[str] = None
+    visibility: Optional[str] = None
+    text_direction: Optional[str] = None
+    language: Optional[str] = None
+    hierarchy: Optional[Dict[str, Any]] = None
+    collection_metadata: Optional[Dict[str, Any]] = None
+    modified_by_id: Optional[int] = None
+
+class DocumentCollection(DocumentCollectionBase):
+    id: int
+    created: datetime
+    modified: datetime
+    created_by_id: int
+    modified_by_id: Optional[int] = None
+    
+    class Config:
+        from_attributes = True
+
+class DocumentCollectionWithStats(DocumentCollection):
+    document_count: int = 0
+    created_by: Optional[User] = None
+    modified_by: Optional[User] = None
+    
+    class Config:
+        from_attributes = True
