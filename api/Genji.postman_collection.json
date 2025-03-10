@@ -7,23 +7,310 @@
 	},
 	"item": [
 		{
-			"name": "documents",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:3000/documents",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "3000",
-					"path": [
-						"documents"
-					]
+			"name": "Document Collections",
+			"item": [
+				{
+					"name": "Create Collection",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Washburn Translation\",\n  \"visibility\": \"public\",\n  \"text_direction\": \"ltr\",\n  \"language\": \"en\",\n  \"hierarchy\": {\n    \"chapter\": 1,\n    \"paragraph\": 2\n  },\n  \"collection_metadata\": {},\n  \"created_by_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/collections/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"collections",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Collections",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/collections/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"collections",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Specific Collection",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/collections/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"collections",
+								"1"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"Tim\",\n  \"last_name\": \"Meehan\",\n  \"user_metadata\": {\n    \"affiliation\": \"Dartmouth\",\n    \"role\": \"Developer\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/users",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Documents",
+			"item": [
+				{
+					"name": "Create Document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Kiritsubo\",\n  \"description\": \"The first chapter of the Washburn translation\",\n  \"document_collection_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/documents",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"documents"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Document By ID",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Documents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/documents",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"documents"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Document Elements",
+			"item": [
+				{
+					"name": "Create Element 1",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"document_id\": 1,\n  \"hierarchy\": {\n    \"chapter\": 1,\n    \"paragraph\": 1\n  },\n  \"content\": {\n            \"text\": \"IN WHOSE reign was it that a woman of rather undistinguished lineage captured the heart of the Emperor and enjoyed his favor above all the other imperial wives and concubines? Certain consorts, whose high noble status gave them a sense of vain entitlement, despised and reviled her as an unworthy upstart from the very moment she began her service. Ladies of lower rank were even more vexed, for they knew His Majesty would never bestow the same degree of affection and attention on them. As a result, the mere presence of this woman at morning rites or evening ceremonies seemed to provoke hostile reactions among her rivals, and the anxiety she suffered as a consequence of these ever-increasing displays of jealousy was such a heavy burden that gradually her health began to fail.\",\n        \"formatting\": []\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/elements",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"elements"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Element 2",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"document_id\": 1,\n  \"hierarchy\": {\n    \"chapter\": 1,\n    \"paragraph\": 1\n  },\n  \"content\": {\n        \"text\": \"His Majesty could see how forlorn she was, how often she returned to her family home. He felt sorry for her and wanted to help, and though he could scarcely afford to ignore the admonitions of his advisers, his behavior eventually became the subject of palace gossip. Ranking courtiers and attendants found it difficult to stand by and observe the troubling situation, which they viewed as deplorable. They were fully aware that a similarly ill-fated romance had thrown the Chinese state into chaos. Concern and consternation gradually spread through the court, since it appeared that nothing could be done. Many considered the relationship scandalous, so much so that some openly referred to the example of the Prize Consort Yang. The only thing that made it possible for the woman to continue to serve was the Emperor’s gracious devotion.\",\n        \"formatting\": []\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/elements",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"elements"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Document Elements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/elements",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"elements"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Element by ID",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Annotations",
+			"item": [
+				{
+					"name": "Create Annotation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"document_collection_id\": 1,\n  \"document_id\": 1,\n  \"document_element_id\": 1,\n  \"creator_id\": 1,\n  \"type\": \"Annotation\",\n  \"motivation\": \"commenting\",\n  \"generator\": \"client\",\n  \"body\": {\n    \"id\": 0,\n    \"type\": \"TextualBody\",\n    \"value\": \"This is a good start\",\n    \"format\": \"text/html\",\n    \"language\": \"en\"\n  },\n  \"target\": [\n    {\n      \"type\": \"Text\",\n      \"source\": 1,\n      \"selector\": {\n        \"type\": \"TextQuoteSelector\",\n        \"value\": \"IN\",\n        \"refined_by\": {\n          \"type\": \"TextPositionSelector\",\n          \"start\": 0,\n          \"end\": 2\n        }\n      }\n    }\n  ],\n  \"status\": \"string\",\n  \"annotation_type\": \"comment\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/annotations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"annotations"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "annotations",
@@ -53,6 +340,14 @@
 			"name": "annotations",
 			"request": {
 				"method": "DELETE",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "root",
+			"request": {
+				"method": "GET",
 				"header": []
 			},
 			"response": []

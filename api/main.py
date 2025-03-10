@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import users, documents, document_collections, document_elements
+from routers import users, documents, document_collections, document_elements, annotations
 from database import engine, create_schema
 from models import models
 
@@ -31,6 +31,7 @@ app.include_router(users.router)
 app.include_router(documents.router)  # Add the documents router
 app.include_router(document_collections.router)
 app.include_router(document_elements.router)
+app.include_router(annotations.router)
 
 @app.get("/")
 def read_root():

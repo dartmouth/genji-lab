@@ -39,7 +39,8 @@ CREATE TABLE document_elements (
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     hierarchy JSONB,
-    content JSONB
+    content JSONB,
+    links JSONB
 );
 
 -- Updated annotations table with corrected fields
