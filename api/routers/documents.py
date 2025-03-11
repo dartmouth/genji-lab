@@ -14,6 +14,8 @@ from schemas.documents import (
     DocumentWithDetails
     )
 
+from schemas.document_elements import DocumentElement as DocumentElementSchema
+
 router = APIRouter(
     prefix="/api/v1/documents",
     tags=["documents"],
@@ -197,7 +199,7 @@ def delete_document(document_id: int, db: AsyncSession = Depends(get_db)):
     db.commit()
     return None
 
-@router.get("/{document_id}/elements", response_model=List[Dict[str, Any]])
+@router.get("/{document_id}/elements/", response_model=List[DocumentElementSchema])
 def get_document_elements(
     document_id: int,
     skip: int = 0,

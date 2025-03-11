@@ -17,8 +17,8 @@ RUN npm install
 COPY . .
 
 # build app for production with minification
-# RUN npm run build
+RUN npm run build
 
 EXPOSE 5173
-# CMD [ "serve", "-s", "dist", "-l", "5173"]
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD [ "serve", "-s", "dist", "-l", "5173"]
+

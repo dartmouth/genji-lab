@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete, select, func, update
@@ -68,15 +68,15 @@ def read_annotations(skip: int = 0,
                      limit: int = 100,
                      db: AsyncSession = Depends(get_db)
                      ):
-    query = select(AnnotationModel).offset(skip).limit(limit)
+    query = select(AnnotationModel).options(joinedload(AnnotationModel.creator)).offset(skip).limit(limit)
     result = db.execute(query)
     return result.scalars().all()
 
-@router.get("/{element_id}", response_model=Annotation, status_code=status.HTTP_200_OK)
+@router.get("/{anno_id}", response_model=Annotation, status_code=status.HTTP_200_OK)
 def read_annotation(anno_id: int,
                      db: AsyncSession = Depends(get_db)
                      ):
-    query = select(AnnotationModel).options(joinedload(AnnotationModel.user)).filter(AnnotationModel.id == anno_id)
+    query = select(AnnotationModel).options(joinedload(AnnotationModel.creator)).filter(AnnotationModel.id == anno_id)
 
     anno = db.execute(query).scalar_one_or_none()
 

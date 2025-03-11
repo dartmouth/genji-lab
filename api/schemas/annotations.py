@@ -1,6 +1,7 @@
 from typing import Optional, List
 from pydantic import BaseModel
 from datetime import datetime
+from schemas.users import User
 
 class TextPositionSelector(BaseModel):
     type: str = "TextPositionSelector"
@@ -53,6 +54,7 @@ class Annotation(AnnotationBase):
     created: Optional[datetime] = None
     modified: Optional[datetime] = None
     generated: Optional[datetime] = None
+    creator: Optional[User]
     
     class Config:
         from_attributes = True
