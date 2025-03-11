@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel
 from datetime import datetime
-from documents import Document
+from schemas.documents import Document
 
 class DocumentElementBase(BaseModel):
     document_id: int

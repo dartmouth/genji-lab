@@ -8,7 +8,7 @@ from datetime import datetime
 from database import get_db
 from models.models import DocumentCollection as DocumentCollectionModel
 from models.models import Document, User
-from schemas.schemas import (
+from schemas.document_collections import (
     DocumentCollection, 
     DocumentCollectionCreate, 
     DocumentCollectionUpdate, 

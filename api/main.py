@@ -33,7 +33,7 @@ app.include_router(document_collections.router)
 app.include_router(document_elements.router)
 app.include_router(annotations.router)
 
-@app.get("/")
+@app.get("/api")
 def read_root():
     return {"message": "Welcome to the Document Annotation API"}
 

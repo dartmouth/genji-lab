@@ -1,0 +1,58 @@
+from typing import Optional, List
+from pydantic import BaseModel
+from datetime import datetime
+
+class TextPositionSelector(BaseModel):
+    type: str = "TextPositionSelector"
+    start: int
+    end: int
+
+class TextQuoteSelector(BaseModel):
+    type: str = "TextQuoteSelector"
+    value: str
+    refined_by: TextPositionSelector
+
+class Target(BaseModel):
+    id: Optional[int] = None
+    type: str
+    source: int
+    selector: TextQuoteSelector
+
+class Body(BaseModel):
+    id: Optional[int] = None
+    type: str
+    value: str
+    format: str
+    language: str
+
+class AnnotationBase(BaseModel):
+    context: Optional[str] = None
+    document_collection_id: Optional[int] = None
+    document_id: Optional[int] = None
+    document_element_id: Optional[int] = None
+    creator_id: int
+    
+    type: Optional[str] = None
+    motivation: Optional[str] = None
+    generator: Optional[str] = None
+    
+    body: Optional[Body] = None
+    target: Optional[List[Target]] = None
+    
+    status: Optional[str] = None
+    annotation_type: Optional[str] = None
+    context: Optional[str] = None
+
+
+class AnnotationCreate(AnnotationBase):
+    pass
+
+
+class Annotation(AnnotationBase):
+    id: int
+    created: Optional[datetime] = None
+    modified: Optional[datetime] = None
+    generated: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True

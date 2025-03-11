@@ -8,7 +8,7 @@ from datetime import datetime
 from database import get_db
 from models.models import DocumentElement as DocumentElementModel
 from models.models import Document, Annotation
-from schemas.schemas import (
+from schemas.document_elements import (
     DocumentElement, 
     DocumentElementCreate, 
     DocumentElementUpdate, 

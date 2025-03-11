@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel
 from datetime import datetime
-from users import User
+from schemas.users import User
 
 class DocumentCollectionBase(BaseModel):
     title: Optional[str] = None

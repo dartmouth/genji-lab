@@ -6,7 +6,13 @@ from sqlalchemy.orm import joinedload
 
 from database import get_db
 from models.models import Document as DocumentModel, DocumentCollection, DocumentElement
-from schemas.schemas import Document, DocumentCreate, DocumentUpdate, DocumentPartialUpdate, DocumentWithDetails
+from schemas.documents import (
+    Document, 
+    DocumentCreate, 
+    DocumentUpdate, 
+    DocumentPartialUpdate, 
+    DocumentWithDetails
+    )
 
 router = APIRouter(
     prefix="/documents",
