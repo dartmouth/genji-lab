@@ -16,7 +16,7 @@ from schemas.annotations import (
 )
 
 router = APIRouter(
-    prefix="/annotations",
+    prefix="/api/v1/annotations",
     tags=["annotations"],
     responses={404: {"description": "Annotation not found"}},
 )

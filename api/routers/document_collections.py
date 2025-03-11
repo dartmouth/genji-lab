@@ -17,7 +17,7 @@ from schemas.document_collections import (
 )
 
 router = APIRouter(
-    prefix="/collections",
+    prefix="/api/v1/collections",
     tags=["document collections"],
     responses={404: {"description": "Document collection not found"}},
 )

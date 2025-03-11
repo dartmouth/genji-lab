@@ -24,13 +24,15 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/collections/",
+							"raw": "http://localhost:8000/api/v1/collections/",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"collections",
 								""
 							]
@@ -64,13 +66,15 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8000/collections/1",
+							"raw": "http://localhost:8000/api/v1/collections/1",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"collections",
 								"1"
 							]
@@ -98,12 +102,14 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8000/users",
+							"raw": "localhost:8000/api/v1/users",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"users"
 							]
 						}
@@ -116,13 +122,15 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8000/users",
+							"raw": "http://localhost:8000/api/v1/users",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"users"
 							]
 						}
@@ -149,13 +157,15 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/documents",
+							"raw": "http://localhost:8000/api/v1/documents",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"documents"
 							]
 						}
@@ -166,7 +176,21 @@
 					"name": "Document By ID",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/documents/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"documents",
+								"1"
+							]
+						}
 					},
 					"response": []
 				},
@@ -176,13 +200,15 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8000/documents",
+							"raw": "http://localhost:8000/api/v1/documents",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"documents"
 							]
 						}
@@ -209,13 +235,15 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/elements",
+							"raw": "http://localhost:8000/api/v1/elements",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"elements"
 							]
 						}
@@ -237,13 +265,15 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/elements",
+							"raw": "http://localhost:8000/api/v1/elements",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"elements"
 							]
 						}
@@ -256,13 +286,15 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8000/elements",
+							"raw": "http://localhost:8000/api/v1/elements",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"elements"
 							]
 						}
@@ -273,7 +305,44 @@
 					"name": "Get Element by ID",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/elements/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"elements",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Annotations of an Element",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/elements/1/annotations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"elements",
+								"1",
+								"annotations"
+							]
+						}
 					},
 					"response": []
 				}
@@ -297,14 +366,59 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/annotations",
+							"raw": "http://localhost:8000/api/v1/annotations",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
+								"api",
+								"v1",
 								"annotations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Annotations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/annotations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"annotations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Annotation by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/annotations/4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"annotations",
+								"4"
 							]
 						}
 					},
@@ -313,42 +427,17 @@
 			]
 		},
 		{
-			"name": "annotations",
-			"request": {
-				"method": "GET",
-				"header": []
-			},
-			"response": []
-		},
-		{
-			"name": "annotations",
-			"request": {
-				"method": "POST",
-				"header": []
-			},
-			"response": []
-		},
-		{
-			"name": "annotations",
-			"request": {
-				"method": "PATCH",
-				"header": []
-			},
-			"response": []
-		},
-		{
-			"name": "annotations",
-			"request": {
-				"method": "DELETE",
-				"header": []
-			},
-			"response": []
-		},
-		{
 			"name": "root",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "localhost:8000",
+					"host": [
+						"localhost"
+					],
+					"port": "8000"
+				}
 			},
 			"response": []
 		}

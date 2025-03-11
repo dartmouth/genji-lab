@@ -8,7 +8,7 @@ from models.models import User as UserModel
 from schemas.users import User, UserCreate, UserUpdate
 
 router = APIRouter(
-    prefix="/users",
+    prefix="/api/v1/users",
     tags=["users"],
     responses={404: {"description": "Not found"}},
 )

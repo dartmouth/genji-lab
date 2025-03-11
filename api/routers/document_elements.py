@@ -17,7 +17,7 @@ from schemas.document_elements import (
 )
 
 router = APIRouter(
-    prefix="/elements",
+    prefix="/api/v1/elements",
     tags=["document elements"],
     responses={404: {"description": "Document element not found"}},
 )
