@@ -1,41 +1,37 @@
 import { useState, useEffect, ReactNode, useRef } from "react";
+import { useApiClient } from "./useApi";
 
 interface DecodedToken {
   exp?: number;
   id: number;
   first_name: string;
   last_name: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export const useIAM = () => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<DecodedToken | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [users, setUsers] = useState<DecodedToken[]>([]);
   const userDialogRef = useRef<HTMLDialogElement | null>(null);
+  
+  // Use the API client hook for fetching users
+  const { 
+    data: users = [], 
+    loading: usersLoading,
+    error: usersError 
+  } = useApiClient<DecodedToken[]>("/users/");
 
+  // Run only once on component mount
   useEffect(() => {
-    fetchUsers(); // Load user list on startup
-
     const storedToken = getCookie("jwtToken");
     if (storedToken) {
       validateToken(storedToken);
     } else {
       openUserDialog(); // Show user selection dialog if no JWT
     }
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/users");
-      if (!response.ok) throw new Error("Failed to fetch users");
-      const usersList: DecodedToken[] = await response.json();
-      setUsers(usersList);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array to run only once
 
   const getCookie = (name: string): string | null => {
     const cookies = document.cookie.split("; ");
@@ -55,10 +51,10 @@ export const useIAM = () => {
         id: user.id,
         first_name: user.first_name,
         last_name: user.last_name,
-        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // ✅ Expire in 1 day
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // Expire in 1 day
       })
     );
-    const signature = btoa("mock-signature"); // 🚨 Not secure! Replace with server-side signing
+    const signature = btoa("mock-signature"); // Not secure! Replace with server-side signing
     return `${header}.${payload}.${signature}`;
   };
 
@@ -87,7 +83,7 @@ export const useIAM = () => {
 
   const selectUser = (selectedUser: DecodedToken) => {
     const jwt = generateJWT(selectedUser);
-    document.cookie = `jwtToken=${jwt}; path=/; max-age=86400`; // ✅ 1-day expiry
+    document.cookie = `jwtToken=${jwt}; path=/; max-age=86400`; // 1-day expiry
     validateToken(jwt);
   };
 
@@ -99,26 +95,30 @@ export const useIAM = () => {
     openUserDialog();
   };
 
-  // ✅ Open the modal dialog
+  // Open the modal dialog
   const openUserDialog = () => {
     if (userDialogRef.current) {
       userDialogRef.current.showModal();
     }
   };
 
-  // ✅ Close the modal dialog
+  // Close the modal dialog
   const closeUserDialog = () => {
     if (userDialogRef.current) {
       userDialogRef.current.close();
     }
   };
 
-  // ✅ Now properly renders a modal dialog
+  // Render the user selection dialog
   const renderUserSelection = (): ReactNode => (
     <dialog ref={userDialogRef} className="user-selection-modal">
       <h3>Select a User</h3>
-      {users.length === 0 ? (
+      {usersLoading ? (
         <p>Loading users...</p>
+      ) : usersError ? (
+        <p>Error loading users: {usersError.message}</p>
+      ) : users.length === 0 ? (
+        <p>No users available</p>
       ) : (
         <ul>
           {users.map((u) => (
@@ -132,11 +132,11 @@ export const useIAM = () => {
     </dialog>
   );
 
-  return { 
-    token, 
-    user, 
-    isAuthenticated, 
-    logout, 
-    renderUserSelection 
+  return {
+    token,
+    user,
+    isAuthenticated,
+    logout,
+    renderUserSelection
   };
 };
