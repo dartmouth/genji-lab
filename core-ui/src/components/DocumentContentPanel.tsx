@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import HighlightedText from './HighlightedText';
 import AnnotationCard from './AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
-import { Annotation, DocumentElement } from '../types/annotation';
+import { Annotation, AnnotationCreate } from '../types/annotation';
+import { DocumentElement } from '../types/documentElement';
 // import { useApi } from '../hooks/useApi';
 import { useApiClient } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuthContext'
@@ -27,7 +28,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     const [newAnnotationText, setNewAnnotationText] = useState("");
     const annotations = useApiClient<Annotation[]>("/annotations/")
     // const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>(annotations);
-    // const {data, loading, error } = useApi<DocumentElement[]>('/elements/')
     const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`)
 
     // Reset annotation text when selection changes
@@ -45,37 +45,27 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         }
     };
     
-    const handleCreateAnnotation = () => {
+    const handleCreateAnnotation = async () => {
         if (!selectionInfo.text || !newAnnotationText) return;
-        
-        const now = new Date().toISOString();
-        const newAnnotation: Annotation = {
-            "@context": "http://www.w3.org/ns/anno.jsonld",
-            "id": `annotation-${Date.now()}`,
+        if (!user || !isAuthenticated) return;
+
+        const newAnnotation: AnnotationCreate = {
+            "context": "http://www.w3.org/ns/anno.jsonld",
+            "document_collection_id": 1,
+            "document_id": documentID,
+            "document_element_id": selectionInfo.content_id,
             "type": "Annotation",
-            "creator": {
-                "first_name": "Current",
-                "last_name": "User",
-                "id": -1,
-                "user_metadata": {
-                    "role": "placeholder",
-                    "affiliation": "None"
-                }
-            }, // This would be the actual user ID
-            "created": now,
-            "modified": now,
+            "creator_id": user.id, 
             "generator": "web-client",
-            "generated": now,
             "motivation": "commenting",
+            "annotation_type": "comment",
             "body": {
-                "id": `body-${Date.now()}`,
                 "type": "TextualBody",
                 "value": newAnnotationText,
                 "format": "text/plain",
                 "language": "en"
             },
             "target": [{
-                "id": `target-${selectionInfo.content_id}-${Date.now()}`,
                 "type": "Text",
                 "source": selectionInfo.content_id,
                 "selector": {
@@ -90,11 +80,27 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
             }]
         };
         console.log(newAnnotation)
+        try {
+            // 1. Await the post operation
+            await annotations.post(newAnnotation);
+            
+            // 2. Await the refresh operation as well
+            await annotations.refresh();
+            
+            // 3. Add some logging to verify
+            console.log("Annotation created and data refreshed");
+            
+            setSelectionInfo({
+                content_id: 0,
+                start: 0,
+                end: 0,
+                text: ""
+            });
+            setNewAnnotationText("");
+        } catch (error) {
+            console.error("Error creating annotation:", error);
+        }
         
-        // Add the new annotation to our local state
-        // setLocalAnnotations([...localAnnotations, newAnnotation]);
-        
-        // Clear the selection and annotation text
         setSelectionInfo({
             content_id: 0,
             start: 0,
@@ -103,8 +109,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         });
         setNewAnnotationText("");
         
-        // Here you would typically also send the annotation to your backend
-        // saveAnnotationToServer(newAnnotation);
     };
     
     const handleCancelAnnotation = () => {
@@ -134,12 +138,12 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     
     return (
         <div className='document-content-panel' style={{ display: 'flex' }}>
-        {isAuthenticated && user && (
+        {/* {isAuthenticated && user && (
           <div className="document-user-info">
             <p>Viewing as: {user.first_name} {user.last_name}</p>
             <p>User ID: {user.id}</p>
           </div>
-        )}
+        )} */}
             <div className='document-content-container' style={{ flex: 2 }}>
                 {/* <h3>documentID: {documentID}</h3> */}
                 {elements.data.map((content) => (

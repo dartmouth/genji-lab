@@ -1,6 +1,6 @@
 import React from "react";
 import DocumentContentPanel from "./components/DocumentContentPanel";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./components/AuthContext";
 import { useAuth } from "./hooks/useAuthContext";
 import "./App.css";
 

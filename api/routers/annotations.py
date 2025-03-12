@@ -39,7 +39,7 @@ def create_annotation(annotation: AnnotationCreate, db: AsyncSession = Depends(g
     annotation.body.id = generate_body_id(db)
 
     for target in annotation.target:
-        target.id = generate_target_id(db, annotation.document_element_id)
+        target.id = generate_target_id(db)
 
     db_annotation = AnnotationModel(
         document_collection_id=annotation.document_collection_id,

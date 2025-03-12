@@ -1,5 +1,5 @@
 interface Annotation {
-    "@context": string;
+    "context": string;
     "id": string;
     "type": string;
     "creator": {
@@ -39,18 +39,39 @@ interface Annotation {
     }>
 }
 
-interface DocumentElement {
+interface AnnotationCreate {
+    "context": string;
+    "document_collection_id": number,
     "document_id": number,
-    "hierarchy": object,
-    "content": {
-        "text": string
-    },
-    "links": object[] |null,
-    "id": number,
-    "created": string,
-    "modified": string
+    "document_element_id": number,
+    "type": string;
+    "creator_id": number;
+    "generator": string;
+    "motivation": string;
+    "annotation_type": string;
+    "body": {
+        "type": string;
+        "value": string;
+        "format": string;
+        "language": string;
+    };
+    "target": Array<{
+        "type": string;
+        "source": number;
+        "selector": {
+            "type": string;
+            "value": string;
+            "refined_by": {
+                "type": string;
+                "start": number;
+                "end": number;
+            };
+        };
+    }>
 }
+
+
 
 // export annotation not using default
 export type { Annotation }
-export type { DocumentElement }
+export type {AnnotationCreate}
