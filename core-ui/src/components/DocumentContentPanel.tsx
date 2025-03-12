@@ -6,6 +6,7 @@ import AnnotationCreationCard from './AnnotationCreationCard';
 import { Annotation, DocumentElement } from '../types/annotation';
 // import { useApi } from '../hooks/useApi';
 import { useApiClient } from '../hooks/useApi';
+import { useAuth } from '../hooks/useAuthContext'
 
 interface DocumentContentPanelProps {
     documentID: number;
@@ -15,6 +16,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     documentID,
 }) => {
     const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
+    const { user, isAuthenticated } = useAuth();
+
     const [selectionInfo, setSelectionInfo] = useState({
         content_id: 0,
         start: 0,
@@ -131,6 +134,12 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     
     return (
         <div className='document-content-panel' style={{ display: 'flex' }}>
+        {isAuthenticated && user && (
+          <div className="document-user-info">
+            <p>Viewing as: {user.first_name} {user.last_name}</p>
+            <p>User ID: {user.id}</p>
+          </div>
+        )}
             <div className='document-content-container' style={{ flex: 2 }}>
                 {/* <h3>documentID: {documentID}</h3> */}
                 {elements.data.map((content) => (
