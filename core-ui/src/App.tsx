@@ -1,55 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import DocumentContentPanel from "./components/DocumentContentPanel";
-import Auth from "./components/Auth";
+import { useIAM } from "./hooks/useIAM";
 import { Annotation } from "./types/annotation";
 import "./App.css";
 
-interface User {
-  id: number;
-  first_name: string;
-  last_name: string;
-}
-
-// Function to get a cookie value
-const getCookie = (name: string) => {
-  const cookies = document.cookie.split("; ");
-  for (const cookie of cookies) {
-    const [key, value] = cookie.split("=");
-    if (key === name) {
-      return decodeURIComponent(value);
-    }
-  }
-  return null;
-};
-
-// Function to decode JWT manually (Base64 decoding)
-const decodeJWT = (token: string): User | null => {
-  try {
-    return JSON.parse(atob(token)); // Decode base64 token
-  } catch (error) {
-    console.error("Error decoding JWT:", error);
-    return null;
-  }
-};
-
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const jwt = getCookie("token");
-    if (jwt) {
-      const decodedUser = decodeJWT(jwt);
-      if (decodedUser) {
-        setUser(decodedUser);
-      }
-    }
-  }, []);
-
-  // Logout function to clear JWT cookie
-  const handleLogout = () => {
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
-    setUser(null);
-  };
+  const { user, isAuthenticated, renderUserSelection, logout } = useIAM();
 
   // Sample annotations
   const sampleAnnotations: Annotation[] = [
@@ -125,14 +81,16 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      {/* Show Auth if no user is logged in */}
-      {!user && <Auth onLogin={setUser} />}
+      {/* ✅ Show user selection if no user is logged in */}
+      {renderUserSelection()}
 
-      {/* Display user info & Logout button */}
-      {user && (
+      {/* ✅ Show Logout & User Info if authenticated */}
+      {isAuthenticated && user && (
         <header className="app-header">
-          <p className="user-greeting">Hello, {user.first_name} {user.last_name}!</p>
-          <button onClick={handleLogout}>Logout</button>
+          <p className="user-greeting">
+            Hello, {user.first_name} {user.last_name}!
+          </p>
+          <button onClick={logout}>Logout</button>
         </header>
       )}
 
