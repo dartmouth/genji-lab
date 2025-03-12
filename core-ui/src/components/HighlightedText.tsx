@@ -1,41 +1,56 @@
 // components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import { Annotation } from '../types/annotation'; // Assuming you've moved the Annotation interface to a types file
+import Highlight from './Highlight';
+
+// interface HighlightProps {
+//   annotation: Annotation;
+//   position: {
+//     left: number;
+//     top: number;
+//     width: number;
+//     height: number;
+//   };
+//   onMouseEnter: () => void;
+//   onMouseLeave: () => void;
+// }
 
 
-interface HighlightProps {
-  annotation: Annotation;
-  position: {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-  };
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
-}
 
-
-
-const Highlight: React.FC<HighlightProps> = ({ position, onMouseEnter, onMouseLeave }) => {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        backgroundColor: 'yellow',
-        opacity: 0.5,
-        left: `${position.left}px`,
-        top: `${position.top}px`,
-        width: `${position.width}px`,
-        height: `${position.height}px`,
-        pointerEvents: 'all', // Changed to 'all' to capture mouse events
-        userSelect: 'none',
-      }}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-    />
-  );
-};
+// const Highlight: React.FC<HighlightProps> = ({ position, onMouseEnter, onMouseLeave }) => {
+//   return (
+//     <>
+//     <div
+//       style={{
+//         position: 'absolute',
+//         backgroundColor: 'yellow',
+//         opacity: 0.5,
+//         left: `${position.left}px`,
+//         top: `${position.top}px`,
+//         width: `${position.width}px`,
+//         height: `${position.height}px`,
+//         pointerEvents: 'none', // Changed to 'all' to capture mouse events
+//         userSelect: 'none',
+//       }}
+//       onMouseEnter={onMouseEnter}
+//       onMouseLeave={onMouseLeave}
+//     />
+//           <div
+//         style={{
+//           position: 'absolute',
+//           left: `${position.left}px`,
+//           top: `${position.top}px`,
+//           width: `${position.width}px`,
+//           height: '2px', // Top border
+//           backgroundColor: 'transparent',
+//           pointerEvents: 'all',
+//         }}
+//         onMouseEnter={onMouseEnter}
+//         onMouseLeave={onMouseLeave}
+//       />
+//     </>
+//   );
+// };
 
 interface SelectedTextInterface {
   content_id: number;
@@ -176,7 +191,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           {positions.map((position, index) => (
             <Highlight
               key={`${annotationId}-${index}`}
-              annotation={annotations.find(a => a.id === annotationId)!}
+              // annotation={annotations.find(a => a.id === annotationId)!}
               position={position}
               onMouseEnter={() => onHighlightHover(annotationId, true)}
               onMouseLeave={() => onHighlightHover(annotationId, false)}
