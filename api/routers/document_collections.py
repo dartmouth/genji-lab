@@ -8,7 +8,7 @@ from datetime import datetime
 from database import get_db
 from models.models import DocumentCollection as DocumentCollectionModel
 from models.models import Document, User
-from schemas.schemas import (
+from schemas.document_collections import (
     DocumentCollection, 
     DocumentCollectionCreate, 
     DocumentCollectionUpdate, 
@@ -17,7 +17,7 @@ from schemas.schemas import (
 )
 
 router = APIRouter(
-    prefix="/collections",
+    prefix="/api/v1/collections",
     tags=["document collections"],
     responses={404: {"description": "Document collection not found"}},
 )

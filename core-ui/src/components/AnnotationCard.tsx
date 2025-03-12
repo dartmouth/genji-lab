@@ -22,7 +22,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 margin: '10px 0',
             }}
         >
-            <div className="comment-header">{annotation.creator}</div>
+            <div className="comment-header">{`${annotation.creator.first_name} ${annotation.creator.last_name}`}</div>
             <div className="comment-body">{annotation.body.value}</div>
         </div>
     )

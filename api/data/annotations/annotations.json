@@ -20,14 +20,14 @@
             {
                 "id": "comment1/target",
                 "type": "Text",
-                "source": "http://example.org/page1",
+                "source": 1,
                 "selector": {
-                    "type": "FragmentSelector",
-                    "value": "P1",
+                    "type": "TextQuoteSelector",
+                    "value": "IN",
                     "refinedBy": {
                         "type": "TextPositionSelector",
-                        "start": 131,
-                        "end": 174
+                        "start": 0,
+                        "end": 2
                     }
                 }
             }

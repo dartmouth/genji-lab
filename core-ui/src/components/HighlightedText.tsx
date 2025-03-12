@@ -38,7 +38,7 @@ const Highlight: React.FC<HighlightProps> = ({ position, onMouseEnter, onMouseLe
 };
 
 interface SelectedTextInterface {
-  content_id: string;
+  content_id: number;
   start: number;
   end: number;
   text: string;
@@ -48,7 +48,7 @@ interface SelectedTextInterface {
 interface HighlightedTextProps {
   text: string;
   annotations: Annotation[];
-  paragraphId: string;
+  paragraphId: number;
   // add prop that is a function to set selected text state in parent component
   setSelectedText: (selectedText: SelectedTextInterface) => void;
   onHighlightHover?: (annotationId: string | null, isHovering: boolean) => void;
@@ -81,13 +81,14 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     annotations.forEach((annotation) => {
       // Find annotations that target this paragraph
       const target = annotation.target.find((t) => 
-        t.source === paragraphId || t.id.includes(paragraphId)
+        t.source === paragraphId 
+      // || t.id.includes(paragraphId)
       );
       
       if (!target) return;
 
       try {
-        const { start, end } = target.selector.refinedBy;
+        const { start, end } = target.selector.refined_by;
         const range = document.createRange();
         
         range.setStart(textNode, start);
@@ -144,7 +145,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     const startParagraph = startContainerParent ? startContainerParent.closest('.annotatable-paragraph') : null;
     if (!startParagraph) return;
     const newSelectionInfo = {
-      content_id: startParagraph.id,
+      content_id: Number(startParagraph.id),
       start: range.startOffset,
       end: range.endOffset,
       text: selection.toString()
@@ -156,7 +157,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   return (
     <div 
       id={
-        paragraphId
+        `${paragraphId}`
       }
       ref={containerRef} 
       className="annotatable-paragraph"

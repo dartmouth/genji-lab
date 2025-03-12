@@ -6,10 +6,18 @@ from sqlalchemy.orm import joinedload
 
 from database import get_db
 from models.models import Document as DocumentModel, DocumentCollection, DocumentElement
-from schemas.schemas import Document, DocumentCreate, DocumentUpdate, DocumentPartialUpdate, DocumentWithDetails
+from schemas.documents import (
+    Document, 
+    DocumentCreate, 
+    DocumentUpdate, 
+    DocumentPartialUpdate, 
+    DocumentWithDetails
+    )
+
+from schemas.document_elements import DocumentElement as DocumentElementSchema
 
 router = APIRouter(
-    prefix="/documents",
+    prefix="/api/v1/documents",
     tags=["documents"],
     responses={404: {"description": "Document not found"}},
 )
@@ -191,7 +199,7 @@ def delete_document(document_id: int, db: AsyncSession = Depends(get_db)):
     db.commit()
     return None
 
-@router.get("/{document_id}/elements", response_model=List[Dict[str, Any]])
+@router.get("/{document_id}/elements/", response_model=List[DocumentElementSchema])
 def get_document_elements(
     document_id: int,
     skip: int = 0,

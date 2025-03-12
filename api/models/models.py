@@ -32,8 +32,8 @@ class DocumentCollection(Base):
     text_direction = Column(String(50))
     created = Column(DateTime, default=func.current_timestamp())
     modified = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
-    created_by_id = Column(Integer, ForeignKey("app.users.id"))  # Note the schema prefix
-    modified_by_id = Column(Integer, ForeignKey("app.users.id"))  # Note the schema prefix
+    created_by_id = Column(Integer, ForeignKey("app.users.id")) 
+    modified_by_id = Column(Integer, ForeignKey("app.users.id")) 
     language = Column(String(50))
     hierarchy = Column(JSONB)
     collection_metadata = Column(JSONB)
@@ -50,7 +50,7 @@ class Document(Base):
     __table_args__ = {'schema': 'app'}
     
     id = Column(Integer, primary_key=True, index=True)
-    document_collection_id = Column(Integer, ForeignKey("app.document_collections.id"))  # Note the schema prefix
+    document_collection_id = Column(Integer, ForeignKey("app.document_collections.id")) 
     title = Column(String(255))
     description = Column(Text)
     created = Column(DateTime, default=func.current_timestamp())
@@ -67,7 +67,7 @@ class DocumentElement(Base):
     __table_args__ = {'schema': 'app'}
     
     id = Column(Integer, primary_key=True, index=True)
-    document_id = Column(Integer, ForeignKey("app.documents.id"))  # Note the schema prefix
+    document_id = Column(Integer, ForeignKey("app.documents.id")) 
     created = Column(DateTime, default=func.current_timestamp())
     modified = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     hierarchy = Column(JSONB)
@@ -83,10 +83,10 @@ class Annotation(Base):
     __table_args__ = {'schema': 'app'}
     
     id = Column(Integer, primary_key=True, index=True)
-    document_collection_id = Column(Integer, ForeignKey("app.document_collections.id"))  # Note the schema prefix
-    document_id = Column(Integer, ForeignKey("app.documents.id"))  # Note the schema prefix
-    document_element_id = Column(Integer, ForeignKey("app.document_elements.id"))  # Note the schema prefix
-    creator_id = Column(Integer, ForeignKey("app.users.id"))  # Note the schema prefix
+    document_collection_id = Column(Integer, ForeignKey("app.document_collections.id")) 
+    document_id = Column(Integer, ForeignKey("app.documents.id")) 
+    document_element_id = Column(Integer, ForeignKey("app.document_elements.id")) 
+    creator_id = Column(Integer, ForeignKey("app.users.id")) 
     
     type = Column(String(100))
     created = Column(DateTime)

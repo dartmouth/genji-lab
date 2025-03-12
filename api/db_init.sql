@@ -90,15 +90,20 @@ CREATE INDEX idx_annotations_created ON annotations(created);
 CREATE INDEX idx_annotations_motivation ON annotations(motivation);
 
 -- Add GIN indexes for JSONB fields to enable efficient querying of JSON data
-CREATE INDEX idx_users_metadata ON users USING GIN (metadata);
+CREATE INDEX idx_users_metadata ON users USING GIN (user_metadata);
 CREATE INDEX idx_document_collections_hierarchy ON document_collections USING GIN (hierarchy);
-CREATE INDEX idx_document_collections_metadata ON document_collections USING GIN (metadata);
+CREATE INDEX idx_document_collections_metadata ON document_collections USING GIN (collection_metadata);
 CREATE INDEX idx_document_elements_hierarchy ON document_elements USING GIN (hierarchy);
 CREATE INDEX idx_document_elements_content ON document_elements USING GIN (content);
 CREATE INDEX idx_annotations_body ON annotations USING GIN (body);
 CREATE INDEX idx_annotations_target ON annotations USING GIN (target);
 
 -- Create sequences for annotation IDs
-CREATE SEQUENCE annotation_id_seq START 1;
-CREATE SEQUENCE annotation_body_id_seq START 1;
-CREATE SEQUENCE annotation_target_id_seq START 1;
+CREATE SEQUENCE app.annotation_body_id_seq START 1;
+CREATE SEQUENCE app.annotation_target_id_seq START 1;
+
+grant all on sequence app.annotation_body_id_seq to application;
+grant all on sequence app.annotation_target_id_seq to application;
+alter table app.document_elements add column links JSONB;
+
+create index idx_element_links on document_elements using GIN (links);
