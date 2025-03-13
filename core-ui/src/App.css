@@ -109,8 +109,110 @@
 
 
 .app-header {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f8f9fa; /* Light background color */
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000; /* Ensures header stays on top */
+}
+
+.app {
+  margin-top: 60px; 
+  padding: 20px;
+}
+
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f8f9fa;
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: flex-end; /* Change from space-between to flex-end */
+  align-items: center;
+  z-index: 1000;
+}
+
+.user-greeting {
+  margin-right: 15px; /* Add space between greeting and button */
+  font-weight: 500;
+}
+
+.app-header button {
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.app-header button:hover {
+  background-color: #e0e0e0;
+}
+
+.main {
+  display: flex;
+  flex-direction: column; /* Stack header above content */
+  min-height: 100vh;
+}
+
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f8f9fa;
+  padding: 10px 20px 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 1000;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #00693e; /* Green circle */
+  border-radius: 50%; /* Makes it a circle */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.user-avatar span {
+  color: white;
   font-weight: bold;
+  font-size: 16px;
+}
+
+.user-greeting {
+  margin: 0 15px 0 0;
+  font-weight: 500;
+}
+
+.app-header button {
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 35px;
+}
+
+.app-header button:hover {
+  background-color: #e0e0e0;
 }

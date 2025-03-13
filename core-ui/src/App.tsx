@@ -5,18 +5,22 @@ import { useAuth } from "./hooks/useAuthContext";
 import "./App.css";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-// Create a header component that uses the auth context
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
 
   if (!isAuthenticated || !user) return null;
 
+  // Get initials from first and last name
+  const initials = `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
+
   return (
     <header className="app-header">
-      <p className="user-greeting">
-        Hello, {user.first_name} {user.last_name}!
-      </p>
-      <button onClick={logout}>Logout</button>
+      <div className="header-right">
+        <div className="user-avatar">
+          <span>{initials}</span>
+        </div>
+        <button onClick={logout}>Logout</button>
+      </div>
     </header>
   );
 };
@@ -24,7 +28,7 @@ const AppHeader: React.FC = () => {
 // Main app component
 const AppContent: React.FC = () => {
   return (
-    <>
+    <div className="main">
       <AppHeader />
       <div className="app">
         <ErrorBoundary>
@@ -32,7 +36,7 @@ const AppContent: React.FC = () => {
         </ErrorBoundary>
         
       </div>
-    </>
+    </div>
   );
 };
 

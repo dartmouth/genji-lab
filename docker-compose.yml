@@ -2,14 +2,12 @@ services:
   ui:
     build:
       context: ./core-ui
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
-      - "80:80"
+      - "5173:5173"
     volumes:
       - ./core-ui/src:/app/src
       - ./core-ui/vite.config.ts:/app/vite.config.ts
-    networks:
-      - app-network
   api:
     build:
       context: ./api
@@ -18,8 +16,3 @@ services:
       - "8000:8000"
     volumes:
       - ./api:/app
-    networks:
-      - app-network
-networks:
-  app-network:
-    driver: bridge
