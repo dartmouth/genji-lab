@@ -18,6 +18,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
 }) => {
     const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
     const { user, isAuthenticated } = useAuth();
+    const [collapsedComments, setCollapsedComments] = useState<boolean>(true)
 
     const [selectionInfo, setSelectionInfo] = useState({
         content_id: 0,
@@ -134,14 +135,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     
     return (
         <div className='document-content-panel' style={{ display: 'flex' }}>
-        {/* {isAuthenticated && user && (
-          <div className="document-user-info">
-            <p>Viewing as: {user.first_name} {user.last_name}</p>
-            <p>User ID: {user.id}</p>
-          </div>
-        )} */}
+
             <div className='document-content-container' style={{ flex: 2 }}>
-                {/* <h3>documentID: {documentID}</h3> */}
                 {elements.data.map((content) => (
                     <div key={content.id} className='document-content'>
                         <HighlightedText
@@ -159,11 +154,13 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     </div>
                 ))}
             </div>
-            
-            <div className='annotations-panel' style={{ flex: 1, marginLeft: '20px' }}>
-                <h3>Annotations</h3>
+
+            <button onClick={() => setCollapsedComments(!collapsedComments)}>Collapse</button>
+            {collapsedComments && <div className='annotations-panel' style={{ flex: 1, marginLeft: '20px' }}>
+                {/* <h3>Annotations</h3> */}
                 
                 {/* Annotation Creation Card - Now as a separate component */}
+                
 
                 
                 {/* Existing Annotations */}
@@ -189,7 +186,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         onCancel={handleCancelAnnotation}
                     />
                 )}
-            </div>
+            </div>}
         </div>
     );
 };
