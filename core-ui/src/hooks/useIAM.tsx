@@ -16,11 +16,7 @@ export const useIAM = () => {
   const userDialogRef = useRef<HTMLDialogElement | null>(null);
   
   // Use the API client hook for fetching users
-  const { 
-    data: users = [], 
-    loading: usersLoading,
-    error: usersError 
-  } = useApiClient<DecodedToken[]>("/users/");
+  const users = useApiClient<DecodedToken[]>("/users/");
 
   // Run only once on component mount
   useEffect(() => {
@@ -108,20 +104,26 @@ export const useIAM = () => {
       userDialogRef.current.close();
     }
   };
-
+  useEffect(() => {
+    console.log("Users data type:", typeof users.data);
+    console.log("Is array:", Array.isArray(users.data));
+    console.log("Users data:", users.data);
+  }, [users.data]);
   // Render the user selection dialog
   const renderUserSelection = (): ReactNode => (
     <dialog ref={userDialogRef} className="user-selection-modal">
       <h3>Select a User</h3>
-      {usersLoading ? (
+      {users.loading ? (
         <p>Loading users...</p>
-      ) : usersError ? (
-        <p>Error loading users: {usersError.message}</p>
-      ) : users.length === 0 ? (
+      ) : users.error ? (
+        <p>Error loading users: {users.error.message}</p>
+      ) : !users.data || !Array.isArray(users.data) ? (
+        <p>Error: Invalid user data format</p>
+      ) : users.data.length === 0 ? (
         <p>No users available</p>
       ) : (
         <ul>
-          {users.map((u) => (
+          {users.data.map((u) => (
             <li key={u.id} onClick={() => selectUser(u)}>
               {u.first_name} {u.last_name}
             </li>
@@ -131,7 +133,6 @@ export const useIAM = () => {
       <button onClick={closeUserDialog}>Cancel</button>
     </dialog>
   );
-
   return {
     token,
     user,

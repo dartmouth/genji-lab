@@ -13,28 +13,22 @@ interface ApiResponse<T> {
   error: AxiosError | null;
 }
 
-interface ApiResponse<T> {
-  data: T;
-  loading: boolean;
-  error: AxiosError | null;
-}
-
 interface ApiClient<T> extends ApiResponse<T> {
   // Method overloads for get
   get(options?: AxiosRequestConfig): Promise<T>;
   get(endpoint: string, options?: AxiosRequestConfig): Promise<T>;
   
   // Method overloads for post
-  post<R = unknown>(payload: R, options?: AxiosRequestConfig): Promise<T>;
-  post<R = unknown>(endpoint: string, payload: R, options?: AxiosRequestConfig): Promise<T>;
+  post<RequestData = unknown>(payload: RequestData, options?: AxiosRequestConfig): Promise<T>;
+  post<RequestData = unknown>(endpoint: string, payload: RequestData, options?: AxiosRequestConfig): Promise<T>;
   
   // Method overloads for put
-  put<R = unknown>(payload: R, options?: AxiosRequestConfig): Promise<T>;
-  put<R = unknown>(endpoint: string, payload: R, options?: AxiosRequestConfig): Promise<T>;
+  put<RequestData = unknown>(payload: RequestData, options?: AxiosRequestConfig): Promise<T>;
+  put<RequestData = unknown>(endpoint: string, payload: RequestData, options?: AxiosRequestConfig): Promise<T>;
   
   // Method overloads for patch
-  patch<R = unknown>(payload: R, options?: AxiosRequestConfig): Promise<T>;
-  patch<R = unknown>(endpoint: string, payload: R, options?: AxiosRequestConfig): Promise<T>;
+  patch<RequestData = unknown>(payload: RequestData, options?: AxiosRequestConfig): Promise<T>;
+  patch<RequestData = unknown>(endpoint: string, payload: RequestData, options?: AxiosRequestConfig): Promise<T>;
   
   // Method overloads for delete
   delete(options?: AxiosRequestConfig): Promise<T>;
@@ -59,10 +53,10 @@ export function useApiClient<T>(
   const isMountedRef = useRef<boolean>(true);
   
   // Helper function to execute requests
-  const executeRequest = useCallback(async <R = unknown>(
+  const executeRequest = useCallback(async <RequestData = unknown>(
     method: 'get' | 'post' | 'put' | 'patch' | 'delete',
     requestEndpoint: string | undefined,
-    payload?: R,
+    payload?: RequestData,
     requestOptions?: AxiosRequestConfig
   ): Promise<T> => {
     const targetEndpoint = requestEndpoint || endpoint;
@@ -136,14 +130,14 @@ export function useApiClient<T>(
   
   // Implementation of post with overloads
   const post = useCallback(
-    <R = unknown>(
-      endpointOrPayload: string | R,
-      payloadOrOptions?: R | AxiosRequestConfig,
+    <RequestData = unknown>(
+      endpointOrPayload: string | RequestData,
+      payloadOrOptions?: RequestData | AxiosRequestConfig,
       maybeOptions?: AxiosRequestConfig
     ): Promise<T> => {
       if (typeof endpointOrPayload === 'string') {
         // First overload: endpoint provided
-        return executeRequest('post', endpointOrPayload, payloadOrOptions as R, maybeOptions);
+        return executeRequest('post', endpointOrPayload, payloadOrOptions as RequestData, maybeOptions);
       } else {
         // Second overload: using current endpoint
         return executeRequest('post', undefined, endpointOrPayload, payloadOrOptions as AxiosRequestConfig);
@@ -154,14 +148,14 @@ export function useApiClient<T>(
   
   // Implementation of put with overloads
   const put = useCallback(
-    <R = unknown>(
-      endpointOrPayload: string | R,
-      payloadOrOptions?: R | AxiosRequestConfig,
+    <RequestData = unknown>(
+      endpointOrPayload: string | RequestData,
+      payloadOrOptions?: RequestData | AxiosRequestConfig,
       maybeOptions?: AxiosRequestConfig
     ): Promise<T> => {
       if (typeof endpointOrPayload === 'string') {
         // First overload: endpoint provided
-        return executeRequest('put', endpointOrPayload, payloadOrOptions as R, maybeOptions);
+        return executeRequest('put', endpointOrPayload, payloadOrOptions as RequestData, maybeOptions);
       } else {
         // Second overload: using current endpoint
         return executeRequest('put', undefined, endpointOrPayload, payloadOrOptions as AxiosRequestConfig);
@@ -172,14 +166,14 @@ export function useApiClient<T>(
   
   // Implementation of patch with overloads
   const patch = useCallback(
-    <R = unknown>(
-      endpointOrPayload: string | R,
-      payloadOrOptions?: R | AxiosRequestConfig,
+    <RequestData = unknown>(
+      endpointOrPayload: string | RequestData,
+      payloadOrOptions?: RequestData | AxiosRequestConfig,
       maybeOptions?: AxiosRequestConfig
     ): Promise<T> => {
       if (typeof endpointOrPayload === 'string') {
         // First overload: endpoint provided
-        return executeRequest('patch', endpointOrPayload, payloadOrOptions as R, maybeOptions);
+        return executeRequest('patch', endpointOrPayload, payloadOrOptions as RequestData, maybeOptions);
       } else {
         // Second overload: using current endpoint
         return executeRequest('patch', undefined, endpointOrPayload, payloadOrOptions as AxiosRequestConfig);
@@ -239,7 +233,8 @@ export function useApiClient<T>(
     delete: del,
     refresh
   };
-  }
+}
+
 // Extended API client for direct use
 interface ExtendedApiClient extends AxiosInstance {
   getById: <T>(endpoint: string, id: string | number, options?: AxiosRequestConfig) => Promise<T>;
