@@ -3,6 +3,7 @@ import DocumentContentPanel from "./components/DocumentContentPanel";
 import { AuthProvider } from "./components/AuthContext";
 import { useAuth } from "./hooks/useAuthContext";
 import "./App.css";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Create a header component that uses the auth context
 const AppHeader: React.FC = () => {
@@ -26,7 +27,10 @@ const AppContent: React.FC = () => {
     <>
       <AppHeader />
       <div className="app">
+        <ErrorBoundary>
         <DocumentContentPanel documentID={1} />
+        </ErrorBoundary>
+        
       </div>
     </>
   );

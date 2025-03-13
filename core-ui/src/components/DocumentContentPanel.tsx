@@ -79,15 +79,11 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 }
             }]
         };
-        console.log(newAnnotation)
         try {
-            // 1. Await the post operation
-            await annotations.post(newAnnotation);
+
+            await annotations.post(newAnnotation)
+                .then(() => annotations.get())
             
-            // 2. Await the refresh operation as well
-            await annotations.refresh();
-            
-            // 3. Add some logging to verify
             console.log("Annotation created and data refreshed");
             
             setSelectionInfo({
