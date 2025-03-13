@@ -135,7 +135,6 @@ export function useApiClient<T>(
   );
   
   // Implementation of post with overloads
-  // Implementation of post with overloads
   const post = useCallback(
     <R = unknown>(
       endpointOrPayload: string | R,
@@ -220,14 +219,11 @@ export function useApiClient<T>(
       initialFetchDoneRef.current = true;
     }
     
-    // Set the mounted flag to true (although it's already true by default)
     isMountedRef.current = true;
     
     // Update the cleanup function
     return () => {
-      // Mark component as unmounted
       isMountedRef.current = false;
-      // No need to abort anything
     };
   }, [initialEndpoint, initialOptions, get]);
   
