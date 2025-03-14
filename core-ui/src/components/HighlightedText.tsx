@@ -1,56 +1,7 @@
 // components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { Annotation } from '../types/annotation'; // Assuming you've moved the Annotation interface to a types file
+import { Annotation } from '../types/annotation'; 
 import Highlight from './Highlight';
-
-// interface HighlightProps {
-//   annotation: Annotation;
-//   position: {
-//     left: number;
-//     top: number;
-//     width: number;
-//     height: number;
-//   };
-//   onMouseEnter: () => void;
-//   onMouseLeave: () => void;
-// }
-
-
-
-// const Highlight: React.FC<HighlightProps> = ({ position, onMouseEnter, onMouseLeave }) => {
-//   return (
-//     <>
-//     <div
-//       style={{
-//         position: 'absolute',
-//         backgroundColor: 'yellow',
-//         opacity: 0.5,
-//         left: `${position.left}px`,
-//         top: `${position.top}px`,
-//         width: `${position.width}px`,
-//         height: `${position.height}px`,
-//         pointerEvents: 'none', // Changed to 'all' to capture mouse events
-//         userSelect: 'none',
-//       }}
-//       onMouseEnter={onMouseEnter}
-//       onMouseLeave={onMouseLeave}
-//     />
-//           <div
-//         style={{
-//           position: 'absolute',
-//           left: `${position.left}px`,
-//           top: `${position.top}px`,
-//           width: `${position.width}px`,
-//           height: '2px', // Top border
-//           backgroundColor: 'transparent',
-//           pointerEvents: 'all',
-//         }}
-//         onMouseEnter={onMouseEnter}
-//         onMouseLeave={onMouseLeave}
-//       />
-//     </>
-//   );
-// };
 
 interface SelectedTextInterface {
   content_id: number;
@@ -64,7 +15,6 @@ interface HighlightedTextProps {
   text: string;
   annotations: Annotation[];
   paragraphId: number;
-  // add prop that is a function to set selected text state in parent component
   setSelectedText: (selectedText: SelectedTextInterface) => void;
   onHighlightHover?: (annotationId: string | null, isHovering: boolean) => void;
 }
@@ -97,7 +47,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       // Find annotations that target this paragraph
       const target = annotation.target.find((t) => 
         t.source === paragraphId 
-      // || t.id.includes(paragraphId)
       );
       
       if (!target) return;
@@ -166,7 +115,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       text: selection.toString()
     };
     setSelectedText(newSelectionInfo)
-    // console.log(selectionInfo);
   };
 
   return (

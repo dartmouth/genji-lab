@@ -15,7 +15,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             className={`comment-card ${isHighlighted ? 'highlighted' : ''}`}
             style={{
                 transition: 'background-color 0.2s ease',
-                backgroundColor: isHighlighted ? '#ffffd6' : 'white',
+                backgroundColor: isHighlighted ? '#c4dd88' : 'white',
                 border: '1px solid #ddd',
                 borderRadius: '4px',
                 padding: '10px',

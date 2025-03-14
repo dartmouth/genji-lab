@@ -17,7 +17,7 @@ interface HighlightProps {
     position,
     onMouseEnter,
     onMouseLeave,
-    color = 'yellow',
+    color = '#c4dd88',
     id
   }) => {
     const [isHovering, setIsHovering] = useState(false);
@@ -72,7 +72,7 @@ interface HighlightProps {
           style={{
             position: 'absolute',
             backgroundColor: color,
-            opacity: isHovering ? 0.7 : 0.5,
+            opacity: isHovering ? 0.5 : 0.3,
             left: `${position.left}px`,
             top: `${position.top}px`,
             width: `${position.width}px`,
@@ -84,7 +84,6 @@ interface HighlightProps {
           }}
         />
         
-        {/* Four border elements for better mouse tracking */}
         <div
           style={{
             position: 'absolute',
