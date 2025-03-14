@@ -5,7 +5,7 @@ import AnnotationCard from './AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
 import { Annotation, AnnotationCreate } from '../types/annotation';
 import { DocumentElement } from '../types/documentElement';
-// import { useApi } from '../hooks/useApi';
+import { FaChevronRight, FaChevronLeft } from 'react-icons/fa'; // Import icons
 import { useApiClient } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuthContext'
 
@@ -28,7 +28,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     });
     const [newAnnotationText, setNewAnnotationText] = useState("");
     const annotations = useApiClient<Annotation[]>("/annotations/")
-    // const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>(annotations);
     const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`)
 
     // Reset annotation text when selection changes
@@ -123,12 +122,10 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         return <div>Loading document elements...</div>;
       }
     
-      // Handle error state
       if (elements.error) {
         return <div>Error: {elements.error.message}</div>;
       }
     
-      // Handle empty data
       if (!elements.data || elements.data.length === 0) {
         return <div>No document elements found.</div>;
     }
@@ -155,24 +152,26 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 ))}
             </div>
 
-            <button onClick={() => setCollapsedComments(!collapsedComments)}>Collapse</button>
-            {collapsedComments && <div className='annotations-panel' style={{ flex: 1, marginLeft: '20px' }}>
-                {/* <h3>Annotations</h3> */}
-                
-                {/* Annotation Creation Card - Now as a separate component */}
-                
 
-                
-                {/* Existing Annotations */}
+
+            <div 
+                className={`annotations-panel ${collapsedComments ? 'open' : 'closed'}`} 
+                style={{ 
+                    flex: collapsedComments ? 1 : 0,
+                    width: collapsedComments ? 'auto' : '0',
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease-in-out'
+                }}
+            >
                 {annotations.data.length === 0 ? (
                     !selectionInfo.text && <p>No annotations yet.</p>
                 ) : (
                     annotations.data.map(annotation => (
                         <AnnotationCard
-                            key={annotation.id}
-                            id={annotation.id}
-                            annotation={annotation}
-                            isHighlighted={hoveredAnnotationId === annotation.id}
+                        key={annotation.id}
+                        id={annotation.id}
+                        annotation={annotation}
+                        isHighlighted={hoveredAnnotationId === annotation.id}
                         />
                     ))
                 )}
@@ -186,7 +185,18 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         onCancel={handleCancelAnnotation}
                     />
                 )}
-            </div>}
+            </div>
+            
+            <div className="sidebar-controls">
+                <button 
+                    className="sidebar-toggle-button"
+                    onClick={() => setCollapsedComments(!collapsedComments)}
+                    aria-label={collapsedComments ? "Show comments" : "Hide comments"}
+                >
+                    {collapsedComments ? <FaChevronLeft /> : <FaChevronRight />}
+                </button>
+            </div>
+
         </div>
     );
 };
