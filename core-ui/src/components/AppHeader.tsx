@@ -16,6 +16,9 @@ const AppHeader: React.FC = () => {
   
     return (
       <header className="app-header">
+        <div className="header-left">
+          <h1 className="app-title">The Tale of Genji</h1>
+        </div>
         <div className="header-right">
           <div className="user-avatar-container">
             <div className="user-avatar" onClick={toggleDropdown}>
