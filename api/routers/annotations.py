@@ -1,7 +1,7 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import delete, select, func, update
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from datetime import datetime
 
@@ -72,11 +72,11 @@ def read_annotations(skip: int = 0,
     result = db.execute(query)
     return result.scalars().all()
 
-@router.get("/{anno_id}", response_model=Annotation, status_code=status.HTTP_200_OK)
-def read_annotation(anno_id: int,
+@router.get("/{annotation_id}", response_model=Annotation, status_code=status.HTTP_200_OK)
+def read_annotation(annotation_id: int,
                      db: AsyncSession = Depends(get_db)
                      ):
-    query = select(AnnotationModel).options(joinedload(AnnotationModel.creator)).filter(AnnotationModel.id == anno_id)
+    query = select(AnnotationModel).options(joinedload(AnnotationModel.creator)).filter(AnnotationModel.id == annotation_id)
 
     anno = db.execute(query).scalar_one_or_none()
 
@@ -84,3 +84,18 @@ def read_annotation(anno_id: int,
         raise HTTPException(status_code=404, detail="Annotation not found")
     
     return anno
+
+
+@router.delete("/{annotation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_annotation(annotation_id: int, db: AsyncSession = Depends(get_db)):
+    db_annotation = db.execute(
+        select(AnnotationModel).filter(AnnotationModel.id == annotation_id)
+    ).scalar_one_or_none()
+
+    if not db_annotation:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+    
+    db.delete(db_annotation)
+    db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
