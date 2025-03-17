@@ -29,16 +29,16 @@ const AnnotationCreationCard: React.FC<AnnotationCreationCardProps> = ({
       }}
     >
       <div className="comment-header" style={{ marginBottom: '8px', fontWeight: 'bold' }}>
-        New Annotation
+        New Comment
       </div>
       
       <div className="selected-text" style={{ 
         fontSize: '0.9em',
         padding: '6px',
-        backgroundColor: '#ffffd0',
+        backgroundColor: '#c4dd88',
         borderRadius: '3px',
         marginBottom: '8px',
-        borderLeft: '3px solid #ffd700'
+        borderLeft: '3px solid #c4dd88'
       }}>
         "{selectedText}"
       </div>
@@ -46,7 +46,7 @@ const AnnotationCreationCard: React.FC<AnnotationCreationCardProps> = ({
       <textarea
         value={annotationText}
         onChange={(e) => onAnnotationTextChange(e.target.value)}
-        placeholder="Enter your annotation here..."
+        placeholder="Enter your comment here..."
         style={{ 
           width: '100%', 
           minHeight: '60px',

@@ -163,6 +163,18 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     transition: 'all 0.3s ease-in-out'
                 }}
             >
+
+                {selectionInfo.text && (
+                    <AnnotationCreationCard
+                        selectedText={selectionInfo.text}
+                        annotationText={newAnnotationText}
+                        onAnnotationTextChange={setNewAnnotationText}
+                        onSave={handleCreateAnnotation}
+                        onCancel={handleCancelAnnotation}
+                    />
+                )}
+
+                
                 {annotations.data.length === 0 ? (
                     !selectionInfo.text && <p>No annotations yet.</p>
                 ) : (
@@ -176,15 +188,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     ))
                 )}
 
-                {selectionInfo.text && (
-                    <AnnotationCreationCard
-                        selectedText={selectionInfo.text}
-                        annotationText={newAnnotationText}
-                        onAnnotationTextChange={setNewAnnotationText}
-                        onSave={handleCreateAnnotation}
-                        onCancel={handleCancelAnnotation}
-                    />
-                )}
             </div>
             
             <div className="sidebar-controls">
