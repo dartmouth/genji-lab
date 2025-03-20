@@ -11,8 +11,6 @@ interface AnnotationCardProps {
 
 const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighlighted = false }) => {
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-    const [tagsMenuAnchor, setTagsMenuAnchor] = useState<null | HTMLElement>(null);
-    const [flagMenuAnchor, setFlagMenuAnchor] = useState<null | HTMLElement>(null); // State for Flag submenu
 
     const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setMenuAnchor(event.currentTarget);
@@ -20,16 +18,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
 
     const closeMenu = () => {
         setMenuAnchor(null);
-        setTagsMenuAnchor(null);
-        setFlagMenuAnchor(null);
-    };
-
-    const openTagsMenu = (event: React.MouseEvent<HTMLLIElement>) => {
-        setTagsMenuAnchor(event.currentTarget);
-    };
-
-    const openFlagMenu = (event: React.MouseEvent<HTMLLIElement>) => {
-        setFlagMenuAnchor(event.currentTarget);
     };
 
     return (
@@ -55,7 +43,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                     <button title="Reply" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'blue' }}>
                         <ChatBubbleOutline fontSize='1rem' />
                     </button>
-                    <button title="Flag" onClick={openFlagMenu} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}>
+                    <button title="Flag" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}>
                         <Flag fontSize='1rem' />
                     </button>
                     <button title="Settings" onClick={toggleMenu} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'black' }}>
@@ -73,32 +61,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             >
                 <MenuItem onClick={closeMenu}>Edit</MenuItem>
                 <MenuItem onClick={closeMenu}>Delete</MenuItem>
-                <MenuItem onClick={openTagsMenu}>Tags  ⋮</MenuItem>
-            </Menu>
-
-            <Menu
-                anchorEl={tagsMenuAnchor}
-                open={Boolean(tagsMenuAnchor)}
-                onClose={closeMenu}
-                disableScrollLock
-            >
-                <MenuItem onClick={closeMenu}>Important</MenuItem>
-                <MenuItem onClick={closeMenu}>Reviewed</MenuItem>
-                <MenuItem onClick={closeMenu}>Needs Revision</MenuItem>
-                <MenuItem onClick={closeMenu}>Research</MenuItem>
-                <MenuItem onClick={closeMenu}>Reference</MenuItem>
-            </Menu>
-
-            <Menu
-                anchorEl={flagMenuAnchor}
-                open={Boolean(flagMenuAnchor)}
-                onClose={closeMenu}
-                disableScrollLock
-            >
-                <MenuItem onClick={closeMenu}>Offensive</MenuItem>
-                <MenuItem onClick={closeMenu}>Misinformation</MenuItem>
-                <MenuItem onClick={closeMenu}>Plagiarism</MenuItem>
-                <MenuItem onClick={closeMenu}>Off-Topic</MenuItem>
+                <MenuItem onClick={closeMenu}>Tags</MenuItem>
             </Menu>
         </div>
     );
