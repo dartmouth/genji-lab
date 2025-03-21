@@ -19,10 +19,8 @@ interface DocumentContentPanelProps {
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({ 
     documentID,
 }) => {
-    const { user, isAuthenticated } = useAuth();
+    // STATE
     const [collapsedComments, setCollapsedComments] = useState<boolean>(false);
-
-
     const [selectionInfo, setSelectionInfo] = useState({
         content_id: 0,
         start: 0,
@@ -30,9 +28,22 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         text: ""
     });
     const [newAnnotationText, setNewAnnotationText] = useState("");
+
+    const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
+
+    // HOOKS
+    const { user, isAuthenticated } = useAuth();
+
     const annotations = useApiClient<Annotation[]>("/annotations/");
     const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`);
 
+    useEffect(() => {
+        if (selectionInfo.text) {
+            setNewAnnotationText("");
+        }
+    }, [selectionInfo]);
+
+    // REDUX
     const dispatch = useDispatch();
     const dispatchAnnotationsMemo = useCallback(() => {
         dispatch(addAnnotations(annotations.data))
@@ -42,11 +53,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         dispatchAnnotationsMemo()
     }, [dispatchAnnotationsMemo])
 
-    useEffect(() => {
-        if (selectionInfo.text) {
-            setNewAnnotationText("");
-        }
-    }, [selectionInfo]);
     const hoveredHighlightIds = useSelector(
         (state: RootState) => state.highlightRegistry.hoveredHighlightIds
       );
@@ -57,13 +63,15 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         (state: RootState) => selectAnnotationsByIdMemo(state, hoveredHighlightIds)
       );
     
-      const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
+
+
 
       useEffect(() => {
         if (hoveredAnnotations.length > 0 && !hasAutoOpened && !collapsedComments) {
           setCollapsedComments(true);
           setHasAutoOpened(true);
         }
+
       }, [hoveredAnnotations, hasAutoOpened, collapsedComments]);
     
     const handleCreateAnnotation = async () => {
