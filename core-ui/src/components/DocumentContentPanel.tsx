@@ -2,15 +2,14 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import HighlightedText from './HighlightedText';
 import AnnotationCard from './AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
-import { Annotation, AnnotationCreate } from '../types/annotation';
 import { DocumentElement } from '../types/documentElement';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { useApiClient } from '../hooks/useApi';
-import { useAuth } from '../hooks/useAuthContext';
 import { makeSelectAnnotationsById } from '../store/annotationSlice';
 import { RootState } from '../store/index'
 import { useDispatch, useSelector } from 'react-redux';
 import { addAnnotations } from '../store';
+import { useAnnotationCreation } from '../hooks/useAnnotationCreation';
 
 interface DocumentContentPanelProps {
     documentID: number;
@@ -21,27 +20,21 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
 }) => {
     // STATE
     const [collapsedComments, setCollapsedComments] = useState<boolean>(false);
-    const [selectionInfo, setSelectionInfo] = useState({
-        content_id: 0,
-        start: 0,
-        end: 0,
-        text: ""
-    });
-    const [newAnnotationText, setNewAnnotationText] = useState("");
-
     const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
 
+    // Use the extracted annotation creation hook
+    const {
+        selectionInfo,
+        setSelectionInfo,
+        newAnnotationText,
+        setNewAnnotationText,
+        handleCreateAnnotation,
+        handleCancelAnnotation,
+        annotations
+    } = useAnnotationCreation(documentID);
+
     // HOOKS
-    const { user, isAuthenticated } = useAuth();
-
-    const annotations = useApiClient<Annotation[]>("/annotations/");
     const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`);
-
-    useEffect(() => {
-        if (selectionInfo.text) {
-            setNewAnnotationText("");
-        }
-    }, [selectionInfo]);
 
     // REDUX
     const dispatch = useDispatch();
@@ -55,86 +48,20 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
 
     const hoveredHighlightIds = useSelector(
         (state: RootState) => state.highlightRegistry.hoveredHighlightIds
-      );
+    );
 
     const selectAnnotationsByIdMemo = useMemo(makeSelectAnnotationsById, []);
 
     const hoveredAnnotations = useSelector(
         (state: RootState) => selectAnnotationsByIdMemo(state, hoveredHighlightIds)
-      );
-    
+    );
 
-
-
-      useEffect(() => {
+    useEffect(() => {
         if (hoveredAnnotations.length > 0 && !hasAutoOpened && !collapsedComments) {
-          setCollapsedComments(true);
-          setHasAutoOpened(true);
+            setCollapsedComments(true);
+            setHasAutoOpened(true);
         }
-
-      }, [hoveredAnnotations, hasAutoOpened, collapsedComments]);
-    
-    const handleCreateAnnotation = async () => {
-        if (!selectionInfo.text || !newAnnotationText) return;
-        if (!user || !isAuthenticated) return;
-
-        const newAnnotation: AnnotationCreate = {
-            "context": "http://www.w3.org/ns/anno.jsonld",
-            "document_collection_id": 1,
-            "document_id": documentID,
-            "document_element_id": selectionInfo.content_id,
-            "type": "Annotation",
-            "creator_id": user.id, 
-            "generator": "web-client",
-            "motivation": "commenting",
-            "annotation_type": "comment",
-            "body": {
-                "type": "TextualBody",
-                "value": newAnnotationText,
-                "format": "text/plain",
-                "language": "en"
-            },
-            "target": [{
-                "type": "Text",
-                "source": selectionInfo.content_id,
-                "selector": {
-                    "type": "TextQuoteSelector",
-                    "value": selectionInfo.text,
-                    "refined_by": {
-                        "type": "TextPositionSelector",
-                        "start": selectionInfo.start,
-                        "end": selectionInfo.end
-                    }
-                }
-            }]
-        };
-        try {
-            await annotations.post(newAnnotation)
-                .then(() => annotations.get());
-            
-            console.log("Annotation created and data refreshed");
-            
-            setSelectionInfo({
-                content_id: 0,
-                start: 0,
-                end: 0,
-                text: ""
-            });
-            setNewAnnotationText("");
-        } catch (error) {
-            console.error("Error creating annotation:", error);
-        }
-    };
-    
-    const handleCancelAnnotation = () => {
-        setSelectionInfo({
-            content_id: 0,
-            start: 0,
-            end: 0,
-            text: ""
-        });
-        setNewAnnotationText("");
-    };
+    }, [hoveredAnnotations, hasAutoOpened, collapsedComments]);
 
     if (elements.loading) {
         return <div>Loading document elements...</div>;
@@ -170,7 +97,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     </div>
                 ))}
             </div>
-
             <div 
                 className={`annotations-panel ${collapsedComments ? 'open' : 'closed'}`} 
                 style={{ 
