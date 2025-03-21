@@ -18,7 +18,7 @@ interface DocumentContentPanelProps {
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({ 
     documentID,
 }) => {
-    const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
+    // const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
     const { user, isAuthenticated } = useAuth();
     const [collapsedComments, setCollapsedComments] = useState<boolean>(true);
     // const dispatch = useDispatch();
@@ -51,13 +51,13 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     }, [selectionInfo]);
     
     // Original highlight hover handler (keep for compatibility)
-    const handleHighlightHover = (annotationId: string | null, isHovering: boolean) => {
-        if (isHovering && annotationId) {
-            setHoveredAnnotationId(annotationId);
-        } else {
-            setHoveredAnnotationId(null);
-        }
-    };
+    // const handleHighlightHover = (annotationId: string | null, isHovering: boolean) => {
+    //     if (isHovering && annotationId) {
+    //         setHoveredAnnotationId(annotationId);
+    //     } else {
+    //         setHoveredAnnotationId(null);
+    //     }
+    // };
 
     // Mouse move handler for the document content
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -161,7 +161,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                                 end: selectedText.end,
                                 text: selectedText.text
                             })}
-                            onHighlightHover={handleHighlightHover}
                         />
                     </div>
                 ))}
@@ -205,7 +204,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                                 key={annotation.id}
                                 id={`${annotation.id}`}
                                 annotation={annotation}
-                                isHighlighted={hoveredAnnotationId === annotation.id}
+                                isHighlighted={false}
+                                // isHighlighted={hoveredAnnotationId === annotation.id}
                             />
                         ))
                     )
