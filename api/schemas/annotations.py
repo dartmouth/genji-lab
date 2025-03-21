@@ -1,5 +1,5 @@
-from typing import Optional, List
-from pydantic import BaseModel
+from typing import Optional, List, Dict
+from pydantic import BaseModel, RootModel
 from datetime import datetime
 from schemas.users import User
 
@@ -58,3 +58,6 @@ class Annotation(AnnotationBase):
     
     class Config:
         from_attributes = True
+
+class DocumentElementAnnotationsResponse(RootModel):
+    root: Dict[str, List[Annotation]]

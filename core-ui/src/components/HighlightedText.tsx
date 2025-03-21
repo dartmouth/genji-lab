@@ -2,6 +2,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Annotation } from '../types/annotation'; 
 import Highlight from './Highlight';
+import { useDispatch } from 'react-redux';
+import { updateHighlightPosition } from '../store/highlightRegistrySlice';
 
 interface SelectedTextInterface {
   content_id: number;
@@ -27,7 +29,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   setSelectedText,
   onHighlightHover = () => {},
 }) => {
-
+  const dispatch = useDispatch()
   const containerRef = useRef<HTMLDivElement>(null);
   const [highlightPositions, setHighlightPositions] = useState<Map<string, Array<{ left: number; top: number; width: number; height: number }>>>(
     new Map()
@@ -67,6 +69,10 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         }));
         
         newPositions.set(annotation.id, positions);
+        dispatch(updateHighlightPosition({
+          id: `highlight-${annotation.id}`, // Make sure this ID matches what you use elsewhere
+          boundingBoxes: positions
+        }));
       } catch (error) {
         console.error('Error calculating highlight position:', error);
       }
@@ -139,6 +145,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           {positions.map((position, index) => (
             <Highlight
               key={`${annotationId}-${index}`}
+              id={`highlight-${annotationId}`}
+              annotationId={`${annotationId}`}
               // annotation={annotations.find(a => a.id === annotationId)!}
               position={position}
               onMouseEnter={() => onHighlightHover(annotationId, true)}

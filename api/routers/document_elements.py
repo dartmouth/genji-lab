@@ -1,13 +1,14 @@
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import String, delete, select, func, and_, or_
+from sqlalchemy import String, delete, select, func
 from sqlalchemy.orm import joinedload
 from datetime import datetime
 
 from database import get_db
 from models.models import DocumentElement as DocumentElementModel
-from models.models import Document, Annotation
+from models.models import Document
+from models.models import Annotation as AnnotationModel
 from schemas.document_elements import (
     DocumentElement, 
     DocumentElementCreate, 
@@ -16,6 +17,10 @@ from schemas.document_elements import (
     DocumentElementWithDocument
 )
 
+from schemas.annotations import (
+    Annotation,
+    DocumentElementAnnotationsResponse
+)
 router = APIRouter(
     prefix="/api/v1/elements",
     tags=["document elements"],
@@ -198,8 +203,8 @@ def delete_element(element_id: int, force: bool = False, db: AsyncSession = Depe
     # Check if element has annotations
     annotation_count = db.execute(
         select(func.count())
-        .select_from(Annotation)
-        .filter(Annotation.document_element_id == element_id)
+        .select_from(AnnotationModel)
+        .filter(AnnotationModel.document_element_id == element_id)
     ).scalar_one()
     
     if annotation_count > 0 and not force:
@@ -211,14 +216,14 @@ def delete_element(element_id: int, force: bool = False, db: AsyncSession = Depe
     # If force=True, delete all associated annotations first
     if force and annotation_count > 0:
         db.execute(
-            delete(Annotation).where(Annotation.document_element_id == element_id)
+            delete(AnnotationModel).where(AnnotationModel.document_element_id == element_id)
         )
     
     db.delete(db_element)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@router.get("/{element_id}/annotations", response_model=List[Dict[str, Any]])
+@router.get("/{element_id}/annotations", response_model=List[Annotation])
 def get_element_annotations(
     element_id: int,
     skip: int = 0,
@@ -238,28 +243,13 @@ def get_element_annotations(
     
     # Get annotations
     annotations = db.execute(
-        select(Annotation)
-        .filter(Annotation.document_element_id == element_id)
+        select(AnnotationModel)
+        .filter(AnnotationModel.document_element_id == element_id)
         .offset(skip)
         .limit(limit)
     ).scalars().all()
     
-    # Convert to dict
-    result = []
-    for annotation in annotations:
-        anno_dict = {
-            "id": annotation.id,
-            "type": annotation.type,
-            "created": annotation.created,
-            "modified": annotation.modified,
-            "motivation": annotation.motivation,
-            "body": annotation.body,
-            "target": annotation.target,
-            "creator_id": annotation.creator_id
-        }
-        result.append(anno_dict)
-    
-    return result
+    return annotations
 
 @router.patch("/{element_id}/content", response_model=DocumentElement)
 def update_element_content(

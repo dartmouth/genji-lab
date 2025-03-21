@@ -104,11 +104,11 @@ export const useIAM = () => {
       userDialogRef.current.close();
     }
   };
-  useEffect(() => {
-    console.log("Users data type:", typeof users.data);
-    console.log("Is array:", Array.isArray(users.data));
-    console.log("Users data:", users.data);
-  }, [users.data]);
+  // useEffect(() => {
+  //   console.log("Users data type:", typeof users.data);
+  //   console.log("Is array:", Array.isArray(users.data));
+  //   console.log("Users data:", users.data);
+  // }, [users.data]);
   // Render the user selection dialog
   const renderUserSelection = (): ReactNode => (
     <dialog ref={userDialogRef} className="user-selection-modal">

@@ -1,28 +1,55 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useDispatch } from 'react-redux';
+import { registerHighlight, updateHighlightPosition, removeHighlight } from '../store/highlightRegistrySlice';
 
 interface HighlightProps {
+    id: string,
     position: {
       left: number;
       top: number;
       width: number;
       height: number;
     };
+    annotationId: string,
     onMouseEnter?: (e: React.MouseEvent) => void;
     onMouseLeave?: (e: React.MouseEvent) => void;
     color?: string;
-    id?: string;
   }
   
   const Highlight: React.FC<HighlightProps> = ({
+    id,
     position,
+    annotationId,
     onMouseEnter,
     onMouseLeave,
-    color = '#c4dd88',
-    id
+    color = '#c4dd88'
   }) => {
+    const dispatch = useDispatch();
+    // const highlightRef = useRef<HTMLDivElement>(null);
     const [isHovering, setIsHovering] = useState(false);
     const borderThickness = 6;
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+      // Register highlight on mount
+    useEffect(() => {
+      dispatch(registerHighlight({
+        id,
+        boundingBoxes: [position],
+        annotationId
+      }));
+
+      // Clean up on unmount
+      return () => {
+        dispatch(removeHighlight(id));
+      };
+    }, [dispatch, id, annotationId, position]);
+
+    useEffect(() => {
+      dispatch(updateHighlightPosition({
+        id,
+        boundingBoxes: [position]
+      }));
+    }, [dispatch, id, position]);
     
     // Create a container for all our elements
     const containerRef = useRef<HTMLDivElement>(null);

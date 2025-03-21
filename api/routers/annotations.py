@@ -14,7 +14,7 @@ from schemas.annotations import (
     Annotation,
     AnnotationCreate
 )
-
+ 
 router = APIRouter(
     prefix="/api/v1/annotations",
     tags=["annotations"],
@@ -99,3 +99,4 @@ def delete_annotation(annotation_id: int, db: AsyncSession = Depends(get_db)):
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+

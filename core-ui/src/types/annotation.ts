@@ -1,6 +1,7 @@
 interface Annotation {
     "context": string;
     "id": string;
+    "document_element_id": string;
     "type": string;
     "creator": {
         "first_name": string,

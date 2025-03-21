@@ -1,13 +1,15 @@
-// DocumentContentPanel.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import HighlightedText from './HighlightedText';
 import AnnotationCard from './AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
 import { Annotation, AnnotationCreate } from '../types/annotation';
 import { DocumentElement } from '../types/documentElement';
-import { FaChevronRight, FaChevronLeft } from 'react-icons/fa'; // Import icons
+import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { useApiClient } from '../hooks/useApi';
-import { useAuth } from '../hooks/useAuthContext'
+import { useAuth } from '../hooks/useAuthContext';
+import { useHighlightDetection } from '../hooks/useHighlightDetection';
+import { useDispatch } from 'react-redux';
+import { addAnnotations } from '../store';
 
 interface DocumentContentPanelProps {
     documentID: number;
@@ -18,7 +20,10 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
 }) => {
     const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
     const { user, isAuthenticated } = useAuth();
-    const [collapsedComments, setCollapsedComments] = useState<boolean>(true)
+    const [collapsedComments, setCollapsedComments] = useState<boolean>(true);
+    // const dispatch = useDispatch();
+
+    const { detectHighlightsAtPoint, hoveredAnnotations, hoveredHighlightIds } = useHighlightDetection();
 
     const [selectionInfo, setSelectionInfo] = useState({
         content_id: 0,
@@ -27,8 +32,16 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         text: ""
     });
     const [newAnnotationText, setNewAnnotationText] = useState("");
-    const annotations = useApiClient<Annotation[]>("/annotations/")
-    const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`)
+    const annotations = useApiClient<Annotation[]>("/annotations/");
+    const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`);
+    const dispatch = useDispatch();
+    const memoizedDispatch = useCallback(() => {
+        dispatch(addAnnotations(annotations.data))
+    }, [dispatch, annotations.data])
+
+    useEffect(() => {
+        memoizedDispatch()
+    }, [memoizedDispatch])
 
     // Reset annotation text when selection changes
     useEffect(() => {
@@ -37,12 +50,22 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         }
     }, [selectionInfo]);
     
+    // Original highlight hover handler (keep for compatibility)
     const handleHighlightHover = (annotationId: string | null, isHovering: boolean) => {
         if (isHovering && annotationId) {
             setHoveredAnnotationId(annotationId);
         } else {
             setHoveredAnnotationId(null);
         }
+    };
+
+    // Mouse move handler for the document content
+    const handleMouseMove = (e: React.MouseEvent) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        // console.log("Position is ", x, y)
+        detectHighlightsAtPoint(x, y);
     };
     
     const handleCreateAnnotation = async () => {
@@ -80,9 +103,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
             }]
         };
         try {
-
             await annotations.post(newAnnotation)
-                .then(() => annotations.get())
+                .then(() => annotations.get());
             
             console.log("Annotation created and data refreshed");
             
@@ -96,15 +118,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         } catch (error) {
             console.error("Error creating annotation:", error);
         }
-        
-        setSelectionInfo({
-            content_id: 0,
-            start: 0,
-            end: 0,
-            text: ""
-        });
-        setNewAnnotationText("");
-        
     };
     
     const handleCancelAnnotation = () => {
@@ -116,23 +129,25 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         });
         setNewAnnotationText("");
     };
-    
 
     if (elements.loading) {
         return <div>Loading document elements...</div>;
-      }
-    
-      if (elements.error) {
+    }
+
+    if (elements.error) {
         return <div>Error: {elements.error.message}</div>;
-      }
-    
-      if (!elements.data || elements.data.length === 0) {
+    }
+
+    if (!elements.data || elements.data.length === 0) {
         return <div>No document elements found.</div>;
     }
-    
-    return (
-        <div className='document-content-panel' style={{ display: 'flex' }}>
 
+    return (
+        <div 
+            className='document-content-panel' 
+            style={{ display: 'flex' }}
+            onMouseMove={handleMouseMove}
+        >
             <div className='document-content-container' style={{ flex: 2 }}>
                 {elements.data.map((content) => (
                     <div key={content.id} className='document-content'>
@@ -152,8 +167,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 ))}
             </div>
 
-
-
             <div 
                 className={`annotations-panel ${collapsedComments ? 'open' : 'closed'}`} 
                 style={{ 
@@ -163,7 +176,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     transition: 'all 0.3s ease-in-out'
                 }}
             >
-
                 {selectionInfo.text && (
                     <AnnotationCreationCard
                         selectedText={selectionInfo.text}
@@ -173,21 +185,31 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         onCancel={handleCancelAnnotation}
                     />
                 )}
-
                 
-                {annotations.data.length === 0 ? (
-                    !selectionInfo.text && <p>No annotations yet.</p>
-                ) : (
-                    annotations.data.map(annotation => (
+                {/* Show hovered annotations if any, otherwise show all or none */}
+                {hoveredHighlightIds.length > 0 ? (
+                    hoveredAnnotations.map(annotation => (
                         <AnnotationCard
-                        key={annotation.id}
-                        id={annotation.id}
-                        annotation={annotation}
-                        isHighlighted={hoveredAnnotationId === annotation.id}
+                            key={annotation.id}
+                            id={annotation.id}
+                            annotation={annotation}
+                            isHighlighted={false}
                         />
                     ))
+                ) : (
+                    annotations.data.length === 0 ? (
+                        !selectionInfo.text && <p>No annotations yet.</p>
+                    ) : (
+                        annotations.data.map(annotation => (
+                            <AnnotationCard
+                                key={annotation.id}
+                                id={`${annotation.id}`}
+                                annotation={annotation}
+                                isHighlighted={hoveredAnnotationId === annotation.id}
+                            />
+                        ))
+                    )
                 )}
-
             </div>
             
             <div className="sidebar-controls">
@@ -199,7 +221,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     {collapsedComments ? <FaChevronLeft /> : <FaChevronRight />}
                 </button>
             </div>
-
         </div>
     );
 };

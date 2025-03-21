@@ -5,6 +5,9 @@ import AppHeader from "./components/AppHeader";
 import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 
+import { Provider } from 'react-redux';
+import { store } from "./store";
+
 // Main app component
 const AppContent: React.FC = () => {
   return (
@@ -23,9 +26,11 @@ const AppContent: React.FC = () => {
 // Root component with the provider
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Provider store = {store}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Provider>
   );
 };
 

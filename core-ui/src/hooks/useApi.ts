@@ -48,8 +48,6 @@ export function useApiClient<T>(
   const [endpoint, setEndpoint] = useState<string | undefined>(initialEndpoint);
   const [options, setOptions] = useState<AxiosRequestConfig>(initialOptions);
   
-  // Create a single AbortController for the entire component lifecycle
-  // Only initialize it once when the component mounts
   const isMountedRef = useRef<boolean>(true);
   
   // Helper function to execute requests
@@ -71,7 +69,6 @@ export function useApiClient<T>(
       const mergedOptions = {
         ...options,
         ...requestOptions,
-        // Remove the signal property entirely
       };
       
       let response;

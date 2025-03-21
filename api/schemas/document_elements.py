@@ -2,6 +2,7 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel
 from datetime import datetime
 from schemas.documents import Document
+from schemas.annotations import Annotation
 
 class DocumentElementBase(BaseModel):
     document_id: int
@@ -37,3 +38,8 @@ class DocumentElementWithDocument(DocumentElement):
 
 
 
+class DocumentElementWithAnnotations(DocumentElement):
+    annotations: Optional[List[Annotation]]
+    
+    class Config:
+        from_attributes = True
