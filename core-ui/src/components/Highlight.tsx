@@ -1,4 +1,3 @@
-// import { useState, useRef, useCallback, useEffect } from "react";
 import { useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { registerHighlight, updateHighlightPosition, removeHighlight } from '../store/highlightRegistrySlice';
@@ -30,7 +29,6 @@ interface HighlightProps {
         annotationId
       }), []);
 
-      // Clean up on unmount
       return () => {
         dispatch(removeHighlight(id));
       };
