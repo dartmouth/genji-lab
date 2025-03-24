@@ -28,6 +28,7 @@ FROM node:lts-alpine as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
+RUN npm install @mui/material @emotion/react @emotion/styled @mui/icons-material
 RUN npm install @types/node
 COPY . .
 RUN npm run build
