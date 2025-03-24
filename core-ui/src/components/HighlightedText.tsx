@@ -184,10 +184,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
               id={`highlight-${annotationId}`}
               annotationId={`${annotationId}`}
               position={position}
-              // These props are no longer needed since we're handling hover at container level
-              // but keeping them for compatibility until fully refactored
-              onMouseEnter={() => {}}
-              onMouseLeave={() => {}}
             />
           ))}
         </div>
