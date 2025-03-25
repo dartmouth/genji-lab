@@ -105,7 +105,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     <div key={content.id} className='document-content'>
                         <HighlightedText
                             text={content.content.text}
-                            annotations={annotations.data}
                             paragraphId={`DocumentElements/${content.id}`}
                             setSelectedText={(selectedText) => setSelectionInfo({
                                 content_id: selectedText.content_id,
