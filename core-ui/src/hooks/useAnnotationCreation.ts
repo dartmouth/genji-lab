@@ -20,7 +20,7 @@ interface UseAnnotationCreationReturn {
   annotations: ReturnType<typeof useApiClient<Annotation[]>>;
 }
 
-export const useAnnotationCreation = (documentID: number): UseAnnotationCreationReturn => {
+export const useAnnotationCreation = (documentID: number, motivation: string): UseAnnotationCreationReturn => {
   const [selectionInfo, setSelectionInfo] = useState<SelectionInfo>({
     content_id: 0,
     start: 0,
@@ -30,7 +30,7 @@ export const useAnnotationCreation = (documentID: number): UseAnnotationCreation
   
   const [newAnnotationText, setNewAnnotationText] = useState("");
   const { user, isAuthenticated } = useAuth();
-  const annotations = useApiClient<Annotation[]>("/annotations/");
+  const annotations = useApiClient<Annotation[]>(`/annotations/?motivation=${motivation}`);
 
   useEffect(() => {
     if (selectionInfo.text) {
@@ -50,7 +50,7 @@ export const useAnnotationCreation = (documentID: number): UseAnnotationCreation
       "type": "Annotation",
       "creator_id": user.id, 
       "generator": "web-client",
-      "motivation": "commenting",
+      "motivation": motivation,
       "annotation_type": "comment",
       "body": {
         "type": "TextualBody",
@@ -60,7 +60,7 @@ export const useAnnotationCreation = (documentID: number): UseAnnotationCreation
       },
       "target": [{
         "type": "Text",
-        "source": selectionInfo.content_id,
+        "source": `DocumentElement/${selectionInfo.content_id}`,
         "selector": {
           "type": "TextQuoteSelector",
           "value": selectionInfo.text,
@@ -74,7 +74,7 @@ export const useAnnotationCreation = (documentID: number): UseAnnotationCreation
     };
     
     try {
-      await annotations.post(newAnnotation)
+      await annotations.post("/annotations/", newAnnotation)
         .then(() => annotations.get());
       
       console.log("Annotation created and data refreshed");

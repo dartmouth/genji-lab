@@ -64,10 +64,16 @@ def create_annotation(annotation: AnnotationCreate, db: AsyncSession = Depends(g
     return db_annotation
 
 @router.get("/", response_model=List[Annotation], status_code=status.HTTP_200_OK)
-def read_annotations(skip: int = 0,
+def read_annotations(motivation: str = None,
+                     skip: int = 0,
                      limit: int = 100,
                      db: AsyncSession = Depends(get_db)
                      ):
+    if motivation:
+        query = select(AnnotationModel).options(joinedload(AnnotationModel.creator)).filter(AnnotationModel.motivation == motivation).offset(skip).limit(limit)
+        result = db.execute(query)
+        return result.scalars().all()
+    
     query = select(AnnotationModel).options(joinedload(AnnotationModel.creator)).offset(skip).limit(limit)
     result = db.execute(query)
     return result.scalars().all()

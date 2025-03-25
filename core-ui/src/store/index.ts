@@ -1,24 +1,42 @@
 // index.ts
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers, Reducer, AnyAction } from '@reduxjs/toolkit';
 import highlightRegistryReducer from './highlightRegistrySlice';
-import annotationsReducer from './annotationSlice';
+import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations } from './annotations';
+import { AnnotationState } from './createAnnotationSlice';
 
-const store = configureStore({
-  reducer: {
-    annotations: annotationsReducer,
-    highlightRegistry: highlightRegistryReducer,
-  },
+// Define the structure of our annotations reducers
+interface AnnotationReducers {
+  [key: string]: Reducer<AnnotationState, AnyAction>;
+}
+
+// Create the annotations reducers with explicit typing
+const annotationReducersMap: AnnotationReducers = {
+  [commentingAnnotations.name]: commentingAnnotations.reducer,
+  [replyingAnnotations.name]: replyingAnnotations.reducer,
+  [scholarlyAnnotations.name]: scholarlyAnnotations.reducer
+};
+
+// Combine the reducers
+const annotationsReducer = combineReducers(annotationReducersMap);
+
+// Create the root reducer with explicit typing
+const rootReducer = {
+  annotations: annotationsReducer,
+  highlightRegistry: highlightRegistryReducer,
+};
+
+// Create the store
+export const store = configureStore({
+  reducer: rootReducer,
   devTools: true
 });
 
-export { store };
+// Define types AFTER store creation to avoid circular references
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-// Re-export actions and selectors from annotationSlice
+// Re-export actions and selectors from annotation buckets
 export { 
-  addAnnotations, 
-  addAnnotation,
-  selectAnnotationById,
-  selectAnnotationsByDocumentElement
-} from './annotationSlice';
+  commentingAnnotations,
+  replyingAnnotations
+};

@@ -1,8 +1,9 @@
 // components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
-import { Annotation } from '../types/annotation'; 
 import Highlight from './Highlight';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { commentingAnnotations } from '../store/index';
 import { updateHighlightPosition, setHoveredHighlights } from '../store/highlightRegistrySlice';
 import { debounce } from 'lodash';
 
@@ -15,14 +16,12 @@ interface SelectedTextInterface {
 
 interface HighlightedTextProps {
   text: string;
-  annotations: Annotation[];
-  paragraphId: number;
+  paragraphId: string;
   setSelectedText: (selectedText: SelectedTextInterface) => void;
 }
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
-  annotations,
   paragraphId,
   setSelectedText = () => {},
 }) => {
@@ -32,7 +31,11 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     new Map()
   );
 
-  // Calculate highlight positions
+  const comments = useSelector(
+    (state: RootState) => commentingAnnotations.selectors.selectAnnotationsByDocumentElement(state, `DocumentElements/${paragraphId}`)
+  )
+
+
   const calculateHighlightPositions = () => {
     if (!containerRef.current) return;
 
@@ -42,7 +45,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     const containerRect = containerRef.current.getBoundingClientRect();
     const newPositions = new Map<string, Array<{ left: number; top: number; width: number; height: number }>>();
 
-    annotations.forEach((annotation) => {
+    comments.forEach((annotation) => {
       // Find annotations that target this paragraph
       const target = annotation.target.find((t) => 
         t.source === paragraphId 
@@ -136,7 +139,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       debouncedHandleMouseMove.cancel();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [annotations, text, paragraphId]);
+  }, [comments, text, paragraphId]);
 
   const handleMouseUp = () => {
     const selection = window.getSelection();
@@ -162,7 +165,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
   return (
     <div 
-      id={`${paragraphId}`}
+      id={`DocumentElements/${paragraphId}`}
       ref={containerRef} 
       className="annotatable-paragraph"
       onMouseUp={handleMouseUp}
@@ -184,10 +187,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
               id={`highlight-${annotationId}`}
               annotationId={`${annotationId}`}
               position={position}
-              // These props are no longer needed since we're handling hover at container level
-              // but keeping them for compatibility until fully refactored
-              onMouseEnter={() => {}}
-              onMouseLeave={() => {}}
             />
           ))}
         </div>

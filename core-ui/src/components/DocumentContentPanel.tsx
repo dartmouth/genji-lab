@@ -5,11 +5,11 @@ import AnnotationCreationCard from './AnnotationCreationCard';
 import { DocumentElement } from '../types/documentElement';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { useApiClient } from '../hooks/useApi';
-import { makeSelectAnnotationsById } from '../store/annotationSlice';
-import { RootState } from '../store/index'
+import { RootState } from '../store/index';
 import { useDispatch, useSelector } from 'react-redux';
-import { addAnnotations } from '../store';
+import { commentingAnnotations } from '../store';
 import { useAnnotationCreation } from '../hooks/useAnnotationCreation';
+import { scholarlyAnnotations } from '../store/annotations';
 
 interface DocumentContentPanelProps {
     documentID: number;
@@ -21,7 +21,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     // STATE
     const [collapsedComments, setCollapsedComments] = useState<boolean>(false);
     const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
-
+    
     // Use the extracted annotation creation hook
     const {
         selectionInfo,
@@ -31,29 +31,49 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         handleCreateAnnotation,
         handleCancelAnnotation,
         annotations
-    } = useAnnotationCreation(documentID);
-
+    } = useAnnotationCreation(documentID, "commenting");
+    
+    const scholarlyAnnotationCreate = useAnnotationCreation(documentID, "scholarly")
     // HOOKS
     const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`);
-
+    
     // REDUX
     const dispatch = useDispatch();
+    
+    // Update to use the commentingAnnotations slice actions
     const dispatchAnnotationsMemo = useCallback(() => {
-        dispatch(addAnnotations(annotations.data))
-    }, [dispatch, annotations.data])
+        if (annotations.data && annotations.data.length > 0) {
+            dispatch(commentingAnnotations.actions.addAnnotations(annotations.data));
+        }
+    }, [dispatch, annotations.data]);
+
+    const dispatchScholarlyAnnotationsMemo = useCallback(() => {
+        if (scholarlyAnnotationCreate.annotations.data && scholarlyAnnotationCreate.annotations.data.length > 0) {
+            dispatch(scholarlyAnnotations.actions.addAnnotations(scholarlyAnnotationCreate.annotations.data));
+        }
+    }, [dispatch, scholarlyAnnotationCreate.annotations.data]);
+
+    
+    useEffect(() => {
+        dispatchAnnotationsMemo();
+    }, [dispatchAnnotationsMemo]);
 
     useEffect(() => {
-        dispatchAnnotationsMemo()
-    }, [dispatchAnnotationsMemo])
-
+        dispatchScholarlyAnnotationsMemo();
+    }, [dispatchScholarlyAnnotationsMemo]);
+    
     const hoveredHighlightIds = useSelector(
         (state: RootState) => state.highlightRegistry.hoveredHighlightIds
     );
-
-    const selectAnnotationsByIdMemo = useMemo(makeSelectAnnotationsById, []);
-
+    
+    // Update to use the commentingAnnotations slice selectors
+    const makeSelectAnnotationsById = useMemo(
+        () => commentingAnnotations.selectors.makeSelectAnnotationsById(),
+        []
+    );
+    
     const hoveredAnnotations = useSelector(
-        (state: RootState) => selectAnnotationsByIdMemo(state, hoveredHighlightIds)
+        (state: RootState) => makeSelectAnnotationsById(state, hoveredHighlightIds)
     );
 
     useEffect(() => {
@@ -85,8 +105,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     <div key={content.id} className='document-content'>
                         <HighlightedText
                             text={content.content.text}
-                            annotations={annotations.data}
-                            paragraphId={content.id}
+                            paragraphId={`DocumentElements/${content.id}`}
                             setSelectedText={(selectedText) => setSelectionInfo({
                                 content_id: selectedText.content_id,
                                 start: selectedText.start,

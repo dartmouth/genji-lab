@@ -27,7 +27,7 @@ interface Annotation {
     "target": Array<{
         "id": string;
         "type": string;
-        "source": number;
+        "source": string;
         "selector": {
             "type": string;
             "value": string;
@@ -58,7 +58,7 @@ interface AnnotationCreate {
     };
     "target": Array<{
         "type": string;
-        "source": number;
+        "source": string;
         "selector": {
             "type": string;
             "value": string;
