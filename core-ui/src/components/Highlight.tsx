@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { registerHighlight, updateHighlightPosition, removeHighlight } from '../store/highlightRegistrySlice';
+import { registerHighlight, removeHighlight } from '../store/highlightRegistrySlice';
 
 interface HighlightProps {
     id: string,
@@ -33,13 +33,6 @@ interface HighlightProps {
         dispatch(removeHighlight(id));
       };
     }, [dispatch, id, annotationId, position]);
-
-    useEffect(() => {
-      dispatch(updateHighlightPosition({
-        id,
-        boundingBoxes: [position]
-      }));
-    }, [dispatch, id, position]);
     
     const containerRef = useRef<HTMLDivElement>(null);
     

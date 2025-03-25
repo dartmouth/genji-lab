@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Union
 from pydantic import BaseModel, RootModel
 from datetime import datetime
 from schemas.users import User
@@ -16,7 +16,7 @@ class TextQuoteSelector(BaseModel):
 class Target(BaseModel):
     id: Optional[int] = None
     type: str
-    source: int
+    source: Union[int, str]
     selector: TextQuoteSelector
 
 class Body(BaseModel):

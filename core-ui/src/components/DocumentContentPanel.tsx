@@ -9,6 +9,7 @@ import { RootState } from '../store/index';
 import { useDispatch, useSelector } from 'react-redux';
 import { commentingAnnotations } from '../store';
 import { useAnnotationCreation } from '../hooks/useAnnotationCreation';
+import { scholarlyAnnotations } from '../store/annotations';
 
 interface DocumentContentPanelProps {
     documentID: number;
@@ -30,8 +31,9 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         handleCreateAnnotation,
         handleCancelAnnotation,
         annotations
-    } = useAnnotationCreation(documentID);
+    } = useAnnotationCreation(documentID, "commenting");
     
+    const scholarlyAnnotationCreate = useAnnotationCreation(documentID, "scholarly")
     // HOOKS
     const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`);
     
@@ -44,10 +46,21 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
             dispatch(commentingAnnotations.actions.addAnnotations(annotations.data));
         }
     }, [dispatch, annotations.data]);
+
+    const dispatchScholarlyAnnotationsMemo = useCallback(() => {
+        if (scholarlyAnnotationCreate.annotations.data && scholarlyAnnotationCreate.annotations.data.length > 0) {
+            dispatch(scholarlyAnnotations.actions.addAnnotations(scholarlyAnnotationCreate.annotations.data));
+        }
+    }, [dispatch, scholarlyAnnotationCreate.annotations.data]);
+
     
     useEffect(() => {
         dispatchAnnotationsMemo();
     }, [dispatchAnnotationsMemo]);
+
+    useEffect(() => {
+        dispatchScholarlyAnnotationsMemo();
+    }, [dispatchScholarlyAnnotationsMemo]);
     
     const hoveredHighlightIds = useSelector(
         (state: RootState) => state.highlightRegistry.hoveredHighlightIds
@@ -93,7 +106,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         <HighlightedText
                             text={content.content.text}
                             annotations={annotations.data}
-                            paragraphId={content.id}
+                            paragraphId={`DocumentElements/${content.id}`}
                             setSelectedText={(selectedText) => setSelectionInfo({
                                 content_id: selectedText.content_id,
                                 start: selectedText.start,

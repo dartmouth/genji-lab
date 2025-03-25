@@ -16,7 +16,7 @@ interface SelectedTextInterface {
 interface HighlightedTextProps {
   text: string;
   annotations: Annotation[];
-  paragraphId: number;
+  paragraphId: string;
   setSelectedText: (selectedText: SelectedTextInterface) => void;
 }
 
@@ -162,7 +162,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
   return (
     <div 
-      id={`${paragraphId}`}
+      id={`DocumentElements/${paragraphId}`}
       ref={containerRef} 
       className="annotatable-paragraph"
       onMouseUp={handleMouseUp}
