@@ -3,6 +3,8 @@ import DocumentContentPanel from "./components/DocumentContentPanel";
 import { AuthProvider } from "./components/AuthContext";
 import AppHeader from "./components/AppHeader";
 import ErrorBoundary from "./components/ErrorBoundary";
+import MenuContext from "./components/MenuContext";
+import { data } from "./components/data";
 import "./App.css";
 
 import { Provider } from 'react-redux';
@@ -14,10 +16,10 @@ const AppContent: React.FC = () => {
     <div className="main">
       <AppHeader />
       <div className="app">
+        <MenuContext data={data} />
         <ErrorBoundary>
           <DocumentContentPanel documentID={1} />
         </ErrorBoundary>
-        
       </div>
     </div>
   );
