@@ -76,6 +76,10 @@ export function createAnnotationSlice(bucketName: string) {
 
   const getBucketState = (state: RootState): AnnotationState => {
     // Access the bucket using indexed notation
+    // console.log('Redux state:', state);
+    // console.log('Annotations slice:', state.annotations);
+    // console.log('Bucket name:', bucketName);
+    // console.log('Bucket state:', state.annotations[bucketName]);
     return state.annotations[bucketName] as AnnotationState;
   };
 
@@ -90,11 +94,35 @@ export function createAnnotationSlice(bucketName: string) {
     return ids.map(key => bucketState.byId[key]);
   };
 
-  const selectAnnotationsByDocumentElement = (state: RootState, documentElementId: string) => {
-    const bucketState = getBucketState(state);
-    const annotationIds = bucketState.byDocumentElement[documentElementId] || [];
-    return annotationIds.map(id => bucketState.byId[id]);
-  };
+//   const selectAnnotationsByDocumentElement = (state: RootState, documentElementId: string) => {
+//     const bucketState = getBucketState(state);
+//     const annotationIds = bucketState.byDocumentElement[documentElementId] || [];
+//     return annotationIds.map(id => bucketState.byId[id]);
+//   };
+
+   const makeSelectAnnotationsByDocumentElement = () => 
+    createSelector(
+      [
+        getBucketState,
+        (_: RootState, documentElementId: string) => documentElementId
+      ],
+      (bucketState, documentElementId) => {
+        const annotationIds = bucketState.byDocumentElement[documentElementId];
+        return annotationIds.map(id => bucketState.byId[id]);
+      }
+    );
+  
+  const selectAnnotationsByDocumentElement = createSelector(
+    [
+        getBucketState,
+        (_: RootState, documentElementId: string) => documentElementId
+      ],
+      (bucketState, documentElementId) => {
+        // console.log("In selector, id is", documentElementId)
+        const annotationIds = bucketState.byDocumentElement[documentElementId] || [];
+        return annotationIds.map(id => bucketState.byId[id]);
+      }
+  );
 
   const makeSelectAnnotationsById = () => 
     createSelector(
@@ -113,7 +141,8 @@ export function createAnnotationSlice(bucketName: string) {
       selectAnnotationById,
       selectAnnotationsById,
       selectAnnotationsByDocumentElement,
-      makeSelectAnnotationsById
+      makeSelectAnnotationsById,
+      makeSelectAnnotationsByDocumentElement
     }
   };
 }
