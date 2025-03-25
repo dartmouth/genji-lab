@@ -5,10 +5,9 @@ import AnnotationCreationCard from './AnnotationCreationCard';
 import { DocumentElement } from '../types/documentElement';
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { useApiClient } from '../hooks/useApi';
-import { makeSelectAnnotationsById } from '../store/annotationSlice';
-import { RootState } from '../store/index'
+import { RootState } from '../store/index';
 import { useDispatch, useSelector } from 'react-redux';
-import { addAnnotations } from '../store';
+import { commentingAnnotations } from '../store';
 import { useAnnotationCreation } from '../hooks/useAnnotationCreation';
 
 interface DocumentContentPanelProps {
@@ -21,7 +20,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     // STATE
     const [collapsedComments, setCollapsedComments] = useState<boolean>(false);
     const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
-
+    
     // Use the extracted annotation creation hook
     const {
         selectionInfo,
@@ -32,28 +31,36 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         handleCancelAnnotation,
         annotations
     } = useAnnotationCreation(documentID);
-
+    
     // HOOKS
     const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`);
-
+    
     // REDUX
     const dispatch = useDispatch();
+    
+    // Update to use the commentingAnnotations slice actions
     const dispatchAnnotationsMemo = useCallback(() => {
-        dispatch(addAnnotations(annotations.data))
-    }, [dispatch, annotations.data])
-
+        if (annotations.data && annotations.data.length > 0) {
+            dispatch(commentingAnnotations.actions.addAnnotations(annotations.data));
+        }
+    }, [dispatch, annotations.data]);
+    
     useEffect(() => {
-        dispatchAnnotationsMemo()
-    }, [dispatchAnnotationsMemo])
-
+        dispatchAnnotationsMemo();
+    }, [dispatchAnnotationsMemo]);
+    
     const hoveredHighlightIds = useSelector(
         (state: RootState) => state.highlightRegistry.hoveredHighlightIds
     );
-
-    const selectAnnotationsByIdMemo = useMemo(makeSelectAnnotationsById, []);
-
+    
+    // Update to use the commentingAnnotations slice selectors
+    const makeSelectAnnotationsById = useMemo(
+        () => commentingAnnotations.selectors.makeSelectAnnotationsById(),
+        []
+    );
+    
     const hoveredAnnotations = useSelector(
-        (state: RootState) => selectAnnotationsByIdMemo(state, hoveredHighlightIds)
+        (state: RootState) => makeSelectAnnotationsById(state, hoveredHighlightIds)
     );
 
     useEffect(() => {
