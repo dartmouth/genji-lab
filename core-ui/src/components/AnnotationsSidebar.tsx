@@ -46,7 +46,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   };
 
   return (
-    <>
+    <div className={`sidebar position-${position}`}>
       <div 
         className={`annotations-panel ${collapsedComments ? 'open' : 'closed'} position-${position}`} 
         style={{ 
@@ -90,7 +90,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
           {renderToggleIcon()}
         </button>
       </div>
-    </>
+    </div>
   );
 };
 
