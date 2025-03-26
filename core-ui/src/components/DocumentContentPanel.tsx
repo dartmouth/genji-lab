@@ -127,6 +127,17 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 handleCreateAnnotation={handleCreateAnnotation}
                 handleCancelAnnotation={handleCancelAnnotation}
                 hoveredAnnotations={hoveredAnnotations}
+                position='left'
+      />
+      <AnnotationsSidebar
+                collapsedComments={collapsedComments}
+                setCollapsedComments={setCollapsedComments}
+                selectionInfo={selectionInfo}
+                newAnnotationText={newAnnotationText}
+                setNewAnnotationText={setNewAnnotationText}
+                handleCreateAnnotation={handleCreateAnnotation}
+                handleCancelAnnotation={handleCancelAnnotation}
+                hoveredAnnotations={hoveredAnnotations}
                 position='right'
       />
     </div>

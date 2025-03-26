@@ -1,13 +1,28 @@
 /* AnnotationsSidebar.css */
 
-/* Sidebar Controls */
-.sidebar-controls {
-    position: absolute;
+/* Document container layout adjustments */
+.document-content-panel {
+    position: relative; /* Ensure this is set for absolute positioning context */
+    display: flex;
+    width: 100%;
+  }
+  
+  .document-content-container {
+    position: relative;
+    z-index: 1; /* Lower than sidebar controls */
+    flex: 2;
+    overflow-x: visible; /* Ensure content doesn't get cut off */
+    padding: 0 40px; /* Add padding to prevent text from being too close to the edges */
+  }
+  
+  /* Sidebar Controls */
+  .sidebar-controls {
+    position: fixed; /* Change from absolute to fixed */
     top: 70px; /* Position below header */
     z-index: 100;
     display: flex;
     flex-direction: column;
-    gap: 8px; /* Space for future buttons */
+    gap: 8px;
   }
   
   /* Position-specific styles */
@@ -17,6 +32,56 @@
   
   .sidebar-controls.position-left {
     left: 10px;
+  }
+  
+  /* Annotations Panel Animation */
+  .annotations-panel {
+    position: relative;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    transition: all 0.3s ease-in-out;
+    z-index: 10; /* Higher than document content but lower than controls */
+    max-width: 350px; /* Limit width to prevent it from taking too much space */
+  }
+  
+  /* Position-specific styles */
+  .annotations-panel.position-right {
+    margin-left: 20px;
+    border-left: 1px solid #ddd;
+  }
+  
+  .annotations-panel.position-left {
+    margin-right: 20px;
+    border-right: 1px solid #ddd;
+    order: -1; /* This places it before the document content */
+  }
+  
+  /* Closed state */
+  .annotations-panel.closed {
+    padding: 0;
+    width: 0;
+    max-width: 0;
+  }
+  
+  .annotations-panel.position-right.closed {
+    margin-left: 0;
+  }
+  
+  .annotations-panel.position-left.closed {
+    margin-right: 0;
+  }
+  
+  /* Ensure content inside the panel doesn't show when closed */
+  .annotations-panel.closed > * {
+    opacity: 0;
+    visibility: hidden; /* Add this to ensure content is not clickable when hidden */
+  }
+  
+  .annotations-panel.open > * {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease-in-out 0.1s, visibility 0.2s ease-in-out 0.1s;
   }
   
   /* Toggle Button Styling */
@@ -41,48 +106,4 @@
   .sidebar-toggle-button:focus {
     outline: none;
     border-color: #80bdff;
-  }
-  
-  /* Annotations Panel Animation */
-  .annotations-panel {
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 20px;
-    transition: all 0.3s ease-in-out;
-  }
-  
-  /* Position-specific styles */
-  .annotations-panel.position-right {
-    margin-left: 20px;
-    border-left: 1px solid #ddd;
-  }
-  
-  .annotations-panel.position-left {
-    margin-right: 20px;
-    border-right: 1px solid #ddd;
-    order: -1; /* This places it before the document content */
-  }
-  
-  /* Closed state */
-  .annotations-panel.closed {
-    padding: 0;
-    width: 0;
-  }
-  
-  .annotations-panel.position-right.closed {
-    margin-left: 0;
-  }
-  
-  .annotations-panel.position-left.closed {
-    margin-right: 0;
-  }
-  
-  /* Ensure content inside the panel doesn't show when closed */
-  .annotations-panel.closed > * {
-    opacity: 0;
-  }
-  
-  .annotations-panel.open > * {
-    opacity: 1;
-    transition: opacity 0.2s ease-in-out 0.1s; /* Delay to ensure panel opens first */
   }
