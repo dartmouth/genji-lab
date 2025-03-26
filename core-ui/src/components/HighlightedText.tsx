@@ -3,10 +3,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { commentingAnnotations } from '../store/index';
 import { updateHighlightPosition, setHoveredHighlights } from '../store/highlightRegistrySlice';
 import { debounce } from 'lodash';
-import { Annotation } from '../types/annotation';
+import { selectAllAnnotationsForParagraph } from '../store/combinedSelectors'
 
 interface SelectedTextInterface {
   content_id: number;
@@ -19,43 +18,43 @@ interface HighlightedTextProps {
   text: string;
   paragraphId: string;
   setSelectedText: (selectedText: SelectedTextInterface) => void;
-  comments: Annotation[]
 }
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
   paragraphId,
   setSelectedText = () => {},
-  // comments
 }) => {
   const dispatch = useDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [highlightPositions, setHighlightPositions] = useState<Map<string, Array<{ left: number; top: number; width: number; height: number }>>>(
-    new Map()
+  
+  const [highlightPositions, setHighlightPositions] = useState<Map<string, {
+    positions: Array<{ left: number; top: number; width: number; height: number }>,
+    motivation: string
+  }>>(new Map());
+  
+  const allAnnotations = useSelector((state: RootState) => 
+    selectAllAnnotationsForParagraph(state, paragraphId)
   );
-
-
-  const comments = useSelector((state: RootState) => commentingAnnotations.selectors.selectAnnotationsByDocumentElement(state, paragraphId));  
-
-  console.log(comments)
-
+  
   const calculateHighlightPositions = () => {
     if (!containerRef.current) return;
-
     const textNode = containerRef.current.firstChild;
     if (!textNode || !(textNode instanceof Text)) return;
-
     const containerRect = containerRef.current.getBoundingClientRect();
-    const newPositions = new Map<string, Array<{ left: number; top: number; width: number; height: number }>>();
-
-    comments.forEach((annotation) => {
+    
+    const newPositions = new Map<string, {
+      positions: Array<{ left: number; top: number; width: number; height: number }>,
+      motivation: string
+    }>();
+    
+    allAnnotations.forEach((annotation) => {
       // Find annotations that target this paragraph
       const target = annotation.target.find((t) => 
         t.source === paragraphId 
       );
-      
-      if (!target) return;
 
+      if (!target) return;
       try {
         const { start, end } = target.selector.refined_by;
         const range = document.createRange();
@@ -71,16 +70,20 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           height: rect.height,
         }));
         
-        newPositions.set(annotation.id, positions);
+        // Store both positions and motivation
+        newPositions.set(annotation.id, {
+          positions: positions,
+          motivation: annotation.motivation
+        });
+        
         dispatch(updateHighlightPosition({
           id: `highlight-${annotation.id}`,
-          boundingBoxes: positions
+          boundingBoxes: positions,
         }));
       } catch (error) {
         console.error('Error calculating highlight positions:', error);
       }
     });
-
     setHighlightPositions(newPositions);
   };
 
@@ -89,7 +92,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     const highlightsAtPoint: string[] = [];
     
     highlightPositions.forEach((positions, annotationId) => {
-      const isHovered = positions.some(box => 
+      const isHovered = positions.positions.some(box => 
         x >= box.left &&
         x <= box.left + box.width &&
         y >= box.top &&
@@ -142,7 +145,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       debouncedHandleMouseMove.cancel();
     };
    // eslint-disable-next-line
-  }, [comments, text, paragraphId]);
+  }, [allAnnotations, text, paragraphId]);
 
   const handleMouseUp = () => {
     const selection = window.getSelection();
@@ -156,6 +159,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     // Get all paragraphs in the selection
     const startContainerParent = range.startContainer.parentElement;
     const startParagraph = startContainerParent ? startContainerParent.closest('.annotatable-paragraph') : null;
+    
     if (!startParagraph) return;
     const newSelectionInfo = {
       content_id: Number(startParagraph.id),
@@ -178,15 +182,16 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       {text}
       
       {/* Render highlight containers */}
-      {Array.from(highlightPositions.entries()).map(([annotationId, positions]) => (
+      {Array.from(highlightPositions.entries()).map(([annotationId, position_elems]) => (
         <div 
           key={annotationId}
           className={`highlight-container-${annotationId}`}
           style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 1 }}
         >
-          {positions.map((position, index) => (
+          {position_elems.positions.map((position, index) => (
             <Highlight
               key={`${annotationId}-${index}`}
+              motivation={position_elems.motivation}
               id={`highlight-${annotationId}`}
               annotationId={`${annotationId}`}
               position={position}

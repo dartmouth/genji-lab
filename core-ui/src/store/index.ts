@@ -25,6 +25,7 @@ const rootReducer = {
   highlightRegistry: highlightRegistryReducer,
 };
 
+
 // Create the store
 export const store = configureStore({
   reducer: rootReducer,
@@ -38,5 +39,6 @@ export type AppDispatch = typeof store.dispatch;
 // Re-export actions and selectors from annotation buckets
 export { 
   commentingAnnotations,
-  replyingAnnotations
+  replyingAnnotations,
+  scholarlyAnnotations
 };

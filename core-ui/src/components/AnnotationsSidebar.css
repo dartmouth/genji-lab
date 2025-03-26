@@ -2,36 +2,57 @@
 
 /* Document container layout adjustments */
 .document-content-panel {
-    position: relative; /* Ensure this is set for absolute positioning context */
+    position: relative;
     display: flex;
     width: 100%;
   }
   
   .document-content-container {
     position: relative;
-    z-index: 1; /* Lower than sidebar controls */
+    z-index: 1;
     flex: 2;
-    overflow-x: visible; /* Ensure content doesn't get cut off */
-    padding: 0 40px; /* Add padding to prevent text from being too close to the edges */
+    overflow-x: visible;
+    padding: 0 40px;
+  }
+  
+  /* Parent sidebar container */
+  .sidebar {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    z-index: 10;
+  }
+  
+  .sidebar.position-right {
+    margin-left: auto;
+    margin-right: 5px; /* Reduced space between sidebar and right edge */
+  }
+  
+  .sidebar.position-left {
+    margin-right: auto;
+    margin-left: 5px; /* Reduced space between sidebar and left edge */
+    order: -1;
   }
   
   /* Sidebar Controls */
   .sidebar-controls {
-    position: fixed; /* Change from absolute to fixed */
-    top: 70px; /* Position below header */
-    z-index: 100;
+    position: relative;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 8px;
+    margin-top: 15px;
+    width: 48px;
   }
   
-  /* Position-specific styles */
-  .sidebar-controls.position-right {
-    right: 10px;
+  .sidebar.position-right .sidebar-controls {
+    margin-right: 0; /* Removed extra margin */
+    order: 2;
   }
   
-  .sidebar-controls.position-left {
-    left: 10px;
+  .sidebar.position-left .sidebar-controls {
+    margin-left: 0; /* Removed extra margin */
+    order: 1;
   }
   
   /* Annotations Panel Animation */
@@ -41,20 +62,18 @@
     background-color: #f8f9fa;
     border-radius: 20px;
     transition: all 0.3s ease-in-out;
-    z-index: 10; /* Higher than document content but lower than controls */
-    max-width: 350px; /* Limit width to prevent it from taking too much space */
+    max-width: 350px;
+    width: 350px;
   }
   
-  /* Position-specific styles */
-  .annotations-panel.position-right {
-    margin-left: 20px;
+  .sidebar.position-right .annotations-panel {
     border-left: 1px solid #ddd;
+    order: 1;
   }
   
-  .annotations-panel.position-left {
-    margin-right: 20px;
+  .sidebar.position-left .annotations-panel {
     border-right: 1px solid #ddd;
-    order: -1; /* This places it before the document content */
+    order: 2;
   }
   
   /* Closed state */
@@ -64,18 +83,18 @@
     max-width: 0;
   }
   
-  .annotations-panel.position-right.closed {
+  .sidebar.position-right .annotations-panel.closed {
     margin-left: 0;
   }
   
-  .annotations-panel.position-left.closed {
+  .sidebar.position-left .annotations-panel.closed {
     margin-right: 0;
   }
   
   /* Ensure content inside the panel doesn't show when closed */
   .annotations-panel.closed > * {
     opacity: 0;
-    visibility: hidden; /* Add this to ensure content is not clickable when hidden */
+    visibility: hidden;
   }
   
   .annotations-panel.open > * {
