@@ -3,7 +3,10 @@ import React from 'react';
 import AnnotationCard from './AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { Annotation } from '../types/annotation'; // You'll need to import your annotation type
+import { Annotation } from '../types/annotation';
+import './AnnotationsSidebar.css'; // We'll create this CSS file
+
+type SidebarPosition = 'left' | 'right';
 
 interface AnnotationsSidebarProps {
   collapsedComments: boolean;
@@ -19,6 +22,7 @@ interface AnnotationsSidebarProps {
   handleCreateAnnotation: () => void;
   handleCancelAnnotation: () => void;
   hoveredAnnotations: Annotation[];
+  position?: SidebarPosition; // New prop with default 'right'
 }
 
 const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
@@ -30,16 +34,25 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   handleCreateAnnotation,
   handleCancelAnnotation,
   hoveredAnnotations,
+  position = 'right', // Default to right if not specified
 }) => {
+  // Determine which icon to show based on position and collapsed state
+  const renderToggleIcon = () => {
+    if (position === 'right') {
+      return collapsedComments ? <FaChevronRight /> : <FaChevronLeft />;
+    } else {
+      return collapsedComments ? <FaChevronLeft /> : <FaChevronRight />;
+    }
+  };
+
   return (
     <>
       <div 
-        className={`annotations-panel ${collapsedComments ? 'open' : 'closed'}`} 
+        className={`annotations-panel ${collapsedComments ? 'open' : 'closed'} position-${position}`} 
         style={{ 
           flex: collapsedComments ? 1 : 0,
           width: collapsedComments ? 'auto' : '0',
           overflow: 'hidden',
-          transition: 'all 0.3s ease-in-out'
         }}
       >
         {selectionInfo.text && (
@@ -68,13 +81,13 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
         }
       </div>
       
-      <div className="sidebar-controls">
+      <div className={`sidebar-controls position-${position}`}>
         <button 
           className="sidebar-toggle-button"
           onClick={() => setCollapsedComments(!collapsedComments)}
-          aria-label={collapsedComments ? "Show comments" : "Hide comments"}
+          aria-label={collapsedComments ? "Hide comments" : "Show comments"}
         >
-          {collapsedComments ? <FaChevronLeft /> : <FaChevronRight />}
+          {renderToggleIcon()}
         </button>
       </div>
     </>

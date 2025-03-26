@@ -119,14 +119,15 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 ))}
             </div>
             <AnnotationsSidebar
-        collapsedComments={collapsedComments}
-        setCollapsedComments={setCollapsedComments}
-        selectionInfo={selectionInfo}
-        newAnnotationText={newAnnotationText}
-        setNewAnnotationText={setNewAnnotationText}
-        handleCreateAnnotation={handleCreateAnnotation}
-        handleCancelAnnotation={handleCancelAnnotation}
-        hoveredAnnotations={hoveredAnnotations}
+                collapsedComments={collapsedComments}
+                setCollapsedComments={setCollapsedComments}
+                selectionInfo={selectionInfo}
+                newAnnotationText={newAnnotationText}
+                setNewAnnotationText={setNewAnnotationText}
+                handleCreateAnnotation={handleCreateAnnotation}
+                handleCancelAnnotation={handleCancelAnnotation}
+                hoveredAnnotations={hoveredAnnotations}
+                position='right'
       />
     </div>
     );

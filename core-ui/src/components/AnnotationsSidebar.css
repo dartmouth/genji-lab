@@ -1,0 +1,88 @@
+/* AnnotationsSidebar.css */
+
+/* Sidebar Controls */
+.sidebar-controls {
+    position: absolute;
+    top: 70px; /* Position below header */
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Space for future buttons */
+  }
+  
+  /* Position-specific styles */
+  .sidebar-controls.position-right {
+    right: 10px;
+  }
+  
+  .sidebar-controls.position-left {
+    left: 10px;
+  }
+  
+  /* Toggle Button Styling */
+  .sidebar-toggle-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .sidebar-toggle-button:hover {
+    background-color: #e9ecef;
+  }
+  
+  .sidebar-toggle-button:focus {
+    outline: none;
+    border-color: #80bdff;
+  }
+  
+  /* Annotations Panel Animation */
+  .annotations-panel {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  /* Position-specific styles */
+  .annotations-panel.position-right {
+    margin-left: 20px;
+    border-left: 1px solid #ddd;
+  }
+  
+  .annotations-panel.position-left {
+    margin-right: 20px;
+    border-right: 1px solid #ddd;
+    order: -1; /* This places it before the document content */
+  }
+  
+  /* Closed state */
+  .annotations-panel.closed {
+    padding: 0;
+    width: 0;
+  }
+  
+  .annotations-panel.position-right.closed {
+    margin-left: 0;
+  }
+  
+  .annotations-panel.position-left.closed {
+    margin-right: 0;
+  }
+  
+  /* Ensure content inside the panel doesn't show when closed */
+  .annotations-panel.closed > * {
+    opacity: 0;
+  }
+  
+  .annotations-panel.open > * {
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out 0.1s; /* Delay to ensure panel opens first */
+  }
