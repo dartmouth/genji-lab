@@ -27,6 +27,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 }) => {
   const dispatch = useDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
+  
   const [highlightPositions, setHighlightPositions] = useState<Map<string, {
     positions: Array<{ left: number; top: number; width: number; height: number }>,
     motivation: string
@@ -52,7 +53,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       const target = annotation.target.find((t) => 
         t.source === paragraphId 
       );
-      
+
       if (!target) return;
       try {
         const { start, end } = target.selector.refined_by;
@@ -78,7 +79,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         dispatch(updateHighlightPosition({
           id: `highlight-${annotation.id}`,
           boundingBoxes: positions,
-          // motivation: annotation.motivation // Include motivation in the dispatch
         }));
       } catch (error) {
         console.error('Error calculating highlight positions:', error);
