@@ -1,5 +1,9 @@
 /* AnnotationsSidebar.css */
-
+/* .sidebar-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+} */
 /* Document container layout adjustments */
 .document-content-panel {
     position: relative; /* Ensure this is set for absolute positioning context */
