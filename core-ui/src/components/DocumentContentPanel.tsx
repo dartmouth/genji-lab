@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import HighlightedText from './HighlightedText';
-import AnnotationCard from './AnnotationCard';
-import AnnotationCreationCard from './AnnotationCreationCard';
+// import AnnotationCard from './AnnotationCard';
+// import AnnotationCreationCard from './AnnotationCreationCard';
 import { DocumentElement } from '../types/documentElement';
-import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
+// import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { useApiClient } from '../hooks/useApi';
 import { RootState } from '../store/index';
 import { useDispatch, useSelector } from 'react-redux';
 import { commentingAnnotations } from '../store';
 import { useAnnotationCreation } from '../hooks/useAnnotationCreation';
 import { scholarlyAnnotations } from '../store/annotations';
+import AnnotationsSidebar from './AnnotationsSidebar';
 
 interface DocumentContentPanelProps {
     documentID: number;
@@ -106,6 +107,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         <HighlightedText
                             text={content.content.text}
                             paragraphId={`DocumentElements/${content.id}`}
+                            comments={annotations.data}
                             setSelectedText={(selectedText) => setSelectionInfo({
                                 content_id: selectedText.content_id,
                                 start: selectedText.start,
@@ -116,51 +118,29 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     </div>
                 ))}
             </div>
-            <div 
-                className={`annotations-panel ${collapsedComments ? 'open' : 'closed'}`} 
-                style={{ 
-                    flex: collapsedComments ? 1 : 0,
-                    width: collapsedComments ? 'auto' : '0',
-                    overflow: 'hidden',
-                    transition: 'all 0.3s ease-in-out'
-                }}
-            >
-                {selectionInfo.text && (
-                    <AnnotationCreationCard
-                        selectedText={selectionInfo.text}
-                        annotationText={newAnnotationText}
-                        onAnnotationTextChange={setNewAnnotationText}
-                        onSave={handleCreateAnnotation}
-                        onCancel={handleCancelAnnotation}
-                    />
-                )}
-                
-                {
-                    hoveredAnnotations.length === 0 ? (
-                        !selectionInfo.text && <p>Hover over a highlight to view annotations</p>
-                    ) : (
-                        hoveredAnnotations.map(annotation => (
-                            <AnnotationCard
-                                key={annotation.id}
-                                id={`${annotation.id}`}
-                                annotation={annotation}
-                                isHighlighted={false}
-                            />
-                        ))
-                    )
-                }
-            </div>
-            
-            <div className="sidebar-controls">
-                <button 
-                    className="sidebar-toggle-button"
-                    onClick={() => setCollapsedComments(!collapsedComments)}
-                    aria-label={collapsedComments ? "Show comments" : "Hide comments"}
-                >
-                    {collapsedComments ? <FaChevronLeft /> : <FaChevronRight />}
-                </button>
-            </div>
-        </div>
+            <AnnotationsSidebar
+                collapsedComments={collapsedComments}
+                setCollapsedComments={setCollapsedComments}
+                selectionInfo={selectionInfo}
+                newAnnotationText={newAnnotationText}
+                setNewAnnotationText={setNewAnnotationText}
+                handleCreateAnnotation={handleCreateAnnotation}
+                handleCancelAnnotation={handleCancelAnnotation}
+                hoveredAnnotations={hoveredAnnotations}
+                position='left'
+      />
+      <AnnotationsSidebar
+                collapsedComments={collapsedComments}
+                setCollapsedComments={setCollapsedComments}
+                selectionInfo={selectionInfo}
+                newAnnotationText={newAnnotationText}
+                setNewAnnotationText={setNewAnnotationText}
+                handleCreateAnnotation={handleCreateAnnotation}
+                handleCancelAnnotation={handleCancelAnnotation}
+                hoveredAnnotations={hoveredAnnotations}
+                position='right'
+      />
+    </div>
     );
 };
 

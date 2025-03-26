@@ -6,6 +6,7 @@ import { RootState } from '../store';
 import { commentingAnnotations } from '../store/index';
 import { updateHighlightPosition, setHoveredHighlights } from '../store/highlightRegistrySlice';
 import { debounce } from 'lodash';
+import { Annotation } from '../types/annotation';
 
 interface SelectedTextInterface {
   content_id: number;
@@ -18,12 +19,14 @@ interface HighlightedTextProps {
   text: string;
   paragraphId: string;
   setSelectedText: (selectedText: SelectedTextInterface) => void;
+  comments: Annotation[]
 }
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
   paragraphId,
   setSelectedText = () => {},
+  // comments
 }) => {
   const dispatch = useDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,10 +34,10 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     new Map()
   );
 
-  const comments = useSelector(
-    (state: RootState) => commentingAnnotations.selectors.selectAnnotationsByDocumentElement(state, `DocumentElements/${paragraphId}`)
-  )
 
+  const comments = useSelector((state: RootState) => commentingAnnotations.selectors.selectAnnotationsByDocumentElement(state, paragraphId));  
+
+  console.log(comments)
 
   const calculateHighlightPositions = () => {
     if (!containerRef.current) return;
@@ -138,7 +141,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       resizeObserver.disconnect();
       debouncedHandleMouseMove.cancel();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   // eslint-disable-next-line
   }, [comments, text, paragraphId]);
 
   const handleMouseUp = () => {
