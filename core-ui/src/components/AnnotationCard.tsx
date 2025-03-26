@@ -31,7 +31,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 borderRadius: '4px',
                 padding: '10px',
                 margin: '10px 0',
-                position: 'relative'
+                position: 'relative',
+                width: '275px'
             }}
         >
             <div className="comment-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

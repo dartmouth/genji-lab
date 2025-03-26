@@ -63,6 +63,7 @@
     border-radius: 20px;
     transition: all 0.3s ease-in-out;
     max-width: 350px;
+    width: 350px;
   }
   
   .sidebar.position-right .annotations-panel {

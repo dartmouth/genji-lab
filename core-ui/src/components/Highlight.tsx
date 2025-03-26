@@ -4,6 +4,7 @@ import { registerHighlight, removeHighlight } from '../store/highlightRegistrySl
 
 interface HighlightProps {
     id: string,
+    motivation: string
     position: {
       left: number;
       top: number;
@@ -18,13 +19,16 @@ interface HighlightProps {
     id,
     position,
     annotationId,
-    color = '#c4dd88'
+    motivation,
+    // color = '#c4dd88'
   }) => {
+    const color = motivation == 'commenting' ? '#c4dd88' : '#abf7ff'
     const dispatch = useDispatch();
 
     useEffect(() => {
       dispatch(registerHighlight({
         id,
+        motivation: motivation,
         boundingBoxes: [position],
         annotationId
       }), []);
@@ -32,7 +36,7 @@ interface HighlightProps {
       return () => {
         dispatch(removeHighlight(id));
       };
-    }, [dispatch, id, annotationId, position]);
+    }, [dispatch, id, annotationId, motivation, position]);
     
     const containerRef = useRef<HTMLDivElement>(null);
     
