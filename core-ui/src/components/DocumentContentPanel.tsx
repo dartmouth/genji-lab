@@ -21,6 +21,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
 }) => {
     // STATE
     const [collapsedComments, setCollapsedComments] = useState<boolean>(false);
+    const [collapsedAnnotations, setCollapsedAnnotations] = useState<boolean>(false)
     const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
     
     // Use the extracted annotation creation hook
@@ -72,9 +73,17 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         () => commentingAnnotations.selectors.makeSelectAnnotationsById(),
         []
     );
+
+    const makeSelectScholarlyAnnotationsById = useMemo(
+        () => scholarlyAnnotations.selectors.makeSelectAnnotationsById(),
+        []
+    );
     
     const hoveredAnnotations = useSelector(
         (state: RootState) => makeSelectAnnotationsById(state, hoveredHighlightIds)
+    );
+    const hoveredScholarlyAnnotations = useSelector(
+        (state: RootState) => makeSelectScholarlyAnnotationsById(state, hoveredHighlightIds)
     );
 
     useEffect(() => {
@@ -107,7 +116,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         <HighlightedText
                             text={content.content.text}
                             paragraphId={`DocumentElements/${content.id}`}
-                            comments={annotations.data}
+                            // comments={annotations.data}
                             setSelectedText={(selectedText) => setSelectionInfo({
                                 content_id: selectedText.content_id,
                                 start: selectedText.start,
@@ -119,14 +128,14 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 ))}
             </div>
             <AnnotationsSidebar
-                collapsedComments={collapsedComments}
-                setCollapsedComments={setCollapsedComments}
+                collapsedComments={collapsedAnnotations}
+                setCollapsedComments={setCollapsedAnnotations}
                 selectionInfo={selectionInfo}
                 newAnnotationText={newAnnotationText}
                 setNewAnnotationText={setNewAnnotationText}
                 handleCreateAnnotation={handleCreateAnnotation}
                 handleCancelAnnotation={handleCancelAnnotation}
-                hoveredAnnotations={hoveredAnnotations}
+                hoveredAnnotations={hoveredScholarlyAnnotations}
                 position='left'
             />
             <AnnotationsSidebar

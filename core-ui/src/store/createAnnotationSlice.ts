@@ -91,14 +91,14 @@ export function createAnnotationSlice(bucketName: string) {
 
   const selectAnnotationsById = (state: RootState, ids: string[]) => {
     const bucketState = getBucketState(state);
-    return ids.map(key => bucketState.byId[key]);
+    return ids.map(key => bucketState.byId?.[key]);
   };
 
-//   const selectAnnotationsByDocumentElement = (state: RootState, documentElementId: string) => {
-//     const bucketState = getBucketState(state);
-//     const annotationIds = bucketState.byDocumentElement[documentElementId] || [];
-//     return annotationIds.map(id => bucketState.byId[id]);
-//   };
+  const selectAllAnnotations = (state: RootState) => {
+    const bucketState = getBucketState(state);
+    const ids = Object.keys(bucketState.byId)
+    return ids.map(key => bucketState.byId[key]);
+  };
 
    const makeSelectAnnotationsByDocumentElement = () => 
     createSelector(
@@ -130,8 +130,14 @@ export function createAnnotationSlice(bucketName: string) {
         (state: RootState) => getBucketState(state).byId, 
         (_: RootState, ids: string[]) => ids
       ],
-      (byId, ids) => ids.map(key => byId[key])
+      (byId, ids) => {
+        if (!byId || !ids || ids.length === 0) return [];
+        
+        const results = ids.map(key => byId[key]).filter(Boolean);
+        return results.length > 0 ? results : [];
+      }
     );
+    
 
   return {
     name: bucketName,
@@ -140,6 +146,7 @@ export function createAnnotationSlice(bucketName: string) {
     selectors: {
       selectAnnotationById,
       selectAnnotationsById,
+      selectAllAnnotations,
       selectAnnotationsByDocumentElement,
       makeSelectAnnotationsById,
       makeSelectAnnotationsByDocumentElement

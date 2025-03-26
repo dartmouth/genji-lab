@@ -3,10 +3,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { commentingAnnotations } from '../store/index';
 import { updateHighlightPosition, setHoveredHighlights } from '../store/highlightRegistrySlice';
 import { debounce } from 'lodash';
-import { Annotation } from '../types/annotation';
+import { selectAllAnnotationsForParagraph } from '../store/combinedSelectors'
 
 interface SelectedTextInterface {
   content_id: number;
@@ -19,7 +18,6 @@ interface HighlightedTextProps {
   text: string;
   paragraphId: string;
   setSelectedText: (selectedText: SelectedTextInterface) => void;
-  comments: Annotation[]
 }
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
@@ -34,10 +32,10 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     new Map()
   );
 
-
-  const comments = useSelector((state: RootState) => commentingAnnotations.selectors.selectAnnotationsByDocumentElement(state, paragraphId));  
-
-  console.log(comments)
+  // Then in your component:
+  const allAnnotations = useSelector((state: RootState) => 
+    selectAllAnnotationsForParagraph(state, paragraphId)
+  );
 
   const calculateHighlightPositions = () => {
     if (!containerRef.current) return;
@@ -48,7 +46,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     const containerRect = containerRef.current.getBoundingClientRect();
     const newPositions = new Map<string, Array<{ left: number; top: number; width: number; height: number }>>();
 
-    comments.forEach((annotation) => {
+    allAnnotations.forEach((annotation) => {
       // Find annotations that target this paragraph
       const target = annotation.target.find((t) => 
         t.source === paragraphId 
@@ -142,7 +140,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       debouncedHandleMouseMove.cancel();
     };
    // eslint-disable-next-line
-  }, [comments, text, paragraphId]);
+  }, [allAnnotations, text, paragraphId]);
 
   const handleMouseUp = () => {
     const selection = window.getSelection();
