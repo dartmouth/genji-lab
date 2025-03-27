@@ -22,6 +22,7 @@ interface AnnotationsSidebarProps {
   handleCreateAnnotation: () => void;
   handleCancelAnnotation: () => void;
   hoveredAnnotations: Annotation[];
+  createAnnotation: boolean;
   position?: SidebarPosition; // New prop with default 'right'
 }
 
@@ -34,6 +35,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   handleCreateAnnotation,
   handleCancelAnnotation,
   hoveredAnnotations,
+  createAnnotation,
   position = 'right', // Default to right if not specified
 }) => {
   // Determine which icon to show based on position and collapsed state
@@ -55,7 +57,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
           overflow: 'hidden',
         }}
       >
-        {selectionInfo.text && (
+        {createAnnotation && (
           <AnnotationCreationCard
             selectedText={selectionInfo.text}
             annotationText={newAnnotationText}

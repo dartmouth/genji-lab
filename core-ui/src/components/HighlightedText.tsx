@@ -8,6 +8,19 @@ import { debounce } from 'lodash';
 import { selectAllAnnotationsForParagraph } from '../store/combinedSelectors'
 // import { fetchCommentingAnnotations } from '../store/thunk/annotationThunkInstances'
 
+interface Position {
+  x: number;
+  y: number;
+}
+
+interface SelectionInfo {
+  content_id: number; // If this must be a number
+  start: number;
+  end: number;
+  text: string;
+  position: Position;
+}
+
 interface SelectedTextInterface {
   content_id: number;
   start: number;
@@ -18,7 +31,7 @@ interface SelectedTextInterface {
 interface HighlightedTextProps {
   text: string;
   paragraphId: string;
-  setSelectedText: (selectedText: SelectedTextInterface) => void;
+  setSelectedText: (info: SelectionInfo) => void;
 }
 
 // function parseURI(uri: string){
@@ -163,27 +176,45 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
    // eslint-disable-next-line
   }, [allAnnotations, text, paragraphId]);
 
+  // Helper functions for getting selection offsets
+  const getSelectionStartOffset = (range: Range): number => {
+    const preSelectionRange = range.cloneRange();
+    const element = range.startContainer.parentElement || document.body;
+    preSelectionRange.selectNodeContents(element);
+    preSelectionRange.setEnd(range.startContainer, range.startOffset);
+    return preSelectionRange.toString().length;
+  };
+  
+  const getSelectionEndOffset = (range: Range): number => {
+    const preSelectionRange = range.cloneRange();
+    const element = range.endContainer.parentElement || document.body;
+    preSelectionRange.selectNodeContents(element);
+    preSelectionRange.setEnd(range.endContainer, range.endOffset);
+    return preSelectionRange.toString().length;
+  };
+  
   const handleMouseUp = () => {
     const selection = window.getSelection();
-    if (!selection) return;
-    const range = selection.getRangeAt(0);
-    if (!range) return;
-    
-    // Only process if there's actually text selected
-    if (selection.toString().trim().length === 0) return;
-    
-    // Get all paragraphs in the selection
-    const startContainerParent = range.startContainer.parentElement;
-    const startParagraph = startContainerParent ? startContainerParent.closest('.annotatable-paragraph') : null;
-    
-    if (!startParagraph) return;
-    const newSelectionInfo = {
-      content_id: Number(startParagraph.id),
-      start: range.startOffset,
-      end: range.endOffset,
-      text: selection.toString()
-    };
-    setSelectedText(newSelectionInfo);
+    if (selection && selection.toString().trim().length > 0) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      // Extract a number from paragraphId
+      // Assuming format like "DocumentElements/123"
+      const contentIdMatch = paragraphId.match(/\/(\d+)$/);
+      const contentId = contentIdMatch ? parseInt(contentIdMatch[1], 10) : 0;
+      
+      setSelectedText({
+        content_id: contentId,
+        start: getSelectionStartOffset(range),
+        end: getSelectionEndOffset(range),
+        text: selection.toString(),
+        position: {
+          x: rect.left + window.scrollX,
+          y: rect.bottom + window.scrollY
+        }
+      });
+    }
   };
 
   return (

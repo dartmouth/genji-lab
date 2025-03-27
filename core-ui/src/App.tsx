@@ -17,7 +17,6 @@ const AppContent: React.FC = () => {
         <ErrorBoundary>
           <DocumentContentPanel documentID={1} />
         </ErrorBoundary>
-        
       </div>
     </div>
   );

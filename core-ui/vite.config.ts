@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      'styled-components': 'styled-components',
+    },
+  },
   server: {
     host: '0.0.0.0',
     proxy: {
@@ -11,6 +16,6 @@ export default defineConfig({
         target: 'http://api:8000',
         changeOrigin: true,
       }
-    }
+    },
   }
 })

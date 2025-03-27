@@ -9,3 +9,4 @@ core-ui/node_modules/*
 env
 .env
 api/env/*
+node_modules/*
