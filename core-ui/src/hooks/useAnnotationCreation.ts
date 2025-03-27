@@ -65,7 +65,7 @@ export const useAnnotationCreation = (documentID: number, motivation: string): U
       },
       "target": [{
         "type": "Text",
-        "source": `DocumentElement/${selectionInfo.content_id}`,
+        "source": `DocumentElements/${selectionInfo.content_id}`,
         "selector": {
           "type": "TextQuoteSelector",
           "value": selectionInfo.text,

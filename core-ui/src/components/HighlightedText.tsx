@@ -21,26 +21,19 @@ interface SelectionInfo {
   position: Position;
 }
 
-interface SelectedTextInterface {
-  content_id: number;
-  start: number;
-  end: number;
-  text: string;
-}
-
 interface HighlightedTextProps {
   text: string;
   paragraphId: string;
   setSelectedText: (info: SelectionInfo) => void;
 }
 
-// function parseURI(uri: string){
-//   const destruct = uri.split("/")
-//   if (destruct.length != 2){
-//     console.error("Bad URI: ", uri)
-//   }
-//   return destruct[1]
-// }
+function parseURI(uri: string){
+  const destruct = uri.split("/")
+  if (destruct.length != 2){
+    console.error("Bad URI: ", uri)
+  }
+  return destruct[1]
+}
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
@@ -201,11 +194,11 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       
       // Extract a number from paragraphId
       // Assuming format like "DocumentElements/123"
-      const contentIdMatch = paragraphId.match(/\/(\d+)$/);
-      const contentId = contentIdMatch ? parseInt(contentIdMatch[1], 10) : 0;
+      // const contentIdMatch = paragraphId.match(/\/(\d+)$/);
+      // const contentId = contentIdMatch ? parseInt(contentIdMatch[1], 10) : 0;
       
       setSelectedText({
-        content_id: contentId,
+        content_id: parseURI(paragraphId) as unknown as number,
         start: getSelectionStartOffset(range),
         end: getSelectionEndOffset(range),
         text: selection.toString(),

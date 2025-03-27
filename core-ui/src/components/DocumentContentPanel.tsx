@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import HighlightedText from './HighlightedText';
+// import AnnotationCard from './AnnotationCard';
+// import AnnotationCreationCard from './AnnotationCreationCard';
 import { DocumentElement } from '../types/documentElement';
+// import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { useApiClient } from '../hooks/useApi';
 import { RootState } from '../store/index';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,7 +25,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     const [collapsedComments, setCollapsedComments] = useState<boolean>(false);
     const [collapsedAnnotations, setCollapsedAnnotations] = useState<boolean>(false)
     const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
-    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+    // const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
     
     // Use the extracted annotation creation hook
     const {
@@ -88,23 +91,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         (state: RootState) => makeSelectScholarlyAnnotationsById(state, hoveredHighlightIds)
     );
 
-    // Handler for text selection
-    const handleTextSelection = (selectedTextInfo: any) => {
-        setSelectionInfo({
-            content_id: selectedTextInfo.content_id,
-            start: selectedTextInfo.start,
-            end: selectedTextInfo.end,
-            text: selectedTextInfo.text
-        });
-        
-        if (selectedTextInfo.position) {
-            setMenuPosition({
-                x: selectedTextInfo.position.x,
-                y: selectedTextInfo.position.y
-            });
-        }
-    };
-
     useEffect(() => {
         if (hoveredAnnotations.length > 0 && !hasAutoOpened && !collapsedComments) {
             setCollapsedComments(true);
@@ -135,14 +121,18 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         <HighlightedText
                             text={content.content.text}
                             paragraphId={`DocumentElements/${content.id}`}
-                            setSelectedText={handleTextSelection}
+                            setSelectedText={(selectedText) => setSelectionInfo({
+                                content_id: selectedText.content_id,
+                                start: selectedText.start,
+                                end: selectedText.end,
+                                text: selectedText.text
+                            })}
                         />
                     </div>
                 ))}
                 <MenuContext 
                     data={data}
                     selectedText={selectionInfo?.text || ""}
-                    position={menuPosition}
                     setCreateAnnotation={scholarlyAnnotationCreate.setCreateAnnotation}
                     setCreateComment={setCreateAnnotation}
                 />
