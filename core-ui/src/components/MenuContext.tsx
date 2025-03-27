@@ -10,7 +10,7 @@ interface MenuItem {
 interface MenuContextProps {
   data: MenuItem[];
   selectedText: string;
-  position: { x: number; y: number };
+  // position: { x: number; y: number };
   setCreateComment: (value: boolean) => void;
   setCreateAnnotation: (value: boolean) => void;
 }
