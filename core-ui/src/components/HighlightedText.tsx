@@ -1,11 +1,12 @@
 // components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
 import { RootState } from '../store';
 import { updateHighlightPosition, setHoveredHighlights } from '../store/highlightRegistrySlice';
 import { debounce } from 'lodash';
 import { selectAllAnnotationsForParagraph } from '../store/combinedSelectors'
+// import { fetchCommentingAnnotations } from '../store/thunk/annotationThunkInstances'
 
 interface SelectedTextInterface {
   content_id: number;
@@ -20,12 +21,27 @@ interface HighlightedTextProps {
   setSelectedText: (selectedText: SelectedTextInterface) => void;
 }
 
+// function parseURI(uri: string){
+//   const destruct = uri.split("/")
+//   if (destruct.length != 2){
+//     console.error("Bad URI: ", uri)
+//   }
+//   return destruct[1]
+// }
+
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
   paragraphId,
   setSelectedText = () => {},
 }) => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+
+  // useEffect(() => {
+  //   // Fetch annotations when the component mounts
+  //   // console.log("firing dispatch")
+  //   dispatch(fetchCommentingAnnotations(parseURI(paragraphId)));
+  // }, [dispatch, paragraphId]);
+
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [highlightPositions, setHighlightPositions] = useState<Map<string, {
@@ -33,7 +49,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     motivation: string
   }>>(new Map());
   
-  const allAnnotations = useSelector((state: RootState) => 
+  const allAnnotations = useAppSelector((state: RootState) => 
     selectAllAnnotationsForParagraph(state, paragraphId)
   );
   

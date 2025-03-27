@@ -1,9 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import HighlightedText from './HighlightedText';
-// import AnnotationCard from './AnnotationCard';
-// import AnnotationCreationCard from './AnnotationCreationCard';
 import { DocumentElement } from '../types/documentElement';
-// import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 import { useApiClient } from '../hooks/useApi';
 import { RootState } from '../store/index';
 import { useDispatch, useSelector } from 'react-redux';

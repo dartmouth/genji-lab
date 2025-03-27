@@ -11,6 +11,7 @@ export interface HighlightBoundingBox {
 
 interface RegisteredHighlight {
   id: string;
+  motivation: string
   boundingBoxes: HighlightBoundingBox[]; // Multiple boxes for multi-line highlights
   annotationId: string; // To link to the annotation data
 }
