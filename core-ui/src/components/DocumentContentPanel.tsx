@@ -35,7 +35,9 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         setNewAnnotationText,
         handleCreateAnnotation,
         handleCancelAnnotation,
-        annotations
+        annotations,
+        createAnnotation,
+        setCreateAnnotation,
     } = useAnnotationCreation(documentID, "commenting");
     
     const scholarlyAnnotationCreate = useAnnotationCreation(documentID, "scholarly")
@@ -144,17 +146,20 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                     data={data}
                     selectedText={selectionInfo?.text || ""}
                     position={menuPosition}
+                    setCreateAnnotation={scholarlyAnnotationCreate.setCreateAnnotation}
+                    setCreateComment={setCreateAnnotation}
                 />
             </div>
             <AnnotationsSidebar
                 collapsedComments={collapsedAnnotations}
                 setCollapsedComments={setCollapsedAnnotations}
-                selectionInfo={selectionInfo}
-                newAnnotationText={newAnnotationText}
-                setNewAnnotationText={setNewAnnotationText}
-                handleCreateAnnotation={handleCreateAnnotation}
-                handleCancelAnnotation={handleCancelAnnotation}
+                selectionInfo={scholarlyAnnotationCreate.selectionInfo}
+                newAnnotationText={scholarlyAnnotationCreate.newAnnotationText}
+                setNewAnnotationText={scholarlyAnnotationCreate.setNewAnnotationText}
+                handleCreateAnnotation={scholarlyAnnotationCreate.handleCreateAnnotation}
+                handleCancelAnnotation={scholarlyAnnotationCreate.handleCancelAnnotation}
                 hoveredAnnotations={hoveredScholarlyAnnotations}
+                createAnnotation={scholarlyAnnotationCreate.createAnnotation}
                 position='left'
             />
             <AnnotationsSidebar
@@ -166,6 +171,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 handleCreateAnnotation={handleCreateAnnotation}
                 handleCancelAnnotation={handleCancelAnnotation}
                 hoveredAnnotations={hoveredAnnotations}
+                createAnnotation={createAnnotation}
                 position='right'
             />
     </div>

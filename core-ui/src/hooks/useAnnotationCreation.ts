@@ -18,6 +18,8 @@ interface UseAnnotationCreationReturn {
   handleCreateAnnotation: () => Promise<void>;
   handleCancelAnnotation: () => void;
   annotations: ReturnType<typeof useApiClient<Annotation[]>>;
+  createAnnotation: boolean;
+  setCreateAnnotation: (value: boolean) => void;
 }
 
 export const useAnnotationCreation = (documentID: number, motivation: string): UseAnnotationCreationReturn => {
@@ -28,6 +30,8 @@ export const useAnnotationCreation = (documentID: number, motivation: string): U
     text: ""
   });
   
+  const [createAnnotation, setCreateAnnotation] = useState<boolean>(false);
+
   const [newAnnotationText, setNewAnnotationText] = useState("");
   const { user, isAuthenticated } = useAuth();
   const annotations = useApiClient<Annotation[]>(`/annotations/?motivation=${motivation}`);
@@ -41,6 +45,7 @@ export const useAnnotationCreation = (documentID: number, motivation: string): U
   const handleCreateAnnotation = async () => {
     if (!selectionInfo.text || !newAnnotationText) return;
     if (!user || !isAuthenticated) return;
+    setCreateAnnotation(false);
 
     const newAnnotation: AnnotationCreate = {
       "context": "http://www.w3.org/ns/anno.jsonld",
@@ -106,6 +111,8 @@ export const useAnnotationCreation = (documentID: number, motivation: string): U
     setNewAnnotationText,
     handleCreateAnnotation,
     handleCancelAnnotation,
-    annotations
+    annotations,
+    createAnnotation,
+    setCreateAnnotation,
   };
 };
