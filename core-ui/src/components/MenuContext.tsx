@@ -1,52 +1,60 @@
-import React, { useEffect } from "react";
-import useContextMenu from "../hooks/useContextMenu";
-import { ContextMenu } from "../styles/styles";
+// MenuContext.tsx
+import React, { useState, useEffect } from "react";
+import { ContextMenu, ContextButton } from "../styles/styles";
 
 interface MenuItem {
-  id: string | number;
+  id: number | string;
   title: string;
 }
 
-interface MenuContextHookProps {
+interface MenuContextProps {
   data: MenuItem[];
+  selectedText: string;
+  position: { x: number; y: number };
 }
 
-const MenuContext: React.FC<MenuContextHookProps> = ({ data }) => {
-  const { clicked, setClicked, points, setPoints, selectedText } = useContextMenu();
-
+const MenuContext: React.FC<MenuContextProps> = ({ data, selectedText, position }) => {
+  const [clicked, setClicked] = useState(false);
+  
   useEffect(() => {
-    // Handle right-click on document
     const handleContextMenu = (e: MouseEvent) => {
-      // Only show context menu if text is selected
-      const selection = window.getSelection();
-      if (selection && selection.toString().trim().length > 0) {
+      if (selectedText && selectedText.trim().length > 0) {
         e.preventDefault();
         setClicked(true);
-        setPoints({
-          x: e.pageX,
-          y: e.pageY,
-        });
       }
     };
 
+    const handleClick = () => {
+      setClicked(false);
+    };
+
     document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("click", handleClick);
     
     return () => {
       document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("click", handleClick);
     };
-  }, [setClicked, setPoints]);
+  }, [selectedText]);
+
+  if (!clicked || !selectedText) return null;
 
   return (
-    <div>
-      {clicked && selectedText && (
-        <ContextMenu top={points.y} left={points.x}>
-          <ul>
-            <li>Create Annotation</li>
-            <li>Create Comment</li>
-          </ul>
-        </ContextMenu>
-      )}
-    </div>
+    <ContextMenu top={position.y} left={position.x}>
+      {data.map((item) => (
+        <ContextButton 
+          key={item.id} 
+          onClick={() => {
+            // Handle menu item click
+            console.log(`Clicked ${item.title} for text: ${selectedText}`);
+            // Add your action handling here
+            setClicked(false);
+          }}
+        >
+          {item.title}
+        </ContextButton>
+      ))}
+    </ContextMenu>
   );
 };
 
