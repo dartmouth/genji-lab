@@ -4,8 +4,9 @@ import AnnotationCard from './AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Annotation } from '../types/annotation';
-import './AnnotationsSidebar.css'; // We'll create this CSS file
-
+import './AnnotationsSidebar.css'; 
+import { useAppSelector } from '../store/hooks/useAppDispatch';
+import { selectMotivation } from '../store/slice/annotationCreate'
 type SidebarPosition = 'left' | 'right';
 
 interface AnnotationsSidebarProps {
@@ -24,22 +25,25 @@ interface AnnotationsSidebarProps {
   hoveredAnnotations: Annotation[];
   createAnnotation: boolean;
   motivation: string
-  position?: SidebarPosition; // New prop with default 'right'
+  position?: SidebarPosition;
 }
 
 const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   collapsedComments,
   setCollapsedComments,
   selectionInfo,
-  newAnnotationText,
-  setNewAnnotationText,
-  handleCreateAnnotation,
-  handleCancelAnnotation,
+  // newAnnotationText,
+  // setNewAnnotationText,
+  // handleCreateAnnotation,
+  // handleCancelAnnotation,
   hoveredAnnotations,
-  createAnnotation,
+  // createAnnotation,
   motivation,
   position = 'right', // Default to right if not specified
 }) => {
+  // const dispatch = useAppDispatch()
+
+  const currentMotivation = useAppSelector(selectMotivation)
   // Determine which icon to show based on position and collapsed state
   const renderToggleIcon = () => {
     if (position === 'right') {
@@ -48,7 +52,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
       return collapsedComments ? <FaChevronLeft /> : <FaChevronRight />;
     }
   };
-  console.log(motivation)
+  // console.log(motivation)
 
   return (
     <div className={`sidebar position-${position}`}>
@@ -60,14 +64,8 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
           overflow: 'hidden',
         }}
       >
-        {createAnnotation && (
-          <AnnotationCreationCard
-            selectedText={selectionInfo.text}
-            annotationText={newAnnotationText}
-            onAnnotationTextChange={setNewAnnotationText}
-            onSave={handleCreateAnnotation}
-            onCancel={handleCancelAnnotation}
-          />
+        {currentMotivation === motivation && (
+          <AnnotationCreationCard/>
         )}
         
         {

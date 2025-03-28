@@ -12,7 +12,7 @@ import { useAnnotationCreation } from '../hooks/useAnnotationCreation';
 import { scholarlyAnnotations } from '../store/slice/annotationSlices';
 import AnnotationsSidebar from './AnnotationsSidebar';
 import MenuContext from './MenuContext';
-import { data } from '../components/data';
+
 
 interface DocumentContentPanelProps {
     documentCollectionId: number;
@@ -39,7 +39,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         handleCancelAnnotation,
         annotations,
         createAnnotation,
-        setCreateAnnotation,
+        // setCreateAnnotation,
     } = useAnnotationCreation(documentID, "commenting");
     
     const scholarlyAnnotationCreate = useAnnotationCreation(documentID, "scholarly")
@@ -96,6 +96,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     useEffect(() => {
         if (hoveredAnnotations.length > 0 && !hasAutoOpened && !collapsedComments) {
             setCollapsedComments(true);
+            setCollapsedAnnotations(true);
             setHasAutoOpened(true);
         }
     }, [hoveredAnnotations, hasAutoOpened, collapsedComments]);
@@ -134,12 +135,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         />
                     </div>
                 ))}
-                <MenuContext 
-                    data={data}
-                    selectedText={selectionInfo?.text || ""}
-                    setCreateAnnotation={scholarlyAnnotationCreate.setCreateAnnotation}
-                    setCreateComment={setCreateAnnotation}
-                />
+                <MenuContext/>
             </div>
             <AnnotationsSidebar
                 collapsedComments={collapsedAnnotations}

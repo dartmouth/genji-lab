@@ -6,7 +6,8 @@ import { RootState } from '../store';
 import { updateHighlightPosition, setHoveredHighlights } from '../store/slice/highlightRegistrySlice';
 import { debounce } from 'lodash';
 import { selectAllAnnotationsForParagraph } from '../store/selector/combinedSelectors'
-import { setSelection } from '../store/slice/annotationCreate';
+import { setTarget } from '../store/slice/annotationCreate';
+import { parseURI } from '../functions/makeAnnotationBody';
 // import { fetchCommentingAnnotations } from '../store/thunk/annotationThunkInstances'
 
 interface Position {
@@ -30,13 +31,7 @@ interface HighlightedTextProps {
   setSelectedText: (info: SelectionInfo) => void;
 }
 
-function parseURI(uri: string){
-  const destruct = uri.split("/")
-  if (destruct.length != 2){
-    console.error("Bad URI: ", uri)
-  }
-  return destruct[1]
-}
+
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
@@ -197,7 +192,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
-      dispatch(setSelection(
+      dispatch(setTarget(
         {selectedText: selection.toString(),
           sourceURI: [paragraphId],
           documentCollectionId: documentCollectionId,

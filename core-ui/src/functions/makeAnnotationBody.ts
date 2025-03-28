@@ -45,3 +45,11 @@ export function makeTextAnnotationBody(
 
     return newAnnotation
 }
+
+export function parseURI(uri: string){
+  const destruct = uri.split("/")
+  if (destruct.length != 2){
+    console.error("Bad URI: ", uri)
+  }
+  return destruct[1]
+}

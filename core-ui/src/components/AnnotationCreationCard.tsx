@@ -1,5 +1,11 @@
 // AnnotationCreationCard.tsx
 import React from 'react';
+import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
+import { selectAnnotationCreate } from '../store/slice/annotationCreate';
+import { setContent, resetCreateAnnotation } from '../store/slice/annotationCreate';
+import { debounce } from 'lodash';
+import { makeTextAnnotationBody, parseURI } from '../functions/makeAnnotationBody';
+import { useIAM } from '../hooks/useIAM';
 
 interface AnnotationCreationCardProps {
   selectedText: string;
@@ -10,12 +16,44 @@ interface AnnotationCreationCardProps {
 }
 
 const AnnotationCreationCard: React.FC<AnnotationCreationCardProps> = ({
-  selectedText,
+  // selectedText,
   annotationText,
-  onAnnotationTextChange,
-  onSave,
-  onCancel
+  // onAnnotationTextChange,
+  // onSave,
+  // onCancel
 }) => {
+  const dispatch = useAppDispatch()
+  const { user } =useIAM()
+
+  const newAnno = useAppSelector(selectAnnotationCreate)
+
+  const onTextChange = (value: string) => {
+    // console.log(value)
+    dispatch(setContent(value))
+  };
+
+  const onSave = () => {
+    if (!user) return
+
+    const annoBody = makeTextAnnotationBody(
+      newAnno.target.documentCollectionId,
+      newAnno.target.documentId,
+      parseURI(newAnno.target.sourceURI[0]) as unknown as number,
+      user.id,
+      newAnno.motivation,
+      newAnno.target.sourceURI[0],
+      newAnno.content,
+      newAnno.target.start,
+      newAnno.target.end
+    )
+    console.log(annoBody)
+    
+  }
+  const onCancel = () => {
+    dispatch(resetCreateAnnotation())
+  }
+  const onTextChangeDebounce = debounce(onTextChange, 10)
+
   return (
     <div 
       className="comment-card annotation-creation-card"
@@ -29,7 +67,7 @@ const AnnotationCreationCard: React.FC<AnnotationCreationCardProps> = ({
       }}
     >
       <div className="comment-header" style={{ marginBottom: '8px', fontWeight: 'bold' }}>
-        New Comment
+        {newAnno.motivation === 'commenting' ? "New Comment" : "New Scholarly Annotation"}
       </div>
       
       <div className="selected-text" style={{ 
@@ -40,12 +78,12 @@ const AnnotationCreationCard: React.FC<AnnotationCreationCardProps> = ({
         marginBottom: '8px',
         borderLeft: '3px solid #c4dd88'
       }}>
-        "{selectedText}"
+        "{newAnno.target.selectedText}"
       </div>
       
       <textarea
-        value={annotationText}
-        onChange={(e) => onAnnotationTextChange(e.target.value)}
+        value={newAnno.content}
+        onChange={(e) => onTextChangeDebounce(e.target.value)}
         placeholder="Enter your comment here..."
         style={{ 
           width: '100%', 
@@ -76,14 +114,14 @@ const AnnotationCreationCard: React.FC<AnnotationCreationCardProps> = ({
         </button>
         <button
           onClick={onSave}
-          disabled={!annotationText.trim()}
+          disabled={!newAnno.content.trim()}
           style={{
             padding: '6px 12px',
-            backgroundColor: annotationText.trim() ? '#4285f4' : '#cccccc',
+            backgroundColor: newAnno.content.trim() ? '#4285f4' : '#cccccc',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: annotationText.trim() ? 'pointer' : 'not-allowed',
+            cursor: newAnno.content.trim() ? 'pointer' : 'not-allowed',
             fontSize: '0.9em'
           }}
         >
