@@ -1,15 +1,19 @@
 import React, { useState } from "react";
+import { RootState } from "../store/index";
 import { Annotation } from "../types/annotation";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
+import { replyingAnnotations } from "../store";
+import { useAppSelector } from "../store/hooks/useAppDispatch";
 
 interface AnnotationCardProps {
     id: string;
     annotation: Annotation;
     isHighlighted?: boolean;
+    depth: number
 }
 
-const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighlighted = false }) => {
+const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighlighted = false, depth=0 }) => {
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
     const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -19,6 +23,10 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const closeMenu = () => {
         setMenuAnchor(null);
     };
+    
+    const replies = useAppSelector(
+        (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
+    );
 
     return (
         <div 
@@ -32,23 +40,23 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 padding: '10px',
                 margin: '10px 0',
                 position: 'relative',
-                width: '275px'
+                width: `${275 - (25*depth)}px`
             }}
         >
             <div className="comment-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>{`${annotation.creator.first_name} ${annotation.creator.last_name}`}</span>
                 <div>
                     <button title="Upvote" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'green' }}>
-                        <ThumbUp fontSize='1rem' />
+                        <ThumbUp sx={{ fontSize: '1rem' }} />
                     </button>
                     <button title="Reply" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'blue' }}>
-                        <ChatBubbleOutline fontSize='1rem' />
+                        <ChatBubbleOutline sx={{ fontSize: '1rem' }} />
                     </button>
                     <button title="Flag" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}>
-                        <Flag fontSize='1rem' />
+                        <Flag sx={{ fontSize: '1rem' }} />
                     </button>
                     <button title="Settings" onClick={toggleMenu} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'black' }}>
-                        <Settings fontSize='1rem' />
+                        <Settings sx={{ fontSize: '1rem' }}/>
                     </button>
                 </div>
             </div>
@@ -64,6 +72,19 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 <MenuItem onClick={closeMenu}>Delete</MenuItem>
                 <MenuItem onClick={closeMenu}>Tags</MenuItem>
             </Menu>
+            {
+                replies && (
+                    replies.map(reply => (
+                                  <AnnotationCard
+                                    key={reply.id}
+                                    id={`${reply.id}`}
+                                    annotation={reply}
+                                    isHighlighted={false}
+                                    depth={depth+1}
+                                  />
+                                ))
+                )
+            }
         </div>
     );
 }

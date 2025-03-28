@@ -3,50 +3,34 @@ import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
 import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
 import { RootState } from '../store';
-import { updateHighlightPosition, setHoveredHighlights } from '../store/slice/highlightRegistrySlice';
+import { updateHighlightPosition, setHoveredHighlights } from '../slice/highlightRegistrySlice';
 import { debounce } from 'lodash';
 import { selectAllAnnotationsForParagraph } from '../store/selector/combinedSelectors'
-import { setTarget } from '../store/slice/annotationCreate';
+import { setTarget } from '../slice/annotationCreate';
 import { parseURI } from '../functions/makeAnnotationBody';
-// import { fetchCommentingAnnotations } from '../store/thunk/annotationThunkInstances'
-
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface SelectionInfo {
-  content_id: number; // If this must be a number
-  start: number;
-  end: number;
-  text: string;
-  position: Position;
-}
+import { fetchCommentingAnnotations, fetchScholarlyAnnotations, fetchReplyingAnnotations } from '../store/thunk/annotationThunks';
 
 interface HighlightedTextProps {
   text: string;
   documentCollectionId: number,
   documentId: number,
   paragraphId: string;
-  setSelectedText: (info: SelectionInfo) => void;
 }
-
-
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
   paragraphId,
   documentCollectionId,
   documentId,
-  setSelectedText = () => {},
+  // setSelectedText = () => {},
 }) => {
   const dispatch = useAppDispatch();
 
-  // useEffect(() => {
-  //   // Fetch annotations when the component mounts
-  //   // console.log("firing dispatch")
-  //   dispatch(fetchCommentingAnnotations(parseURI(paragraphId)));
-  // }, [dispatch, paragraphId]);
+  useEffect(() => {
+    dispatch(fetchCommentingAnnotations(parseURI(paragraphId)));
+    dispatch(fetchScholarlyAnnotations(parseURI(paragraphId)))
+    dispatch(fetchReplyingAnnotations(parseURI(paragraphId)))
+  }, [dispatch, paragraphId]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -190,7 +174,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     const selection = window.getSelection();
     if (selection && selection.toString().trim().length > 0) {
       const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
       
       dispatch(setTarget(
         {selectedText: selection.toString(),
@@ -201,17 +184,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           end: getSelectionEndOffset(range),
         }
       ))
-
-      setSelectedText({
-        content_id: parseURI(paragraphId) as unknown as number,
-        start: getSelectionStartOffset(range),
-        end: getSelectionEndOffset(range),
-        text: selection.toString(),
-        position: {
-          x: rect.left + window.scrollX,
-          y: rect.bottom + window.scrollY
-        }
-      });
     }
   };
 
