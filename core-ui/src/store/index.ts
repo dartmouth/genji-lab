@@ -1,6 +1,7 @@
 // index.ts
 import { configureStore, combineReducers, Reducer, Action } from '@reduxjs/toolkit';
 import highlightRegistryReducer from './slice/highlightRegistrySlice';
+import createAnnotationSliceReducer from './slice/annotationCreate'
 import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations } from './slice/annotationSlices';
 import { AnnotationState } from './slice/factory/createAnnotationSlice';
 
@@ -23,6 +24,7 @@ const annotationsReducer = combineReducers(annotationReducersMap);
 const rootReducer = {
   annotations: annotationsReducer,
   highlightRegistry: highlightRegistryReducer,
+  createAnnotation: createAnnotationSliceReducer
 };
 
 

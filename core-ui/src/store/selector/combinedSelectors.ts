@@ -1,5 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { commentingAnnotations, scholarlyAnnotations, RootState } from './index';
+import { commentingAnnotations, scholarlyAnnotations, RootState } from '../index';
 
 export const selectAllAnnotationsForParagraph = createSelector(
   [

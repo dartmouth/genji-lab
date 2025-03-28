@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
 import { RootState } from '../store';
 import { updateHighlightPosition, setHoveredHighlights } from '../store/slice/highlightRegistrySlice';
 import { debounce } from 'lodash';
-import { selectAllAnnotationsForParagraph } from '../store/combinedSelectors'
+import { selectAllAnnotationsForParagraph } from '../store/selector/combinedSelectors'
 // import { fetchCommentingAnnotations } from '../store/thunk/annotationThunkInstances'
 
 interface Position {
