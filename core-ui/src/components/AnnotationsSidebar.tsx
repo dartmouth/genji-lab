@@ -6,24 +6,24 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Annotation } from '../types/annotation';
 import '../styles/AnnotationsSidebar.css'; 
 import { useAppSelector } from '../store/hooks/useAppDispatch';
-import { selectMotivation } from '../store/slice/annotationCreate'
+import { selectMotivation } from '../slice/annotationCreate'
 type SidebarPosition = 'left' | 'right';
 
 interface AnnotationsSidebarProps {
   collapsedComments: boolean;
   setCollapsedComments: (collapsed: boolean) => void;
-  selectionInfo: {
-    content_id: number;
-    start: number;
-    end: number;
-    text: string;
-  };
-  newAnnotationText: string;
-  setNewAnnotationText: (text: string) => void;
-  handleCreateAnnotation: () => void;
-  handleCancelAnnotation: () => void;
+  // selectionInfo: {
+  //   content_id: number;
+  //   start: number;
+  //   end: number;
+  //   text: string;
+  // };
+  // newAnnotationText: string;
+  // setNewAnnotationText: (text: string) => void;
+  // handleCreateAnnotation: () => void;
+  // handleCancelAnnotation: () => void;
   hoveredAnnotations: Annotation[];
-  createAnnotation: boolean;
+  // createAnnotation: boolean;
   motivation: string
   position?: SidebarPosition;
 }
@@ -31,7 +31,7 @@ interface AnnotationsSidebarProps {
 const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   collapsedComments,
   setCollapsedComments,
-  selectionInfo,
+  // selectionInfo,
   // newAnnotationText,
   // setNewAnnotationText,
   // handleCreateAnnotation,
@@ -44,6 +44,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   // const dispatch = useAppDispatch()
 
   const currentMotivation = useAppSelector(selectMotivation)
+
   // Determine which icon to show based on position and collapsed state
   const renderToggleIcon = () => {
     if (position === 'right') {
@@ -70,7 +71,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
         
         {
           hoveredAnnotations.length === 0 ? (
-            !selectionInfo.text && <p>Hover over a highlight to view annotations</p>
+            <p>Hover over a highlight to view annotations</p>
           ) : (
             hoveredAnnotations.map(annotation => (
               <AnnotationCard

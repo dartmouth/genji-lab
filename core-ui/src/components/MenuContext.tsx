@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ContextMenu, ContextButton } from "../components/ContextMenuComponents";
 import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
-import { selectSelectedText, setMotivation } from '../store/slice/annotationCreate';
+import { selectSelectedText, setMotivation } from '../slice/annotationCreate';
 import { createPortal } from 'react-dom';
 
 const MenuContext: React.FC = () => {
@@ -49,7 +49,6 @@ const MenuContext: React.FC = () => {
           onClick={(e: React.MouseEvent) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log(`Clicked Create Comment for text: ${text}`);
             dispatch(setMotivation("commenting"));
             setClicked(false);
           }}
@@ -61,7 +60,6 @@ const MenuContext: React.FC = () => {
           onClick={(e: React.MouseEvent) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log(`Clicked Create Annotation for text: ${text}`);
             dispatch(setMotivation("scholarly"));
             setClicked(false);
           }}

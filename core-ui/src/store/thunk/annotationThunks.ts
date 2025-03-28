@@ -1,14 +1,13 @@
-// src/store/annotationThunkInstances.ts
 import { 
     commentingAnnotations, 
     replyingAnnotations, 
     scholarlyAnnotations 
-  } from '../slice/annotationSlices';
-  
+  } from '../../slice/annotationSlices';
+
   import { 
     createFetchAnnotationsThunk, 
     createSaveAnnotationThunk 
-  } from './factory/annotationThunks';
+  } from './factory/createAnnotationThunks';
   
   // Create fetch thunks for each annotation type
   export const fetchCommentingAnnotations = createFetchAnnotationsThunk(

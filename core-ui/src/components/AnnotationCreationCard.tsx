@@ -1,11 +1,13 @@
 // AnnotationCreationCard.tsx
 import React from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
-import { selectAnnotationCreate } from '../store/slice/annotationCreate';
-import { setContent, resetCreateAnnotation } from '../store/slice/annotationCreate';
+import { selectAnnotationCreate } from '../slice/annotationCreate';
+import { setContent, resetCreateAnnotation } from '../slice/annotationCreate';
 import { debounce } from 'lodash';
 import { makeTextAnnotationBody, parseURI } from '../functions/makeAnnotationBody';
 import { useIAM } from '../hooks/useIAM';
+import { thunkMap } from '../store/thunk/annotationThunks';
+
 
 const AnnotationCreationCard: React.FC = () => {
   const dispatch = useAppDispatch()
@@ -21,6 +23,15 @@ const AnnotationCreationCard: React.FC = () => {
   const onSave = () => {
     if (!user) return
 
+    const annoType: string = newAnno.motivation
+
+    const thunk = thunkMap[annoType] || {}
+
+    if (!thunk) {
+      console.error("Bad motivation")
+      return
+    }
+
     const annoBody = makeTextAnnotationBody(
       newAnno.target.documentCollectionId,
       newAnno.target.documentId,
@@ -32,7 +43,9 @@ const AnnotationCreationCard: React.FC = () => {
       newAnno.target.start,
       newAnno.target.end
     )
-    console.log(annoBody)
+    
+    dispatch(thunk.create(annoBody))
+    dispatch(resetCreateAnnotation())
     
   }
   const onCancel = () => {

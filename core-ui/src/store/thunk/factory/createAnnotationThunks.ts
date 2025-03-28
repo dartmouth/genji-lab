@@ -1,6 +1,6 @@
 
 import { createAsyncThunk, ActionCreatorWithPayload } from '@reduxjs/toolkit';
-import { Annotation } from '../../../types/annotation';
+import { Annotation, AnnotationCreate } from '../../../types/annotation';
 import { RootState } from '../../index';
 import axios, { AxiosInstance } from 'axios';
 
@@ -69,15 +69,15 @@ export function createSaveAnnotationThunk(
     
     return createAsyncThunk<
       Annotation,
-      Annotation,
+      AnnotationCreate,
       { state: RootState }
     >(
       thunkName,
-      async (annotation: Annotation, { dispatch, rejectWithValue }) => {
+      async (annotation: AnnotationCreate, { dispatch, rejectWithValue }) => {
         try {
 
           // Use your API client
-          const response = await api.post(`/annotations`, annotation);
+          const response = await api.post(`/annotations/`, annotation);
           
           const savedAnnotation: Annotation = response.data;
           
