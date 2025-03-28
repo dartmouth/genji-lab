@@ -7,21 +7,7 @@ import { debounce } from 'lodash';
 import { makeTextAnnotationBody, parseURI } from '../functions/makeAnnotationBody';
 import { useIAM } from '../hooks/useIAM';
 
-interface AnnotationCreationCardProps {
-  selectedText: string;
-  annotationText: string;
-  onAnnotationTextChange: (text: string) => void;
-  onSave: () => void;
-  onCancel: () => void;
-}
-
-const AnnotationCreationCard: React.FC<AnnotationCreationCardProps> = ({
-  // selectedText,
-  annotationText,
-  // onAnnotationTextChange,
-  // onSave,
-  // onCancel
-}) => {
+const AnnotationCreationCard: React.FC = () => {
   const dispatch = useAppDispatch()
   const { user } =useIAM()
 

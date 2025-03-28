@@ -1,4 +1,3 @@
-// MenuContext.tsx
 import React, { useState, useEffect } from "react";
 import { ContextMenu, ContextButton } from "../components/ContextMenuComponents";
 import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
@@ -14,7 +13,6 @@ const MenuContext: React.FC = () => {
   const [coords, setCoords] = useState<{ x: number; y: number }>({
     x: 0, y: 0
   });
-  // const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
@@ -23,7 +21,7 @@ const MenuContext: React.FC = () => {
         setCoords({ x: e.pageX, y: e.pageY});
         setClicked(true);
       } else {
-        console.log("No text selected or text is empty"); // Debug log
+        console.log("No text selected or text is empty"); 
       }
     };
 
@@ -39,8 +37,6 @@ const MenuContext: React.FC = () => {
       document.removeEventListener("click", handleClick);
     };
   }, [text]);
-
-
 
   if (!clicked || !text) {
     return null;
