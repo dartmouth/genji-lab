@@ -2,7 +2,7 @@
 import { useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { setHoveredHighlights } from '../store/slice/highlightRegistrySlice';
+import { setHoveredHighlights } from '../slice/highlightRegistrySlice';
 import { makeSelectAnnotationsById } from '../store/annotationSlice';
 import { debounce } from 'lodash';
 

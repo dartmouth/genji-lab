@@ -1,8 +1,7 @@
-// MenuContext.tsx
 import React, { useState, useEffect } from "react";
 import { ContextMenu, ContextButton } from "../components/ContextMenuComponents";
 import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
-import { selectSelectedText, setMotivation } from '../store/slice/annotationCreate';
+import { selectSelectedText, setMotivation } from '../slice/annotationCreate';
 import { createPortal } from 'react-dom';
 
 const MenuContext: React.FC = () => {
@@ -14,7 +13,6 @@ const MenuContext: React.FC = () => {
   const [coords, setCoords] = useState<{ x: number; y: number }>({
     x: 0, y: 0
   });
-  // const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
@@ -23,7 +21,7 @@ const MenuContext: React.FC = () => {
         setCoords({ x: e.pageX, y: e.pageY});
         setClicked(true);
       } else {
-        console.log("No text selected or text is empty"); // Debug log
+        console.log("No text selected or text is empty"); 
       }
     };
 
@@ -40,8 +38,6 @@ const MenuContext: React.FC = () => {
     };
   }, [text]);
 
-
-
   if (!clicked || !text) {
     return null;
   }
@@ -53,7 +49,6 @@ const MenuContext: React.FC = () => {
           onClick={(e: React.MouseEvent) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log(`Clicked Create Comment for text: ${text}`);
             dispatch(setMotivation("commenting"));
             setClicked(false);
           }}
@@ -65,7 +60,6 @@ const MenuContext: React.FC = () => {
           onClick={(e: React.MouseEvent) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log(`Clicked Create Annotation for text: ${text}`);
             dispatch(setMotivation("scholarly"));
             setClicked(false);
           }}

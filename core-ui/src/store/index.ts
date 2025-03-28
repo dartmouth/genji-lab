@@ -1,9 +1,9 @@
 // index.ts
 import { configureStore, combineReducers, Reducer, Action } from '@reduxjs/toolkit';
-import highlightRegistryReducer from './slice/highlightRegistrySlice';
-import createAnnotationSliceReducer from './slice/annotationCreate'
-import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations } from './slice/annotationSlices';
-import { AnnotationState } from './slice/factory/createAnnotationSlice';
+import highlightRegistryReducer from '../slice/highlightRegistrySlice';
+import createAnnotationSliceReducer from '../slice/annotationCreate'
+import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations } from '../slice/annotationSlices';
+import { AnnotationState } from '../slice/factory/createAnnotationSlice';
 
 // Define the structure of our annotations reducers
 interface AnnotationReducers {

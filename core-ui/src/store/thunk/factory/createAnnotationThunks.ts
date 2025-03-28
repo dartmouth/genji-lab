@@ -1,6 +1,6 @@
 
 import { createAsyncThunk, ActionCreatorWithPayload } from '@reduxjs/toolkit';
-import { Annotation } from '../../../types/annotation';
+import { Annotation, AnnotationCreate } from '../../../types/annotation';
 import { RootState } from '../../index';
 import axios, { AxiosInstance } from 'axios';
 
@@ -69,15 +69,51 @@ export function createSaveAnnotationThunk(
     
     return createAsyncThunk<
       Annotation,
-      Annotation,
+      AnnotationCreate,
       { state: RootState }
     >(
       thunkName,
-      async (annotation: Annotation, { dispatch, rejectWithValue }) => {
+      async (annotation: AnnotationCreate, { dispatch, rejectWithValue }) => {
         try {
 
           // Use your API client
-          const response = await api.post(`/annotations`, annotation);
+          const response = await api.post(`/annotations/`, annotation);
+          
+          const savedAnnotation: Annotation = response.data;
+          
+          dispatch(sliceActions.addAnnotation(savedAnnotation));
+          
+          return savedAnnotation;
+        } catch (error) {
+          return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+        }
+      }
+    );
+  }
+
+  interface AnnotationPatch {
+    annotationId: number,
+    payload: {
+      body: string
+    }
+  }
+  export function createPatchAnnotationThunk(
+    bucketName: string,
+    sliceActions: AnnotationSliceActions
+  ) {
+    const thunkName = `annotations/${bucketName}/patchAnnotation`;
+    
+    return createAsyncThunk<
+      Annotation,
+      AnnotationPatch,
+      { state: RootState }
+    >(
+      thunkName,
+      async (patch: AnnotationPatch, { dispatch, rejectWithValue }) => {
+        try {
+
+          // Use your API client
+          const response = await api.patch(`/annotations/${patch.annotationId}`, patch.payload);
           
           const savedAnnotation: Annotation = response.data;
           
