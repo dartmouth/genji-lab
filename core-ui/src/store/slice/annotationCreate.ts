@@ -2,12 +2,16 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface createAnnotation {
     selectedText: string;
-    sourceURI: string;
+    sourceURI: string[];
+    start: number,
+    end: number
 }
 
 const initialState: createAnnotation = {
     selectedText: "",
-    sourceURI: ""
+    sourceURI: [""],
+    start: 0,
+    end: 0
 }
 
 const createAnnotationSlice = createSlice({
@@ -15,9 +19,14 @@ const createAnnotationSlice = createSlice({
     initialState,
     reducers:{
         setSelectedText: (state, action: PayloadAction<createAnnotation>) => {
-            state = action.payload
+            return {
+                ...state,
+                ...action.payload
+            };
         }
     }
 })
+
+export const { setSelectedText } = createAnnotationSlice.actions;
 
 export default createAnnotationSlice.reducer

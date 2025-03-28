@@ -23,6 +23,7 @@ interface AnnotationsSidebarProps {
   handleCancelAnnotation: () => void;
   hoveredAnnotations: Annotation[];
   createAnnotation: boolean;
+  motivation: string
   position?: SidebarPosition; // New prop with default 'right'
 }
 
@@ -36,6 +37,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   handleCancelAnnotation,
   hoveredAnnotations,
   createAnnotation,
+  motivation,
   position = 'right', // Default to right if not specified
 }) => {
   // Determine which icon to show based on position and collapsed state
@@ -46,6 +48,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
       return collapsedComments ? <FaChevronLeft /> : <FaChevronRight />;
     }
   };
+  console.log(motivation)
 
   return (
     <div className={`sidebar position-${position}`}>

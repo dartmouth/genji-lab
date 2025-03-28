@@ -15,10 +15,12 @@ import MenuContext from './MenuContext';
 import { data } from '../components/data';
 
 interface DocumentContentPanelProps {
+    documentCollectionId: number;
     documentID: number;
 }
 
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({ 
+    documentCollectionId,
     documentID,
 }) => {
     // STATE
@@ -121,6 +123,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                         <HighlightedText
                             text={content.content.text}
                             paragraphId={`DocumentElements/${content.id}`}
+                            documentCollectionId={documentCollectionId}
+                            documentId={documentID}
                             setSelectedText={(selectedText) => setSelectionInfo({
                                 content_id: selectedText.content_id,
                                 start: selectedText.start,
@@ -147,6 +151,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 handleCancelAnnotation={scholarlyAnnotationCreate.handleCancelAnnotation}
                 hoveredAnnotations={hoveredScholarlyAnnotations}
                 createAnnotation={scholarlyAnnotationCreate.createAnnotation}
+                motivation='scholarly'
                 position='left'
             />
             <AnnotationsSidebar
@@ -159,6 +164,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 handleCancelAnnotation={handleCancelAnnotation}
                 hoveredAnnotations={hoveredAnnotations}
                 createAnnotation={createAnnotation}
+                motivation='commenting'
                 position='right'
             />
     </div>

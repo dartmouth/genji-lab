@@ -6,6 +6,7 @@ import { RootState } from '../store';
 import { updateHighlightPosition, setHoveredHighlights } from '../store/slice/highlightRegistrySlice';
 import { debounce } from 'lodash';
 import { selectAllAnnotationsForParagraph } from '../store/selector/combinedSelectors'
+import { setSelection } from '../store/slice/annotationCreate';
 // import { fetchCommentingAnnotations } from '../store/thunk/annotationThunkInstances'
 
 interface Position {
@@ -23,6 +24,8 @@ interface SelectionInfo {
 
 interface HighlightedTextProps {
   text: string;
+  documentCollectionId: number,
+  documentId: number,
   paragraphId: string;
   setSelectedText: (info: SelectionInfo) => void;
 }
@@ -38,6 +41,8 @@ function parseURI(uri: string){
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
   paragraphId,
+  documentCollectionId,
+  documentId,
   setSelectedText = () => {},
 }) => {
   const dispatch = useAppDispatch();
@@ -192,11 +197,16 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
-      // Extract a number from paragraphId
-      // Assuming format like "DocumentElements/123"
-      // const contentIdMatch = paragraphId.match(/\/(\d+)$/);
-      // const contentId = contentIdMatch ? parseInt(contentIdMatch[1], 10) : 0;
-      
+      dispatch(setSelection(
+        {selectedText: selection.toString(),
+          sourceURI: [paragraphId],
+          documentCollectionId: documentCollectionId,
+          documentId: documentId,
+          start: getSelectionStartOffset(range),
+          end: getSelectionEndOffset(range),
+        }
+      ))
+
       setSelectedText({
         content_id: parseURI(paragraphId) as unknown as number,
         start: getSelectionStartOffset(range),
