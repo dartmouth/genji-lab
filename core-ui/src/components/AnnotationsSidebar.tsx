@@ -1,4 +1,3 @@
-// AnnotationsSidebar.tsx
 import React from 'react';
 import AnnotationCard from './AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
@@ -12,18 +11,7 @@ type SidebarPosition = 'left' | 'right';
 interface AnnotationsSidebarProps {
   collapsedComments: boolean;
   setCollapsedComments: (collapsed: boolean) => void;
-  // selectionInfo: {
-  //   content_id: number;
-  //   start: number;
-  //   end: number;
-  //   text: string;
-  // };
-  // newAnnotationText: string;
-  // setNewAnnotationText: (text: string) => void;
-  // handleCreateAnnotation: () => void;
-  // handleCancelAnnotation: () => void;
   hoveredAnnotations: Annotation[];
-  // createAnnotation: boolean;
   motivation: string
   position?: SidebarPosition;
 }
@@ -31,17 +19,10 @@ interface AnnotationsSidebarProps {
 const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   collapsedComments,
   setCollapsedComments,
-  // selectionInfo,
-  // newAnnotationText,
-  // setNewAnnotationText,
-  // handleCreateAnnotation,
-  // handleCancelAnnotation,
   hoveredAnnotations,
-  // createAnnotation,
   motivation,
-  position = 'right', // Default to right if not specified
+  position = 'right'
 }) => {
-  // const dispatch = useAppDispatch()
 
   const currentMotivation = useAppSelector(selectMotivation)
 
@@ -53,7 +34,6 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
       return collapsedComments ? <FaChevronLeft /> : <FaChevronRight />;
     }
   };
-  // console.log(motivation)
 
   return (
     <div className={`sidebar position-${position}`}>

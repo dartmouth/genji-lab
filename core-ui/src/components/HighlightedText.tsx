@@ -17,8 +17,6 @@ interface HighlightedTextProps {
   paragraphId: string;
 }
 
-
-
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
   paragraphId,
@@ -175,7 +173,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     const selection = window.getSelection();
     if (selection && selection.toString().trim().length > 0) {
       const range = selection.getRangeAt(0);
-      // const rect = range.getBoundingClientRect();
       
       dispatch(setTarget(
         {selectedText: selection.toString(),
@@ -186,17 +183,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           end: getSelectionEndOffset(range),
         }
       ))
-
-      // setSelectedText({
-      //   content_id: parseURI(paragraphId) as unknown as number,
-      //   start: getSelectionStartOffset(range),
-      //   end: getSelectionEndOffset(range),
-      //   text: selection.toString(),
-      //   position: {
-      //     x: rect.left + window.scrollX,
-      //     y: rect.bottom + window.scrollY
-      //   }
-      // });
     }
   };
 

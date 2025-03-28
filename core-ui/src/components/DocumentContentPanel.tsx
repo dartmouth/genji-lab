@@ -27,12 +27,10 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     // HOOKS
     const elements = useApiClient<DocumentElement[]>(`/documents/${documentID}/elements/`);
     
-    
     const hoveredHighlightIds = useSelector(
         (state: RootState) => state.highlightRegistry.hoveredHighlightIds
     );
     
-    // Update to use the commentingAnnotations slice selectors
     const makeSelectAnnotationsById = useMemo(
         () => commentingAnnotations.selectors.makeSelectAnnotationsById(),
         []
