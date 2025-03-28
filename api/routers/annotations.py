@@ -49,6 +49,8 @@ def create_annotation(annotation: AnnotationCreate, db: AsyncSession = Depends(g
         creator_id=annotation.creator_id,
         type=annotation.type,
         motivation=annotation.motivation,
+        generator=annotation.generator,
+        generated=datetime.now(),
         body=annotation.body.model_dump(by_alias=True),
         target=[t.model_dump(by_alias=True) for t in annotation.target],
         status=annotation.status,

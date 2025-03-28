@@ -19,6 +19,11 @@ class Target(BaseModel):
     source: Union[int, str]
     selector: TextQuoteSelector
 
+class ReplyTarget:
+    id: Optional[int] = None
+    type: str
+    source: Union[int, str]
+
 class Body(BaseModel):
     id: Optional[int] = None
     type: str
@@ -34,11 +39,11 @@ class AnnotationBase(BaseModel):
     creator_id: int
     
     type: Optional[str] = None
-    motivation: Optional[str] = None
+    motivation: str = None
     generator: Optional[str] = None
     
     body: Optional[Body] = None
-    target: Optional[List[Target]] = None
+    target: Optional[List[Union[Target, ReplyTarget]]] = None
     
     status: Optional[str] = None
     annotation_type: Optional[str] = None
