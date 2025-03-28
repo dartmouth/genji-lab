@@ -61,3 +61,8 @@ class Annotation(AnnotationBase):
 
 class DocumentElementAnnotationsResponse(RootModel):
     root: Dict[str, List[Annotation]]
+
+
+class AnnotationPatch(BaseModel):
+    body: Optional[str] = None
+    motivation: Optional[str] = None

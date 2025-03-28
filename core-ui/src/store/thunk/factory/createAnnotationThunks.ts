@@ -90,3 +90,39 @@ export function createSaveAnnotationThunk(
       }
     );
   }
+
+  interface AnnotationPatch {
+    annotationId: number,
+    payload: {
+      body: string
+    }
+  }
+  export function createPatchAnnotationThunk(
+    bucketName: string,
+    sliceActions: AnnotationSliceActions
+  ) {
+    const thunkName = `annotations/${bucketName}/patchAnnotation`;
+    
+    return createAsyncThunk<
+      Annotation,
+      AnnotationPatch,
+      { state: RootState }
+    >(
+      thunkName,
+      async (patch: AnnotationPatch, { dispatch, rejectWithValue }) => {
+        try {
+
+          // Use your API client
+          const response = await api.patch(`/annotations/${patch.annotationId}`, patch.payload);
+          
+          const savedAnnotation: Annotation = response.data;
+          
+          dispatch(sliceActions.addAnnotation(savedAnnotation));
+          
+          return savedAnnotation;
+        } catch (error) {
+          return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+        }
+      }
+    );
+  }

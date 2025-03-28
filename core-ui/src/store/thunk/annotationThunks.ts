@@ -6,7 +6,8 @@ import {
 
   import { 
     createFetchAnnotationsThunk, 
-    createSaveAnnotationThunk 
+    createSaveAnnotationThunk,
+    createPatchAnnotationThunk
   } from './factory/createAnnotationThunks';
   
   // Create fetch thunks for each annotation type
@@ -40,26 +41,43 @@ import {
     'scholarly',
     scholarlyAnnotations.actions
   );
-
+  
+  // patch thunks
+  export const patchCommentingAnnotations = createPatchAnnotationThunk(
+    'commenting',
+    commentingAnnotations.actions
+  )
+  export const patchReplyingAnnotations = createPatchAnnotationThunk(
+    'replying',
+    commentingAnnotations.actions
+  )
+  export const patchScholarlyAnnotations = createPatchAnnotationThunk(
+    'scholarly',
+    commentingAnnotations.actions
+  )
   type ThunkMap = {
     [key: string]: {
       get: ReturnType<typeof createFetchAnnotationsThunk>;
       create: ReturnType<typeof createSaveAnnotationThunk>;
+      update: ReturnType<typeof createPatchAnnotationThunk>;
     }
   };
 
   export const thunkMap: ThunkMap = {
     'commenting' : {
       'get' : fetchCommentingAnnotations,
-      'create': saveCommentingAnnotation
+      'create': saveCommentingAnnotation,
+      'update': patchCommentingAnnotations
     },
     'replying': {
       'get': fetchReplyingAnnotations,
-      'create': saveReplyingAnnotation
+      'create': saveReplyingAnnotation,
+      'update': patchReplyingAnnotations
     },
     'scholarly': {
       'get': fetchScholarlyAnnotations,
-      'create': saveScholarlyAnnotation
+      'create': saveScholarlyAnnotation,
+      'update': patchScholarlyAnnotations
     }
   }
 

@@ -12,7 +12,8 @@ from database import get_db
 from models.models import Annotation as AnnotationModel
 from schemas.annotations import (
     Annotation,
-    AnnotationCreate
+    AnnotationCreate,
+    AnnotationPatch
 )
  
 router = APIRouter(
@@ -111,3 +112,22 @@ def delete_annotation(annotation_id: int, db: AsyncSession = Depends(get_db)):
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+@router.patch("/{annotation_id}", response_model=Annotation, status_code=status.HTTP_200_OK)
+def update_annotation(annotation_id: int, payload: AnnotationPatch, db: AsyncSession = Depends(get_db)):
+    db_annotation = db.execute(
+        select(AnnotationModel).filter(AnnotationModel.id == annotation_id)
+    ).scalar_one_or_none()
+
+    if not db_annotation:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+
+    if payload.body:
+        current_body = dict(db_annotation.body)
+        current_body["value"] = payload.body
+        db_annotation.body = current_body
+        db_annotation.modified = datetime.now()
+
+        db.commit()
+        db.refresh(db_annotation)
+
+    return db_annotation
