@@ -1,6 +1,6 @@
 // MenuContext.tsx
-import React, { useState, useEffect, useRef } from "react";
-import { ContextMenu, ContextButton } from "../styles/styles";
+import React, { useState, useEffect } from "react";
+import { ContextMenu, ContextButton } from "../components/ContextMenuComponents";
 import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
 import { selectSelectedText, setMotivation } from '../store/slice/annotationCreate';
 import { createPortal } from 'react-dom';
@@ -14,7 +14,7 @@ const MenuContext: React.FC = () => {
   const [coords, setCoords] = useState<{ x: number; y: number }>({
     x: 0, y: 0
   });
-  const menuRef = useRef<HTMLDivElement>(null);
+  // const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
@@ -40,19 +40,14 @@ const MenuContext: React.FC = () => {
     };
   }, [text]);
 
-  const handleClick = (e: MouseEvent) => {
-    // Only close if click is outside the menu
-    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-      setClicked(false);
-    }
-  };
+
 
   if (!clicked || !text) {
     return null;
   }
 
   return createPortal(
-    <ContextMenu ref={menuRef} top={coords.y} left={coords.x}>
+    <ContextMenu top={coords.y} left={coords.x}>
         <ContextButton 
           key={`context-button-${1}`} 
           onClick={(e: React.MouseEvent) => {

@@ -1,0 +1,43 @@
+.menu-context-container {
+    border: 1px solid #ffffff2d;
+    border-radius: 4px;
+    padding: 18px;
+    margin: 5px 0;
+    box-sizing: border-box;
+  }
+  
+  .context-button {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: white;
+    border: none;
+    text-align: left;
+    color: #00693e; /* Dartmouth Green */
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin: 2px 0;
+  }
+  
+  .context-button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .context-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 105, 62, 0.3);
+  }
+  
+  .context-menu {
+    position: absolute;
+    width: 200px;
+    background-color: white;
+    border-radius: 5px;
+    box-sizing: border-box;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
