@@ -10,9 +10,10 @@ interface AnnotationCardProps {
     id: string;
     annotation: Annotation;
     isHighlighted?: boolean;
+    depth: number
 }
 
-const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighlighted = false }) => {
+const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighlighted = false, depth=0 }) => {
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
     const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -22,17 +23,10 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const closeMenu = () => {
         setMenuAnchor(null);
     };
-    // const makeSelectAnnotationsById = useMemo(
-    //     () => replyingAnnotations.selectors.makeSelectAnnotationsById(),
-    //     []
-    // );
-
     
     const replies = useAppSelector(
         (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
     );
-
-    console.log(`Id is Annotation/${id}, replies are:`, replies)
 
     return (
         <div 
@@ -46,7 +40,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 padding: '10px',
                 margin: '10px 0',
                 position: 'relative',
-                width: '275px'
+                width: `${275 - (25*depth)}px`
             }}
         >
             <div className="comment-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -86,6 +80,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                                     id={`${reply.id}`}
                                     annotation={reply}
                                     isHighlighted={false}
+                                    depth={depth+1}
                                   />
                                 ))
                 )
