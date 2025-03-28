@@ -4,7 +4,7 @@ import AnnotationCard from './AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Annotation } from '../types/annotation';
-import './AnnotationsSidebar.css'; 
+import '../styles/AnnotationsSidebar.css'; 
 import { useAppSelector } from '../store/hooks/useAppDispatch';
 import { selectMotivation } from '../store/slice/annotationCreate'
 type SidebarPosition = 'left' | 'right';
