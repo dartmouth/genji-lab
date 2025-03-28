@@ -1,12 +1,12 @@
 // index.ts
-import { configureStore, combineReducers, Reducer, AnyAction } from '@reduxjs/toolkit';
-import highlightRegistryReducer from './highlightRegistrySlice';
-import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations } from './annotations';
-import { AnnotationState } from './createAnnotationSlice';
+import { configureStore, combineReducers, Reducer, Action } from '@reduxjs/toolkit';
+import highlightRegistryReducer from './slice/highlightRegistrySlice';
+import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations } from './slice/annotationSlices';
+import { AnnotationState } from './slice/factory/createAnnotationSlice';
 
 // Define the structure of our annotations reducers
 interface AnnotationReducers {
-  [key: string]: Reducer<AnnotationState, AnyAction>;
+  [key: string]: Reducer<AnnotationState, Action>;
 }
 
 // Create the annotations reducers with explicit typing

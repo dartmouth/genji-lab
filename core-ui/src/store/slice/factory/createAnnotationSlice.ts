@@ -1,9 +1,9 @@
 // createAnnotationSlice.ts
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { Annotation } from '../types/annotation';
+import { Annotation } from '../../../types/annotation';
 
 // Import RootState type - but we'll use a type import to avoid circular references
-import type { RootState } from './index';
+import type { RootState } from '../../index';
 
 // The state structure for a single annotation bucket
 export interface AnnotationState {

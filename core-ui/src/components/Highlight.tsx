@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { registerHighlight, removeHighlight } from '../store/highlightRegistrySlice';
+import { registerHighlight, removeHighlight } from '../store/slice/highlightRegistrySlice';
 
 interface HighlightProps {
     id: string,

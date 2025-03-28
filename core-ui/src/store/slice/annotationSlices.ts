@@ -1,5 +1,5 @@
 // annotations.ts
-import { createAnnotationSlice } from './createAnnotationSlice';
+import { createAnnotationSlice } from './factory/createAnnotationSlice';
 
 // Create specific annotation slices
 export const commentingAnnotations = createAnnotationSlice('commenting');

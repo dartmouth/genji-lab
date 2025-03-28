@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
 import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
 import { RootState } from '../store';
-import { updateHighlightPosition, setHoveredHighlights } from '../store/highlightRegistrySlice';
+import { updateHighlightPosition, setHoveredHighlights } from '../store/slice/highlightRegistrySlice';
 import { debounce } from 'lodash';
 import { selectAllAnnotationsForParagraph } from '../store/combinedSelectors'
 // import { fetchCommentingAnnotations } from '../store/thunk/annotationThunkInstances'

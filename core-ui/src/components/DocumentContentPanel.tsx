@@ -9,7 +9,7 @@ import { RootState } from '../store/index';
 import { useDispatch, useSelector } from 'react-redux';
 import { commentingAnnotations } from '../store';
 import { useAnnotationCreation } from '../hooks/useAnnotationCreation';
-import { scholarlyAnnotations } from '../store/annotations';
+import { scholarlyAnnotations } from '../store/slice/annotationSlices';
 import AnnotationsSidebar from './AnnotationsSidebar';
 import MenuContext from './MenuContext';
 import { data } from '../components/data';

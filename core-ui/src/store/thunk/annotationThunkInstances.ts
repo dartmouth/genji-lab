@@ -3,11 +3,12 @@ import {
     commentingAnnotations, 
     replyingAnnotations, 
     scholarlyAnnotations 
-  } from '../annotations';
+  } from '../slice/annotationSlices';
+  
   import { 
     createFetchAnnotationsThunk, 
     createSaveAnnotationThunk 
-  } from './annotationThunks';
+  } from './factory/annotationThunks';
   
   // Create fetch thunks for each annotation type
   export const fetchCommentingAnnotations = createFetchAnnotationsThunk(
@@ -40,3 +41,26 @@ import {
     'scholarly',
     scholarlyAnnotations.actions
   );
+
+  type ThunkMap = {
+    [key: string]: {
+      get: ReturnType<typeof createFetchAnnotationsThunk>;
+      create: ReturnType<typeof createSaveAnnotationThunk>;
+    }
+  };
+
+  export const thunkMap: ThunkMap = {
+    'commenting' : {
+      'get' : fetchCommentingAnnotations,
+      'create': saveCommentingAnnotation
+    },
+    'replying': {
+      'get': fetchReplyingAnnotations,
+      'create': saveReplyingAnnotation
+    },
+    'scholarly': {
+      'get': fetchScholarlyAnnotations,
+      'create': saveScholarlyAnnotation
+    }
+  }
+
