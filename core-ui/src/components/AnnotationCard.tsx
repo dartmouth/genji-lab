@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { RootState } from "../store/index";
 import { Annotation } from "../types/annotation";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
+import { replyingAnnotations } from "../store";
+import { useAppSelector } from "../store/hooks/useAppDispatch";
 
 interface AnnotationCardProps {
     id: string;
@@ -19,6 +22,17 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const closeMenu = () => {
         setMenuAnchor(null);
     };
+    // const makeSelectAnnotationsById = useMemo(
+    //     () => replyingAnnotations.selectors.makeSelectAnnotationsById(),
+    //     []
+    // );
+
+    
+    const replies = useAppSelector(
+        (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
+    );
+
+    console.log(`Id is Annotation/${id}, replies are:`, replies)
 
     return (
         <div 
@@ -64,6 +78,18 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 <MenuItem onClick={closeMenu}>Delete</MenuItem>
                 <MenuItem onClick={closeMenu}>Tags</MenuItem>
             </Menu>
+            {
+                replies && (
+                    replies.map(reply => (
+                                  <AnnotationCard
+                                    key={reply.id}
+                                    id={`${reply.id}`}
+                                    annotation={reply}
+                                    isHighlighted={false}
+                                  />
+                                ))
+                )
+            }
         </div>
     );
 }

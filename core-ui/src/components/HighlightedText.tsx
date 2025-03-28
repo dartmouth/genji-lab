@@ -8,7 +8,7 @@ import { debounce } from 'lodash';
 import { selectAllAnnotationsForParagraph } from '../store/selector/combinedSelectors'
 import { setTarget } from '../slice/annotationCreate';
 import { parseURI } from '../functions/makeAnnotationBody';
-import { fetchCommentingAnnotations, fetchScholarlyAnnotations } from '../store/thunk/annotationThunks';
+import { fetchCommentingAnnotations, fetchScholarlyAnnotations, fetchReplyingAnnotations } from '../store/thunk/annotationThunks';
 
 interface HighlightedTextProps {
   text: string;
@@ -29,6 +29,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   useEffect(() => {
     dispatch(fetchCommentingAnnotations(parseURI(paragraphId)));
     dispatch(fetchScholarlyAnnotations(parseURI(paragraphId)))
+    dispatch(fetchReplyingAnnotations(parseURI(paragraphId)))
   }, [dispatch, paragraphId]);
 
   const containerRef = useRef<HTMLDivElement>(null);

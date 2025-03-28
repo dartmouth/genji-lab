@@ -51,7 +51,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
         
         {
           hoveredAnnotations.length === 0 ? (
-            <p>Hover over a highlight to view annotations</p>
+            <p>{`Hover over a highlight to view ${motivation === 'commenting' ? 'comments': 'annotations'}`}</p>
           ) : (
             hoveredAnnotations.map(annotation => (
               <AnnotationCard
