@@ -59,6 +59,7 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
                 id={`${annotation.id}`}
                 annotation={annotation}
                 isHighlighted={false}
+                depth={0}
               />
             ))
           )

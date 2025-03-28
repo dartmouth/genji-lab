@@ -47,16 +47,16 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 <span>{`${annotation.creator.first_name} ${annotation.creator.last_name}`}</span>
                 <div>
                     <button title="Upvote" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'green' }}>
-                        <ThumbUp fontSize='1rem' />
+                        <ThumbUp sx={{ fontSize: '1rem' }} />
                     </button>
                     <button title="Reply" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'blue' }}>
-                        <ChatBubbleOutline fontSize='1rem' />
+                        <ChatBubbleOutline sx={{ fontSize: '1rem' }} />
                     </button>
                     <button title="Flag" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}>
-                        <Flag fontSize='1rem' />
+                        <Flag sx={{ fontSize: '1rem' }} />
                     </button>
                     <button title="Settings" onClick={toggleMenu} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'black' }}>
-                        <Settings fontSize='1rem' />
+                        <Settings sx={{ fontSize: '1rem' }}/>
                     </button>
                 </div>
             </div>
