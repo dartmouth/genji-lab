@@ -12,6 +12,8 @@ interface Annotation {
     "context": string;
     "id": string;
     "document_element_id": string;
+    "document_id": number;
+    "document_collection_id": number;
     "type": string;
     "creator": {
         "first_name": string,
