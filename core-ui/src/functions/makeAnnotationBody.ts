@@ -1,4 +1,4 @@
-import { AnnotationCreate } from '../types/annotation';
+import { AnnotationCreate, Selector } from '../types/annotation';
 
 export function makeTextAnnotationBody(
     document_collection_id: number,
@@ -8,8 +8,8 @@ export function makeTextAnnotationBody(
     motivation: string,
     sourceURI: string,
     text: string,
-    targetStart: number,
-    targetEnd: number,
+    targetStart?: number,
+    targetEnd?: number,
     language: string = "en"
 ): AnnotationCreate {
     const newAnnotation: AnnotationCreate = {
@@ -31,17 +31,28 @@ export function makeTextAnnotationBody(
         "target": [{
           "type": "Text",
           "source": sourceURI,
-          "selector": {
-            "type": "TextQuoteSelector",
-            "value": text,
-            "refined_by": {
-              "type": "TextPositionSelector",
-              "start": targetStart,
-              "end": targetEnd
-            }
-          }
+
         }]
       };
+
+      if (motivation === 'commenting'){
+        
+        if (!targetStart || !targetEnd){
+          throw new SyntaxError("Range start and end are required for new comments")
+        }
+
+        const selector: Selector = {
+          "type": "TextQuoteSelector",
+          "value": text,
+          "refined_by": {
+            "type": "TextPositionSelector",
+            "start": targetStart,
+            "end": targetEnd
+          }
+        }
+
+        Object.defineProperty(newAnnotation.target, "selector", selector)
+      }
 
     return newAnnotation
 }

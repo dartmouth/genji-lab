@@ -1,3 +1,13 @@
+interface Selector {
+        "type": string;
+        "value": string;
+        "refined_by": {
+            "type": string;
+            "start": number;
+            "end": number;
+        };
+}
+
 interface Annotation {
     "context": string;
     "id": string;
@@ -28,15 +38,7 @@ interface Annotation {
         "id": string;
         "type": string;
         "source": string;
-        "selector": {
-            "type": string;
-            "value": string;
-            "refined_by": {
-                "type": string;
-                "start": number;
-                "end": number;
-            };
-        };
+        "selector"?: Selector;
     }>
 }
 
@@ -59,15 +61,7 @@ interface AnnotationCreate {
     "target": Array<{
         "type": string;
         "source": string;
-        "selector": {
-            "type": string;
-            "value": string;
-            "refined_by": {
-                "type": string;
-                "start": number;
-                "end": number;
-            };
-        };
+        "selector"?: Selector;
     }>
 }
 
@@ -75,4 +69,5 @@ interface AnnotationCreate {
 
 // export annotation not using default
 export type { Annotation }
-export type {AnnotationCreate}
+export type { AnnotationCreate }
+export type { Selector}

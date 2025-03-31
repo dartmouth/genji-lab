@@ -13,13 +13,13 @@ class TextQuoteSelector(BaseModel):
     value: str
     refined_by: TextPositionSelector
 
-class Target(BaseModel):
+class TextTarget(BaseModel):
     id: Optional[int] = None
     type: str
     source: Union[int, str]
     selector: TextQuoteSelector
 
-class ReplyTarget:
+class ObjectTarget:
     id: Optional[int] = None
     type: str
     source: Union[int, str]
@@ -43,7 +43,7 @@ class AnnotationBase(BaseModel):
     generator: Optional[str] = None
     
     body: Optional[Body] = None
-    target: Optional[List[Union[Target, ReplyTarget]]] = None
+    target: Optional[List[Union[TextTarget, ObjectTarget]]] = None
     
     status: Optional[str] = None
     annotation_type: Optional[str] = None
