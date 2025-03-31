@@ -9,7 +9,7 @@ import { saveReplyingAnnotation, saveTaggingAnnotation, deleteTaggingAnnotations
 import { useAuth } from "../hooks/useAuthContext";
 import { AnnotationCreate } from "../types/annotation";
 import { makeTextAnnotationBody, parseURI } from "../functions/makeAnnotationBody";
-// import { taggingAnnotations } from "../store/slice/annotationSlices";
+import { thunkMap } from "../store/thunk/annotationThunks";
 
 interface AnnotationCardProps {
     id: string;
@@ -38,10 +38,21 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         (state: RootState) => taggingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
     );
 
-    // 2. Add handler for the Tags menu item
     const handleTagsClick = () => {
     setIsTagging(!isTagging);
-    closeMenu(); // Close the dropdown menu when Tags is clicked
+    closeMenu(); 
+    };
+
+    const handleCommentDelete = () => {
+        const motivation = annotation.motivation
+        const thunk = thunkMap[motivation]
+        if (!thunk) {
+            console.error("Bad motivation in handle comment delete:", motivation)
+            return
+        }
+        dispatch(thunk.delete({'annotationId': annotation.id as unknown as number}))
+        closeMenu();
+
     };
 
     const handleTagSubmit = () => {
@@ -73,8 +84,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             dispatch(saveTaggingAnnotation(tagAnno))
         })
         
-        setTagInput(""); // Clear the input
-        // Optionally close the tag UI
+        setTagInput("");
         setIsTagging(false);
       };
 
@@ -89,10 +99,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     };
 
     const handleRemoveTag = (tagId: number | string) => {
-        // Here you would dispatch an action to remove the tag
         console.log("Remove tag with ID:", tagId);
         dispatch(deleteTaggingAnnotations({'annotationId':tagId as unknown as number}))
-        // Example: dispatch(removeTaggingAnnotation(tagId));
       };
     
 
@@ -136,6 +144,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         setIsReplying(false);
         setIsReplying(!isReplying);
     };
+
+
 
     return (
         <div 
@@ -194,7 +204,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                         }}
                     >
                         {tag.body.value}
-                        <span 
+                        {(user && tag.creator.id === user.id) && (<span 
                         onClick={() => handleRemoveTag(tag.id)} 
                         style={{ 
                             marginLeft: '4px', 
@@ -203,7 +213,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                         }}
                         >
                         ×
-                        </span>
+                        </span>)}
                     </div>
                     ))}
                 </div>
@@ -215,8 +225,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 onClose={closeMenu}
                 disableScrollLock
             >
-                <MenuItem onClick={closeMenu}>Edit</MenuItem>
-                <MenuItem onClick={closeMenu}>Delete</MenuItem>
+                {(user && user.id === annotation.creator.id) && (<MenuItem onClick={closeMenu}>Edit</MenuItem>)}
+                {(user && user.id === annotation.creator.id) && (<MenuItem onClick={handleCommentDelete}>Delete</MenuItem>)}
                 <MenuItem onClick={handleTagsClick}>Tags</MenuItem>
             </Menu>
             {

@@ -55,7 +55,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       motivation: string
     }>();
     
-    allAnnotations.forEach((annotation) => {
+    allAnnotations.filter(anno => anno && anno.target).forEach((annotation) => {
       // Find annotations that target this paragraph
       const target = annotation.target.find((t) => 
         t.source === paragraphId 
