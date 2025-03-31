@@ -2,7 +2,7 @@ import {
     commentingAnnotations, 
     replyingAnnotations, 
     scholarlyAnnotations 
-  } from '../../slice/annotationSlices';
+  } from '../slice/annotationSlices';
 
   import { 
     createFetchAnnotationsThunk, 

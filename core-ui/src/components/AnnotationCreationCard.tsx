@@ -1,8 +1,8 @@
 // AnnotationCreationCard.tsx
 import React from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
-import { selectAnnotationCreate } from '../slice/annotationCreate';
-import { setContent, resetCreateAnnotation } from '../slice/annotationCreate';
+import { selectAnnotationCreate } from '../store/slice/annotationCreate';
+import { setContent, resetCreateAnnotation } from '../store/slice/annotationCreate';
 import { debounce } from 'lodash';
 import { makeTextAnnotationBody, parseURI } from '../functions/makeAnnotationBody';
 import { useIAM } from '../hooks/useIAM';

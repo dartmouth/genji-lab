@@ -5,7 +5,7 @@ import { useApiClient } from '../hooks/useApi';
 import { RootState } from '../store/index';
 import { useSelector } from 'react-redux';
 import { commentingAnnotations } from '../store';
-import { scholarlyAnnotations } from '../slice/annotationSlices';
+import { scholarlyAnnotations } from '../store/slice/annotationSlices';
 import AnnotationsSidebar from './AnnotationsSidebar';
 import MenuContext from './MenuContext';
 

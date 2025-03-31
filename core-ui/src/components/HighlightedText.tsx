@@ -3,10 +3,10 @@ import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
 import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
 import { RootState } from '../store';
-import { updateHighlightPosition, setHoveredHighlights } from '../slice/highlightRegistrySlice';
+import { updateHighlightPosition, setHoveredHighlights } from '../store/slice/highlightRegistrySlice';
 import { debounce } from 'lodash';
 import { selectAllAnnotationsForParagraph } from '../store/selector/combinedSelectors'
-import { setTarget } from '../slice/annotationCreate';
+import { setTarget } from '../store/slice/annotationCreate';
 import { parseURI } from '../functions/makeAnnotationBody';
 import { fetchCommentingAnnotations, fetchScholarlyAnnotations, fetchReplyingAnnotations } from '../store/thunk/annotationThunks';
 

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { RootState } from '../store/index';
+import { RootState } from '../index';
 
 interface createAnnotation {
     motivation: string,

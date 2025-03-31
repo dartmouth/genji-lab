@@ -5,7 +5,7 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Annotation } from '../types/annotation';
 import '../styles/AnnotationsSidebar.css'; 
 import { useAppSelector } from '../store/hooks/useAppDispatch';
-import { selectMotivation } from '../slice/annotationCreate'
+import { selectMotivation } from '../store/slice/annotationCreate'
 type SidebarPosition = 'left' | 'right';
 
 interface AnnotationsSidebarProps {
