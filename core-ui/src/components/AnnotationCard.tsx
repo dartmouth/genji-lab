@@ -1,3 +1,4 @@
+// AnnotationCard.tsx
 import React, { useState } from "react";
 import { RootState } from "../store/index";
 import { Annotation } from "../types/annotation";
@@ -5,14 +6,13 @@ import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material"
 import { Menu, MenuItem } from "@mui/material";
 import { replyingAnnotations } from "../store";
 import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
-import { saveReplyingAnnotation } from "../store/thunk/annotationThunks";
 import { useAuth } from "../hooks/useAuthContext";
-import { AnnotationCreate } from "../types/annotation";
-import { parseURI } from "../functions/makeAnnotationBody";
 import { thunkMap } from "../store/thunk/annotationThunks";
 import TagList from "./TagList";
 import TagInput from "./TagInput";
 import { useAnnotationTags } from "../hooks/useAnnotationTags";
+import ReplyForm from "./AnnotationReplyForm";
+import AnnotationEditor from "./AnnotationEditorInterface";
 
 interface AnnotationCardProps {
     id: string;
@@ -27,10 +27,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
 
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [isReplying, setIsReplying] = useState(false);
-    const [replyText, setReplyText] = useState("");
-
     const [isEditing, setIsEditing] = useState(false);
-    const [editText, setEditText] = useState("");
 
     const { 
         tags, 
@@ -42,17 +39,15 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     } = useAnnotationTags(annotation, user?.id);
 
     const handleEditClick = () => {
-        setEditText(annotation.body.value);
         setIsEditing(true);
         closeMenu();
     };
 
     const handleEditCancel = () => {
         setIsEditing(false);
-        setEditText("");
     };
 
-    const handleEditSave = () => {
+    const handleEditSave = (editText: string) => {
         if (!editText.trim()) return;
 
         const motivation = annotation.motivation;
@@ -96,41 +91,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
 
     const handleReplyClick = () => {
         setIsReplying(!isReplying);
-    };
-
-    const onReplySave = () => {
-        if (!replyText.trim()) return;
-        if (!user) return;
-    
-        const replyPayload: AnnotationCreate = {
-          creator_id: user.id,
-          context: "http://www.w3.org/ns/anno.jsonld",
-          document_id: annotation.document_id,
-          type: "Annotation",
-          generator: "web-client",
-          document_collection_id: annotation.document_collection_id,
-          document_element_id: typeof annotation.document_element_id === "string"
-            ? parseInt(parseURI(annotation.document_element_id))
-            : annotation.document_element_id,
-          motivation: "replying",
-          annotation_type: "reply",
-          body: {
-            type: "TextualBody",
-            value: replyText,
-            format: "text/html",
-            language: "en"
-          },
-          target: [
-            {
-              type: "Text",
-              source: `Annotation/${annotation.id}`
-            }
-          ]
-        };
-    
-        dispatch(saveReplyingAnnotation(replyPayload));
-        setReplyText("");
-        setIsReplying(false);
     };
 
     return (
@@ -193,98 +153,18 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             )}
 
             {isEditing && (
-                <div className="edit-section" style={{ marginRight: '10px', marginTop: '10px' }}>
-                    <textarea
-                        placeholder="Edit your annotation..."
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleEditSave();
-                            }
-                        }}
-                        rows={3}
-                        style={{
-                            width: '100%',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            padding: '5px',
-                            resize: 'none',
-                            fontFamily: 'Arial, Helvetica, sans-serif'
-                        }}
-                    />
-                    <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'space-between' }}>
-                        <button
-                            style={{
-                                padding: '5px 10px',
-                                backgroundColor: '#6c757d',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                            }}
-                            onClick={handleEditCancel}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            style={{
-                                padding: '5px 10px',
-                                backgroundColor: '#007bff',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                            }}
-                            onClick={handleEditSave}
-                        >
-                            Save
-                        </button>
-                    </div>
-                </div>
+                <AnnotationEditor
+                    initialText={annotation.body.value}
+                    onSave={handleEditSave}
+                    onCancel={handleEditCancel}
+                />
             )}
 
             {isReplying && (
-                <div className="reply-section" style={{ marginRight: '10px', marginTop: '10px' }}>
-                    <textarea
-                        placeholder="Write your reply..."
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              onReplySave();
-                            }
-                          }}
-                        rows={3}
-                        style={{
-                            width: '100%',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            padding: '5px',
-                            resize: 'none',
-                            fontFamily: 'Arial, Helvetica, sans-serif'
-                        }}
-                    />
-                    <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'flex-end' }}>
-                        <button
-                            style={{
-                                padding: '5px 10px',
-                                backgroundColor: '#007bff',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                            }}
-                            onClick={() => {
-                                onReplySave();
-                            }}
-                        >
-                            Submit
-                        </button>
-                    </div>
-                </div>
+                <ReplyForm
+                    annotation={annotation}
+                    onSave={() => setIsReplying(false)}
+                />
             )}
 
             {
