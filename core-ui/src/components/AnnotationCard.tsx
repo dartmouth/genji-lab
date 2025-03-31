@@ -3,13 +3,16 @@ import { RootState } from "../store/index";
 import { Annotation } from "../types/annotation";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
-import { replyingAnnotations, taggingAnnotations } from "../store";
+import { replyingAnnotations } from "../store";
 import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
-import { saveReplyingAnnotation, saveTaggingAnnotation, deleteTaggingAnnotations } from "../store/thunk/annotationThunks";
+import { saveReplyingAnnotation } from "../store/thunk/annotationThunks";
 import { useAuth } from "../hooks/useAuthContext";
 import { AnnotationCreate } from "../types/annotation";
-import { makeTextAnnotationBody, parseURI } from "../functions/makeAnnotationBody";
+import { parseURI } from "../functions/makeAnnotationBody";
 import { thunkMap } from "../store/thunk/annotationThunks";
+import TagList from "./TagList";
+import TagInput from "./TagInput";
+import { useAnnotationTags } from "../hooks/useAnnotationTags";
 
 interface AnnotationCardProps {
     id: string;
@@ -20,46 +23,46 @@ interface AnnotationCardProps {
 
 const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighlighted = false, depth=0 }) => {
     const { user } = useAuth();
-
     const dispatch = useAppDispatch();
 
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState("");
 
-    const [isTagging, setIsTagging] = useState(false);
-    const [tagInput, setTagInput] = useState("");
-
-    // Add these state variables at the top with your other state declarations
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState("");
 
-    // Add this handler function with your other handlers
+    const { 
+        tags, 
+        isTagging, 
+        setIsTagging, 
+        handleTagsClick, 
+        handleRemoveTag, 
+        handleTagSubmit 
+    } = useAnnotationTags(annotation, user?.id);
+
     const handleEditClick = () => {
         setEditText(annotation.body.value);
         setIsEditing(true);
         closeMenu();
     };
 
-    // Add this handler for canceling edits
     const handleEditCancel = () => {
         setIsEditing(false);
         setEditText("");
     };
 
-    // Add this placeholder handler for saving edits (we'll connect to Redux later)
     const handleEditSave = () => {
         if (!editText.trim()) return;
 
-        const motivation = annotation.motivation
-
-        const thunk = thunkMap[motivation]
+        const motivation = annotation.motivation;
+        const thunk = thunkMap[motivation];
 
         if (!thunk){
-            console.error("Bad motivation in update: ", motivation)
+            console.error("Bad motivation in update: ", motivation);
         }
 
-        dispatch(thunk.update({"annotationId": annotation.id as unknown as number, "payload": {"body": editText}}))
+        dispatch(thunk.update({"annotationId": annotation.id as unknown as number, "payload": {"body": editText}}));
         setIsEditing(false);
     };
 
@@ -67,62 +70,21 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
     );
 
-    const tags = useAppSelector(
-        (state: RootState) => taggingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
-    );
-
-    const handleTagsClick = () => {
-    setIsTagging(!isTagging);
-    closeMenu(); 
+    const handleTagsMenuClick = () => {
+        handleTagsClick();
+        closeMenu(); 
     };
 
     const handleCommentDelete = () => {
-        const motivation = annotation.motivation
-        const thunk = thunkMap[motivation]
+        const motivation = annotation.motivation;
+        const thunk = thunkMap[motivation];
         if (!thunk) {
-            console.error("Bad motivation in handle comment delete:", motivation)
-            return
+            console.error("Bad motivation in handle comment delete:", motivation);
+            return;
         }
-        dispatch(thunk.delete({'annotationId': annotation.id as unknown as number}))
+        dispatch(thunk.delete({'annotationId': annotation.id as unknown as number}));
         closeMenu();
-
     };
-
-
-    const handleTagSubmit = () => {
-        if (!tagInput.trim()) return;
-        
-        const newTags = tagInput
-          .split(',')
-          .map(tag => tag.trim())
-          .filter(tag => tag.length > 0);
-        
-
-        if (!user) return;
-
-        const deId = typeof annotation.document_element_id === "string"
-        ? parseInt(parseURI(annotation.document_element_id))
-        : annotation.document_element_id
-
-        newTags.map((tag) => {
-            const tagAnno = makeTextAnnotationBody(
-                annotation.document_collection_id,
-                annotation.document_id,
-                deId,
-                user.id,
-                'tagging',
-                `Annotation/${annotation.id}`,
-                tag
-            )
-
-            dispatch(saveTaggingAnnotation(tagAnno))
-        })
-        
-        setTagInput("");
-        setIsTagging(false);
-      };
-
-
 
     const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setMenuAnchor(event.currentTarget);
@@ -131,13 +93,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const closeMenu = () => {
         setMenuAnchor(null);
     };
-
-    const handleRemoveTag = (tagId: number | string) => {
-        console.log("Remove tag with ID:", tagId);
-        dispatch(deleteTaggingAnnotations({'annotationId':tagId as unknown as number}))
-      };
-    
-
 
     const handleReplyClick = () => {
         setIsReplying(!isReplying);
@@ -176,10 +131,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         dispatch(saveReplyingAnnotation(replyPayload));
         setReplyText("");
         setIsReplying(false);
-        setIsReplying(!isReplying);
     };
-
-
 
     return (
         <div 
@@ -216,42 +168,11 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
 
             <div className="comment-body">{annotation.body.value}</div>
 
-            {tags && tags.filter(tag => tag && tag.body).length> 0 && (
-                <div className="tags-container" style={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
-                    gap: '5px',
-                    marginTop: '8px' 
-                }}>
-                    {tags.map(tag => (
-                    <div 
-                        key={tag.id} 
-                        className="tag-chip" 
-                        style={{
-                        backgroundColor: '#e0e0e0',
-                        borderRadius: '16px',
-                        padding: '2px 8px',
-                        fontSize: '0.8rem',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        color: '#333'
-                        }}
-                    >
-                        {tag.body.value}
-                        {(user && tag.creator.id === user.id) && (<span 
-                        onClick={() => handleRemoveTag(tag.id)} 
-                        style={{ 
-                            marginLeft: '4px', 
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                        }}
-                        >
-                        ×
-                        </span>)}
-                    </div>
-                    ))}
-                </div>
-                )}
+            <TagList 
+                tags={tags} 
+                userId={user?.id} 
+                onRemoveTag={handleRemoveTag} 
+            />
             
             <Menu
                 anchorEl={menuAnchor}
@@ -261,63 +182,16 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             >
                 {(user && user.id === annotation.creator.id) && (<MenuItem onClick={handleEditClick}>Edit</MenuItem>)}
                 {(user && user.id === annotation.creator.id) && (<MenuItem onClick={handleCommentDelete}>Delete</MenuItem>)}
-                <MenuItem onClick={handleTagsClick}>Tags</MenuItem>
+                <MenuItem onClick={handleTagsMenuClick}>Tags</MenuItem>
             </Menu>
-            {
-                replies && (
-                    replies.map(reply => (
-                                  <AnnotationCard
-                                    key={reply.id}
-                                    id={`${reply.id}`}
-                                    annotation={reply}
-                                    isHighlighted={false}
-                                    depth={depth+1}
-                                  />
-                                ))
-                )
-            }
 
             {isTagging && (
-            <div className="tag-section" style={{ marginRight: '10px', marginTop: '10px' }}>
-                <div style={{ fontSize: '0.8rem', marginBottom: '5px', color: '#666' }}>
-                Enter tags separated by commas
-                </div>
-                <input
-                type="text"
-                placeholder="Enter tags"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleTagSubmit();
-                    }
-                }}
-                style={{
-                    width: '100%',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    padding: '5px',
-                    fontFamily: 'Arial, Helvetica, sans-serif'
-                }}
+                <TagInput 
+                    onSubmit={handleTagSubmit}
+                    onClose={() => setIsTagging(false)}
                 />
-                <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                    style={{
-                    padding: '5px 10px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    }}
-                    onClick={handleTagSubmit}
-                >
-                    Add Tags
-                </button>
-                </div>
-            </div>
             )}
+
             {isEditing && (
                 <div className="edit-section" style={{ marginRight: '10px', marginTop: '10px' }}>
                     <textarea
@@ -412,6 +286,20 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                     </div>
                 </div>
             )}
+
+            {
+                replies && (
+                    replies.map(reply => (
+                        <AnnotationCard
+                            key={reply.id}
+                            id={`${reply.id}`}
+                            annotation={reply}
+                            isHighlighted={false}
+                            depth={depth+1}
+                        />
+                    ))
+                )
+            }
         </div>
     );
 }
