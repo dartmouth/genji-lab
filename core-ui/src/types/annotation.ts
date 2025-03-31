@@ -67,9 +67,12 @@ interface AnnotationCreate {
     }>
 }
 
-
+interface AnnotationDelete {
+    annotationId: number
+  }
 
 // export annotation not using default
 export type { Annotation }
 export type { AnnotationCreate }
+export type { AnnotationDelete }
 export type { Selector}

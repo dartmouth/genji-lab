@@ -5,7 +5,7 @@ import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material"
 import { Menu, MenuItem } from "@mui/material";
 import { replyingAnnotations, taggingAnnotations } from "../store";
 import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
-import { saveReplyingAnnotation, saveTaggingAnnotation } from "../store/thunk/annotationThunks";
+import { saveReplyingAnnotation, saveTaggingAnnotation, deleteTaggingAnnotations } from "../store/thunk/annotationThunks";
 import { useAuth } from "../hooks/useAuthContext";
 import { AnnotationCreate } from "../types/annotation";
 import { makeTextAnnotationBody, parseURI } from "../functions/makeAnnotationBody";
@@ -19,6 +19,10 @@ interface AnnotationCardProps {
 }
 
 const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighlighted = false, depth=0 }) => {
+    const { user } = useAuth();
+
+    const dispatch = useAppDispatch();
+
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState("");
@@ -74,9 +78,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         setIsTagging(false);
       };
 
-    const { user } = useAuth();
 
-    const dispatch = useAppDispatch();
 
     const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setMenuAnchor(event.currentTarget);
@@ -89,6 +91,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const handleRemoveTag = (tagId: number | string) => {
         // Here you would dispatch an action to remove the tag
         console.log("Remove tag with ID:", tagId);
+        dispatch(deleteTaggingAnnotations({'annotationId':tagId as unknown as number}))
         // Example: dispatch(removeTaggingAnnotation(tagId));
       };
     
@@ -168,7 +171,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             </div>
 
             <div className="comment-body">{annotation.body.value}</div>
-            {tags && tags.length > 0 && (
+
+            {tags && tags.filter(tag => tag && tag.body).length> 0 && (
                 <div className="tags-container" style={{ 
                     display: 'flex', 
                     flexWrap: 'wrap', 

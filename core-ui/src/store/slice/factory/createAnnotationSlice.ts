@@ -1,6 +1,6 @@
 // createAnnotationSlice.ts
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { Annotation } from '../../../types/annotation';
+import { Annotation, AnnotationDelete } from '../../../types/annotation';
 
 // Import RootState type - but we'll use a type import to avoid circular references
 import type { RootState } from '../../index';
@@ -34,15 +34,15 @@ export function createAnnotationSlice(bucketName: string) {
           
           // Extract document element ID from target
           annotation.target.forEach(target => {
-            const documentElementId = target.source;
-            if (documentElementId) {
+            const sourceId = target.source;
+            if (sourceId) {
               // Initialize array if needed
-              if (!state.byParent[documentElementId]) {
-                state.byParent[documentElementId] = [];
+              if (!state.byParent[sourceId]) {
+                state.byParent[sourceId] = [];
               }
               // Add reference to annotation ID (avoid duplicates)
-              if (!state.byParent[documentElementId].includes(annotation.id)) {
-                state.byParent[documentElementId].push(annotation.id);
+              if (!state.byParent[sourceId].includes(annotation.id)) {
+                state.byParent[sourceId].push(annotation.id);
               }
             }
           });
@@ -58,18 +58,41 @@ export function createAnnotationSlice(bucketName: string) {
         
         // Extract document element ID from target
         annotation.target.forEach(target => {
-          const documentElementId = target.source;
-          if (documentElementId) {
+          const sourceId = target.source;
+          if (sourceId) {
             // Initialize array if needed
-            if (!state.byParent[documentElementId]) {
-              state.byParent[documentElementId] = [];
+            if (!state.byParent[sourceId]) {
+              state.byParent[sourceId] = [];
             }
             // Add reference to annotation ID (avoid duplicates)
-            if (!state.byParent[documentElementId].includes(annotation.id)) {
-              state.byParent[documentElementId].push(annotation.id);
+            if (!state.byParent[sourceId].includes(annotation.id)) {
+              state.byParent[sourceId].push(annotation.id);
             }
           }
         });
+      },
+      deleteAnnotation(state, action: PayloadAction<AnnotationDelete>) {
+        const { annotationId } = action.payload;
+        const stringId = String(annotationId); // Convert to string since your IDs are stored as strings
+        
+        // Get the annotation to be deleted
+        const annotation = state.byId[stringId];
+        
+        if (annotation) {
+          // Remove from byId index
+          delete state.byId[stringId];
+          
+          // Remove from byParent indexes
+          annotation.target.forEach(target => {
+            const sourceId = target.source;
+            if (sourceId && state.byParent[sourceId]) {
+              // Filter out the annotation ID from the array
+              state.byParent[sourceId] = state.byParent[sourceId]
+                .filter(id => id !== stringId);
+              
+            }
+          });
+        }
       }
     }
   });

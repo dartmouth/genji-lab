@@ -8,7 +8,8 @@ import {
   import { 
     createFetchAnnotationsThunk, 
     createSaveAnnotationThunk,
-    createPatchAnnotationThunk
+    createPatchAnnotationThunk,
+    createDeleteAnnotationThunk
   } from './factory/createAnnotationThunks';
   
   // Create fetch thunks for each annotation type
@@ -72,11 +73,31 @@ import {
     taggingAnnotations.actions
   )
 
+  // patch thunks
+  export const deleteCommentingAnnotations = createDeleteAnnotationThunk(
+    'commenting',
+    commentingAnnotations.actions
+  )
+  export const deleteReplyingAnnotations = createDeleteAnnotationThunk(
+    'replying',
+    commentingAnnotations.actions
+  )
+  export const deleteScholarlyAnnotations = createDeleteAnnotationThunk(
+    'scholarly',
+    commentingAnnotations.actions
+  )
+
+  export const deleteTaggingAnnotations = createDeleteAnnotationThunk(
+    'tagging',
+    taggingAnnotations.actions
+  )
+
   type ThunkMap = {
     [key: string]: {
       get: ReturnType<typeof createFetchAnnotationsThunk>;
       create: ReturnType<typeof createSaveAnnotationThunk>;
       update: ReturnType<typeof createPatchAnnotationThunk>;
+      delete: ReturnType<typeof createDeleteAnnotationThunk>
     }
   };
 
@@ -84,22 +105,26 @@ import {
     'commenting' : {
       'get' : fetchCommentingAnnotations,
       'create': saveCommentingAnnotation,
-      'update': patchCommentingAnnotations
+      'update': patchCommentingAnnotations,
+      'delete': deleteCommentingAnnotations
     },
     'replying': {
       'get': fetchReplyingAnnotations,
       'create': saveReplyingAnnotation,
-      'update': patchReplyingAnnotations
+      'update': patchReplyingAnnotations,
+      'delete': deleteReplyingAnnotations
     },
     'scholarly': {
       'get': fetchScholarlyAnnotations,
       'create': saveScholarlyAnnotation,
-      'update': patchScholarlyAnnotations
+      'update': patchScholarlyAnnotations,
+      'delete': deleteScholarlyAnnotations
     },
     'tagging' : {
       'get' : fetchTaggingAnnotations,
       'create': saveTaggingAnnotation,
-      'update': patchTaggingAnnotations
+      'update': patchTaggingAnnotations,
+      'delete': deleteTaggingAnnotations
     }
   }
 

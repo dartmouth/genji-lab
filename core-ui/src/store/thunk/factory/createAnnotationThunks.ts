@@ -1,6 +1,6 @@
 
 import { createAsyncThunk, ActionCreatorWithPayload } from '@reduxjs/toolkit';
-import { Annotation, AnnotationCreate } from '../../../types/annotation';
+import { Annotation, AnnotationCreate, AnnotationDelete } from '../../../types/annotation';
 import { RootState } from '../../index';
 import axios, { AxiosInstance } from 'axios';
 
@@ -9,11 +9,11 @@ const api: AxiosInstance = axios.create({
   timeout: 10000,
 });
 
-
 // Type for the slice actions that our thunks need
 interface AnnotationSliceActions {
   addAnnotations: ActionCreatorWithPayload<Annotation[], string>;
   addAnnotation: ActionCreatorWithPayload<Annotation, string>;
+  deleteAnnotation: ActionCreatorWithPayload<AnnotationDelete, string>
   // Add other action creators as needed
 }
 
@@ -120,6 +120,39 @@ export function createSaveAnnotationThunk(
           dispatch(sliceActions.addAnnotation(savedAnnotation));
           
           return savedAnnotation;
+        } catch (error) {
+          return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+        }
+      }
+    );
+  }
+
+
+
+  export function createDeleteAnnotationThunk(
+    bucketName: string,
+    sliceActions: AnnotationSliceActions
+  ) {
+    const thunkName = `annotations/${bucketName}/deleteAnnotation`;
+    
+    return createAsyncThunk<
+      // Annotation,
+      AnnotationDelete,
+      AnnotationDelete,
+      { state: RootState }
+    >(
+      thunkName,
+      async (id: AnnotationDelete, { dispatch, rejectWithValue }) => {
+        try {
+
+          // Use your API client
+          await api.delete(`/annotations/${id.annotationId}`);
+          
+          
+          dispatch(sliceActions.deleteAnnotation(id));
+
+          return id
+
         } catch (error) {
           return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
         }
