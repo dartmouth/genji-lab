@@ -5,6 +5,11 @@ import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material"
 import { Menu, MenuItem } from "@mui/material";
 import { replyingAnnotations } from "../store";
 import { useAppSelector } from "../store/hooks/useAppDispatch";
+import { useAppDispatch } from "../store/hooks/useAppDispatch";
+import { saveReplyingAnnotation } from "../store/thunk/annotationThunks";
+import { useAuth } from "../hooks/useAuthContext";
+import { AnnotationCreate } from "../types/annotation";
+import { parseURI } from "../functions/makeAnnotationBody";
 
 interface AnnotationCardProps {
     id: string;
@@ -17,6 +22,9 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState("");
+    const { user } = useAuth();
+
+    const dispatch = useAppDispatch();
 
     const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setMenuAnchor(event.currentTarget);
@@ -32,7 +40,43 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
 
     const handleReplyClick = () => {
         setIsReplying(!isReplying);
-    }
+    };
+
+    const onReplySave = () => {
+        if (!replyText.trim()) return;
+        if (!user) return;
+    
+        const replyPayload: AnnotationCreate = {
+          creator_id: user.id,
+          context: "http://www.w3.org/ns/anno.jsonld",
+          document_id: annotation.document_id,
+          type: "Annotation",
+          generator: "web-client",
+          document_collection_id: annotation.document_collection_id,
+          document_element_id: typeof annotation.document_element_id === "string"
+            ? parseInt(parseURI(annotation.document_element_id))
+            : annotation.document_element_id,
+          motivation: "replying",
+          annotation_type: "reply",
+          body: {
+            type: "TextualBody",
+            value: replyText,
+            format: "text/html",
+            language: "en"
+          },
+          target: [
+            {
+              type: "Text",
+              source: `Annotation/${annotation.id}`
+            }
+          ]
+        };
+    
+        dispatch(saveReplyingAnnotation(replyPayload));
+        setReplyText("");
+        setIsReplying(false);
+        setIsReplying(!isReplying);
+    };
 
     return (
         <div 
@@ -67,6 +111,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 </div>
             </div>
             <div className="comment-body">{annotation.body.value}</div>
+
             
             <Menu
                 anchorEl={menuAnchor}
@@ -98,6 +143,12 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                         placeholder="Write your reply..."
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              onReplySave();
+                            }
+                          }}
                         rows={3}
                         style={{
                             width: '100%',
@@ -105,6 +156,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                             borderRadius: '4px',
                             padding: '5px',
                             resize: 'none',
+                            fontFamily: 'Arial, Helvetica, sans-serif'
                         }}
                     />
                     <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -118,7 +170,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                                 cursor: 'pointer',
                             }}
                             onClick={() => {
-                                console.log('Submit reply:', replyText);
+                                onReplySave();
                             }}
                         >
                             Submit
