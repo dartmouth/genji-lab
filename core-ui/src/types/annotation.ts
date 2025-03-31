@@ -2,6 +2,8 @@ interface Annotation {
     "context": string;
     "id": string;
     "document_element_id": string;
+    "document_id": number;
+    "document_collection_id": number;
     "type": string;
     "creator": {
         "first_name": string,
@@ -59,7 +61,7 @@ interface AnnotationCreate {
     "target": Array<{
         "type": string;
         "source": string;
-        "selector": {
+        "selector"?: {
             "type": string;
             "value": string;
             "refined_by": {
