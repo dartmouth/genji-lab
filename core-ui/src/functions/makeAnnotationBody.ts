@@ -35,10 +35,15 @@ export function makeTextAnnotationBody(
         }]
       };
 
-      if (motivation === 'commenting'){
-        
-        if (!targetStart || !targetEnd){
-          throw new SyntaxError("Range start and end are required for new comments")
+      if (['commenting', 'scholarly'].includes(motivation)){
+        console.log("Start is ", targetStart)
+        console.log("End is ", targetEnd)
+        if (!targetStart){
+          throw new SyntaxError("Range start required for new comments")
+        }
+
+        if (!targetEnd){
+          throw new SyntaxError("Range end required for new comments")
         }
 
         const selector: Selector = {
@@ -50,8 +55,8 @@ export function makeTextAnnotationBody(
             "end": targetEnd
           }
         }
-
-        Object.defineProperty(newAnnotation.target, "selector", selector)
+        // FIXME -- need to update for multi-paragraph annotations
+        newAnnotation.target[0].selector = selector;
       }
 
     return newAnnotation

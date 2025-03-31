@@ -31,6 +31,7 @@ const AnnotationCreationCard: React.FC = () => {
       console.error("Bad motivation")
       return
     }
+    console.log(newAnno)
 
     const annoBody = makeTextAnnotationBody(
       newAnno.target.documentCollectionId,

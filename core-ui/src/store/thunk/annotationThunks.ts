@@ -1,3 +1,5 @@
+// FIXME this whole file is stupid. Way too much copy-paste nonsense
+// find a way not to have to create all this cruft
 import { 
     commentingAnnotations, 
     replyingAnnotations, 
@@ -80,11 +82,11 @@ import {
   )
   export const deleteReplyingAnnotations = createDeleteAnnotationThunk(
     'replying',
-    commentingAnnotations.actions
+    replyingAnnotations.actions
   )
   export const deleteScholarlyAnnotations = createDeleteAnnotationThunk(
     'scholarly',
-    commentingAnnotations.actions
+    scholarlyAnnotations.actions
   )
 
   export const deleteTaggingAnnotations = createDeleteAnnotationThunk(
