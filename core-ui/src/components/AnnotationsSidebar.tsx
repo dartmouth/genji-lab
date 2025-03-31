@@ -1,5 +1,5 @@
 import React from 'react';
-import AnnotationCard from './AnnotationCard';
+import AnnotationCard from './annotationcard/AnnotationCard';
 import AnnotationCreationCard from './AnnotationCreationCard';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Annotation } from '../types/annotation';

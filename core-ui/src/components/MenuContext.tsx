@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ContextMenu, ContextButton } from "../components/ContextMenuComponents";
+import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
 import { selectSelectedText, setMotivation } from '../store/slice/annotationCreate';
 import { createPortal } from 'react-dom';
