@@ -19,7 +19,7 @@ class TextTarget(BaseModel):
     source: Union[int, str]
     selector: TextQuoteSelector
 
-class ObjectTarget:
+class ObjectTarget(BaseModel):
     id: Optional[int] = None
     type: str
     source: Union[int, str]

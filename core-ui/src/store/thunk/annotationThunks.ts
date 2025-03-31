@@ -1,7 +1,8 @@
 import { 
     commentingAnnotations, 
     replyingAnnotations, 
-    scholarlyAnnotations 
+    scholarlyAnnotations,
+    taggingAnnotations
   } from '../slice/annotationSlices';
 
   import { 
@@ -25,6 +26,11 @@ import {
     'scholarly',
     scholarlyAnnotations.actions
   );
+
+  export const fetchTaggingAnnotations = createFetchAnnotationsThunk(
+    'tagging',
+    taggingAnnotations.actions
+  );
   
   // Create save thunks for each annotation type
   export const saveCommentingAnnotation = createSaveAnnotationThunk(
@@ -42,6 +48,11 @@ import {
     scholarlyAnnotations.actions
   );
   
+  export const saveTaggingAnnotation = createSaveAnnotationThunk(
+    'tagging',
+    taggingAnnotations.actions
+  );
+
   // patch thunks
   export const patchCommentingAnnotations = createPatchAnnotationThunk(
     'commenting',
@@ -55,6 +66,12 @@ import {
     'scholarly',
     commentingAnnotations.actions
   )
+
+  export const patchTaggingAnnotations = createPatchAnnotationThunk(
+    'tagging',
+    taggingAnnotations.actions
+  )
+
   type ThunkMap = {
     [key: string]: {
       get: ReturnType<typeof createFetchAnnotationsThunk>;
@@ -78,6 +95,11 @@ import {
       'get': fetchScholarlyAnnotations,
       'create': saveScholarlyAnnotation,
       'update': patchScholarlyAnnotations
+    },
+    'tagging' : {
+      'get' : fetchTaggingAnnotations,
+      'create': saveTaggingAnnotation,
+      'update': patchTaggingAnnotations
     }
   }
 

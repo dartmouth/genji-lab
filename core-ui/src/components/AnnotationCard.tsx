@@ -3,13 +3,13 @@ import { RootState } from "../store/index";
 import { Annotation } from "../types/annotation";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
-import { replyingAnnotations } from "../store";
-import { useAppSelector } from "../store/hooks/useAppDispatch";
-import { useAppDispatch } from "../store/hooks/useAppDispatch";
-import { saveReplyingAnnotation } from "../store/thunk/annotationThunks";
+import { replyingAnnotations, taggingAnnotations } from "../store";
+import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
+import { saveReplyingAnnotation, saveTaggingAnnotation } from "../store/thunk/annotationThunks";
 import { useAuth } from "../hooks/useAuthContext";
 import { AnnotationCreate } from "../types/annotation";
-import { parseURI } from "../functions/makeAnnotationBody";
+import { makeTextAnnotationBody, parseURI } from "../functions/makeAnnotationBody";
+// import { taggingAnnotations } from "../store/slice/annotationSlices";
 
 interface AnnotationCardProps {
     id: string;
@@ -22,6 +22,58 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState("");
+
+    const [isTagging, setIsTagging] = useState(false);
+    const [tagInput, setTagInput] = useState("");
+
+    const replies = useAppSelector(
+        (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
+    );
+
+    const tags = useAppSelector(
+        (state: RootState) => taggingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
+    );
+
+    // 2. Add handler for the Tags menu item
+    const handleTagsClick = () => {
+    setIsTagging(!isTagging);
+    closeMenu(); // Close the dropdown menu when Tags is clicked
+    };
+
+    const handleTagSubmit = () => {
+        if (!tagInput.trim()) return;
+        
+        const newTags = tagInput
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag.length > 0);
+        
+
+        if (!user) return;
+
+        const deId = typeof annotation.document_element_id === "string"
+        ? parseInt(parseURI(annotation.document_element_id))
+        : annotation.document_element_id
+
+        newTags.map((tag) => {
+            const tagAnno = makeTextAnnotationBody(
+                annotation.document_collection_id,
+                annotation.document_id,
+                deId,
+                user.id,
+                'tagging',
+                `Annotation/${annotation.id}`,
+                tag
+            )
+
+            dispatch(saveTaggingAnnotation(tagAnno))
+        })
+        
+        setTagInput(""); // Clear the input
+        // Optionally close the tag UI
+        setIsTagging(false);
+      };
+
     const { user } = useAuth();
 
     const dispatch = useAppDispatch();
@@ -33,10 +85,14 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const closeMenu = () => {
         setMenuAnchor(null);
     };
+
+    const handleRemoveTag = (tagId: number | string) => {
+        // Here you would dispatch an action to remove the tag
+        console.log("Remove tag with ID:", tagId);
+        // Example: dispatch(removeTaggingAnnotation(tagId));
+      };
     
-    const replies = useAppSelector(
-        (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
-    );
+
 
     const handleReplyClick = () => {
         setIsReplying(!isReplying);
@@ -110,8 +166,44 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                     </button>
                 </div>
             </div>
-            <div className="comment-body">{annotation.body.value}</div>
 
+            <div className="comment-body">{annotation.body.value}</div>
+            {tags && tags.length > 0 && (
+                <div className="tags-container" style={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: '5px',
+                    marginTop: '8px' 
+                }}>
+                    {tags.map(tag => (
+                    <div 
+                        key={tag.id} 
+                        className="tag-chip" 
+                        style={{
+                        backgroundColor: '#e0e0e0',
+                        borderRadius: '16px',
+                        padding: '2px 8px',
+                        fontSize: '0.8rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        color: '#333'
+                        }}
+                    >
+                        {tag.body.value}
+                        <span 
+                        onClick={() => handleRemoveTag(tag.id)} 
+                        style={{ 
+                            marginLeft: '4px', 
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                        >
+                        ×
+                        </span>
+                    </div>
+                    ))}
+                </div>
+                )}
             
             <Menu
                 anchorEl={menuAnchor}
@@ -121,7 +213,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             >
                 <MenuItem onClick={closeMenu}>Edit</MenuItem>
                 <MenuItem onClick={closeMenu}>Delete</MenuItem>
-                <MenuItem onClick={closeMenu}>Tags</MenuItem>
+                <MenuItem onClick={handleTagsClick}>Tags</MenuItem>
             </Menu>
             {
                 replies && (
@@ -136,6 +228,48 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                                 ))
                 )
             }
+
+            {isTagging && (
+            <div className="tag-section" style={{ marginRight: '10px', marginTop: '10px' }}>
+                <div style={{ fontSize: '0.8rem', marginBottom: '5px', color: '#666' }}>
+                Enter tags separated by commas
+                </div>
+                <input
+                type="text"
+                placeholder="Enter tags"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleTagSubmit();
+                    }
+                }}
+                style={{
+                    width: '100%',
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    padding: '5px',
+                    fontFamily: 'Arial, Helvetica, sans-serif'
+                }}
+                />
+                <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                    style={{
+                    padding: '5px 10px',
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    }}
+                    onClick={handleTagSubmit}
+                >
+                    Add Tags
+                </button>
+                </div>
+            </div>
+            )}
 
             {isReplying && (
                 <div className="reply-section" style={{ marginRight: '10px', marginTop: '10px' }}>

@@ -2,7 +2,7 @@
 import { configureStore, combineReducers, Reducer, Action } from '@reduxjs/toolkit';
 import highlightRegistryReducer from './slice/highlightRegistrySlice';
 import createAnnotationSliceReducer from './slice/annotationCreate'
-import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations } from './slice/annotationSlices';
+import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations, taggingAnnotations } from './slice/annotationSlices';
 import { AnnotationState } from './slice/factory/createAnnotationSlice';
 
 // Define the structure of our annotations reducers
@@ -14,7 +14,8 @@ interface AnnotationReducers {
 const annotationReducersMap: AnnotationReducers = {
   [commentingAnnotations.name]: commentingAnnotations.reducer,
   [replyingAnnotations.name]: replyingAnnotations.reducer,
-  [scholarlyAnnotations.name]: scholarlyAnnotations.reducer
+  [scholarlyAnnotations.name]: scholarlyAnnotations.reducer,
+  [taggingAnnotations.name]: taggingAnnotations.reducer
 };
 
 // Combine the reducers
@@ -42,5 +43,6 @@ export type AppDispatch = typeof store.dispatch;
 export { 
   commentingAnnotations,
   replyingAnnotations,
-  scholarlyAnnotations
+  scholarlyAnnotations,
+  taggingAnnotations
 };
