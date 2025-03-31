@@ -73,7 +73,7 @@ const AnnotationCreationCard: React.FC = () => {
       <div className="selected-text" style={{ 
         fontSize: '0.9em',
         padding: '6px',
-        backgroundColor: '#c4dd88',
+        backgroundColor: newAnno.motivation === 'commenting' ? '#c4dd88' : '#abf7ff',
         borderRadius: '3px',
         marginBottom: '8px',
         borderLeft: '3px solid #c4dd88'

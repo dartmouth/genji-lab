@@ -50,8 +50,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     // Add this placeholder handler for saving edits (we'll connect to Redux later)
     const handleEditSave = () => {
         if (!editText.trim()) return;
-        // We'll add the Redux dispatch here later
-        console.log("Saving edit:", editText);
 
         const motivation = annotation.motivation
 
