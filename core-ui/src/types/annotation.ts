@@ -71,8 +71,16 @@ interface AnnotationDelete {
     annotationId: number
   }
 
+interface AnnotationPatch {
+    annotationId: number,
+    payload: {
+      body: string
+    }
+  }
+
 // export annotation not using default
 export type { Annotation }
 export type { AnnotationCreate }
 export type { AnnotationDelete }
 export type { Selector}
+export type { AnnotationPatch}

@@ -1,6 +1,6 @@
 
 import { createAsyncThunk, ActionCreatorWithPayload } from '@reduxjs/toolkit';
-import { Annotation, AnnotationCreate, AnnotationDelete } from '../../../types/annotation';
+import { Annotation, AnnotationCreate, AnnotationDelete, AnnotationPatch } from '../../../types/annotation';
 import { RootState } from '../../index';
 import axios, { AxiosInstance } from 'axios';
 
@@ -91,12 +91,6 @@ export function createSaveAnnotationThunk(
     );
   }
 
-  interface AnnotationPatch {
-    annotationId: number,
-    payload: {
-      body: string
-    }
-  }
   export function createPatchAnnotationThunk(
     bucketName: string,
     sliceActions: AnnotationSliceActions

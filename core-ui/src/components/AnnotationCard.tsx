@@ -30,6 +30,41 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const [isTagging, setIsTagging] = useState(false);
     const [tagInput, setTagInput] = useState("");
 
+    // Add these state variables at the top with your other state declarations
+    const [isEditing, setIsEditing] = useState(false);
+    const [editText, setEditText] = useState("");
+
+    // Add this handler function with your other handlers
+    const handleEditClick = () => {
+        setEditText(annotation.body.value);
+        setIsEditing(true);
+        closeMenu();
+    };
+
+    // Add this handler for canceling edits
+    const handleEditCancel = () => {
+        setIsEditing(false);
+        setEditText("");
+    };
+
+    // Add this placeholder handler for saving edits (we'll connect to Redux later)
+    const handleEditSave = () => {
+        if (!editText.trim()) return;
+        // We'll add the Redux dispatch here later
+        console.log("Saving edit:", editText);
+
+        const motivation = annotation.motivation
+
+        const thunk = thunkMap[motivation]
+
+        if (!thunk){
+            console.error("Bad motivation in update: ", motivation)
+        }
+
+        dispatch(thunk.update({"annotationId": annotation.id as unknown as number, "payload": {"body": editText}}))
+        setIsEditing(false);
+    };
+
     const replies = useAppSelector(
         (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
     );
@@ -54,6 +89,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         closeMenu();
 
     };
+
 
     const handleTagSubmit = () => {
         if (!tagInput.trim()) return;
@@ -225,7 +261,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 onClose={closeMenu}
                 disableScrollLock
             >
-                {(user && user.id === annotation.creator.id) && (<MenuItem onClick={closeMenu}>Edit</MenuItem>)}
+                {(user && user.id === annotation.creator.id) && (<MenuItem onClick={handleEditClick}>Edit</MenuItem>)}
                 {(user && user.id === annotation.creator.id) && (<MenuItem onClick={handleCommentDelete}>Delete</MenuItem>)}
                 <MenuItem onClick={handleTagsClick}>Tags</MenuItem>
             </Menu>
@@ -283,6 +319,58 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 </button>
                 </div>
             </div>
+            )}
+            {isEditing && (
+                <div className="edit-section" style={{ marginRight: '10px', marginTop: '10px' }}>
+                    <textarea
+                        placeholder="Edit your annotation..."
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleEditSave();
+                            }
+                        }}
+                        rows={3}
+                        style={{
+                            width: '100%',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            padding: '5px',
+                            resize: 'none',
+                            fontFamily: 'Arial, Helvetica, sans-serif'
+                        }}
+                    />
+                    <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'space-between' }}>
+                        <button
+                            style={{
+                                padding: '5px 10px',
+                                backgroundColor: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                            }}
+                            onClick={handleEditCancel}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            style={{
+                                padding: '5px 10px',
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                            }}
+                            onClick={handleEditSave}
+                        >
+                            Save
+                        </button>
+                    </div>
+                </div>
             )}
 
             {isReplying && (
