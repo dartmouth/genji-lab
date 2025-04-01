@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { HighlightedText } from './highlightedContent';
-import { DocumentElement } from '../types/documentElement';
-import { useApiClient } from '../../../hooks/useApi';
+import { 
+    HighlightedText,
+    AnnotationsSidebar,
+    MenuContext
+ } from '.';
+import { DocumentElement } from '@documentView/types';
+import { useApiClient } from '@hooks/useApi';
 import { RootState, commentingAnnotations, scholarlyAnnotations } from '@store';
 import { useSelector } from 'react-redux';
-import { AnnotationsSidebar } from './sidebar';
-import { MenuContext } from './contextMenu';
 
 
 interface DocumentContentPanelProps {

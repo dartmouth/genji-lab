@@ -6,7 +6,7 @@ import {
   RootState, 
   taggingAnnotations 
 } from '@store';
-import { makeTextAnnotationBody, parseURI } from '../utils/makeAnnotationBody';
+import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
 import { Annotation } from '@documentView/types';
 
 export const useAnnotationTags = (annotation: Annotation, userId?: number) => {

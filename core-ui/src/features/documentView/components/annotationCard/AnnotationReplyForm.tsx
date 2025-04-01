@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Annotation, AnnotationCreate } from '@documentView/types';
 import { useAppDispatch, saveReplyingAnnotation } from '@store';
 import { useAuth } from '@hooks/useAuthContext';
-import { parseURI } from '@documentView/utils/makeAnnotationBody';
+import { parseURI } from '@documentView/utils';
 
 interface ReplyFormProps {
     annotation: Annotation;

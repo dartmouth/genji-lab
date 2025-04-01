@@ -1,7 +1,7 @@
 // components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
-import { parseURI } from '@documentView/utils/makeAnnotationBody';
+import { parseURI } from '@documentView/utils';
 
 import { 
   RootState,

@@ -1,3 +1,3 @@
 
 
-export * from './makeAnnotationBody'
+export { makeTextAnnotationBody, parseURI } from './makeAnnotationBody'
