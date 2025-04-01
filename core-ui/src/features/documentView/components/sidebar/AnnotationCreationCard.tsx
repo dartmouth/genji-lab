@@ -6,7 +6,7 @@ import {
   setContent, 
   resetCreateAnnotation, 
   selectAnnotationCreate, 
-  thunkMap 
+  sliceMap 
 } from '@store';
 
 import { debounce } from 'lodash';
@@ -30,9 +30,9 @@ const AnnotationCreationCard: React.FC = () => {
 
     const annoType: string = newAnno.motivation
 
-    const thunk = thunkMap[annoType] || {}
+    const slice = sliceMap[annoType] || {}
 
-    if (!thunk) {
+    if (!slice) {
       console.error("Bad motivation")
       return
     }
@@ -50,7 +50,7 @@ const AnnotationCreationCard: React.FC = () => {
       newAnno.target.end
     )
     
-    dispatch(thunk.create(annoBody))
+    dispatch(slice.thunks.saveAnnotation(annoBody))
     dispatch(resetCreateAnnotation())
     
   }

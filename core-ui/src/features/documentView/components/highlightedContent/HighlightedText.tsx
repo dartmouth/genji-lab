@@ -11,10 +11,10 @@ import {
   setHoveredHighlights, 
   selectAllAnnotationsForParagraph, 
   setTarget,
-  fetchCommentingAnnotations, 
-  fetchScholarlyAnnotations, 
-  fetchReplyingAnnotations, 
-  fetchTaggingAnnotations
+  commentingAnnotations,
+  scholarlyAnnotations,
+  replyingAnnotations,
+  taggingAnnotations
 } from '@store';
 
 import { debounce } from 'lodash';
@@ -38,10 +38,10 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(fetchCommentingAnnotations(parseURI(paragraphId)));
-    dispatch(fetchScholarlyAnnotations(parseURI(paragraphId)))
-    dispatch(fetchReplyingAnnotations(parseURI(paragraphId)))
-    dispatch(fetchTaggingAnnotations(parseURI(paragraphId)))
+    dispatch(commentingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+    dispatch(scholarlyAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)))
+    dispatch(replyingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)))
+    dispatch(taggingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)))
   }, [dispatch, paragraphId]);
 
   const containerRef = useRef<HTMLDivElement>(null);

@@ -1,4 +1,10 @@
-export { commentingAnnotations, replyingAnnotations, scholarlyAnnotations, taggingAnnotations } from './annotationSlices'
+export { 
+    commentingAnnotations, 
+    replyingAnnotations, 
+    scholarlyAnnotations, 
+    taggingAnnotations,
+    sliceMap
+} from './annotationSlices'
 export {  
     registerHighlight, 
     updateHighlightPosition, 

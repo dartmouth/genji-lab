@@ -1,15 +1,20 @@
 // AnnotationCard.tsx
 import React, { useState } from "react";
-import { RootState, replyingAnnotations, thunkMap, useAppDispatch, useAppSelector  } from "@store";
+import { 
+    RootState, 
+    replyingAnnotations, 
+    sliceMap, 
+    useAppDispatch, 
+    useAppSelector  
+} from "@store";
 import { Annotation } from "@documentView/types";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
 
 import { useAuth } from "@hooks/useAuthContext";
 
-
-import { TagList, TagInput } from '../annotationTags'
-import { useAnnotationTags } from "../../hooks/useAnnotationTags";
+import { TagList, TagInput } from '@documentView/components'
+import { useAnnotationTags } from "@documentView/hooks";
 import { AnnotationEditor, ReplyForm } from '.'
 
 interface AnnotationCardProps {
@@ -49,13 +54,13 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         if (!editText.trim()) return;
 
         const motivation = annotation.motivation;
-        const thunk = thunkMap[motivation];
+        const slice = sliceMap[motivation];
 
-        if (!thunk){
+        if (!slice){
             console.error("Bad motivation in update: ", motivation);
         }
 
-        dispatch(thunk.update({"annotationId": annotation.id as unknown as number, "payload": {"body": editText}}));
+        dispatch(slice.thunks.patchAnnotation({"annotationId": annotation.id as unknown as number, "payload": {"body": editText}}));
         setIsEditing(false);
     };
 
@@ -70,12 +75,12 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
 
     const handleCommentDelete = () => {
         const motivation = annotation.motivation;
-        const thunk = thunkMap[motivation];
-        if (!thunk) {
-            console.error("Bad motivation in handle comment delete:", motivation);
-            return;
+        const slice = sliceMap[motivation];
+
+        if (!slice){
+            console.error("Bad motivation in update: ", motivation);
         }
-        dispatch(thunk.delete({'annotationId': annotation.id as unknown as number}));
+        dispatch(slice.thunks.deleteAnnotation({'annotationId': annotation.id as unknown as number}));
         closeMenu();
     };
 

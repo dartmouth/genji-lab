@@ -1,4 +1,4 @@
-import { AnnotationCreate, Selector } from '../types/annotation';
+import { AnnotationCreate, Selector } from '@documentView/types';
 
 export function makeTextAnnotationBody(
     document_collection_id: number,
