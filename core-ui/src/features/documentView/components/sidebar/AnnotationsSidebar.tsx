@@ -1,11 +1,11 @@
 import React from 'react';
-import AnnotationCard from './annotationcard/AnnotationCard';
-import AnnotationCreationCard from './AnnotationCreationCard';
+import { AnnotationCard } from '../annotationCard';
+import { AnnotationCreationCard} from '.';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { Annotation } from '../types/annotation';
-import '../styles/AnnotationsSidebar.css'; 
-import { useAppSelector } from '../store/hooks/useAppDispatch';
-import { selectMotivation } from '../store/slice/annotationCreate'
+import { Annotation } from '../../types/annotation';
+import '../../styles/AnnotationsSidebar.css'; 
+import { useAppSelector, selectMotivation } from '../../../../store';
+
 type SidebarPosition = 'left' | 'right';
 
 interface AnnotationsSidebarProps {

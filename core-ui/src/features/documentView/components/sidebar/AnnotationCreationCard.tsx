@@ -1,12 +1,17 @@
-// AnnotationCreationCard.tsx
 import React from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
-import { selectAnnotationCreate } from '../store/slice/annotationCreate';
-import { setContent, resetCreateAnnotation } from '../store/slice/annotationCreate';
+
+import { 
+  useAppDispatch, 
+  useAppSelector, 
+  setContent, 
+  resetCreateAnnotation, 
+  selectAnnotationCreate, 
+  thunkMap 
+} from '../../../../store';
+
 import { debounce } from 'lodash';
-import { makeTextAnnotationBody, parseURI } from '../functions/makeAnnotationBody';
-import { useIAM } from '../hooks/useIAM';
-import { thunkMap } from '../store/thunk/annotationThunks';
+import { makeTextAnnotationBody, parseURI } from '../../utils/makeAnnotationBody';
+import { useIAM } from '../../../../hooks/useIAM';
 
 
 const AnnotationCreationCard: React.FC = () => {

@@ -40,9 +40,14 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
 // Re-export actions and selectors from annotation buckets
-export { 
-  commentingAnnotations,
-  replyingAnnotations,
-  scholarlyAnnotations,
-  taggingAnnotations
-};
+// export { 
+//   commentingAnnotations,
+//   replyingAnnotations,
+//   scholarlyAnnotations,
+//   taggingAnnotations
+// };
+
+export * from './slice'
+export * from './hooks'
+export * from './thunk'
+export * from './selector'

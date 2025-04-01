@@ -1,10 +1,9 @@
 // hooks/useAnnotationTags.ts
 import { useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
-import { RootState } from '../store';
-import { taggingAnnotations } from '../store';
-import { saveTaggingAnnotation, deleteTaggingAnnotations } from '../store/thunk/annotationThunks';
-import { makeTextAnnotationBody, parseURI } from '../functions/makeAnnotationBody';
+import { useAppDispatch, useAppSelector } from '../../..//store/hooks/useAppDispatch';
+import { RootState, taggingAnnotations } from '../../../store';
+import { saveTaggingAnnotation, deleteTaggingAnnotations } from '../../../store/thunk/annotationThunks';
+import { makeTextAnnotationBody, parseURI } from '../utils/makeAnnotationBody';
 import { Annotation } from '../types/annotation';
 
 export const useAnnotationTags = (annotation: Annotation, userId?: number) => {

@@ -1,5 +1,5 @@
 import React from "react";
-import DocumentContentPanel from "./components/DocumentContentPanel";
+import { DocumentContentPanel } from "./features/documentView";
 import { AuthProvider } from "./components/AuthContext";
 import AppHeader from "./components/AppHeader";
 import ErrorBoundary from "./components/ErrorBoundary";

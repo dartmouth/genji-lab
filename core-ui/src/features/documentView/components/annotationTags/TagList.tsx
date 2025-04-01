@@ -1,6 +1,6 @@
 // components/TagList.tsx
 import React from 'react';
-import TagChip from './TagChip';
+import { TagChip } from '.';
 import { Annotation } from '../../types/annotation';
 
 interface TagListProps {

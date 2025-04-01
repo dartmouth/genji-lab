@@ -1,14 +1,25 @@
 // components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
-import { useAppDispatch, useAppSelector } from '../store/hooks/useAppDispatch';
-import { RootState } from '../store';
-import { updateHighlightPosition, setHoveredHighlights } from '../store/slice/highlightRegistrySlice';
+import { parseURI } from '../../utils/makeAnnotationBody';
+
+import { 
+  RootState,
+  useAppDispatch, 
+  useAppSelector, 
+  updateHighlightPosition, 
+  setHoveredHighlights, 
+  selectAllAnnotationsForParagraph, 
+  setTarget,
+  fetchCommentingAnnotations, 
+  fetchScholarlyAnnotations, 
+  fetchReplyingAnnotations, 
+  fetchTaggingAnnotations
+} from '../../../../store';
+
 import { debounce } from 'lodash';
-import { selectAllAnnotationsForParagraph } from '../store/selector/combinedSelectors'
-import { setTarget } from '../store/slice/annotationCreate';
-import { parseURI } from '../functions/makeAnnotationBody';
-import { fetchCommentingAnnotations, fetchScholarlyAnnotations, fetchReplyingAnnotations, fetchTaggingAnnotations } from '../store/thunk/annotationThunks';
+
+
 
 interface HighlightedTextProps {
   text: string;

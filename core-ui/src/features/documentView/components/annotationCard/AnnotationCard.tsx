@@ -1,18 +1,16 @@
 // AnnotationCard.tsx
 import React, { useState } from "react";
-import { RootState } from "../../store/index";
+import { RootState, replyingAnnotations, thunkMap, useAppDispatch, useAppSelector  } from "../../../../store";
 import { Annotation } from "../../types/annotation";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
-import { replyingAnnotations } from "../../store";
-import { useAppDispatch, useAppSelector } from "../../store/hooks/useAppDispatch";
-import { useAuth } from "../../hooks/useAuthContext";
-import { thunkMap } from "../../store/thunk/annotationThunks";
-import TagList from "../annotationtags/TagList";
-import TagInput from "../annotationtags/TagInput";
+
+import { useAuth } from "../../../../hooks/useAuthContext";
+
+
+import { TagList, TagInput } from '../annotationTags'
 import { useAnnotationTags } from "../../hooks/useAnnotationTags";
-import ReplyForm from "./AnnotationReplyForm";
-import AnnotationEditor from "./AnnotationEditorInterface";
+import { AnnotationEditor, ReplyForm } from '.'
 
 interface AnnotationCardProps {
     id: string;

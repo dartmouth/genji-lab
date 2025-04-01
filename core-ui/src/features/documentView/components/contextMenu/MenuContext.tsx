@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
-import { useAppDispatch, useAppSelector } from "../store/hooks/useAppDispatch";
-import { selectSelectedText, setMotivation } from '../store/slice/annotationCreate';
+import { useAppDispatch, useAppSelector, selectSelectedText, setMotivation  } from "../../../../store";
 import { createPortal } from 'react-dom';
 
 const MenuContext: React.FC = () => {

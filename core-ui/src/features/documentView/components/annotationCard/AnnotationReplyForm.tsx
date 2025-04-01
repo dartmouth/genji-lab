@@ -1,10 +1,9 @@
 // components/ReplyForm.tsx
 import React, { useState } from 'react';
 import { Annotation, AnnotationCreate } from '../../types/annotation';
-import { useAppDispatch } from '../../store/hooks/useAppDispatch';
-import { saveReplyingAnnotation } from '../../store/thunk/annotationThunks';
-import { useAuth } from '../../hooks/useAuthContext';
-import { parseURI } from '../../functions/makeAnnotationBody';
+import { useAppDispatch, saveReplyingAnnotation } from '../../../../store';
+import { useAuth } from '../../../../hooks/useAuthContext';
+import { parseURI } from '../../utils/makeAnnotationBody';
 
 interface ReplyFormProps {
     annotation: Annotation;

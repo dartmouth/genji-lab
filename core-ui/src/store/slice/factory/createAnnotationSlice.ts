@@ -1,6 +1,6 @@
 // createAnnotationSlice.ts
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { Annotation, AnnotationDelete } from '../../../types/annotation';
+import { Annotation, AnnotationDelete } from '../../../features/documentView/types/annotation';
 
 // Import RootState type - but we'll use a type import to avoid circular references
 import type { RootState } from '../../index';

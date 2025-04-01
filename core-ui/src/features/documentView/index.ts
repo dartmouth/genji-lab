@@ -1,0 +1,1 @@
+export { default as DocumentContentPanel } from './components/DocumentContentPanel'
