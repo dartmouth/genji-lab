@@ -1,5 +1,5 @@
 import React, { ReactNode, HTMLAttributes } from 'react';
-import '../../styles/ContextMenuStyles.css';
+import '@documentView/styles/ContextMenuStyles.css';
 
 interface MenuContextContainerProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode;

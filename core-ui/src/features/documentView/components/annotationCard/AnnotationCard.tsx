@@ -1,11 +1,11 @@
 // AnnotationCard.tsx
 import React, { useState } from "react";
 import { RootState, replyingAnnotations, thunkMap, useAppDispatch, useAppSelector  } from "@store";
-import { Annotation } from "../../types/annotation";
+import { Annotation } from "@documentView/types";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
 
-import { useAuth } from "../../../../hooks/useAuthContext";
+import { useAuth } from "@hooks/useAuthContext";
 
 
 import { TagList, TagInput } from '../annotationTags'

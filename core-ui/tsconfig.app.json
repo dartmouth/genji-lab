@@ -30,6 +30,8 @@
       "@components": ["src/components", "src/components/index.ts"],
       "@features/*": ["src/features/*"],
       "@features": ["src/features", "src/features/index.ts"],
+      "@documentView/*": ["src/features/documentView/*"],
+      "@documentView": ["src/features/documentView", "src/features/documentView/index.ts"],
       "@utils/*": ["src/utils/*"],
       "@utils": ["src/utils", "src/utils/index.ts"],
       "@hooks/*": ["src/hooks/*"],

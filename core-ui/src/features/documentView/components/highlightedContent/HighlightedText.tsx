@@ -1,7 +1,7 @@
 // components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
-import { parseURI } from '../../utils/makeAnnotationBody';
+import { parseURI } from '@documentView/utils/makeAnnotationBody';
 
 import { 
   RootState,
@@ -15,7 +15,7 @@ import {
   fetchScholarlyAnnotations, 
   fetchReplyingAnnotations, 
   fetchTaggingAnnotations
-} from '../../../../store';
+} from '@store';
 
 import { debounce } from 'lodash';
 

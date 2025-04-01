@@ -10,8 +10,8 @@ import {
 } from '@store';
 
 import { debounce } from 'lodash';
-import { makeTextAnnotationBody, parseURI } from '../../utils/makeAnnotationBody';
-import { useIAM } from '../../../../hooks/useIAM';
+import { makeTextAnnotationBody, parseURI } from '@documentView/utils/makeAnnotationBody';
+import { useIAM } from '@hooks/useIAM';
 
 
 const AnnotationCreationCard: React.FC = () => {
