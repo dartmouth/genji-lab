@@ -1,5 +1,6 @@
 // components/AnnotationEditor.tsx
 import React, { useState } from 'react';
+import '../../styles/AnnotationCardStyles.css'
 
 interface AnnotationEditorProps {
     initialText: string;
@@ -16,9 +17,10 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ initialText, onSave
     };
 
     return (
-        <div className="edit-section" style={{ marginRight: '10px', marginTop: '10px' }}>
+        <div className="edit-section">
             <textarea
                 placeholder="Edit your annotation..."
+                className='edit-textarea'
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
                 onKeyDown={(e) => {
@@ -28,38 +30,16 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ initialText, onSave
                     }
                 }}
                 rows={3}
-                style={{
-                    width: '100%',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    padding: '5px',
-                    resize: 'none',
-                    fontFamily: 'Arial, Helvetica, sans-serif'
-                }}
             />
-            <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'space-between' }}>
+            <div className="edit-buttons">
                 <button
-                    style={{
-                        padding: '5px 10px',
-                        backgroundColor: '#6c757d',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                    }}
+                    className='cancel-edit-button'
                     onClick={onCancel}
                 >
                     Cancel
                 </button>
                 <button
-                    style={{
-                        padding: '5px 10px',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                    }}
+                    className='save-edit-button'
                     onClick={handleSave}
                 >
                     Save
