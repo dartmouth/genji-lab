@@ -7,7 +7,7 @@ import {
   resetCreateAnnotation, 
   selectAnnotationCreate, 
   thunkMap 
-} from '../../../../store';
+} from '@store';
 
 import { debounce } from 'lodash';
 import { makeTextAnnotationBody, parseURI } from '../../utils/makeAnnotationBody';

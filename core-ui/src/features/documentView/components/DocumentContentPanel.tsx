@@ -2,11 +2,10 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { HighlightedText } from './highlightedContent';
 import { DocumentElement } from '../types/documentElement';
 import { useApiClient } from '../../../hooks/useApi';
-import { RootState, commentingAnnotations } from '../../../store';
+import { RootState, commentingAnnotations, scholarlyAnnotations } from '@store';
 import { useSelector } from 'react-redux';
-import { scholarlyAnnotations } from '../../../store/slice/annotationSlices';
 import { AnnotationsSidebar } from './sidebar';
-import MenuContext from './contextMenu/MenuContext';
+import { MenuContext } from './contextMenu';
 
 
 interface DocumentContentPanelProps {

@@ -1,7 +1,7 @@
 // hooks/useAnnotationTags.ts
 import { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../..//store/hooks/useAppDispatch';
-import { RootState, taggingAnnotations } from '../../../store';
+import { RootState, taggingAnnotations } from '@store';
 import { saveTaggingAnnotation, deleteTaggingAnnotations } from '../../../store/thunk/annotationThunks';
 import { makeTextAnnotationBody, parseURI } from '../utils/makeAnnotationBody';
 import { Annotation } from '../types/annotation';
@@ -14,6 +14,7 @@ export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
     (state: RootState) => taggingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${annotation.id}`)
   );
 
+  console.log('blah')
   const handleTagsClick = () => {
     setIsTagging(!isTagging);
   };

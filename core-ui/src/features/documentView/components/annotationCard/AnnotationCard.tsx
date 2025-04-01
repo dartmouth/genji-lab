@@ -1,6 +1,6 @@
 // AnnotationCard.tsx
 import React, { useState } from "react";
-import { RootState, replyingAnnotations, thunkMap, useAppDispatch, useAppSelector  } from "../../../../store";
+import { RootState, replyingAnnotations, thunkMap, useAppDispatch, useAppSelector  } from "@store";
 import { Annotation } from "../../types/annotation";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
