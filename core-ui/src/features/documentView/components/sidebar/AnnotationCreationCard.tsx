@@ -10,7 +10,7 @@ import {
 } from '@store';
 
 import { debounce } from 'lodash';
-import { makeTextAnnotationBody, parseURI } from '@features/documentView/utils';
+import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
 import { useIAM } from '@hooks/useIAM';
 
 

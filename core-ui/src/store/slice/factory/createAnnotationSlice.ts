@@ -1,5 +1,13 @@
 // createAnnotationSlice.ts
-import { createSlice, PayloadAction, createSelector, AsyncThunk, Selector, Reducer } from '@reduxjs/toolkit';
+import { 
+  createSlice, 
+  PayloadAction, 
+  createSelector,
+  AsyncThunk, 
+  Selector, 
+  Reducer 
+} from '@reduxjs/toolkit';
+
 import { Annotation, AnnotationDelete, AnnotationCreate, AnnotationPatch } from '@documentView/types';
 
 import { 
