@@ -1,14 +1,9 @@
-// components/ReplyForm.tsx
 import React, { useState } from 'react';
-
-import { useAppDispatch, saveReplyingAnnotation } from '@store';
+import { useAppDispatch, replyingAnnotations } from '@store';
 import { useAuth } from '@hooks/useAuthContext';
-import { parseURI } from '@documentView/utils';
+import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
 import '../../styles/AnnotationCardStyles.css'
-import { Annotation, AnnotationCreate } from '@documentView/types';
-
-
-
+import { Annotation } from '@documentView/types';
 
 interface ReplyFormProps {
     annotation: Annotation;
@@ -23,34 +18,18 @@ const ReplyForm: React.FC<ReplyFormProps> = ({ annotation, onSave }) => {
     const handleSave = () => {
         if (!replyText.trim()) return;
         if (!user) return;
-    
-        const replyPayload: AnnotationCreate = {
-            creator_id: user.id,
-            context: "http://www.w3.org/ns/anno.jsonld",
-            document_id: annotation.document_id,
-            type: "Annotation",
-            generator: "web-client",
-            document_collection_id: annotation.document_collection_id,
-            document_element_id: typeof annotation.document_element_id === "string"
-                ? parseInt(parseURI(annotation.document_element_id))
-                : annotation.document_element_id,
-            motivation: "replying",
-            annotation_type: "reply",
-            body: {
-                type: "TextualBody",
-                value: replyText,
-                format: "text/html",
-                language: "en"
-            },
-            target: [
-                {
-                    type: "Text",
-                    source: `Annotation/${annotation.id}`
-                }
-            ]
-        };
-    
-        dispatch(saveReplyingAnnotation(replyPayload));
+
+        const payload = makeTextAnnotationBody(
+            annotation.document_collection_id,
+            annotation.document_id,
+            typeof annotation.document_element_id === "string" ? parseInt(parseURI(annotation.document_element_id)) : annotation.document_element_id,
+            user.id,
+            "replying",
+            `Annotation/${annotation.id}`,
+            replyText
+        )
+        
+        dispatch(replyingAnnotations.thunks.saveAnnotation(payload));
         setReplyText('');
         onSave();
     };

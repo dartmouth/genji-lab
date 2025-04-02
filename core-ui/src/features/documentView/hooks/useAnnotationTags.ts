@@ -17,7 +17,6 @@ export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
     (state: RootState) => taggingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${annotation.id}`)
   );
 
-  console.log('blah')
   const handleTagsClick = () => {
     setIsTagging(!isTagging);
   };
