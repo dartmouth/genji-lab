@@ -1,15 +1,60 @@
 // createAnnotationSlice.ts
-import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { Annotation, AnnotationDelete } from '../../../features/documentView/types/annotation';
+import { 
+  createSlice, 
+  PayloadAction, 
+  createSelector,
+  AsyncThunk, 
+  Selector, 
+  Reducer 
+} from '@reduxjs/toolkit';
+
+import { Annotation, AnnotationDelete, AnnotationCreate, AnnotationPatch } from '@documentView/types';
+
+import { 
+  createFetchAnnotationsThunk, 
+  createSaveAnnotationThunk, 
+  createPatchAnnotationThunk,
+  createDeleteAnnotationThunk 
+} from '@store/thunk/factory/createAnnotationThunks';
 
 // Import RootState type - but we'll use a type import to avoid circular references
-import type { RootState } from '../../index';
+import type { RootState } from '@store/index';
 
 // The state structure for a single annotation bucket
 export interface AnnotationState {
   byId: Record<string, Annotation>;
   byParent: Record<string, string[]>;
+  loading: boolean;
+  error: string | null;
 }
+
+export type AnnotationSlice = {
+  name: string;
+  reducer: Reducer<AnnotationState>;
+  actions: {
+    addAnnotations: (annotations: Annotation[]) => PayloadAction<Annotation[]>;
+    addAnnotation: (annotation: Annotation) => PayloadAction<Annotation>;
+    deleteAnnotation: (annotationDelete: AnnotationDelete) => PayloadAction<AnnotationDelete>;
+  };
+  thunks: {
+    fetchAnnotations: AsyncThunk<Annotation[], string, { state: RootState }>;
+    saveAnnotation: AsyncThunk<Annotation, AnnotationCreate, { state: RootState }>;
+    patchAnnotation: AsyncThunk<Annotation, AnnotationPatch, { state: RootState }>;
+    deleteAnnotation: AsyncThunk<AnnotationDelete, AnnotationDelete, { state: RootState }>;
+  };
+  selectors: {
+    selectAnnotationById: (state: RootState, id: string) => Annotation | undefined;
+    selectAnnotationsById: (state: RootState, ids: string[]) => (Annotation | undefined)[];
+    selectAllAnnotations: (state: RootState) => Annotation[];
+    selectAnnotationsByParent: (state: RootState, documentElementId: string) => Annotation[];
+    makeSelectAnnotationsById: () => Selector<RootState, Annotation[], [string[]]>;
+    makeSelectAnnotationsByParent: () => Selector<RootState, Annotation[], [string]>;
+  };
+};
+
+export type AnnotationSliceMap = {
+  [key: string]: AnnotationSlice;
+};
 
 // The state structure for the combined annotations slice
 export interface AnnotationsState {
@@ -20,8 +65,11 @@ export interface AnnotationsState {
 export function createAnnotationSlice(bucketName: string) {
   const initialState: AnnotationState = {
     byId: {},
-    byParent: {}
+    byParent: {},
+    loading: false,
+    error: null
   };
+
 
   const slice = createSlice({
     name: `annotations/${bucketName}`,
@@ -97,6 +145,15 @@ export function createAnnotationSlice(bucketName: string) {
     }
   });
 
+
+    const thunks =  {
+      fetchAnnotations: createFetchAnnotationsThunk(bucketName, slice.actions),
+      saveAnnotation: createSaveAnnotationThunk(bucketName, slice.actions),
+      patchAnnotation: createPatchAnnotationThunk(bucketName, slice.actions),
+      deleteAnnotation: createDeleteAnnotationThunk(bucketName, slice.actions)
+    }
+
+
   const getBucketState = (state: RootState): AnnotationState => {
     return state.annotations[bucketName] as AnnotationState;
   };
@@ -155,12 +212,13 @@ export function createAnnotationSlice(bucketName: string) {
         return results.length > 0 ? results : [];
       }
     );
-    
+
 
   return {
     name: bucketName,
     reducer: slice.reducer,
     actions: slice.actions,
+    thunks,
     selectors: {
       selectAnnotationById,
       selectAnnotationsById,

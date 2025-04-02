@@ -1,10 +1,14 @@
 // components/ReplyForm.tsx
 import React, { useState } from 'react';
-import { Annotation, AnnotationCreate } from '../../types/annotation';
-import { useAppDispatch, saveReplyingAnnotation } from '../../../../store';
-import { useAuth } from '../../../../hooks/useAuthContext';
-import { parseURI } from '../../utils/makeAnnotationBody';
+
+import { useAppDispatch, saveReplyingAnnotation } from '@store';
+import { useAuth } from '@hooks/useAuthContext';
+import { parseURI } from '@documentView/utils';
 import '../../styles/AnnotationCardStyles.css'
+import { Annotation, AnnotationCreate } from '@documentView/types';
+
+
+
 
 interface ReplyFormProps {
     annotation: Annotation;

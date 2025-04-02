@@ -1,7 +1,12 @@
 
 import { createAsyncThunk, ActionCreatorWithPayload } from '@reduxjs/toolkit';
-import { Annotation, AnnotationCreate, AnnotationDelete, AnnotationPatch } from '../../../features/documentView/types/annotation';
-import { RootState } from '../../index';
+import { 
+  Annotation, 
+  AnnotationCreate, 
+  AnnotationDelete, 
+  AnnotationPatch
+} from '@documentView/types';
+import { RootState } from '@store';
 import axios, { AxiosInstance } from 'axios';
 
 const api: AxiosInstance = axios.create({

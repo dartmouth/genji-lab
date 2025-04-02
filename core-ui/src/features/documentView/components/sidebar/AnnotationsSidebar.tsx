@@ -1,10 +1,10 @@
 import React from 'react';
-import { AnnotationCard } from '../annotationCard';
+import { AnnotationCard } from '@documentView/components';
 import { AnnotationCreationCard} from '.';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { Annotation } from '../../types/annotation';
-import '../../styles/AnnotationsSidebar.css'; 
-import { useAppSelector, selectMotivation } from '../../../../store';
+import { Annotation } from '@documentView/types';
+import '@documentView/styles/AnnotationsSidebar.css'; 
+import { useAppSelector, selectMotivation } from '@store';
 
 type SidebarPosition = 'left' | 'right';
 

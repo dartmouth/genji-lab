@@ -6,12 +6,12 @@ import {
   setContent, 
   resetCreateAnnotation, 
   selectAnnotationCreate, 
-  thunkMap 
-} from '../../../../store';
+  sliceMap 
+} from '@store';
 
 import { debounce } from 'lodash';
-import { makeTextAnnotationBody, parseURI } from '../../utils/makeAnnotationBody';
-import { useIAM } from '../../../../hooks/useIAM';
+import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
+import { useIAM } from '@hooks/useIAM';
 
 
 const AnnotationCreationCard: React.FC = () => {
@@ -30,9 +30,9 @@ const AnnotationCreationCard: React.FC = () => {
 
     const annoType: string = newAnno.motivation
 
-    const thunk = thunkMap[annoType] || {}
+    const slice = sliceMap[annoType] || {}
 
-    if (!thunk) {
+    if (!slice) {
       console.error("Bad motivation")
       return
     }
@@ -50,7 +50,7 @@ const AnnotationCreationCard: React.FC = () => {
       newAnno.target.end
     )
     
-    dispatch(thunk.create(annoBody))
+    dispatch(slice.thunks.saveAnnotation(annoBody))
     dispatch(resetCreateAnnotation())
     
   }

@@ -1,10 +1,13 @@
 // hooks/useAnnotationTags.ts
 import { useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../..//store/hooks/useAppDispatch';
-import { RootState, taggingAnnotations } from '../../../store';
-import { saveTaggingAnnotation, deleteTaggingAnnotations } from '../../../store/thunk/annotationThunks';
-import { makeTextAnnotationBody, parseURI } from '../utils/makeAnnotationBody';
-import { Annotation } from '../types/annotation';
+import { 
+  useAppDispatch, 
+  useAppSelector, 
+  RootState, 
+  taggingAnnotations 
+} from '@store';
+import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
+import { Annotation } from '@documentView/types';
 
 export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
   const dispatch = useAppDispatch();
@@ -14,12 +17,13 @@ export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
     (state: RootState) => taggingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${annotation.id}`)
   );
 
+  console.log('blah')
   const handleTagsClick = () => {
     setIsTagging(!isTagging);
   };
 
   const handleRemoveTag = (tagId: number | string) => {
-    dispatch(deleteTaggingAnnotations({'annotationId': tagId as unknown as number}));
+    dispatch(taggingAnnotations.thunks.deleteAnnotation({'annotationId': tagId as unknown as number}));
   };
 
   const handleTagSubmit = (newTags: string[]) => {
@@ -40,7 +44,7 @@ export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
         tag
       );
       
-      dispatch(saveTaggingAnnotation(tagAnno));
+      dispatch(taggingAnnotations.thunks.saveAnnotation(tagAnno));
     });
     
     setIsTagging(false);
