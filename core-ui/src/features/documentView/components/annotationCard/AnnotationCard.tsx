@@ -11,10 +11,12 @@ import { Annotation } from "@documentView/types";
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
 
-import { useAuth } from "@hooks/useAuthContext";
+import { useAuth } from "../../../../hooks/useAuthContext";
+import '../../styles/AnnotationCardStyles.css'
 
 import { TagList, TagInput } from '@documentView/components'
 import { useAnnotationTags } from "@documentView/hooks";
+
 import { AnnotationEditor, ReplyForm } from '.'
 
 interface AnnotationCardProps {
@@ -31,6 +33,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [isReplying, setIsReplying] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
 
     const { 
         tags, 
@@ -99,16 +102,10 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     return (
         <div 
             key={id} 
-            className={`comment-card ${isHighlighted ? 'highlighted' : ''}`}
+            className={`comment-card ${isHighlighted ? 'highlighted' : ''} ${depth > 0 ? 'reply-card-rounded' : ''} ${depth == 0 ? 'comment-card-rounded' : ''}`}
             style={{
-                transition: 'background-color 0.2s ease',
-                backgroundColor: isHighlighted ? '#c4dd88' : 'white',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                padding: '10px',
-                margin: '10px 0',
-                position: 'relative',
-                width: `${275 - (25*depth)}px`
+                backgroundColor: isHighlighted ? '#c4dd88' : 'white',        
+                width: `${275 - (10*depth)}px`
             }}
         >
             <div className="comment-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -170,19 +167,26 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 />
             )}
 
-            {
-                replies && (
-                    replies.map(reply => (
-                        <AnnotationCard
-                            key={reply.id}
-                            id={`${reply.id}`}
-                            annotation={reply}
-                            isHighlighted={false}
-                            depth={depth+1}
-                        />
-                    ))
-                )
-            }
+            {replies && replies.length > 0 && (
+                <button 
+                    onClick={() => setIsCollapsed(!isCollapsed)} 
+                    className="toggle-replies-button"
+                >
+                    {isCollapsed ? `Show ${replies.length} repl${replies.length > 1 ? 'ies' : 'y'}` : 'Hide replies'}
+                </button>
+            )}
+
+            {!isCollapsed && replies && (
+                replies.map(reply => (
+                    <AnnotationCard
+                        key={reply.id}
+                        id={`${reply.id}`}
+                        annotation={reply}
+                        isHighlighted={false}
+                        depth={depth + 1}
+                    />
+                ))
+            )}
         </div>
     );
 }

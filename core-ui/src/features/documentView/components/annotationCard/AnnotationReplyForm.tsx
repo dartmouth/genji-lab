@@ -1,9 +1,14 @@
 // components/ReplyForm.tsx
 import React, { useState } from 'react';
-import { Annotation, AnnotationCreate } from '@documentView/types';
+
 import { useAppDispatch, saveReplyingAnnotation } from '@store';
 import { useAuth } from '@hooks/useAuthContext';
 import { parseURI } from '@documentView/utils';
+import '../../styles/AnnotationCardStyles.css'
+import { Annotation, AnnotationCreate } from '@documentView/types';
+
+
+
 
 interface ReplyFormProps {
     annotation: Annotation;
@@ -63,25 +68,11 @@ const ReplyForm: React.FC<ReplyFormProps> = ({ annotation, onSave }) => {
                     }
                 }}
                 rows={3}
-                style={{
-                    width: '100%',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    padding: '5px',
-                    resize: 'none',
-                    fontFamily: 'Arial, Helvetica, sans-serif'
-                }}
+                className='reply-textarea'
             />
             <div style={{ marginTop: '5px', display: 'flex', justifyContent: 'flex-end' }}>
                 <button
-                    style={{
-                        padding: '5px 10px',
-                        backgroundColor: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                    }}
+                    className='submit-reply-button'
                     onClick={handleSave}
                 >
                     Submit

@@ -1,0 +1,92 @@
+/* Edit Styling */
+.edit-textarea {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px;
+    resize: none;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.cancel-edit-button {
+    padding: 5px 10px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.save-edit-button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.edit-section {
+    margin-right: 10px;
+    margin-top: 10px;
+}
+
+.edit-buttons {
+    margin-top: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Reply Styling */
+.reply-textarea {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px;
+    resize: none;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.submit-reply-button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.toggle-replies-button {
+    font-size: 0.85rem;
+    text-align: left;
+    margin-left: 5px;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: rgb(26, 23, 23);
+    cursor: pointer;
+    margin-top: 10px;
+    background-color: lightgray;
+}
+
+.comment-card {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 9px;
+    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease;
+    border: 1px solid #ddd;
+    margin: 10px 0 10px auto;
+    position: relative;
+}
+
+.reply-card-rounded {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+.reply-card-round {
+    border-radius: 4px;
+}
