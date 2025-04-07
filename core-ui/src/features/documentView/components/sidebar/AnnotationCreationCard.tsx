@@ -36,18 +36,17 @@ const AnnotationCreationCard: React.FC = () => {
       console.error("Bad motivation")
       return
     }
-    console.log(newAnno)
+    console.log("state is", newAnno)
+    console.log(newAnno.target.segments[0].sourceURI)
 
     const annoBody = makeTextAnnotationBody(
       newAnno.target.documentCollectionId,
       newAnno.target.documentId,
-      parseURI(newAnno.target.sourceURI[0]) as unknown as number,
+      parseURI(newAnno.target.segments[0].sourceURI) as unknown as number,
       user.id,
       newAnno.motivation,
-      newAnno.target.sourceURI[0],
       newAnno.content,
-      newAnno.target.start,
-      newAnno.target.end
+      newAnno.target.segments
     )
     
     dispatch(slice.thunks.saveAnnotation(annoBody))

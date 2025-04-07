@@ -1,4 +1,4 @@
-import { AnnotationCreate, Selector } from '@documentView/types';
+import { AnnotationCreate } from '@documentView/types';
 
 export function makeTextAnnotationBody(
     document_collection_id: number,
@@ -6,12 +6,16 @@ export function makeTextAnnotationBody(
     documentElementId: number,
     creatorId: number,
     motivation: string,
-    sourceURI: string,
     text: string,
-    targetStart?: number,
-    targetEnd?: number,
+    segments: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>,
     language: string = "en"
 ): AnnotationCreate {
+  console.log("making a new annotation body")
     const newAnnotation: AnnotationCreate = {
         "context": "http://www.w3.org/ns/anno.jsonld",
         "document_collection_id": document_collection_id,
@@ -28,44 +32,58 @@ export function makeTextAnnotationBody(
           "format": "text/plain",
           "language": language
         },
-        "target": [{
-          "type": "Text",
-          "source": sourceURI,
+        "target": []
+    };
 
-        }]
-      };
+    if (['commenting', 'scholarly'].includes(motivation)) {
+        // Process each segment for commenting/scholarly annotations
+        segments.forEach(segment => {
+            // if (!segment.start) {
+            //     throw new SyntaxError("Range start required for new comments");
+            // }
 
-      if (['commenting', 'scholarly'].includes(motivation)){
-        console.log("Start is ", targetStart)
-        console.log("End is ", targetEnd)
-        if (!targetStart){
-          throw new SyntaxError("Range start required for new comments")
-        }
+            if (!segment.end) {
+                throw new SyntaxError("Range end required for new comments");
+            }
 
-        if (!targetEnd){
-          throw new SyntaxError("Range end required for new comments")
-        }
+            // const start = segment.start > segment.end ? 0 : segment.start
 
-        const selector: Selector = {
-          "type": "TextQuoteSelector",
-          "value": text,
-          "refined_by": {
-            "type": "TextPositionSelector",
-            "start": targetStart,
-            "end": targetEnd
-          }
-        }
-        // FIXME -- need to update for multi-paragraph annotations
-        newAnnotation.target[0].selector = selector;
-      }
+            const target = {
+                "type": "Text",
+                "source": segment.sourceURI,
+                "selector": {
+                    "type": "TextQuoteSelector",
+                    "value": segment.text,
+                    "refined_by": {
+                        "type": "TextPositionSelector",
+                        "start": segment.start,
+                        "end": segment.end
+                    }
+                }
+            };
 
-    return newAnnotation
+            newAnnotation.target.push(target);
+        });
+    } else {
+        // Process each segment for other types of annotations
+        segments.forEach(segment => {
+            const target = {
+                "type": "Text",
+                "source": segment.sourceURI
+            };
+            
+            newAnnotation.target.push(target);
+        });
+    }
+    console.log("new body is", newAnnotation)
+
+    return newAnnotation;
 }
 
-export function parseURI(uri: string){
-  const destruct = uri.split("/")
-  if (destruct.length != 2){
-    console.error("Bad URI: ", uri)
-  }
-  return destruct[1]
+export function parseURI(uri: string) {
+    const destruct = uri.split("/");
+    if (destruct.length != 2) {
+        console.error("Bad URI: ", uri);
+    }
+    return destruct[1];
 }
