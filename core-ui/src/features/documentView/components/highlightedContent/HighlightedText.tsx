@@ -1,10 +1,7 @@
-// components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
 import { parseURI } from '@documentView/utils';
-import rangy from 'rangy';
-import 'rangy/lib/rangy-textrange';
-import 'rangy/lib/rangy-serializer';
+import { debounce } from 'lodash';
 
 import { 
   RootState,
@@ -16,20 +13,24 @@ import {
   commentingAnnotations,
   scholarlyAnnotations,
   replyingAnnotations,
-  taggingAnnotations,
-  initMultiParagraphSelection,
-  addSelectionSegment,
-  // selectIsMultiParagraphSelection,
-  clearSelectionSegments,
-  completeMultiParagraphSelection,
+  taggingAnnotations
 } from '@store';
 
-import { debounce } from 'lodash';
+import { 
+  useSelection 
+} from '../../hooks/useSelection';
+
+import {
+  rangeIntersectsElement,
+  calculateSegmentForParagraph,
+  getSelectionStartOffset,
+  getSelectionEndOffset
+} from '../../utils/selectionUtils';
 
 interface HighlightedTextProps {
   text: string;
-  documentCollectionId: number,
-  documentId: number,
+  documentCollectionId: number;
+  documentId: number;
   paragraphId: string;
 }
 
@@ -42,6 +43,16 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const dispatch = useAppDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Get selection context
+  const { 
+    selectionState, 
+    initSelection, 
+    addSegment, 
+    completeSelection, 
+    resetSelection,
+    isSegmentSelected
+  } = useSelection();
+  
   const [highlightPositions, setHighlightPositions] = useState<Map<string, {
     positions: Array<{ left: number; top: number; width: number; height: number }>,
     motivation: string
@@ -53,13 +64,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     selectAllAnnotationsForParagraph(state, paragraphId)
   );
   
+  // Get selection state from context
+  const isMultiParagraphSelection = selectionState.isMultiParagraphSelection;
 
-  // Initialize rangy
-  useEffect(() => {
-    rangy.init();
-  }, []);
-
-  // Fetch annotations
   useEffect(() => {
     dispatch(commentingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
     dispatch(scholarlyAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
@@ -67,6 +74,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     dispatch(taggingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
   }, [dispatch, paragraphId]);
 
+  // Calculate highlight positions for existing annotations
   const calculateHighlightPositions = () => {
     if (!containerRef.current) return;
     const textNode = containerRef.current.firstChild;
@@ -118,129 +126,96 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     setHighlightPositions(newPositions);
   };
 
-  // Process the Rangy selection
-  const processRangySelection = (selection: any) => {
-    if (!selection || selection.isCollapsed) return;
-    
-    // Get all paragraphs
-    const paragraphs = document.querySelectorAll('.annotatable-paragraph');
-    
-    // For each paragraph, check if it's part of the selection
-    paragraphs.forEach((paragraph) => {
-      const paragraphElementId = paragraph.id;
-      if (!paragraphElementId) return;
-      
-      const currentParagraphId = paragraphElementId.replace('DocumentElements/', '');
-      
-      // Create a range for this paragraph
-      const paragraphRange = rangy.createRange();
-      paragraphRange.selectNodeContents(paragraph);
-      
-      // Check if selection intersects with this paragraph
-      if (selection.intersectsRange(paragraphRange)) {
-        // Create a range representing the intersection
-        const intersectionRange = rangy.createRange();
-        intersectionRange.selectNodeContents(paragraph);
-        
-        // Constrain to selection boundaries
-        if (selection.getRangeAt(0).compareBoundaryPoints(Range.START_TO_START, paragraphRange) > 0) {
-          intersectionRange.setStart(selection.getRangeAt(0).startContainer, selection.getRangeAt(0).startOffset);
-        }
-        
-        if (selection.getRangeAt(0).compareBoundaryPoints(Range.END_TO_END, paragraphRange) < 0) {
-          intersectionRange.setEnd(selection.getRangeAt(0).endContainer, selection.getRangeAt(0).endOffset);
-        }
-        
-        // Get text content of the intersection
-        const selectedText = intersectionRange.toString();
-        
-        // Calculate character offsets using rangy's character position methods
-        const containerNode = paragraph.firstChild;
-        if (!containerNode) return;
-        
-        const textRange = rangy.createRange();
-        textRange.selectNodeContents(paragraph);
-        
-        let start = 0;
-        let end = 0;
-        
-        // If the intersection starts with the paragraph, start at 0
-        if (intersectionRange.startContainer === paragraphRange.startContainer && 
-            intersectionRange.startOffset === paragraphRange.startOffset) {
-          start = 0;
-        } else {
-          // Otherwise, calculate the start offset
-          const startPos = getCharacterPositionFromPoint(paragraph, intersectionRange.startContainer, intersectionRange.startOffset);
-          start = startPos;
-        }
-        
-        // If the intersection ends with the paragraph, end at text length
-        if (intersectionRange.endContainer === paragraphRange.endContainer && 
-            intersectionRange.endOffset === paragraphRange.endOffset) {
-          end = paragraph.textContent?.length || 0;
-        } else {
-          // Otherwise, calculate the end offset
-          const endPos = getCharacterPositionFromPoint(paragraph, intersectionRange.endContainer, intersectionRange.endOffset);
-          end = endPos;
-        }
-        
-        // Add segment to the store
-        dispatch(addSelectionSegment({
-          sourceURI: currentParagraphId,
-          start,
-          end,
-          text: selectedText
-        }));
-      }
-    });
-    
-    // Complete the multi-paragraph selection
-    dispatch(completeMultiParagraphSelection());
-  };
-
-  // Helper function to get character position
-  const getCharacterPositionFromPoint = (container: Node, node: Node, offset: number): number => {
-    // Create a range from the start of the container to the position
-    const range = rangy.createRange();
-    range.setStart(container, 0);
-    range.setEnd(node, offset);
-    
-    // Return the length of the range's text, which is the character position
-    return range.toString().length;
-  };
-
   // Handle selection start
   const handleMouseDown = (e: React.MouseEvent) => {
     // Only track primary mouse button
     if (e.button !== 0) return;
+    resetSelection();
     
     const selection = window.getSelection();
     if (selection && selection.isCollapsed) {
-      // Reset any existing multi-paragraph selection
-      dispatch(clearSelectionSegments());
-      dispatch(initMultiParagraphSelection({
-        documentCollectionId,
-        documentId
-      }));
       setIsSelectionStart(true);
     }
   };
-
-  // Handle selection end
-  const handleMouseUp = () => {
-    if (isSelectionStart) {
-      const selection = rangy.getSelection();
-      
-      if (!selection.isCollapsed) {
-        // Process the selection
-        processRangySelection(selection);
-      }
-      
+  
+  // Handle selection changes
+  const handleSelectionChange = () => {
+    const selection = window.getSelection();
+    if (!selection) return;
+    
+    // If this is where the selection started and it's no longer collapsed
+    if (isSelectionStart && !selection.isCollapsed) {
+      // Initialize multi-paragraph selection
+      initSelection(documentId, documentCollectionId);
       setIsSelectionStart(false);
     }
+    
+    // If there's an active multi-paragraph selection
+    if (isMultiParagraphSelection) {
+      updateSelectionSegment(selection);
+    }
+  };
+  
+  // Helper to update the current paragraph's segment in a multi-paragraph selection
+  const updateSelectionSegment = (selection: Selection) => {
+    if (!containerRef.current) return;
+    
+    // Check if this paragraph is part of the selection
+    const range = selection.getRangeAt(0);
+    const paragraphElement = containerRef.current;
+    
+    // Determine if this paragraph intersects with the selection
+    const intersects = rangeIntersectsElement(range, paragraphElement);
+    
+    if (intersects) {
+      // Calculate the segment for this paragraph
+      const { start, end, selectedText } = calculateSegmentForParagraph(
+        range, paragraphElement
+      );
+      
+      // Add this segment to the context
+      addSegment({
+        sourceURI: paragraphId,
+        start,
+        end,
+        text: selectedText
+      });
+    }
+  };
+  
+  // Handle selection end
+  const handleMouseUp = () => {
+    const selection = window.getSelection();
+    if (!selection) return;
+    
+    if (selection.toString().trim().length > 0) {
+      if (isMultiParagraphSelection) {
+        // For multi-paragraph, update this segment and complete the selection
+        updateSelectionSegment(selection);
+        completeSelection();
+      } else {
+        // For single paragraph, create a segment
+        const range = selection.getRangeAt(0);
+        const start = getSelectionStartOffset(range);
+        const end = getSelectionEndOffset(range);
+        
+        // Create a segment for a single paragraph selection
+        addSegment({
+          sourceURI: paragraphId,
+          start,
+          end,
+          text: selection.toString()
+        });
+        
+        // Complete the selection to finalize it
+        completeSelection();
+      }
+    }
+    
+    setIsSelectionStart(false);
   };
 
-  // Container-level detection function for hover
+  // Container-level detection function for existing highlights
   const detectHighlightsAtPoint = (x: number, y: number) => {
     const highlightsAtPoint: string[] = [];
     
@@ -282,7 +257,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   // Add selection change event listener
   useEffect(() => {
     const handleGlobalSelectionChange = () => {
-      // We handle selection in mouseUp instead
+      handleSelectionChange();
     };
     
     document.addEventListener('selectionchange', handleGlobalSelectionChange);
@@ -291,7 +266,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       document.removeEventListener('selectionchange', handleGlobalSelectionChange);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isSelectionStart, isMultiParagraphSelection]);
 
   // Recalculate on component mount and when annotations or text changes
   useEffect(() => {
@@ -311,7 +286,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       resizeObserver.disconnect();
       debouncedHandleMouseMove.cancel();
     };
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allAnnotations]);
 
@@ -319,7 +293,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     <div 
       id={`DocumentElements/${paragraphId}`}
       ref={containerRef} 
-      className="annotatable-paragraph"
+      className={`annotatable-paragraph ${isSegmentSelected(paragraphId) ? 'has-selection' : ''}`}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseMove={debouncedHandleMouseMove}

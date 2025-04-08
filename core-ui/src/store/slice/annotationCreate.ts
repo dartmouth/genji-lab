@@ -68,6 +68,7 @@ const createAnnotationSlice = createSlice({
         text: string
     }>) => {
         // Check if this segment already exists
+        // console.log('Current segments:', state.target.segments);
         const existingIndex = state.target.segments.findIndex(
             segment => segment.sourceURI === action.payload.sourceURI
         );
@@ -113,7 +114,8 @@ const createAnnotationSlice = createSlice({
     
     // Reset selection (keep existing reset action or enhance it)
 
-    }
+    },
+    
 })
 
 export const { 
