@@ -23,8 +23,6 @@ import {
 import {
   rangeIntersectsElement,
   calculateSegmentForParagraph,
-  getSelectionStartOffset,
-  getSelectionEndOffset
 } from '../../utils/selectionUtils';
 
 interface HighlightedTextProps {
@@ -45,11 +43,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   
   // Get selection context
   const { 
-    selectionState, 
     initSelection, 
     addSegment, 
     completeSelection, 
-    resetSelection,
     isSegmentSelected
   } = useSelection();
   
@@ -63,9 +59,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const allAnnotations = useAppSelector((state: RootState) => 
     selectAllAnnotationsForParagraph(state, paragraphId)
   );
-  
-  // Get selection state from context
-  const isMultiParagraphSelection = selectionState.isMultiParagraphSelection;
 
   useEffect(() => {
     dispatch(commentingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
@@ -130,7 +123,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     // Only track primary mouse button
     if (e.button !== 0) return;
-    resetSelection();
+    initSelection(documentId, documentCollectionId);
     
     const selection = window.getSelection();
     if (selection && selection.isCollapsed) {
@@ -144,16 +137,17 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     if (!selection) return;
     
     // If this is where the selection started and it's no longer collapsed
-    if (isSelectionStart && !selection.isCollapsed) {
+    if (isSelectionStart) {
       // Initialize multi-paragraph selection
+      console.log('initializing')
       initSelection(documentId, documentCollectionId);
       setIsSelectionStart(false);
     }
     
     // If there's an active multi-paragraph selection
-    if (isMultiParagraphSelection) {
+    // if (isMultiParagraphSelection) {
       updateSelectionSegment(selection);
-    }
+    // }
   };
   
   // Helper to update the current paragraph's segment in a multi-paragraph selection
@@ -189,27 +183,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     if (!selection) return;
     
     if (selection.toString().trim().length > 0) {
-      if (isMultiParagraphSelection) {
-        // For multi-paragraph, update this segment and complete the selection
         updateSelectionSegment(selection);
         completeSelection();
-      } else {
-        // For single paragraph, create a segment
-        const range = selection.getRangeAt(0);
-        const start = getSelectionStartOffset(range);
-        const end = getSelectionEndOffset(range);
-        
-        // Create a segment for a single paragraph selection
-        addSegment({
-          sourceURI: paragraphId,
-          start,
-          end,
-          text: selection.toString()
-        });
-        
-        // Complete the selection to finalize it
-        completeSelection();
-      }
     }
     
     setIsSelectionStart(false);
@@ -266,7 +241,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       document.removeEventListener('selectionchange', handleGlobalSelectionChange);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSelectionStart, isMultiParagraphSelection]);
+  }, [isSelectionStart]);
 
   // Recalculate on component mount and when annotations or text changes
   useEffect(() => {

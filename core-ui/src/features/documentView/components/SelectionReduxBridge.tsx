@@ -11,13 +11,13 @@ const SelectionReduxBridge: React.FC = () => {
   // Sync selection state to Redux when it changes
   useEffect(() => {
     // Only sync completed selections to Redux
-    if (selectionState.selectedText && !selectionState.isMultiParagraphSelection) {
+    if (selectionState.selectedText) {
       dispatch(setTarget({
         selectedText: selectionState.selectedText,
         segments: selectionState.segments,
         documentCollectionId: selectionState.documentCollectionId,
         documentId: selectionState.documentId,
-        isMultiParagraphSelection: selectionState.isMultiParagraphSelection
+        isMultiParagraphSelection: true
       }));
     }
   }, [selectionState, dispatch]);

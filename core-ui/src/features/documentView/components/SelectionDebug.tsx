@@ -1,12 +1,12 @@
 // src/components/SelectionDebugger.tsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSelection } from '../hooks/useSelection';
 
 const SelectionDebugger: React.FC = () => {
   const { selectionState } = useSelection();
-  useEffect(() => {
-    console.log(selectionState)
-  },[selectionState])
+//   useEffect(() => {
+//     console.log(selectionState)
+//   },[selectionState])
   
 //   if (!selectionState.segments.length) return null;
   

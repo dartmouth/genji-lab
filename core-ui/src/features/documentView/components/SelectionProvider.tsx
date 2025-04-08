@@ -7,10 +7,9 @@ import { SelectionContext } from '../contexts/SelectionContext';
     selectedText: "",
     documentCollectionId: 0,
     documentId: 0,
-    isMultiParagraphSelection: true
+    // isMultiParagraphSelection: true
   };
   
-  // Create the provider component
   export const SelectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [selectionState, setSelectionState] = useState<SelectionState>(initialState);
   
@@ -21,7 +20,7 @@ import { SelectionContext } from '../contexts/SelectionContext';
         selectedText: "",
         documentCollectionId,
         documentId,
-        isMultiParagraphSelection: true
+        // isMultiParagraphSelection: true
       });
     }, []);
   
@@ -81,40 +80,11 @@ import { SelectionContext } from '../contexts/SelectionContext';
             ...prevState,
             segments: sortedSegments,
             selectedText: combinedText,
-            isMultiParagraphSelection: false
+            // isMultiParagraphSelection: false
         };
         });
     }, []);
 
-    // In the Selection Context, add a function to normalize selection direction
-    const normalizeSelectionDirection = useCallback((segments: SelectionSegment[]) => {
-        // If user selected bottom-to-top, the segments might be in reverse order
-        // Check the DOM positions of the first and last segments to determine direction
-        if (segments.length < 2) return segments;
-        
-        // Get the first and last paragraphs by selection index
-        const orderedSegments = [...segments].sort((a, b) => 
-            a.sourceURI.localeCompare(b.sourceURI)
-        );
-        
-        const firstParagraph = document.getElementById(`DocumentElements/${orderedSegments[0].sourceURI}`);
-        const lastParagraph = document.getElementById(`DocumentElements/${orderedSegments[orderedSegments.length-1].sourceURI}`);
-        
-        if (firstParagraph && lastParagraph) {
-        // Compare their DOM positions
-        const comparison = firstParagraph.compareDocumentPosition(lastParagraph);
-        
-        // If first paragraph comes after last paragraph, reverse the order
-        if (comparison & Node.DOCUMENT_POSITION_PRECEDING) {
-            return orderedSegments.reverse().map((segment, idx) => ({
-            ...segment,
-            selectionIndex: idx
-            }));
-        }
-        }
-        
-        return orderedSegments;
-    }, []);
     // Reset selection state
     const resetSelection = useCallback(() => {
       setSelectionState(initialState);
@@ -138,8 +108,7 @@ import { SelectionContext } from '../contexts/SelectionContext';
       completeSelection,
       resetSelection,
       isSegmentSelected,
-      getSegmentForParagraph,
-      normalizeSelectionDirection
+      getSegmentForParagraph
     }), [
       selectionState, 
       initSelection, 
@@ -147,8 +116,7 @@ import { SelectionContext } from '../contexts/SelectionContext';
       completeSelection, 
       resetSelection,
       isSegmentSelected,
-      getSegmentForParagraph,
-      normalizeSelectionDirection
+      getSegmentForParagraph
     ]);
   
     return (

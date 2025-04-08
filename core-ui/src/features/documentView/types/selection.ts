@@ -14,7 +14,7 @@ interface SelectionState {
     selectedText: string;
     documentCollectionId: number;
     documentId: number;
-    isMultiParagraphSelection: boolean;
+    // isMultiParagraphSelection: boolean;
   }
 
 export type { SelectionState}
