@@ -1,21 +1,24 @@
 // AnnotationCard.tsx
 import React, { useState } from "react";
+
 import { 
     RootState, 
     replyingAnnotations, 
+    upvoteAnnotations,
     sliceMap, 
     useAppDispatch, 
     useAppSelector  
 } from "@store";
+
 import { Annotation } from "@documentView/types";
-import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
-import { Menu, MenuItem } from "@mui/material";
-
-import { useAuth } from "../../../../hooks/useAuthContext";
-import '../../styles/AnnotationCardStyles.css'
-
 import { TagList, TagInput } from '@documentView/components'
 import { useAnnotationTags } from "@documentView/hooks";
+import { useAuth } from "@hooks/useAuthContext";
+import '@documentView/styles/AnnotationCardStyles.css'
+import { parseURI, makeTextAnnotationBody } from "@documentView/utils";
+
+import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
+import { Menu, MenuItem, Chip, Tooltip, Avatar } from "@mui/material";
 
 import { AnnotationEditor, ReplyForm } from '.'
 
@@ -71,6 +74,13 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
     );
 
+    const upvotes = useAppSelector(
+        (state: RootState) => upvoteAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
+    );
+
+    const hasUserUpvoted = !!(user?.id && upvotes?.some(u => u.creator.id === user.id));
+
+
     const handleTagsMenuClick = () => {
         handleTagsClick();
         closeMenu(); 
@@ -98,6 +108,34 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const handleReplyClick = () => {
         setIsReplying(!isReplying);
     };
+    const handleUpvote = () => {
+        console.log("upvoting")
+        if (!user) return;
+        if (!user.id) return;
+    
+        const deId = typeof annotation.document_element_id === "string"
+            ? parseInt(parseURI(annotation.document_element_id))
+            : annotation.document_element_id;
+
+        const segment = [{
+            sourceURI: `Annotation/${annotation.id}`,
+            start: 1,
+            end: 1,
+            text: ""
+        }]
+        
+            const upvote = makeTextAnnotationBody(
+            annotation.document_collection_id,
+            annotation.document_id,
+            deId,
+            user.id,
+            'upvoting',
+            "Upvote",
+            segment
+            );
+            
+            dispatch(upvoteAnnotations.thunks.saveAnnotation(upvote));
+    };
 
     return (
         <div 
@@ -108,12 +146,51 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 width: `${275 - (10*depth)}px`
             }}
         >
-            <div className="comment-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="comment-header" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center' }}>
                 <span>{`${annotation.creator.first_name} ${annotation.creator.last_name}`}</span>
+                
                 <div>
-                    <button title="Upvote" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'green' }}>
-                        <ThumbUp sx={{ fontSize: '1rem' }} />
+                    <button title="Upvote" onClick={handleUpvote} disabled={hasUserUpvoted} 
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: hasUserUpvoted ? 'not-allowed' : 'pointer',
+                        color: hasUserUpvoted ? '#aaa' : 'green',
+                        opacity: hasUserUpvoted ? 0.5 : 1,
+                        pointerEvents: hasUserUpvoted ? 'none' : 'auto' // fully prevents interaction
+                    }}
+                    >
+                        <ThumbUp sx={{ 
+                            fontSize: '1rem'
+                         }} />
                     </button>
+                    <Tooltip
+                        title={
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                {upvotes?.map(upvote => (
+                                    <Chip
+                                        key={upvote.id}
+                                        avatar={<Avatar>{`${upvote.creator.first_name.charAt(0)}${upvote.creator.last_name.charAt(0)}`.toUpperCase()}</Avatar>}
+                                        label={`${upvote.creator.first_name} ${upvote.creator.last_name}`}
+                                        size="small"
+                                        color="primary"
+                                        // variant="outlined"
+                                    />
+                                ))}
+                            </div>
+                        }
+                        arrow
+                        placement="bottom-start"
+                    >
+                    <Chip 
+                        label={upvotes?.length || 0} 
+                        size="small" 
+                        sx={{ backgroundColor: '#e0f2f1', fontWeight: 'bold', height: '24px' }} 
+                    />
+                    </Tooltip>
                     <button title="Reply" onClick={handleReplyClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'blue' }}>
                         <ChatBubbleOutline sx={{ fontSize: '1rem' }} />
                     </button>
@@ -133,7 +210,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 userId={user?.id} 
                 onRemoveTag={handleRemoveTag} 
             />
-            
             <Menu
                 anchorEl={menuAnchor}
                 open={Boolean(menuAnchor)}

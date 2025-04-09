@@ -3,6 +3,7 @@ export {
     replyingAnnotations, 
     scholarlyAnnotations, 
     taggingAnnotations,
+    upvoteAnnotations,
     sliceMap
 } from './annotationSlices'
 export {  
