@@ -13,12 +13,15 @@ import {
   commentingAnnotations,
   scholarlyAnnotations,
   replyingAnnotations,
-  taggingAnnotations
+  taggingAnnotations, 
+  initSelection as initRedux,
+  addSelectionSegment,
+  completeSelection as completeSelectionRedux
 } from '@store';
 
-import { 
-  useSelection 
-} from '../../hooks/useSelection';
+// import { 
+//   useSelection 
+// } from '../../hooks/useSelection';
 
 import {
   rangeIntersectsElement,
@@ -42,12 +45,13 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Get selection context
-  const { 
-    initSelection, 
-    addSegment, 
-    completeSelection, 
-    isSegmentSelected
-  } = useSelection();
+  // const { 
+  //   initSelection, 
+  //   addSegment, 
+  //   completeSelection, 
+  //   isSegmentSelected
+  // } = useSelection();
+
   
   const [highlightPositions, setHighlightPositions] = useState<Map<string, {
     positions: Array<{ left: number; top: number; width: number; height: number }>,
@@ -123,7 +127,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     // Only track primary mouse button
     if (e.button !== 0) return;
-    initSelection(documentId, documentCollectionId);
+    // initSelection(documentId, documentCollectionId);
+    dispatch(initRedux({documentId, documentCollectionId}))
     
     const selection = window.getSelection();
     if (selection && selection.isCollapsed) {
@@ -140,7 +145,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     if (isSelectionStart) {
       // Initialize multi-paragraph selection
       console.log('initializing')
-      initSelection(documentId, documentCollectionId);
+      // initSelection(documentId, documentCollectionId);
+      dispatch(initRedux({documentId, documentCollectionId}))
       setIsSelectionStart(false);
     }
     
@@ -168,12 +174,19 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       );
       
       // Add this segment to the context
-      addSegment({
+      dispatch(addSelectionSegment({
         sourceURI: paragraphId,
         start,
         end,
         text: selectedText
-      });
+      }))
+
+      // addSegment({
+      //   sourceURI: paragraphId,
+      //   start,
+      //   end,
+      //   text: selectedText
+      // });
     }
   };
   
@@ -184,7 +197,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     
     if (selection.toString().trim().length > 0) {
         updateSelectionSegment(selection);
-        completeSelection();
+        dispatch(completeSelectionRedux())
+        // completeSelection();
     }
     
     setIsSelectionStart(false);
@@ -268,7 +282,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     <div 
       id={`DocumentElements/${paragraphId}`}
       ref={containerRef} 
-      className={`annotatable-paragraph ${isSegmentSelected(paragraphId) ? 'has-selection' : ''}`}
+      // className={`annotatable-paragraph ${isSegmentSelected(paragraphId) ? 'has-selection' : ''}`}
+      className={`annotatable-paragraph`}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseMove={debouncedHandleMouseMove}

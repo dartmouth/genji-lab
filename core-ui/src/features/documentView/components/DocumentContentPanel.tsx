@@ -8,7 +8,7 @@ import { DocumentElement } from '@documentView/types';
 import { useApiClient } from '@hooks/useApi';
 import { RootState, commentingAnnotations, scholarlyAnnotations } from '@store';
 import { useSelector } from 'react-redux';
-import SelectionDebugger from './SelectionDebug';
+// import SelectionDebugger from './SelectionDebug';
 
 interface DocumentContentPanelProps {
     documentCollectionId: number;
@@ -100,7 +100,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 motivation='commenting'
                 position='right'
             />
-            <SelectionDebugger></SelectionDebugger>
+            {/* <SelectionDebugger></SelectionDebugger> */}
     </div>
     );
 };

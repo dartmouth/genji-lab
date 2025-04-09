@@ -5,8 +5,8 @@ import AppHeader from "./components/AppHeader";
 import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 
-import { SelectionProvider } from './features/documentView/components/SelectionProvider';
-import SelectionReduxBridge from './features/documentView//components/SelectionReduxBridge';
+// import { SelectionProvider } from './features/documentView/components/SelectionProvider';
+// import SelectionReduxBridge from './features/documentView//components/SelectionReduxBridge';
 
 import { Provider } from 'react-redux';
 import { store } from "./store";
@@ -29,12 +29,12 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Provider store = {store}>
-      <SelectionProvider>
-        <SelectionReduxBridge />
+      {/* <SelectionProvider> */}
+        {/* <SelectionReduxBridge /> */}
         <AuthProvider>
           <AppContent />
         </AuthProvider>
-      </SelectionProvider>
+      {/* </SelectionProvider> */}
     </Provider>
   );
 };
