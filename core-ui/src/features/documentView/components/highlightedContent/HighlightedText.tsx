@@ -19,10 +19,6 @@ import {
   completeSelection as completeSelectionRedux
 } from '@store';
 
-// import { 
-//   useSelection 
-// } from '../../hooks/useSelection';
-
 import {
   rangeIntersectsElement,
   calculateSegmentForParagraph,
@@ -43,15 +39,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Get selection context
-  // const { 
-  //   initSelection, 
-  //   addSegment, 
-  //   completeSelection, 
-  //   isSegmentSelected
-  // } = useSelection();
-
   
   const [highlightPositions, setHighlightPositions] = useState<Map<string, {
     positions: Array<{ left: number; top: number; width: number; height: number }>,
@@ -144,16 +131,11 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     // If this is where the selection started and it's no longer collapsed
     if (isSelectionStart) {
       // Initialize multi-paragraph selection
-      console.log('initializing')
-      // initSelection(documentId, documentCollectionId);
       dispatch(initRedux({documentId, documentCollectionId}))
       setIsSelectionStart(false);
     }
     
-    // If there's an active multi-paragraph selection
-    // if (isMultiParagraphSelection) {
       updateSelectionSegment(selection);
-    // }
   };
   
   // Helper to update the current paragraph's segment in a multi-paragraph selection
@@ -180,13 +162,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         end,
         text: selectedText
       }))
-
-      // addSegment({
-      //   sourceURI: paragraphId,
-      //   start,
-      //   end,
-      //   text: selectedText
-      // });
     }
   };
   
@@ -198,7 +173,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     if (selection.toString().trim().length > 0) {
         updateSelectionSegment(selection);
         dispatch(completeSelectionRedux())
-        // completeSelection();
     }
     
     setIsSelectionStart(false);

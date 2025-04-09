@@ -14,7 +14,6 @@ interface createAnnotation {
         }>;
         documentCollectionId: number,
         documentId: number,
-        isMultiParagraphSelection: boolean
     },
     content: string
 }
@@ -27,7 +26,6 @@ const initialState: createAnnotation = {
         segments: [],
         documentCollectionId: 1,
         documentId: 1,
-        isMultiParagraphSelection: false
     },
     content: ""
 }
@@ -105,13 +103,7 @@ const createAnnotationSlice = createSlice({
             const prefix = index === 0 ? '' : ' ';
             return combinedText + prefix + segment.text;
             }, '');
-            
-            // Mark the multi-paragraph selection as complete
-            // This could be used to trigger UI changes or further processing
-            state.target.isMultiParagraphSelection = false;
         },
-        
-        // Reset selection (keep existing reset action or enhance it)
 
         },
     
@@ -146,8 +138,8 @@ export const selectTargetInfo = (state: RootState) => {
 export const selectNewAnnotationContent = (state: RootState) => state.createAnnotation.content;
 
 // New selectors for multi-paragraph functionality
-export const selectIsMultiParagraphSelection = (state: RootState) => 
-    state.createAnnotation.target.isMultiParagraphSelection;
+// export const selectIsMultiParagraphSelection = (state: RootState) => 
+//     state.createAnnotation.target.isMultiParagraphSelection;
 
 export const selectSegments = (state: RootState) => 
     state.createAnnotation.target.segments;
