@@ -7,6 +7,7 @@ export const replyingAnnotations = createAnnotationSlice('replying');
 export const scholarlyAnnotations = createAnnotationSlice('scholarly');
 export const taggingAnnotations = createAnnotationSlice('tagging')
 export const upvoteAnnotations = createAnnotationSlice('upvoting')
+export const flaggingAnnotations = createAnnotationSlice('flagging')
 // You can add more buckets as needed
 
 
@@ -15,5 +16,6 @@ export const sliceMap: AnnotationSliceMap = {
     "replying": replyingAnnotations,
     "scholarly": scholarlyAnnotations,
     "tagging": taggingAnnotations,
-    "upvoting": upvoteAnnotations
+    "upvoting": upvoteAnnotations,
+    "flagging": flaggingAnnotations
 }

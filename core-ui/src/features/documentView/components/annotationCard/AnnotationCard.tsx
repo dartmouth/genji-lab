@@ -169,6 +169,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                     </button>
                     <Tooltip
                         title={
+                            upvotes && upvotes.length > 0 ? (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                                 {upvotes?.map(upvote => (
                                     <Chip
@@ -181,6 +182,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                                     />
                                 ))}
                             </div>
+                            ) : ""
                         }
                         arrow
                         placement="bottom-start"

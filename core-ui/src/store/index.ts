@@ -7,7 +7,8 @@ import {
   replyingAnnotations, 
   scholarlyAnnotations, 
   taggingAnnotations,
-  upvoteAnnotations
+  upvoteAnnotations,
+  flaggingAnnotations
 } from './slice/annotationSlices';
 import { AnnotationState } from './slice/factory/createAnnotationSlice';
 
@@ -23,6 +24,7 @@ const annotationReducersMap: AnnotationReducers = {
   [scholarlyAnnotations.name]: scholarlyAnnotations.reducer,
   [taggingAnnotations.name]: taggingAnnotations.reducer,
   [upvoteAnnotations.name]: upvoteAnnotations.reducer,
+  [flaggingAnnotations.name]: flaggingAnnotations.reducer,
 };
 
 // Combine the reducers
