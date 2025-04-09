@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
-import { useAppDispatch, useAppSelector, selectSelectedText, setMotivation  } from "@store";
+import { useAppDispatch, useAppSelector, selectSegments, setMotivation  } from "@store";
 import { createPortal } from 'react-dom';
 
 const MenuContext: React.FC = () => {
   const dispatch = useAppDispatch();
-  const text = useAppSelector(selectSelectedText);
+  const text = useAppSelector(selectSegments);
 
   const [clicked, setClicked] = useState(false);
   
@@ -15,7 +15,7 @@ const MenuContext: React.FC = () => {
 
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
-      if (text && text.trim().length > 0) {
+      if (text && text.length > 0) {
         e.preventDefault();
         setCoords({ x: e.pageX, y: e.pageY});
         setClicked(true);

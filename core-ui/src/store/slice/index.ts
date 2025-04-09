@@ -12,16 +12,5 @@ export {
     setHoveredHighlights  
 } from './highlightRegistrySlice' 
 
-export {
-    setContent, 
-    setTarget, 
-    setMotivation,
-    resetCreateAnnotation,
-    selectAnnotationCreate,
-    selectSelectedText,
-    selectTarget,
-    selectTargetInfo,
-    selectMotivation,
-    selectNewAnnotationContent
+export * from './annotationCreate'
 
-} from './annotationCreate'
