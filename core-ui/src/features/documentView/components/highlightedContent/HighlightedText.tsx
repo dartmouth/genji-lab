@@ -3,6 +3,8 @@ import Highlight from './Highlight';
 import { parseURI } from '@documentView/utils';
 import { debounce } from 'lodash';
 
+import { useVisibilityWithPrefetch } from '@/hooks/useVisibilityWithPrefetch';
+
 import { 
   RootState,
   useAppDispatch, 
@@ -10,16 +12,17 @@ import {
   updateHighlightPosition, 
   setHoveredHighlights, 
   selectAllAnnotationsForParagraph, 
-  commentingAnnotations,
-  scholarlyAnnotations,
-  replyingAnnotations,
-  taggingAnnotations, 
-  upvoteAnnotations,
+  // commentingAnnotations,
+  // scholarlyAnnotations,
+  // replyingAnnotations,
+  // taggingAnnotations, 
+  // upvoteAnnotations,
   initSelection as initRedux,
   addSelectionSegment,
   completeSelection as completeSelectionRedux
 } from '@store';
 
+import { fetchAnnotationByMotivation } from '@store'
 import {
   rangeIntersectsElement,
   calculateSegmentForParagraph,
@@ -40,6 +43,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
+  const notFetched = useRef(true)
+
+  const { isVisible, shouldPrefetch } = useVisibilityWithPrefetch(containerRef);
   
   const [highlightPositions, setHighlightPositions] = useState<Map<string, {
     positions: Array<{ left: number; top: number; width: number; height: number }>,
@@ -53,12 +59,17 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   );
 
   useEffect(() => {
-    dispatch(commentingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-    dispatch(scholarlyAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-    dispatch(replyingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-    dispatch(taggingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-    dispatch(upvoteAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-  }, [dispatch, paragraphId]);
+    if ((shouldPrefetch || isVisible) && notFetched.current) {
+      notFetched.current = false;
+      console.log(`Paragraph ${paragraphId} is visible (${isVisible}) or should prefetch (${shouldPrefetch})`)
+      // dispatch(commentingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+      // dispatch(scholarlyAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+      // dispatch(replyingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+      // dispatch(taggingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+      // dispatch(upvoteAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+      dispatch(fetchAnnotationByMotivation(parseURI(paragraphId) as unknown as number))
+    }
+  }, [dispatch, paragraphId, isVisible, shouldPrefetch]);
 
   // Calculate highlight positions for existing annotations
   const calculateHighlightPositions = () => {

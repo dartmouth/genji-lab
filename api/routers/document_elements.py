@@ -330,3 +330,5 @@ def get_elements_by_document(
     ).scalars().all()
     
     return elements
+
+

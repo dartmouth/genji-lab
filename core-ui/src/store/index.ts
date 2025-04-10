@@ -66,5 +66,5 @@ export type AppDispatch = typeof store.dispatch;
 
 export * from './slice'
 export * from './hooks'
-export * from './thunk'
+export { fetchAnnotationByMotivation} from './thunk'
 export * from './selector'

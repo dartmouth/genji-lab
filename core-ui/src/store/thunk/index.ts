@@ -1,0 +1,1 @@
+export { fetchAnnotationByMotivation } from './annotationsByMotivation'

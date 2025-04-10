@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from datetime import datetime
+from collections import defaultdict
+from typing import Dict, List
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -133,3 +135,27 @@ def update_annotation(annotation_id: int, payload: AnnotationPatch, db: AsyncSes
         db.refresh(db_annotation)
 
     return db_annotation
+
+
+@router.get("/by-motivation/{document_element_id}", response_model=Dict[str, List[Annotation]], status_code=status.HTTP_200_OK)
+def read_annotations_by_motivation(
+    document_element_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    # Query to get all annotations for the document element
+    query = select(AnnotationModel).options(
+        joinedload(AnnotationModel.creator)
+    ).filter(
+        AnnotationModel.document_element_id == document_element_id
+    )
+    
+    result = db.execute(query)
+    annotations = result.scalars().all()
+    
+    # Group by motivation
+    grouped_annotations = defaultdict(list)
+    for annotation in annotations:
+        grouped_annotations[annotation.motivation].append(annotation)
+    
+    # Convert defaultdict to regular dict for response
+    return dict(grouped_annotations)
