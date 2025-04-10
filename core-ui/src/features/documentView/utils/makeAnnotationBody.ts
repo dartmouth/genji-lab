@@ -15,7 +15,7 @@ export function makeTextAnnotationBody(
     }>,
     language: string = "en"
 ): AnnotationCreate {
-  console.log("making a new annotation body")
+//   console.log("making a new annotation body") 
     const newAnnotation: AnnotationCreate = {
         "context": "http://www.w3.org/ns/anno.jsonld",
         "document_collection_id": document_collection_id,
@@ -38,15 +38,10 @@ export function makeTextAnnotationBody(
     if (['commenting', 'scholarly'].includes(motivation)) {
         // Process each segment for commenting/scholarly annotations
         segments.forEach(segment => {
-            // if (!segment.start) {
-            //     throw new SyntaxError("Range start required for new comments");
-            // }
 
             if (!segment.end) {
                 throw new SyntaxError("Range end required for new comments");
             }
-
-            // const start = segment.start > segment.end ? 0 : segment.start
 
             const target = {
                 "type": "Text",
@@ -75,7 +70,7 @@ export function makeTextAnnotationBody(
             newAnnotation.target.push(target);
         });
     }
-    console.log("new body is", newAnnotation)
+    // console.log("new body is", newAnnotation)
 
     return newAnnotation;
 }

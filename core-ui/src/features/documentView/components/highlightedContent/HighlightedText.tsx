@@ -14,6 +14,7 @@ import {
   scholarlyAnnotations,
   replyingAnnotations,
   taggingAnnotations, 
+  upvoteAnnotations,
   initSelection as initRedux,
   addSelectionSegment,
   completeSelection as completeSelectionRedux
@@ -56,6 +57,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     dispatch(scholarlyAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
     dispatch(replyingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
     dispatch(taggingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+    dispatch(upvoteAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
   }, [dispatch, paragraphId]);
 
   // Calculate highlight positions for existing annotations
