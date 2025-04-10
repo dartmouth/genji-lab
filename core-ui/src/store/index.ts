@@ -2,8 +2,10 @@
 import { configureStore, combineReducers, Reducer, Action } from '@reduxjs/toolkit';
 import highlightRegistryReducer from './slice/highlightRegistrySlice';
 import createAnnotationSliceReducer from './slice/annotationCreate'
+import documentsReducer from './slice/documentSlice';
 import { commentingAnnotations, replyingAnnotations, scholarlyAnnotations, taggingAnnotations } from './slice/annotationSlices';
 import { AnnotationState } from './slice/factory/createAnnotationSlice';
+import documentCollectionsReducer from './slice/documentCollectionSlice';
 
 // Define the structure of our annotations reducers
 interface AnnotationReducers {
@@ -25,7 +27,9 @@ const annotationsReducer = combineReducers(annotationReducersMap);
 const rootReducer = {
   annotations: annotationsReducer,
   highlightRegistry: highlightRegistryReducer,
-  createAnnotation: createAnnotationSliceReducer
+  createAnnotation: createAnnotationSliceReducer,
+  documentCollections: documentCollectionsReducer,
+  documents: documentsReducer
 };
 
 

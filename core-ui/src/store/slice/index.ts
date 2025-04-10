@@ -25,3 +25,21 @@ export {
     selectNewAnnotationContent
 
 } from './annotationCreate'
+
+export {
+    clearCollections,
+    fetchDocumentCollections,
+    selectAllDocumentCollections,
+    selectDocumentCollectionsStatus,
+    selectDocumentCollectionsError
+} from './documentCollectionSlice'
+
+export {
+    clearDocuments,
+    setSelectedCollectionId,
+    fetchDocumentsByCollection,
+    selectAllDocuments,
+    selectDocumentsStatus,
+    selectDocumentsError,
+    selectSelectedCollectionId
+} from './documentSlice'
