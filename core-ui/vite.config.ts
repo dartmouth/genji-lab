@@ -12,6 +12,7 @@ export default defineConfig({
       '@components': path.resolve(__dirname, './src/components'),
       '@features': path.resolve(__dirname, './src/features'),
       "@documentView": path.resolve(__dirname, './src/features/documentView'),
+      '@documentGallery': path.resolve(__dirname, './src/features/documentGallery'),
       '@utils': path.resolve(__dirname, './src/utils'),
       '@hooks': path.resolve(__dirname, './src/hooks')
     }
