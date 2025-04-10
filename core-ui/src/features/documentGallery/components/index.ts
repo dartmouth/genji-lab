@@ -1,0 +1,1 @@
+export { default as DocumentCollectionGallery } from '../../documentGallery/DocumentCollectionGallery'

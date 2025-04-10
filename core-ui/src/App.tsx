@@ -1,5 +1,5 @@
 import React from "react";
-import { DocumentContentPanel } from "@documentView";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./components/AuthContext";
 import AppHeader from "./components/AppHeader";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -10,6 +10,7 @@ import "./App.css";
 
 import { Provider } from 'react-redux';
 import { store } from "./store";
+import DocumentViewerContainer from "./features/documentGallery/DocumentViewerContainer";
 
 // Main app component
 const AppContent: React.FC = () => {
@@ -18,7 +19,11 @@ const AppContent: React.FC = () => {
       <AppHeader />
       <div className="app">
         <ErrorBoundary>
-          <DocumentContentPanel documentID={1} documentCollectionId={1} />
+          <Router>
+            <Routes>
+              <Route path="/*" element={<DocumentViewerContainer />} />
+            </Routes>
+          </Router>
         </ErrorBoundary>
       </div>
     </div>
@@ -28,13 +33,10 @@ const AppContent: React.FC = () => {
 // Root component with the provider
 const App: React.FC = () => {
   return (
-    <Provider store = {store}>
-      {/* <SelectionProvider> */}
-        {/* <SelectionReduxBridge /> */}
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      {/* </SelectionProvider> */}
+    <Provider store={store}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Provider>
   );
 };

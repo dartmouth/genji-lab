@@ -32,6 +32,8 @@
       "@features": ["src/features", "src/features/index.ts"],
       "@documentView/*": ["src/features/documentView/*"],
       "@documentView": ["src/features/documentView", "src/features/documentView/index.ts"],
+      "@documentGallery/*": ["src/features/documentGallery/*"],
+      "@documentGallery": ["src/features/documentGallery", "src/features/documentGallery/index.ts"],
       "@utils/*": ["src/utils/*"],
       "@utils": ["src/utils", "src/utils/index.ts"],
       "@hooks/*": ["src/hooks/*"],
