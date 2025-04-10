@@ -35,6 +35,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
 
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
     const [isReplying, setIsReplying] = useState(false);
+    const [isFlagging, setIsFlagging] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(true);
 
@@ -108,6 +109,11 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     const handleReplyClick = () => {
         setIsReplying(!isReplying);
     };
+
+    const handleFlagClick = () => {
+        setIsFlagging(true)
+    }
+    
     const handleUpvote = () => {
         console.log("upvoting")
         if (!user) return;
@@ -196,7 +202,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                     <button title="Reply" onClick={handleReplyClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'blue' }}>
                         <ChatBubbleOutline sx={{ fontSize: '1rem' }} />
                     </button>
-                    <button title="Flag" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}>
+                    <button title="Flag" onClick={handleFlagClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}>
                         <Flag sx={{ fontSize: '1rem' }} />
                     </button>
                     <button title="Settings" onClick={toggleMenu} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'black' }}>
@@ -238,9 +244,19 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 />
             )}
 
-            {isReplying && (
+            {(isFlagging && !isReplying) && (
                 <ReplyForm
                     annotation={annotation}
+                    motivation="flagging"
+                    onSave={() => setIsFlagging(false)}
+                />
+            )
+
+            }
+            {(isReplying && !isFlagging) && (
+                <ReplyForm
+                    annotation={annotation}
+                    motivation="replying"
                     onSave={() => setIsReplying(false)}
                 />
             )}

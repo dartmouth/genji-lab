@@ -2,6 +2,7 @@
 import { configureStore, combineReducers, Reducer, Action } from '@reduxjs/toolkit';
 import highlightRegistryReducer from './slice/highlightRegistrySlice';
 import createAnnotationSliceReducer from './slice/annotationCreate'
+
 import { 
   commentingAnnotations, 
   replyingAnnotations, 
@@ -10,7 +11,11 @@ import {
   upvoteAnnotations,
   flaggingAnnotations
 } from './slice/annotationSlices';
+
+import documentsReducer from './slice/documentSlice';
+
 import { AnnotationState } from './slice/factory/createAnnotationSlice';
+import documentCollectionsReducer from './slice/documentCollectionSlice';
 
 // Define the structure of our annotations reducers
 interface AnnotationReducers {
@@ -35,6 +40,9 @@ const rootReducer = {
   annotations: annotationsReducer,
   highlightRegistry: highlightRegistryReducer,
   createAnnotation: createAnnotationSliceReducer,
+
+  documentCollections: documentCollectionsReducer,
+  documents: documentsReducer
 };
 
 
