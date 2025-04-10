@@ -12,19 +12,7 @@ export {
     setHoveredHighlights  
 } from './highlightRegistrySlice' 
 
-export {
-    setContent, 
-    setTarget, 
-    setMotivation,
-    resetCreateAnnotation,
-    selectAnnotationCreate,
-    selectSelectedText,
-    selectTarget,
-    selectTargetInfo,
-    selectMotivation,
-    selectNewAnnotationContent
-
-} from './annotationCreate'
+export * from './annotationCreate'
 
 export {
     clearCollections,
@@ -43,3 +31,4 @@ export {
     selectDocumentsError,
     selectSelectedCollectionId
 } from './documentSlice'
+

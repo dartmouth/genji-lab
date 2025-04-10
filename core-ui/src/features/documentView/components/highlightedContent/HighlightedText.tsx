@@ -1,7 +1,7 @@
-// components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
 import { parseURI } from '@documentView/utils';
+import { debounce } from 'lodash';
 
 import { 
   RootState,
@@ -10,21 +10,24 @@ import {
   updateHighlightPosition, 
   setHoveredHighlights, 
   selectAllAnnotationsForParagraph, 
-  setTarget,
   commentingAnnotations,
   scholarlyAnnotations,
   replyingAnnotations,
-  taggingAnnotations
+  taggingAnnotations, 
+  initSelection as initRedux,
+  addSelectionSegment,
+  completeSelection as completeSelectionRedux
 } from '@store';
 
-import { debounce } from 'lodash';
-
-
+import {
+  rangeIntersectsElement,
+  calculateSegmentForParagraph,
+} from '../../utils/selectionUtils';
 
 interface HighlightedTextProps {
   text: string;
-  documentCollectionId: number,
-  documentId: number,
+  documentCollectionId: number;
+  documentId: number;
   paragraphId: string;
 }
 
@@ -33,17 +36,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   paragraphId,
   documentCollectionId,
   documentId,
-  // setSelectedText = () => {},
 }) => {
   const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    dispatch(commentingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-    dispatch(scholarlyAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)))
-    dispatch(replyingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)))
-    dispatch(taggingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)))
-  }, [dispatch, paragraphId]);
-
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [highlightPositions, setHighlightPositions] = useState<Map<string, {
@@ -51,10 +45,20 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     motivation: string
   }>>(new Map());
   
+  const [isSelectionStart, setIsSelectionStart] = useState(false);
+  
   const allAnnotations = useAppSelector((state: RootState) => 
     selectAllAnnotationsForParagraph(state, paragraphId)
   );
-  
+
+  useEffect(() => {
+    dispatch(commentingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+    dispatch(scholarlyAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+    dispatch(replyingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+    dispatch(taggingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
+  }, [dispatch, paragraphId]);
+
+  // Calculate highlight positions for existing annotations
   const calculateHighlightPositions = () => {
     if (!containerRef.current) return;
     const textNode = containerRef.current.firstChild;
@@ -71,7 +75,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       const target = annotation.target.find((t) => 
         t.source === paragraphId 
       );
-
+      
       if (!target) return;
       if (!target.selector) return;
       try {
@@ -106,7 +110,75 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     setHighlightPositions(newPositions);
   };
 
-  // Container-level detection function
+  // Handle selection start
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only track primary mouse button
+    if (e.button !== 0) return;
+    // initSelection(documentId, documentCollectionId);
+    dispatch(initRedux({documentId, documentCollectionId}))
+    
+    const selection = window.getSelection();
+    if (selection && selection.isCollapsed) {
+      setIsSelectionStart(true);
+    }
+  };
+  
+  // Handle selection changes
+  const handleSelectionChange = () => {
+    const selection = window.getSelection();
+    if (!selection) return;
+    
+    // If this is where the selection started and it's no longer collapsed
+    if (isSelectionStart) {
+      // Initialize multi-paragraph selection
+      dispatch(initRedux({documentId, documentCollectionId}))
+      setIsSelectionStart(false);
+    }
+    
+      updateSelectionSegment(selection);
+  };
+  
+  // Helper to update the current paragraph's segment in a multi-paragraph selection
+  const updateSelectionSegment = (selection: Selection) => {
+    if (!containerRef.current) return;
+    
+    // Check if this paragraph is part of the selection
+    const range = selection.getRangeAt(0);
+    const paragraphElement = containerRef.current;
+    
+    // Determine if this paragraph intersects with the selection
+    const intersects = rangeIntersectsElement(range, paragraphElement);
+    
+    if (intersects) {
+      // Calculate the segment for this paragraph
+      const { start, end, selectedText } = calculateSegmentForParagraph(
+        range, paragraphElement
+      );
+      
+      // Add this segment to the context
+      dispatch(addSelectionSegment({
+        sourceURI: paragraphId,
+        start,
+        end,
+        text: selectedText
+      }))
+    }
+  };
+  
+  // Handle selection end
+  const handleMouseUp = () => {
+    const selection = window.getSelection();
+    if (!selection) return;
+    
+    if (selection.toString().trim().length > 0) {
+        updateSelectionSegment(selection);
+        dispatch(completeSelectionRedux())
+    }
+    
+    setIsSelectionStart(false);
+  };
+
+  // Container-level detection function for existing highlights
   const detectHighlightsAtPoint = (x: number, y: number) => {
     const highlightsAtPoint: string[] = [];
     
@@ -145,6 +217,20 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   // Debounce the mouse move handler for better performance
   const debouncedHandleMouseMove = debounce(handleMouseMove, 50);
 
+  // Add selection change event listener
+  useEffect(() => {
+    const handleGlobalSelectionChange = () => {
+      handleSelectionChange();
+    };
+    
+    document.addEventListener('selectionchange', handleGlobalSelectionChange);
+    
+    return () => {
+      document.removeEventListener('selectionchange', handleGlobalSelectionChange);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSelectionStart]);
+
   // Recalculate on component mount and when annotations or text changes
   useEffect(() => {
     calculateHighlightPositions();
@@ -163,48 +249,16 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       resizeObserver.disconnect();
       debouncedHandleMouseMove.cancel();
     };
-   // eslint-disable-next-line
-  }, [allAnnotations, text, paragraphId]);
-
-  // Helper functions for getting selection offsets
-  const getSelectionStartOffset = (range: Range): number => {
-    const preSelectionRange = range.cloneRange();
-    const element = range.startContainer.parentElement || document.body;
-    preSelectionRange.selectNodeContents(element);
-    preSelectionRange.setEnd(range.startContainer, range.startOffset);
-    return preSelectionRange.toString().length;
-  };
-  
-  const getSelectionEndOffset = (range: Range): number => {
-    const preSelectionRange = range.cloneRange();
-    const element = range.endContainer.parentElement || document.body;
-    preSelectionRange.selectNodeContents(element);
-    preSelectionRange.setEnd(range.endContainer, range.endOffset);
-    return preSelectionRange.toString().length;
-  };
-  
-  const handleMouseUp = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString().trim().length > 0) {
-      const range = selection.getRangeAt(0);
-      
-      dispatch(setTarget(
-        {selectedText: selection.toString(),
-          sourceURI: [paragraphId],
-          documentCollectionId: documentCollectionId,
-          documentId: documentId,
-          start: getSelectionStartOffset(range),
-          end: getSelectionEndOffset(range),
-        }
-      ))
-    }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allAnnotations]);
 
   return (
     <div 
       id={`DocumentElements/${paragraphId}`}
       ref={containerRef} 
-      className="annotatable-paragraph"
+      // className={`annotatable-paragraph ${isSegmentSelected(paragraphId) ? 'has-selection' : ''}`}
+      className={`annotatable-paragraph`}
+      onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseMove={debouncedHandleMouseMove}
       style={{ position: 'relative' }}

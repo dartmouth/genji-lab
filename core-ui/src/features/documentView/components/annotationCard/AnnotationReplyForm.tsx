@@ -18,15 +18,20 @@ const ReplyForm: React.FC<ReplyFormProps> = ({ annotation, onSave }) => {
     const handleSave = () => {
         if (!replyText.trim()) return;
         if (!user) return;
-
+       const segment = [{
+            sourceURI: `Annotation/${annotation.id}`,
+            start: 1,
+            end: 1,
+            text: ""
+        }]
         const payload = makeTextAnnotationBody(
             annotation.document_collection_id,
             annotation.document_id,
             typeof annotation.document_element_id === "string" ? parseInt(parseURI(annotation.document_element_id)) : annotation.document_element_id,
             user.id,
             "replying",
-            `Annotation/${annotation.id}`,
-            replyText
+            replyText,
+            segment
         )
         
         dispatch(replyingAnnotations.thunks.saveAnnotation(payload));

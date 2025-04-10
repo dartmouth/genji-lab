@@ -31,7 +31,12 @@ export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
     const deId = typeof annotation.document_element_id === "string"
       ? parseInt(parseURI(annotation.document_element_id))
       : annotation.document_element_id;
-
+    const segment = [{
+        sourceURI: `Annotation/${annotation.id}`,
+        start: 1,
+        end: 1,
+        text: ""
+    }]
     newTags.forEach((tag) => {
       const tagAnno = makeTextAnnotationBody(
         annotation.document_collection_id,
@@ -39,8 +44,8 @@ export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
         deId,
         userId,
         'tagging',
-        `Annotation/${annotation.id}`,
-        tag
+        tag,
+        segment
       );
       
       dispatch(taggingAnnotations.thunks.saveAnnotation(tagAnno));
