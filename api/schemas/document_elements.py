@@ -8,7 +8,7 @@ class DocumentElementBase(BaseModel):
     document_id: int
     hierarchy: Optional[Dict[str, Any]] = None
     content: Optional[Dict[str, Any]] = None
-    links: Optional[List[Dict[str, Any]]] = None
+    # links: Optional[List[Dict[str, Any]]] = None
 
 class DocumentElementCreate(DocumentElementBase):
     pass

@@ -44,7 +44,7 @@ def create_element(element: DocumentElementCreate, db: AsyncSession = Depends(ge
         )
     
     # Create the document element
-    db_element = DocumentElementModel(**element.dict())
+    db_element = DocumentElementModel(**element.model_dump())
     
     db.add(db_element)
     db.commit()
