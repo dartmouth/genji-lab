@@ -2,11 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import users, documents, document_collections, document_elements, annotations
-from database import engine, create_schema
+from database import engine
 from models import models
 
 # Create schema first
-create_schema()
+# create_schema()
 
 # Create tables in the database
 models.Base.metadata.create_all(bind=engine)

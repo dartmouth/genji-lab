@@ -6,6 +6,8 @@ from sqlalchemy.orm import joinedload
 from datetime import datetime
 from collections import defaultdict
 from typing import Dict, List
+from dotenv import load_dotenv, find_dotenv
+import os
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,32 +19,34 @@ from schemas.annotations import (
     AnnotationCreate,
     AnnotationPatch
 )
- 
+
+load_dotenv(find_dotenv())
+
 router = APIRouter(
     prefix="/api/v1/annotations",
     tags=["annotations"],
     responses={404: {"description": "Annotation not found"}},
 )
 
-def generate_body_id(db: AsyncSession) -> str:
+def generate_body_id(db: AsyncSession, schema: str) -> str:
     """Generate a unique body ID using the sequence"""
-    result = db.execute(text("SELECT nextval('app.annotation_body_id_seq')"))
+    result = db.execute(text(f"SELECT nextval('{schema}.annotation_body_id_seq')"))
     id_num = result.scalar_one()
     return id_num
 
-def generate_target_id(db: AsyncSession) -> str:
+def generate_target_id(db: AsyncSession, schema: str) -> str:
     """Generate a unique target ID using the sequence"""
-    result = db.execute(text("SELECT nextval('app.annotation_target_id_seq')"))
+    result = db.execute(text(f"SELECT nextval('{schema}.annotation_target_id_seq')"))
     id_num = result.scalar_one()
     return id_num
 
 @router.post("/", response_model=Annotation, status_code=status.HTTP_201_CREATED)
 def create_annotation(annotation: AnnotationCreate, db: AsyncSession = Depends(get_db)):
 
-    annotation.body.id = generate_body_id(db)
+    annotation.body.id = generate_body_id(db, os.environ.get("DB_SCHEMA"))
 
     for target in annotation.target:
-        target.id = generate_target_id(db)
+        target.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
 
     db_annotation = AnnotationModel(
         document_collection_id=annotation.document_collection_id,

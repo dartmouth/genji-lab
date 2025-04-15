@@ -1,0 +1,16 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install dependencies first (for better caching)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# The actual application code will be mounted at runtime
+# This is just a placeholder to set up the container structure
+RUN mkdir -p alembic
+
+# Set the entrypoint to alembic
+ENTRYPOINT ["alembic"]
+# Default command (can be overridden)
+CMD ["upgrade", "head"]

@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 load_dotenv()
 # Create SQLAlchemy engine
@@ -15,8 +15,10 @@ Base = declarative_base()
 
 # Function to create schema if it doesn't exist
 def create_schema():
+    schema_name = os.environ.get("DB_SCHEMA")
+    sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name};")
     with engine.connect() as conn:
-        conn.execute(text("CREATE SCHEMA IF NOT EXISTS app;"))
+        conn.execute(sql)
         conn.commit()
 
 # Dependency to get DB session
