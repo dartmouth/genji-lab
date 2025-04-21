@@ -33,3 +33,18 @@ export {
     selectSelectedCollectionId
 } from './documentSlice'
 
+export {
+    setActiveParagraph,
+    clearActiveParagraph,
+    selectActiveParagraphId
+} from './documentNavigationSlice'
+
+export {
+    fetchDocumentElements,
+    clearElements,
+    setCurrentDocumentId,
+    selectAllDocumentElements,
+    selectDocumentElementsStatus,
+    selectDocumentElementsError,
+    selectCurrentDocumentId
+} from './documentElementsSlice'

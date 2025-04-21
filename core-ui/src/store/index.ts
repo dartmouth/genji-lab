@@ -2,6 +2,8 @@
 import { configureStore, combineReducers, Reducer, Action } from '@reduxjs/toolkit';
 import highlightRegistryReducer from './slice/highlightRegistrySlice';
 import createAnnotationSliceReducer from './slice/annotationCreate'
+import documentNavigationReducer from './slice/documentNavigationSlice';
+import documentElementsReducer from './slice/documentElementsSlice';
 
 import { 
   commentingAnnotations, 
@@ -40,9 +42,10 @@ const rootReducer = {
   annotations: annotationsReducer,
   highlightRegistry: highlightRegistryReducer,
   createAnnotation: createAnnotationSliceReducer,
-
+  documentElements: documentElementsReducer,
   documentCollections: documentCollectionsReducer,
-  documents: documentsReducer
+  documents: documentsReducer,
+  documentNavigation: documentNavigationReducer
 };
 
 
