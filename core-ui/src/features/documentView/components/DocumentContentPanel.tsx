@@ -93,7 +93,7 @@ const DocumentContentPanel: React.FC = () => {
     
     // Your existing selectors
     const hoveredHighlightIds = useSelector(
-        (state: RootState) => state.highlightRegistry.hoveredHighlightIds
+        (state: RootState) => state.highlightRegistry.hoveredHighlightIds[numericDocumentId] || []
     );
     
     const makeSelectAnnotationsById = useMemo(
