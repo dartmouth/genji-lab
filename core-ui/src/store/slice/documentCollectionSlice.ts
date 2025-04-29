@@ -26,6 +26,29 @@ interface DocumentCollectionState {
   error: string | null;
 }
 
+interface Hierarchy {
+  chapter: number,
+  paragraph: number,
+}
+
+interface DocumentCollectionCreate {
+  title: string,
+  visibility: string,
+  text_direction: string,
+  language: string,
+  hierarchy: Hierarchy,
+  collection_metadata: CollectionMetadata,
+  created_by_id: number,
+}
+
+interface CollectionMetadata {
+  [key: string]: string | number | boolean
+}
+
+export type {DocumentCollectionCreate}
+export type {Hierarchy}
+export type {CollectionMetadata}
+
 // Initial state
 const initialState: DocumentCollectionState = {
   collections: [],
@@ -45,6 +68,24 @@ export const fetchDocumentCollections = createAsyncThunk(
       }
       
       const collections: DocumentCollection[] = response.data;
+      return collections;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+);
+
+export const createDocumentCollection = createAsyncThunk(
+  'documentCollections/create',
+  async (newCollection: DocumentCollectionCreate, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/collections/', newCollection);
+      
+      if (!(response.status === 201)) {
+        return rejectWithValue(`Failed to create document collection: ${response.statusText}`);
+      }
+      
+      const collections: DocumentCollection = response.data;
       return collections;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
@@ -76,7 +117,12 @@ const documentCollectionSlice = createSlice({
       .addCase(fetchDocumentCollections.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
-      });
+      })
+      .addCase(createDocumentCollection.fulfilled, (state, action: PayloadAction<DocumentCollection>) => {
+        state.status = 'succeeded';
+        state.collections = [...state.collections, action.payload];
+      })
+      ;
   }
 });
 

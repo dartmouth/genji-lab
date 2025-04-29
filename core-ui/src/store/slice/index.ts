@@ -16,12 +16,16 @@ export {
 export * from './annotationCreate'
 
 export {
+    createDocumentCollection,
     clearCollections,
     fetchDocumentCollections,
     selectAllDocumentCollections,
     selectDocumentCollectionsStatus,
     selectDocumentCollectionsError
 } from './documentCollectionSlice'
+
+export type {DocumentCollectionCreate, Hierarchy, CollectionMetadata} from './documentCollectionSlice'
+
 
 export {
     clearDocuments,
