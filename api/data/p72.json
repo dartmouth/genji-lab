@@ -1,0 +1,25 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 134
+  },
+  "content": {
+    "text": "A mist of tears can obscure the autumn moon",
+    "formatting": {
+      "left_indent": 0.5,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": [
+        {
+          "start": 0,
+          "end": 43,
+          "type": [
+            "italic"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 30
+  },
+  "content": {
+    "text": "“Had I known that things would turn out like this ...”",
+    "formatting": {
+      "left_indent": 0,
+      "right_indent": 0,
+      "first_line_indent": 0,
+      "alignment": "left",
+      "text_styles": []
+    }
+  }
+}

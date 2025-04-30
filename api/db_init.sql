@@ -107,3 +107,5 @@ grant all on sequence app.annotation_target_id_seq to application;
 alter table app.document_elements add column links JSONB;
 
 create index idx_element_links on document_elements using GIN (links);
+
+

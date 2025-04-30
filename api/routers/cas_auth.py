@@ -1,0 +1,238 @@
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+import httpx
+import re
+import xml.etree.ElementTree as ET
+from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from datetime import datetime, timedelta
+from database import get_db
+from models import models
+from fastapi import Depends
+from typing import Optional, Dict, Any
+
+router = APIRouter(
+    prefix="/api/v1",
+    tags=["authentication"]
+)
+
+class TicketValidation(BaseModel):
+    ticket: str
+    service: str
+
+class UserResponse(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    netid: str
+    email: Optional[str] = None
+    user_metadata: Optional[Dict[str, Any]] = None
+    ttl: str  # ISO format timestamp for when the authentication expires
+
+def extract_and_format_email(xml_string):
+    # Parse the XML
+    root = ET.fromstring(xml_string)
+    
+    # Find the user element (which contains the email)
+    # Using namespace with findall
+    namespace = {'cas': 'http://www.yale.edu/tp/cas'}
+    user_element = root.find('.//cas:user', namespace)
+    
+    if user_element is not None:
+        email = user_element.text
+        
+        # Convert to lowercase
+        email = email.lower()
+        
+        # Replace spaces with periods
+        email = email.replace(' ', '.')
+        
+        return email
+    else:
+        return "Email not found in XML"
+
+def extract_name_parts(xml_string):
+    # Parse the XML
+    root = ET.fromstring(xml_string)
+    
+    # Find the name element
+    namespace = {'cas': 'http://www.yale.edu/tp/cas'}
+    name_element = root.find('.//cas:name', namespace)
+    
+    if name_element is not None:
+        full_name = name_element.text
+        
+        # Split the name into parts
+        name_parts = full_name.split()
+        
+        # Handle cases with middle names or multiple last names
+        if len(name_parts) == 2:
+            first_name, last_name = name_parts
+        elif len(name_parts) > 2:
+            first_name = name_parts[0]
+            # Join all remaining parts as the last name
+            last_name = ' '.join(name_parts[1:])
+        else:
+            # If there's only one part
+            first_name = name_parts[0]
+            last_name = ""
+        
+        return {
+            'first_name': first_name,
+            'last_name': last_name,
+            'full_name': full_name
+        }
+    else:
+        return {
+            'first_name': "",
+            'last_name': "",
+            'full_name': ""
+        }
+
+def extract_cas_metadata(xml_string):
+    """Extract all relevant metadata from CAS response"""
+    root = ET.fromstring(xml_string)
+    namespace = {'cas': 'http://www.yale.edu/tp/cas'}
+    
+    metadata = {}
+    
+    # Extract common attributes
+    for attr_name in ['uid', 'netid', 'did', 'affil']:
+        element = root.find(f'.//cas:{attr_name}', namespace)
+        if element is not None and element.text:
+            metadata[attr_name] = element.text
+    
+    # Also extract the netid from attributes if present
+    netid_attr = root.find('.//cas:attribute[@name="netid"]', namespace)
+    if netid_attr is not None and 'value' in netid_attr.attrib:
+        metadata['netid'] = netid_attr.attrib['value']
+    
+    return metadata
+
+def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
+    """
+    Process CAS response and either retrieve an existing user or create a new one.
+    
+    Args:
+        db_session: SQLAlchemy database session
+        cas_xml_string: XML string from CAS response
+        
+    Returns:
+        User object (either existing or newly created)
+    """
+    # Extract email and name from CAS response
+    email = extract_and_format_email(cas_xml_string)
+    name_parts = extract_name_parts(cas_xml_string)
+    first_name = name_parts['first_name']
+    last_name = name_parts['last_name']
+    
+    # Extract additional metadata from CAS for storage
+    cas_metadata = extract_cas_metadata(cas_xml_string)
+    netid = cas_metadata.get('netid')
+    
+    # Look for existing user by netid first, then by name and email
+    existing_user = None
+    
+    if netid:
+        # Try to find by netid in metadata first
+        existing_user = db_session.query(models.User).filter(
+            models.User.user_metadata.has_key('cas_data'),
+            models.User.user_metadata['cas_data']['netid'].astext == netid
+        ).first()
+    
+    if not existing_user:
+        # Try to find by name and email
+        existing_user = db_session.query(models.User).filter(
+            models.User.first_name == first_name,
+            models.User.last_name == last_name,
+            or_(
+                models.User.user_metadata.has_key('email'),
+                models.User.user_metadata['email'].astext == email
+            )
+        ).first()
+    
+    if existing_user:
+        # User exists, update metadata if needed
+        current_metadata = existing_user.user_metadata or {}
+        # Update metadata with new login info or other details
+        current_metadata.update({
+            'last_login': datetime.now().isoformat(),
+            'email': email,
+            'cas_data': cas_metadata
+        })
+        existing_user.user_metadata = current_metadata
+        db_session.commit()
+        return existing_user
+    else:
+        # Create new user
+        new_user = models.User(
+            first_name=first_name,
+            last_name=last_name,
+            user_metadata={
+                'email': email,
+                'created_at': datetime.now().isoformat(),
+                'last_login': datetime.now().isoformat(),
+                'cas_data': cas_metadata
+            }
+        )
+        db_session.add(new_user)
+        db_session.commit()
+        return new_user
+
+@router.post("/validate-cas-ticket", response_model=UserResponse)
+async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_db)):
+    """
+    Validates a CAS ticket with Dartmouth's CAS server and returns user information.
+    Includes a TTL (time to live) value set to one week from now.
+    """
+    if not data.ticket:
+        raise HTTPException(status_code=400, detail="Missing CAS ticket")
+    
+    validation_url = f"https://login.dartmouth.edu/cas/serviceValidate?ticket={data.ticket}&service={data.service}"
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(validation_url)
+            response.raise_for_status()
+            xml = response.text
+            
+            # Check if authentication was successful
+            if "<cas:authenticationSuccess>" not in xml:
+                raise HTTPException(status_code=401, detail="CAS authentication failed")
+            
+            # Extract netid from CAS response
+            netid_match = re.search(r'<cas:attribute name="netid" value="([^"]+)"', xml)
+            if not netid_match:
+                raise HTTPException(status_code=401, detail="CAS validation failed: netid not found")
+            
+            netid = netid_match.group(1).strip()
+            
+            # Create or get user from database
+            user = get_or_create_user_from_cas(db, xml)
+            
+            # Calculate TTL (1 week from now)
+            ttl = (datetime.now() + timedelta(weeks=1)).isoformat()
+            
+            # Extract email from user metadata
+            email = user.user_metadata.get('email') if user.user_metadata else None
+            
+            # Return user information with TTL
+            return UserResponse(
+                id=user.id,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                netid=netid,
+                email=email,
+                user_metadata=user.user_metadata,
+                ttl=ttl
+            )
+    
+    except httpx.HTTPStatusError as e:
+        detail = f"CAS server returned error: {e.response.status_code}"
+        raise HTTPException(status_code=500, detail=detail)
+    except httpx.RequestError as e:
+        detail = f"Error communicating with CAS server: {str(e)}"
+        raise HTTPException(status_code=500, detail=detail)
+    except Exception as e:
+        detail = f"CAS validation failed: {str(e)}"
+        raise HTTPException(status_code=500, detail=detail)

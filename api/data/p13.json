@@ -1,0 +1,53 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 28
+  },
+  "content": {
+    "text": "Now in deepest sorrow as I contemplate/Our diverging roads, this fork where we must part/How I long to walk the path of the living",
+    "formatting": {
+      "left_indent": 0.5,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": [
+        {
+          "start": 0,
+          "end": 38,
+          "type": [
+            "italic"
+          ]
+        },
+        {
+          "start": 38,
+          "end": 39,
+          "type": [
+            "italic"
+          ]
+        },
+        {
+          "start": 39,
+          "end": 88,
+          "type": [
+            "italic"
+          ]
+        },
+        {
+          "start": 38,
+          "end": 39,
+          "type": [
+            "italic"
+          ]
+        },
+        {
+          "start": 89,
+          "end": 130,
+          "type": [
+            "italic"
+          ]
+        }
+      ]
+    }
+  }
+}

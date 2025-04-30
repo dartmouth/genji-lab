@@ -1,0 +1,25 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 184
+  },
+  "content": {
+    "text": "His Majesty was seated facing east under the eastern eaves of his residence in the Seiryōden, and the seats for Genji and the minister who would bestow the cap were located in front of him. Genji appeared before the Emperor at around four in the afternoon, during the Hour of the Monkey. The lambent glow of his face, which was still framed on either side by the twin loops of his boyish hairdo, made his father feel all the more regretful about the change in appearance that was about to take place. The honor of trimming back Genji’s hair fell to the Minister of the Treasury, whose face betrayed the pain he felt the moment he cut Genji’s beautiful locks. The Emperor had a hard time keeping his emotions in check. If only his mother were here to see this ceremony, he thought, struggling to maintain his composure.",
+    "formatting": {
+      "left_indent": 0,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": [
+        {
+          "start": 718,
+          "end": 767,
+          "type": [
+            "italic"
+          ]
+        }
+      ]
+    }
+  }
+}
