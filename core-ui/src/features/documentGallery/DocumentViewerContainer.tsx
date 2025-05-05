@@ -8,7 +8,6 @@ import { DocumentContentPanel } from "@documentView";
 import RouterSwitchBoard from "@/RouterSwitchBoard";
 
 const DocumentViewerContainer: React.FC = () => {  
-  // Container component now just uses the RouterSwitchBoard
   return <RouterSwitchBoard />;
 };
 
@@ -52,7 +51,7 @@ export const DocumentsView: React.FC = () => {
 };
 
 export const DocumentContentView: React.FC = () => {
-  const { collectionId, documentId } = useParams<{ collectionId: string; documentId: string }>();
+  const { collectionId } = useParams<{ collectionId: string }>();
   const navigate = useNavigate();
   
   const handleBackToDocuments = () => {
@@ -68,12 +67,7 @@ export const DocumentContentView: React.FC = () => {
       >
         ← Back to Documents
       </button>
-      {collectionId && documentId && (
-        <DocumentContentPanel
-          documentCollectionId={Number(collectionId)}
-          documentID={Number(documentId)}
-        />
-      )}
+      <DocumentContentPanel />
     </>
   );
 };

@@ -223,7 +223,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     
     // Update global state with the hovered highlights from this container
     if (hoveredHighlights.length > 0) {
-      dispatch(setHoveredHighlights(hoveredHighlights));
+      dispatch(setHoveredHighlights({documentId: documentId, highlightIds: hoveredHighlights}));
     }
   };
 

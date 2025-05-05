@@ -18,13 +18,18 @@ interface RegisteredHighlight {
 
 interface HighlightRegistryState {
   highlights: Record<string, RegisteredHighlight>;
-  hoveredHighlightIds: string[]; // Store all currently hovered highlight IDs
+  hoveredHighlightIds: Record<string, string[]>; // Store all currently hovered highlight IDs
 }
 
 const initialState: HighlightRegistryState = {
   highlights: {},
-  hoveredHighlightIds: [],
+  hoveredHighlightIds: {},
 };
+
+interface HoveredHighlightsPayload {
+  documentId: number;
+  highlightIds: string[];
+}
 
 const highlightRegistrySlice = createSlice({
   name: 'highlightRegistry',
@@ -44,8 +49,12 @@ const highlightRegistrySlice = createSlice({
     removeHighlight: (state, action: PayloadAction<string>) => {
       delete state.highlights[action.payload];
     },
-    setHoveredHighlights: (state, action: PayloadAction<string[]>) => {
-      state.hoveredHighlightIds = action.payload;
+    setHoveredHighlights: (state, action: PayloadAction<HoveredHighlightsPayload>) => {
+      // state.hoveredHighlightIds = action.payload;
+      if (!state.hoveredHighlightIds[action.payload.documentId]) {
+        state.hoveredHighlightIds[action.payload.documentId] = [];
+      }
+      state.hoveredHighlightIds[action.payload.documentId] = action.payload.highlightIds;
     },
   },
 });
