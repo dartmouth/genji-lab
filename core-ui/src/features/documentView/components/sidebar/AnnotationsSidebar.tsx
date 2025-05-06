@@ -12,8 +12,9 @@ interface AnnotationsSidebarProps {
   collapsedComments: boolean;
   setCollapsedComments: (collapsed: boolean) => void;
   hoveredAnnotations: Annotation[];
-  motivation: string
+  motivation: string;
   position?: SidebarPosition;
+  documentId: number; // Added documentId prop
 }
 
 const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
@@ -21,10 +22,15 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
   setCollapsedComments,
   hoveredAnnotations,
   motivation,
-  position = 'right'
+  position = 'right',
+  documentId // Include in props destructuring
 }) => {
-
-  const currentMotivation = useAppSelector(selectMotivation)
+  const currentMotivation = useAppSelector(selectMotivation);
+  
+  // Filter annotations by document ID
+  const filteredAnnotations = hoveredAnnotations.filter(
+    annotation => !documentId || annotation.document_id === documentId
+  );
 
   // Determine which icon to show based on position and collapsed state
   const renderToggleIcon = () => {
@@ -45,15 +51,22 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
           overflow: 'hidden',
         }}
       >
+        {/* Show document indicator if we have annotations */}
+        {filteredAnnotations.length > 0 && (
+          <div className="document-indicator">
+            Showing annotations for document #{documentId}
+          </div>
+        )}
+        
         {currentMotivation === motivation && (
           <AnnotationCreationCard/>
         )}
         
         {
-          hoveredAnnotations.length === 0 ? (
+          filteredAnnotations.length === 0 ? (
             <p>{`Hover over a highlight to view ${motivation === 'commenting' ? 'comments': 'annotations'}`}</p>
           ) : (
-            hoveredAnnotations.filter(anno => anno && anno.id).map(annotation => (
+            filteredAnnotations.filter(anno => anno && anno.id).map(annotation => (
               <AnnotationCard
                 key={annotation.id}
                 id={`${annotation.id}`}
