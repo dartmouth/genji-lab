@@ -6,7 +6,7 @@ import { AuthContext } from '../contexts/contextDefinition';
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   
   // Configure the CAS authentication with your environment settings
-  console.log('auth it up')
+  // console.log('auth it up')
   const auth = useCasAuth({
     casServerUrl: 'login.dartmouth.edu',
     serviceUrl: window.location.origin,

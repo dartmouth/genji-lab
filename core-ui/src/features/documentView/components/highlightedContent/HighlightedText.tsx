@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
 import { parseURI } from '@documentView/utils';
 import { debounce } from 'lodash';
+import { TextFormatting } from '@documentView/types'
 
 import { useVisibilityWithPrefetch } from '@/hooks/useVisibilityWithPrefetch';
 
@@ -12,11 +13,6 @@ import {
   updateHighlightPosition, 
   setHoveredHighlights, 
   selectAllAnnotationsForParagraph, 
-  // commentingAnnotations,
-  // scholarlyAnnotations,
-  // replyingAnnotations,
-  // taggingAnnotations, 
-  // upvoteAnnotations,
   initSelection as initRedux,
   addSelectionSegment,
   completeSelection as completeSelectionRedux
@@ -30,6 +26,7 @@ import {
 
 interface HighlightedTextProps {
   text: string;
+  format: TextFormatting,
   documentCollectionId: number;
   documentId: number;
   paragraphId: string;
@@ -37,6 +34,7 @@ interface HighlightedTextProps {
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
+  format,
   paragraphId,
   documentCollectionId,
   documentId,
@@ -61,12 +59,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
-      console.log(`Paragraph ${paragraphId} is visible (${isVisible}) or should prefetch (${shouldPrefetch})`)
-      // dispatch(commentingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-      // dispatch(scholarlyAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-      // dispatch(replyingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-      // dispatch(taggingAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
-      // dispatch(upvoteAnnotations.thunks.fetchAnnotations(parseURI(paragraphId)));
       dispatch(fetchAnnotationByMotivation(parseURI(paragraphId) as unknown as number))
     }
   }, [dispatch, paragraphId, isVisible, shouldPrefetch]);
@@ -264,7 +256,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allAnnotations]);
-
+  // console.log(format)
   return (
     <div 
       id={`DocumentElements/${paragraphId}`}
@@ -274,9 +266,15 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseMove={debouncedHandleMouseMove}
-      style={{ position: 'relative' }}
+      style={{ 
+        position: 'relative',
+        textIndent: format.first_line_indent ? `${format.first_line_indent}in` : '0',
+        paddingLeft: format.left_indent ? `${format.first_line_indent}in` : '0',
+        textAlign: format.alignment || 'left'
+       }}
     >
       {text}
+      
       
       {/* Render highlight containers */}
       {Array.from(highlightPositions.entries()).map(([annotationId, position_elems]) => (

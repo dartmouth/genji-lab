@@ -15,7 +15,8 @@ import {
     selectAllDocuments,
     fetchDocumentsByCollection,
     setActiveParagraph,
-    selectActiveParagraphId
+    selectActiveParagraphId,
+    selectHoveredHighlightIds
 } from '@store';
 import { useLocation, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -91,10 +92,9 @@ const DocumentContentPanel: React.FC = () => {
         }
     }, [activeParagraphId, elements]);
     
-    // Your existing selectors
     const hoveredHighlightIds = useSelector(
-        (state: RootState) => state.highlightRegistry.hoveredHighlightIds[numericDocumentId] || []
-    );
+        (state: RootState) => selectHoveredHighlightIds(state, numericDocumentId)
+      );
     
     const makeSelectAnnotationsById = useMemo(
         () => commentingAnnotations.selectors.makeSelectAnnotationsById(),
@@ -149,6 +149,7 @@ const DocumentContentPanel: React.FC = () => {
                         >
                             <HighlightedText
                                 text={content.content.text}
+                                format={content.content.formatting}
                                 paragraphId={paragraphId}
                                 documentCollectionId={numericCollectionId}
                                 documentId={numericDocumentId}
