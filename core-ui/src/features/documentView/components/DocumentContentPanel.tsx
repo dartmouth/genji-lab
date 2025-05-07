@@ -9,16 +9,20 @@ import {
   commentingAnnotations, 
   scholarlyAnnotations,
   fetchDocumentElements,
-  selectDocumentElementsStatus,
-  selectDocumentElementsError,
-  selectAllDocuments,
+  fetchComparisonDocumentElements,
+  selectElementsByDocumentId,
+  selectDocumentStatusById,
+  selectDocumentErrorById,
   fetchDocumentsByCollection,
   setActiveParagraph,
   selectActiveParagraphId,
   selectAllDocumentCollections,
   fetchDocumentCollections,
-  selectAllDocumentElements,
-  selectCurrentDocumentId
+  selectAllDocuments,
+  selectCurrentDocumentId,
+  selectComparisonDocumentIds,
+  removeComparisonDocument,
+  clearAllComparisonDocuments
 } from '@store';
 import { useLocation, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -57,14 +61,11 @@ const DocumentContentPanel: React.FC = () => {
   const [collapsedAnnotations, setCollapsedAnnotations] = useState<boolean>(false);
   const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
   const [showCompareView, setShowCompareView] = useState<boolean>(false);
-  const [compareDocumentId, setCompareDocumentId] = useState<number | null>(null);
+  const [selectedCompareDocumentId, setSelectedCompareDocumentId] = useState<number | null>(null);
   const [selectedCompareCollection, setSelectedCompareCollection] = useState<number | null>(null);
   const [activeAnnotationView, setActiveAnnotationView] = useState<'master' | 'detail'>('master');
-  const [compareDocumentElements, setCompareDocumentElements] = useState<BaseDocumentElement[]>([]);
-  const [compareCollectionDocuments, setCompareCollectionDocuments] = useState<Document[]>([]);
-  const [isLoadingCompare, setIsLoadingCompare] = useState<boolean>(false);
   const [isLoadingCompareCollection, setIsLoadingCompareCollection] = useState<boolean>(false);
-  const [compareError, setCompareError] = useState<string | null>(null);
+  const [compareCollectionDocuments, setCompareCollectionDocuments] = useState<Document[]>([]);
   const [compareCollectionError, setCompareCollectionError] = useState<string | null>(null);
   
   // Redux
@@ -73,12 +74,42 @@ const DocumentContentPanel: React.FC = () => {
   
   // Get data from Redux
   const activeParagraphId = useSelector(selectActiveParagraphId);
-  const allElements = useSelector(selectAllDocumentElements) as BaseDocumentElement[];
-  const elementsStatus = useSelector(selectDocumentElementsStatus);
-  const elementsError = useSelector(selectDocumentElementsError);
+  const currentDocumentId = useSelector(selectCurrentDocumentId);
+  const comparisonDocumentIds = useSelector(selectComparisonDocumentIds);
   const documents = useSelector(selectAllDocuments);
   const documentCollections = useSelector(selectAllDocumentCollections);
-  const currentDocumentIdFromRedux = useSelector(selectCurrentDocumentId);
+  
+  // Get document elements using the new selectors
+  const mainDocumentElements = useSelector((state: RootState) => 
+    selectElementsByDocumentId(state, numericDocumentId)
+  ) as BaseDocumentElement[];
+  
+  const mainDocumentStatus = useSelector((state: RootState) => 
+    selectDocumentStatusById(state, numericDocumentId)
+  );
+  
+  const mainDocumentError = useSelector((state: RootState) => 
+    selectDocumentErrorById(state, numericDocumentId)
+  );
+  
+  // Get compare document elements if a comparison document is selected
+  const compareDocumentElements = useSelector((state: RootState) => 
+    selectedCompareDocumentId ? 
+    selectElementsByDocumentId(state, selectedCompareDocumentId) : 
+    []
+  ) as BaseDocumentElement[];
+  
+  const compareDocumentStatus = useSelector((state: RootState) => 
+    selectedCompareDocumentId ? 
+    selectDocumentStatusById(state, selectedCompareDocumentId) : 
+    'idle'
+  );
+  
+  const compareDocumentError = useSelector((state: RootState) => 
+    selectedCompareDocumentId ? 
+    selectDocumentErrorById(state, selectedCompareDocumentId) : 
+    null
+  );
   
   // Get current document from Redux
   const currentDocument = useMemo(() => 
@@ -88,8 +119,8 @@ const DocumentContentPanel: React.FC = () => {
   
   // Get compare document from the compare collection documents
   const compareDocument = useMemo(() => 
-    compareDocumentId ? compareCollectionDocuments.find(doc => doc.id === compareDocumentId) : null,
-    [compareCollectionDocuments, compareDocumentId]
+    selectedCompareDocumentId ? compareCollectionDocuments.find(doc => doc.id === selectedCompareDocumentId) : null,
+    [compareCollectionDocuments, selectedCompareDocumentId]
   );
   
   // FETCH DATA
@@ -112,40 +143,6 @@ const DocumentContentPanel: React.FC = () => {
   useEffect(() => {
     dispatch(fetchDocumentCollections());
   }, [dispatch]);
-  
-  // Fetch compare document elements - using direct fetch to avoid affecting Redux store
-  useEffect(() => {
-    if (compareDocumentId) {
-      const fetchCompareElements = async () => {
-        try {
-          setIsLoadingCompare(true);
-          setCompareError(null);
-          
-          console.log(`Fetching elements for compare document ID: ${compareDocumentId}`);
-          const response = await fetch(`/api/v1/documents/${compareDocumentId}/elements/`);
-          
-          if (!response.ok) {
-            throw new Error(`Failed to fetch compare elements: ${response.statusText}`);
-          }
-          
-          const data = await response.json();
-          console.log(`Fetched ${data.length} elements for compare document ${compareDocumentId}`);
-          setCompareDocumentElements(data);
-        } catch (error) {
-          console.error('Error fetching compare elements:', error);
-          setCompareError(error instanceof Error ? error.message : 'Unknown error');
-        } finally {
-          setIsLoadingCompare(false);
-        }
-      };
-      
-      fetchCompareElements();
-    } else {
-      // Clear compare elements when no compare document is selected
-      setCompareDocumentElements([]);
-      setCompareError(null);
-    }
-  }, [compareDocumentId]);
   
   // Sync URL hash to Redux (when URL changes)
   useEffect(() => {
@@ -174,13 +171,12 @@ const DocumentContentPanel: React.FC = () => {
     }
   }, [activeParagraphId]);
   
-  // Check if the document in Redux doesn't match the requested document and needs reload
+  // Cleanup comparison documents when component unmounts
   useEffect(() => {
-    if (numericDocumentId && currentDocumentIdFromRedux !== numericDocumentId && elementsStatus !== 'loading') {
-      console.log('Document ID mismatch, triggering reload');
-      dispatch(fetchDocumentElements(numericDocumentId));
-    }
-  }, [dispatch, numericDocumentId, currentDocumentIdFromRedux, elementsStatus]);
+    return () => {
+      dispatch(clearAllComparisonDocuments());
+    };
+  }, [dispatch]);
   
   // ANNOTATION HANDLING
   
@@ -190,8 +186,8 @@ const DocumentContentPanel: React.FC = () => {
   );
   
   const compareHoveredHighlightIds = useSelector(
-    (state: RootState) => compareDocumentId ? 
-      state.highlightRegistry.hoveredHighlightIds[compareDocumentId] || [] : 
+    (state: RootState) => selectedCompareDocumentId ? 
+      state.highlightRegistry.hoveredHighlightIds[selectedCompareDocumentId] || [] : 
       []
   );
   
@@ -236,8 +232,7 @@ const DocumentContentPanel: React.FC = () => {
   const handleCompareCollectionChange = (collectionId: number) => {
     setSelectedCompareCollection(collectionId);
     // Reset the compare document when changing collections
-    setCompareDocumentId(null);
-    setCompareDocumentElements([]);
+    setSelectedCompareDocumentId(null);
     
     // Fetch documents for this specific collection
     const fetchCompareCollectionDocuments = async () => {
@@ -269,15 +264,19 @@ const DocumentContentPanel: React.FC = () => {
   
   // Handle opening compare document
   const handleOpenCompare = (docId: number) => {
-    setCompareDocumentId(docId);
+    setSelectedCompareDocumentId(docId);
+    // Fetch the comparison document elements
+    dispatch(fetchComparisonDocumentElements(docId));
     setShowCompareView(true);
   };
   
   // Handle closing compare document
   const handleCloseCompare = () => {
     setShowCompareView(false);
-    setCompareDocumentId(null);
-    setCompareDocumentElements([]);
+    if (selectedCompareDocumentId) {
+      dispatch(removeComparisonDocument(selectedCompareDocumentId));
+      setSelectedCompareDocumentId(null);
+    }
   };
   
   // Toggle which document's annotations to show
@@ -333,7 +332,7 @@ const DocumentContentPanel: React.FC = () => {
               {selectedCompareCollection && (
                 <div className="document-selector-dropdown">
                   <select 
-                    value={compareDocumentId || ''}
+                    value={selectedCompareDocumentId || ''}
                     onChange={(e) => handleOpenCompare(Number(e.target.value))}
                     className="document-select"
                     disabled={isLoadingCompareCollection || compareDocuments.length === 0}
@@ -361,7 +360,7 @@ const DocumentContentPanel: React.FC = () => {
               )}
             </div>
             
-            {compareDocumentId && (
+            {selectedCompareDocumentId && (
               <button 
                 onClick={handleToggleAnnotationView}
                 className="annotation-toggle-button"
@@ -377,24 +376,24 @@ const DocumentContentPanel: React.FC = () => {
   
   // Render compare document content
   const renderCompareContent = () => {
-    if (!showCompareView || !compareDocumentId) {
+    if (!showCompareView || !selectedCompareDocumentId) {
       return null;
     }
     
-    if (isLoadingCompare) {
+    if (compareDocumentStatus === 'loading') {
       return <div className="loading-indicator">Loading compare document...</div>;
     }
     
-    if (compareError) {
+    if (compareDocumentStatus === 'failed') {
       return (
         <div className="error-message">
-          Error loading compare document: {compareError}
+          Error loading compare document: {compareDocumentError}
           <br />
           <button 
             onClick={() => {
-              setIsLoadingCompare(true);
-              // This will trigger a re-fetch since we depend on compareDocumentId and isLoadingCompare has changed
-              setTimeout(() => setCompareDocumentId(prev => prev), 100);
+              if (selectedCompareDocumentId) {
+                dispatch(fetchComparisonDocumentElements(selectedCompareDocumentId));
+              }
             }}
             className="retry-button"
           >
@@ -429,7 +428,7 @@ const DocumentContentPanel: React.FC = () => {
                 text={content.content.text}
                 paragraphId={paragraphId}
                 documentCollectionId={selectedCompareCollection || numericCollectionId}
-                documentId={compareDocumentId}
+                documentId={selectedCompareDocumentId}
               />
             </div>
           );
@@ -441,13 +440,13 @@ const DocumentContentPanel: React.FC = () => {
   // MAIN RENDER
   
   // Loading/Error states
-  if (elementsStatus === 'loading' && allElements.length === 0) {
+  if (mainDocumentStatus === 'loading' && mainDocumentElements.length === 0) {
     return <div className="loading-indicator">Loading document elements...</div>;
   }
-  if (elementsStatus === 'failed') {
+  if (mainDocumentStatus === 'failed') {
     return (
       <div className="error-message">
-        Error loading document: {elementsError}
+        Error loading document: {mainDocumentError}
         <br />
         <button 
           onClick={() => dispatch(fetchDocumentElements(numericDocumentId))}
@@ -460,17 +459,18 @@ const DocumentContentPanel: React.FC = () => {
   }
   
   // Check if the redux store has the correct document ID
-  const isCurrentDocumentLoaded = currentDocumentIdFromRedux === numericDocumentId;
+  const isCurrentDocumentLoaded = currentDocumentId === numericDocumentId;
   
   // Debug info
   console.log('Current document ID from params:', numericDocumentId);
-  console.log('Current document ID from Redux:', currentDocumentIdFromRedux);
+  console.log('Current document ID from Redux:', currentDocumentId);
   console.log('Is current document loaded:', isCurrentDocumentLoaded);
-  console.log('Elements count:', allElements.length);
+  console.log('Elements count:', mainDocumentElements.length);
   console.log('Compare collection documents:', compareCollectionDocuments.length);
+  console.log('Comparison document IDs:', comparisonDocumentIds);
   
   // If document is not loaded and not loading, show a message
-  if (!isCurrentDocumentLoaded && elementsStatus !== 'loading') {
+  if (!isCurrentDocumentLoaded && mainDocumentStatus !== 'loading') {
     return (
       <div className="document-view-container">
         {renderDocumentSelector()}
@@ -481,9 +481,6 @@ const DocumentContentPanel: React.FC = () => {
       </div>
     );
   }
-  
-// This shows the key changes needed for the component
-// Focus on the return statement where the document layout is defined
 
   return (
     <div className="document-view-container">
@@ -499,7 +496,7 @@ const DocumentContentPanel: React.FC = () => {
             )}
             
             {/* Only render elements if we're confident they're for the right document */}
-            {isCurrentDocumentLoaded && allElements.map((content) => {
+            {isCurrentDocumentLoaded && mainDocumentElements.map((content) => {
               const paragraphId = `DocumentElements/${content.id}`;
               return (
                 <div 
@@ -541,7 +538,7 @@ const DocumentContentPanel: React.FC = () => {
             documentId={
               activeAnnotationView === 'master' 
                 ? numericDocumentId 
-                : (compareDocumentId || numericDocumentId)
+                : (selectedCompareDocumentId || numericDocumentId)
             }
           />
           <AnnotationsSidebar
@@ -557,7 +554,7 @@ const DocumentContentPanel: React.FC = () => {
             documentId={
               activeAnnotationView === 'master' 
                 ? numericDocumentId 
-                : (compareDocumentId || numericDocumentId)
+                : (selectedCompareDocumentId || numericDocumentId)
             }
           />
         </div>
