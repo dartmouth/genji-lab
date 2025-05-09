@@ -41,19 +41,14 @@ export {
 
 export {
     fetchDocumentElements,
-    fetchComparisonDocumentElements,
     clearElements,
     setCurrentDocumentId,
-    addComparisonDocument,
-    removeComparisonDocument,
-    clearAllComparisonDocuments,
     selectElementsByDocumentId,
     selectDocumentStatusById,
     selectDocumentErrorById,
     selectCurrentDocumentId,
-    selectComparisonDocumentIds,
     // Legacy selectors for backward compatibility
-    selectAllDocumentElements,
-    selectDocumentElementsStatus,
-    selectDocumentElementsError
+    // selectAllDocumentElements,
+    // selectDocumentElementsStatus,
+    // selectDocumentElementsError
 } from './documentElementsSlice'

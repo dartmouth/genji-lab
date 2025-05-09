@@ -1,0 +1,40 @@
+/* src/styles/DocumentComparisonStyles.css */
+.document-comparison-container {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    gap: 1rem;
+  }
+  
+  /* Single document layout */
+  .single-document-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Two document layout (side by side) */
+  .multi-document-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  /* For more than 2 documents (2x2 grid) */
+  @media (min-width: 1200px) {
+    .multi-document-layout.four-panels {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+  }
+  
+  /* Document panel styling */
+  .document-panel-wrapper {
+    overflow: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: white;
+  }
+  
+  /* Shared annotation panel */
+  .shared-annotation-panel {
+    grid-column: 1 / -1;
+    border-top: 1px solid #e0e0e0;
+    padding: 1rem;
+  }

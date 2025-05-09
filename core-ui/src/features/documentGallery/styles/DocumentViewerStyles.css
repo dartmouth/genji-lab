@@ -1,0 +1,133 @@
+/* src/styles/DocumentViewerStyles.css */
+
+.document-content-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+  
+  .document-view-header {
+    display: flex;
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f5f5f5;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .back-button {
+    padding: 0.5rem 1rem;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .back-button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  /* Document management panel */
+  .document-management-panel {
+    flex: 1;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .document-management-panel h3 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
+  .document-management-panel h4 {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    color: #666;
+  }
+  
+  /* Document list */
+  .document-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 1rem 0;
+  }
+  
+  .document-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 3px;
+  }
+  
+  .document-title {
+    font-weight: 500;
+  }
+  
+  .remove-document-btn {
+    background-color: #ff5252;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .remove-document-btn:hover {
+    background-color: #ff3333;
+  }
+  
+  /* Add document controls */
+  .add-document-controls {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+  }
+  
+  .collection-selector,
+  .document-selector {
+    margin-bottom: 0.75rem;
+  }
+  
+  .collection-selector label,
+  .document-selector label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .collection-select,
+  .document-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  
+  /* No documents message */
+  .no-documents-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+    font-style: italic;
+  }
