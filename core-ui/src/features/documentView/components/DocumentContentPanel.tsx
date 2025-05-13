@@ -1,14 +1,11 @@
-// src/documentView/DocumentContentPanel.tsx
+// Updated DocumentContentPanel.tsx without sidebar handling
 import React, { useEffect } from 'react';
 import { 
   HighlightedText,
-  AnnotationsSidebar,
   MenuContext
 } from '.';
 import { 
   RootState, 
-  commentingAnnotations, 
-  scholarlyAnnotations,
   fetchDocumentElements,
   selectElementsByDocumentId,
   selectDocumentStatusById,
@@ -33,13 +30,11 @@ interface BaseDocumentElement {
 interface DocumentContentPanelProps {
   documentId: number;
   documentCollectionId: number;
-  showAnnotations?: boolean;
 }
 
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   documentId,
-  documentCollectionId,
-  showAnnotations = true
+  documentCollectionId
 }) => {
   // Redux
   const dispatch = useAppDispatch();
@@ -69,32 +64,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
       dispatch(fetchDocumentElements(documentId));
     }
   }, [dispatch, documentId]);
-  
-  // ANNOTATION HANDLING
-  
-  // Your selectors
-  const hoveredHighlightIds = useSelector(
-    (state: RootState) => state.highlightRegistry.hoveredHighlightIds[documentId] || []
-  );
-  
-  const makeSelectAnnotationsById = React.useMemo(
-    () => commentingAnnotations.selectors.makeSelectAnnotationsById(),
-    []
-  );
-  const makeSelectScholarlyAnnotationsById = React.useMemo(
-    () => scholarlyAnnotations.selectors.makeSelectAnnotationsById(),
-    []
-  );
-  
-  // Document annotations
-  const hoveredAnnotations = useSelector(
-    (state: RootState) => makeSelectAnnotationsById(state, hoveredHighlightIds)
-  );
-  const hoveredScholarlyAnnotations = useSelector(
-    (state: RootState) => makeSelectScholarlyAnnotationsById(state, hoveredHighlightIds)
-  );
-  
-  // RENDER METHODS
   
   // MAIN RENDER
   
@@ -160,27 +129,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         
         <MenuContext/>
       </div>
-      
-      {showAnnotations && (
-        <div className="sidebars-container">
-          <AnnotationsSidebar
-            collapsedComments={false}
-            setCollapsedComments={() => {}}
-            hoveredAnnotations={hoveredScholarlyAnnotations}
-            motivation='scholarly'
-            position='left'
-            documentId={documentId}
-          />
-          <AnnotationsSidebar
-            collapsedComments={false}
-            setCollapsedComments={() => {}}
-            hoveredAnnotations={hoveredAnnotations}
-            motivation='commenting'
-            position='right'
-            documentId={documentId}
-          />
-        </div>
-      )}
     </div>
   );
 };

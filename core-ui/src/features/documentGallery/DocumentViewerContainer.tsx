@@ -7,7 +7,7 @@ import {
   fetchDocumentsByCollection,
   fetchDocumentCollections,
   selectAllDocuments,
-  selectAllDocumentCollections // Uncommented this import
+  selectAllDocumentCollections
 } from "@store";
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
@@ -65,13 +65,18 @@ export const DocumentsView: React.FC = () => {
   );
 };
 
+// Modified DocumentContentView component with collapsible management panel and view modes
 export const DocumentContentView: React.FC = () => {
   const { collectionId, documentId } = useParams<{ collectionId: string; documentId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
-  // State to track the documents being viewed
-  const [viewedDocuments, setViewedDocuments] = useState<Array<{id: number, collectionId: number}>>([]);
+  // State to track the documents being viewed - NOW INCLUDES TITLE
+  const [viewedDocuments, setViewedDocuments] = useState<Array<{
+    id: number, 
+    collectionId: number,
+    title: string  // Added title field
+  }>>([]);
   
   // Track documents by collection to handle the API response structure
   const [documentsByCollection, setDocumentsByCollection] = useState<{
@@ -91,6 +96,12 @@ export const DocumentContentView: React.FC = () => {
   
   // State for document selection dropdown
   const [selectedCollectionId, setSelectedCollectionId] = useState<number>(Number(collectionId));
+  
+  // State for management panel collapse
+  const [isManagementPanelCollapsed, setIsManagementPanelCollapsed] = useState(false);
+  
+  // State for view mode (reading vs annotations)
+  const [viewMode, setViewMode] = useState<'reading' | 'annotations'>('reading');
   
   // Fetch document collections when component mounts
   useEffect(() => {
@@ -147,23 +158,47 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [selectedCollectionId, collectionId, documentsByCollection, dispatch]);
   
-  // Set up initial document view when params change
+  // Helper function to get document title
+  const getDocumentTitle = (docId: number, docCollectionId: number): string => {
+    // First try to find the document in our documentsByCollection cache
+    const docInCache = documentsByCollection[docCollectionId]?.find(d => d.id === docId);
+    
+    // If not found, try to find it in the Redux store
+    if (docInCache) {
+      return docInCache.title;
+    }
+    
+    const docInRedux = documents.find(d => d.id === docId);
+    if (docInRedux) {
+      return docInRedux.title;
+    }
+    
+    // Fall back to a generic title
+    return `Document ${docId}`;
+  };
+  
+  // Set up initial document view when params change - NOW INCLUDES TITLE
   useEffect(() => {
     if (documentId && collectionId) {
+      const docId = Number(documentId);
+      const colId = Number(collectionId);
+      
       setViewedDocuments([{
-        id: Number(documentId),
-        collectionId: Number(collectionId)
+        id: docId,
+        collectionId: colId,
+        title: getDocumentTitle(docId, colId)
       }]);
     }
-  }, [documentId, collectionId]);
+  }, [documentId, collectionId, documentsByCollection, documents]);
   
-  // Handle adding a document for comparison
+  // Handle adding a document for comparison - NOW INCLUDES TITLE
   const handleAddComparisonDocument = (docId: number, docCollectionId: number) => {
     // Only add if not already being viewed
     if (!viewedDocuments.some(doc => doc.id === docId)) {
       setViewedDocuments(prev => [...prev, {
         id: docId,
-        collectionId: docCollectionId
+        collectionId: docCollectionId,
+        title: getDocumentTitle(docId, docCollectionId)
       }]);
     }
   };
@@ -189,14 +224,20 @@ export const DocumentContentView: React.FC = () => {
     setSelectedCollectionId(newCollectionId);
   };
   
+  // Toggle management panel collapsed state
+  const toggleManagementPanel = () => {
+    setIsManagementPanelCollapsed(!isManagementPanelCollapsed);
+  };
+  
+  // Handle view mode change
+  const handleViewModeChange = (mode: 'reading' | 'annotations') => {
+    setViewMode(mode);
+    console.log(`Switched to ${mode} mode`);
+  };
+  
   // Get available documents in the selected collection
   const availableInSelectedCollection = (documentsByCollection[selectedCollectionId] || [])
     .filter(doc => !viewedDocuments.some(viewedDoc => viewedDoc.id === doc.id));
-  
-  // Debug logs
-  console.log('Documents by collection:', documentsByCollection);
-  console.log('Selected collection ID:', selectedCollectionId);
-  console.log('Available documents:', availableInSelectedCollection);
   
   return (
     <div className="document-content-view">
@@ -208,29 +249,40 @@ export const DocumentContentView: React.FC = () => {
           ← Back to Documents
         </button>
         
-        {/* Document management controls */}
-        <div className="document-management-panel">
+      {/* Document management panel with collapsible functionality */}
+      <div className={`document-management-panel ${isManagementPanelCollapsed ? 'collapsed' : ''}`}>
+        <div className="panel-header" onClick={toggleManagementPanel}>
           <h3>Document Comparison</h3>
-          
-          {/* Currently viewed documents */}
-          <div className="viewed-documents">
-            <h4>Currently Viewing:</h4>
-            <ul className="document-list">
-              {viewedDocuments.map(doc => {
-                // First try to find the document in our documentsByCollection cache
-                let docDetails = documentsByCollection[doc.collectionId]?.find(d => d.id === doc.id);
-                
-                // If not found, try to find it in the Redux store
-                if (!docDetails) {
-                  const reduxDoc = documents.find(d => d.id === doc.id);
-                  if (reduxDoc) {
-                    docDetails = { id: reduxDoc.id, title: reduxDoc.title };
-                  }
-                }
-                
-                return (
+          <button className="collapse-toggle" aria-label="Toggle panel">
+            {isManagementPanelCollapsed ? '▼' : '▲'}
+          </button>
+        </div>
+        
+        {!isManagementPanelCollapsed && (
+          <div className="panel-content">
+            {/* More compact view mode toggle buttons */}
+            <div className="view-mode-toggle">
+              <button 
+                className={`mode-button ${viewMode === 'reading' ? 'active' : ''}`}
+                onClick={() => handleViewModeChange('reading')}
+              >
+                <span className="icon">📖</span> Reading
+              </button>
+              <button 
+                className={`mode-button ${viewMode === 'annotations' ? 'active' : ''}`}
+                onClick={() => handleViewModeChange('annotations')}
+              >
+                <span className="icon">💬</span> Annotations
+              </button>
+            </div>
+            
+            {/* Viewed documents section with compact styling */}
+            <div className="viewed-documents">
+              <h4>Currently Viewing:</h4>
+              <ul className="document-list">
+                {viewedDocuments.map(doc => (
                   <li key={doc.id} className="document-item">
-                    <span className="document-title">{docDetails?.title || `Document ${doc.id}`}</span>
+                    <span className="document-title">{doc.title}</span>
                     <button 
                       onClick={() => handleRemoveDocument(doc.id)}
                       className="remove-document-btn"
@@ -239,84 +291,90 @@ export const DocumentContentView: React.FC = () => {
                       ×
                     </button>
                   </li>
-                );
-              })}
-            </ul>
-          </div>
-          
-          {/* Add document controls (only show if fewer than 2 documents are being viewed) */}
-          {viewedDocuments.length < 2 && (
-            <div className="add-document-controls">
-              <h4>Add Document for Comparison:</h4>
-              
-              {/* Collection selector */}
-              <div className="collection-selector">
-                <label htmlFor="collection-select">Collection:</label>
-                <select 
-                  id="collection-select"
-                  value={selectedCollectionId}
-                  onChange={handleCollectionChange}
-                  className="collection-select"
-                >
-                  {documentCollections.map(collection => (
-                    <option key={collection.id} value={collection.id}>
-                      {collection.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Document selector */}
-              <div className="document-selector">
-                <label htmlFor="document-select">Document:</label>
-                <select 
-                  id="document-select"
-                  onChange={(e) => {
-                    const selectedId = Number(e.target.value);
-                    if (selectedId) {
-                      handleAddComparisonDocument(
-                        selectedId, 
-                        selectedCollectionId
-                      );
-                    }
-                  }}
-                  value=""
-                  className="document-select"
-                  disabled={isLoadingDocuments || availableInSelectedCollection.length === 0}
-                >
-                  {isLoadingDocuments ? (
-                    <option value="">Loading documents...</option>
-                  ) : (
-                    <>
-                      <option value="">
-                        {availableInSelectedCollection.length === 0 
-                          ? "No other documents available" 
-                          : "Select a document to compare"}
-                      </option>
-                      {availableInSelectedCollection.map(doc => (
-                        <option key={doc.id} value={doc.id}>
-                          {doc.title || `Document ${doc.id}`}
-                        </option>
-                      ))}
-                    </>
-                  )}
-                </select>
-              </div>
-              
-              {/* Debug info */}
-              <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
-                Collection: {selectedCollectionId} | 
-                Documents: {documentsByCollection[selectedCollectionId]?.length || 0} | 
-                Available: {availableInSelectedCollection.length}
-              </div>
+                ))}
+              </ul>
             </div>
-          )}
-        </div>
+            
+            {/* More compact add document controls */}
+            {viewedDocuments.length < 2 && (
+              <div className="add-document-controls">
+                <h4>Add Document for Comparison:</h4>
+                
+                <div className="collection-selector">
+                  <label htmlFor="collection-select">Collection:</label>
+                  <select 
+                    id="collection-select"
+                    value={selectedCollectionId}
+                    onChange={handleCollectionChange}
+                    className="collection-select"
+                  >
+                    {documentCollections.map(collection => (
+                      <option key={collection.id} value={collection.id}>
+                        {collection.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="document-selector">
+                  <label htmlFor="document-select">Document:</label>
+                  <select 
+                    id="document-select"
+                    onChange={(e) => {
+                      const selectedId = Number(e.target.value);
+                      if (selectedId) {
+                        handleAddComparisonDocument(selectedId, selectedCollectionId);
+                      }
+                    }}
+                    value=""
+                    className="document-select"
+                    disabled={isLoadingDocuments || availableInSelectedCollection.length === 0}
+                  >
+                    {isLoadingDocuments ? (
+                      <option value="">Loading...</option>
+                    ) : (
+                      <>
+                        <option value="">
+                          {availableInSelectedCollection.length === 0 
+                            ? "No other documents available" 
+                            : "Select a document"}
+                        </option>
+                        {availableInSelectedCollection.map(doc => (
+                          <option key={doc.id} value={doc.id}>
+                            {doc.title || `Document ${doc.id}`}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                </div>
+                
+                {/* Hidden by default, only show when expanded */}
+                <div className="debug-info" style={{ display: 'none' }}>
+                  <details>
+                    <summary>Debug Information</summary>
+                    <div className="debug-content">
+                      Collection: {selectedCollectionId} | 
+                      Documents: {documentsByCollection[selectedCollectionId]?.length || 0} | 
+                      Available: {availableInSelectedCollection.length}
+                    </div>
+                  </details>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       </div>
       
+            
       {/* Document content area */}
       {viewedDocuments.length > 0 ? (
-        <DocumentComparisonContainer documents={viewedDocuments} />
+        <DocumentComparisonContainer 
+          documents={viewedDocuments} // Now includes title
+          viewMode={viewMode}
+          handleViewModeChange={handleViewModeChange}
+        />
       ) : (
         <div className="no-documents-message">
           No documents selected for viewing

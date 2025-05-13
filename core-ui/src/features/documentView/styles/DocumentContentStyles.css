@@ -202,3 +202,33 @@
     scroll-margin-top: 120px;
   }
 }
+
+/* Style highlight colors based on annotation type */
+.highlight.commenting {
+  background-color: rgba(79, 170, 232, 0.2); /* Light blue */
+  border-bottom: 2px solid #4faae8;
+}
+
+.highlight.scholarly {
+  background-color: rgba(247, 209, 84, 0.2); /* Light gold */
+  border-bottom: 2px solid #f7d154;
+}
+
+/* Hover states */
+.highlight.commenting:hover {
+  background-color: rgba(79, 170, 232, 0.4); /* Darker blue on hover */
+}
+
+.highlight.scholarly:hover {
+  background-color: rgba(247, 209, 84, 0.4); /* Darker gold on hover */
+}
+
+/* Add a star for scholarly annotations */
+.highlight.scholarly::after {
+  content: "★"; /* Star character */
+  font-size: 8px;
+  position: relative;
+  top: -8px;
+  color: #cc8800;
+  margin-left: 2px;
+}

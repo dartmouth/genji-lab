@@ -41,6 +41,16 @@ const AnnotationsSidebar: React.FC<AnnotationsSidebarProps> = ({
     }
   };
 
+  // Add this to your AnnotationsSidebar component
+console.log(`AnnotationsSidebar (${motivation}) render:`, {
+  position, 
+  collapsedComments, 
+  hoveredAnnotations: hoveredAnnotations.length,
+});
+
+// Also add this to your toggle button click handler
+console.log(`Toggle clicked in ${motivation} sidebar. Current: ${collapsedComments}, Will be: ${!collapsedComments}`);
+
   return (
     <div className={`sidebar position-${position}`}>
       <div 
