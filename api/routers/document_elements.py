@@ -331,4 +331,41 @@ def get_elements_by_document(
     
     return elements
 
+from fastapi import UploadFile, File
+from fastapi.responses import JSONResponse
+from io import BytesIO
+import docx
+from routers.test import extract_paragraphs
 
+@router.post("/upload-word-doc", status_code=status.HTTP_201_CREATED)
+def upload_word_doc(file: UploadFile=File(...), document_collection_id: int = 1, document_number: int = 1):
+    if not file.filename.endswith('.docx'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be a .docx document"
+        )
+    
+    try:
+        contents = file.file.read()
+        doc = docx.Document(BytesIO(contents))
+        paragraph_count = len(doc.paragraphs)
+        # Extract paragraphs and other information
+        text = extract_paragraphs(doc, document_collection_id, document_number)
+
+
+
+
+        return JSONResponse(
+            content={
+                "filename": file.filename,
+                "paragraph_count": paragraph_count,
+                "message": "File processed successfully",
+                "text": text
+            },
+            status_code=status.HTTP_201_CREATED
+        )
+    except Exception as e:
+       raise HTTPException(
+           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+           detail=f"Error processing file: {e}"
+       )
