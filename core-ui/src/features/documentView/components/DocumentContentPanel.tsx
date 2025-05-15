@@ -10,7 +10,7 @@ import {
   selectElementsByDocumentId,
   selectDocumentStatusById,
   selectDocumentErrorById,
-  selectAllDocuments,
+  // selectAllDocuments,
 } from '@store';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@store/hooks';
@@ -53,8 +53,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   );
   
   // Get all documents to find the current document title
-  const documents = useSelector(selectAllDocuments);
-  const currentDocument = documents.find(doc => doc.id === documentId);
+  // const documents = useSelector(selectAllDocuments);
+  // const currentDocument = documents.find(doc => doc.id === documentId);
   
   // FETCH DATA
   
@@ -104,10 +104,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
 
   return (
     <div className="document-panel">
-      {currentDocument && (
-        <h2 className="document-title">{currentDocument.title}</h2>
-      )}
-      
       <div className="document-content-container">
         {documentElements.map((content) => {
           const paragraphId = `DocumentElements/${content.id}`;

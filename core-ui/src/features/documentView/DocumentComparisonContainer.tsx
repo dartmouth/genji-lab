@@ -16,7 +16,7 @@ type AnnotationPanelPosition = 'bottom' | 'right' | 'left';
 interface DocumentProps {
   id: number;
   collectionId: number;
-  title: string; // Now required
+  title: string; 
 }
 
 interface DocumentComparisonContainerProps {
@@ -157,6 +157,25 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
     }
   }, [hoveredAnnotations, showingHoveredAnnotations]);
   
+  // For sticky header shadow effect when scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      const titleHeaders = document.querySelectorAll('.document-title-header');
+      titleHeaders.forEach(header => {
+        if (header.getBoundingClientRect().top <= 0) {
+          header.classList.add('scrolled');
+        } else {
+          header.classList.remove('scrolled');
+        }
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+  
   // Handle document focus/hover
   const handleDocumentFocus = (docId: number) => {
     setActiveDocumentId(docId);
@@ -208,10 +227,21 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
               className={`document-panel-wrapper panel-${index} ${doc.id === activeDocumentId ? 'active' : ''}`}
               onMouseEnter={() => handleDocumentFocus(doc.id)}
             >
-              <DocumentContentPanel
-                documentId={doc.id}
-                documentCollectionId={doc.collectionId}
-              />
+              {/* Document title header */}
+              <div className="document-title-header">
+                <h2>
+                  <span className="color-indicator" style={{ backgroundColor: documentColors[doc.id] }} />
+                  {doc.title}
+                </h2>
+              </div>
+              
+              {/* Document content panel */}
+              <div className="document-content-panel">
+                <DocumentContentPanel
+                  documentId={doc.id}
+                  documentCollectionId={doc.collectionId}
+                />
+              </div>
             </div>
           ))}
         </div>

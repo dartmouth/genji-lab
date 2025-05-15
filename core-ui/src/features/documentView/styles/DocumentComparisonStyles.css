@@ -86,12 +86,14 @@
 
 /* When annotations panel is at right */
 .documents-container.with-annotations-panel.position-right {
-  width: 70%;
+  width: 75%; /* Increase from 70% to 75% */
+  padding-right: 0; /* Remove padding */
 }
 
 /* When annotations panel is at left */
 .documents-container.with-annotations-panel.position-left {
-  width: 70%;
+  width: 75%; /* Increase from 70% to 75% */
+  padding-left: 0; /* Remove padding */
   order: 2; /* Move documents to the right when panel is on left */
 }
 
@@ -101,6 +103,49 @@
   overflow-y: auto;
   position: relative;
   transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Document Title Header */
+.document-title-header {
+  padding: 10px 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e2e6ea;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Add shadow when scrolled */
+.document-title-header.scrolled {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Document Title Styling */
+.document-title-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+.document-title-header .color-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+/* Document Content Panel */
+.document-content-panel {
+  flex: 1;
+  overflow-y: auto;
 }
 
 /* Add subtle indication of active document in multi-document view */
@@ -138,7 +183,7 @@
   position: sticky;
   top: 0;
   right: 0;
-  width: 30%;
+  width: 25%; /* Reduce from 30% to 25% */
   height: 100vh; /* Use viewport height for full height stickiness */
   border-left: 2px solid #e0e0e0;
   z-index: 100;
@@ -148,7 +193,7 @@
   position: sticky;
   top: 0;
   left: 0;
-  width: 30%;
+  width: 25%; /* Reduce from 30% to 25% */
   height: 100vh; /* Use viewport height for full height stickiness */
   border-right: 2px solid #e0e0e0;
   order: 1; /* Move panel to the left when position is left */
@@ -180,6 +225,21 @@
 .annotations-mode {
   display: flex;
   flex-direction: column;
+}
+
+/* Customize title headers based on document colors */
+.document-panel-wrapper .document-title-header {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Multi-document layout specific styles */
+.multi-document-layout .document-panel-wrapper {
+  margin-bottom: 0;
+}
+
+.multi-document-layout .document-title-header {
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
 }
 
 /* Responsive adjustments for smaller screens */
@@ -224,5 +284,10 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+  
+  /* Adjust document title header for mobile */
+  .document-title-header h2 {
+    font-size: 14px;
   }
 }

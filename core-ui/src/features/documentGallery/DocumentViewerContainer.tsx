@@ -232,7 +232,6 @@ export const DocumentContentView: React.FC = () => {
   // Handle view mode change
   const handleViewModeChange = (mode: 'reading' | 'annotations') => {
     setViewMode(mode);
-    console.log(`Switched to ${mode} mode`);
   };
   
   // Get available documents in the selected collection
