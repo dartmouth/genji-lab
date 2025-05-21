@@ -19,8 +19,7 @@ interface HighlightProps {
     id,
     position,
     annotationId,
-    motivation,
-    // color = '#c4dd88'
+    motivation
   }) => {
     const color = motivation == 'commenting' ? '#c4dd88' : '#abf7ff'
     const dispatch = useDispatch();

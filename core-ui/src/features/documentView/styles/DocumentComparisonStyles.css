@@ -1,0 +1,293 @@
+/* src/documentView/styles/DocumentComparisonStyles.css */
+
+.document-comparison-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Annotation Panel Controls */
+.annotation-panel-controls {
+  padding: 8px 16px;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+  z-index: 10;
+}
+
+.panel-position-toggle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.toggle-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-buttons label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  border: 1px solid #ddd;
+  background-color: #fff;
+}
+
+.toggle-buttons label:hover {
+  background-color: #f5f5f5;
+}
+
+.toggle-buttons label.active {
+  background-color: #e6f4ff;
+  border-color: #007bff;
+  color: #0066cc;
+}
+
+.toggle-buttons input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Container for main content and annotations */
+.content-and-annotations-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Documents Container */
+.documents-container {
+  flex: 1;
+  display: flex;
+  overflow: auto;
+  position: relative;
+  transition: all 0.3s ease; /* Add transition for smooth changes */
+}
+
+/* When annotations panel is at bottom */
+.documents-container.with-annotations-panel.position-bottom {
+  height: 60%;
+}
+
+/* When annotations panel is at right */
+.documents-container.with-annotations-panel.position-right {
+  width: 75%; /* Increase from 70% to 75% */
+  padding-right: 0; /* Remove padding */
+}
+
+/* When annotations panel is at left */
+.documents-container.with-annotations-panel.position-left {
+  width: 75%; /* Increase from 70% to 75% */
+  padding-left: 0; /* Remove padding */
+  order: 2; /* Move documents to the right when panel is on left */
+}
+
+/* Document Panel Layout */
+.document-panel-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  transition: background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Document Title Header */
+.document-title-header {
+  padding: 10px 16px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e2e6ea;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Add shadow when scrolled */
+.document-title-header.scrolled {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Document Title Styling */
+.document-title-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+.document-title-header .color-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+/* Document Content Panel */
+.document-content-panel {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Add subtle indication of active document in multi-document view */
+.multi-document-layout .document-panel-wrapper.active {
+  background-color: rgba(0, 123, 255, 0.05);
+  box-shadow: inset 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+/* Divider between documents in multi-document view */
+.multi-document-layout .document-panel-wrapper:not(:last-child) {
+  border-right: 1px solid #e0e0e0;
+}
+
+/* Annotations Panel Container */
+.annotations-panel-container {
+  background-color: #f5f5f5;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease; /* Add transition for smooth changes */
+}
+
+/* Sticky positioning for all panel positions */
+.annotations-panel-container.position-bottom {
+  position: sticky;
+  bottom: 0;
+  height: 40%;
+  width: 100%;
+  border-top: 2px solid #e0e0e0;
+  z-index: 100; /* Ensure it stays above other content */
+}
+
+.annotations-panel-container.position-right {
+  position: sticky;
+  top: 0;
+  right: 0;
+  width: 25%; /* Reduce from 30% to 25% */
+  height: 100vh; /* Use viewport height for full height stickiness */
+  border-left: 2px solid #e0e0e0;
+  z-index: 100;
+}
+
+.annotations-panel-container.position-left {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 25%; /* Reduce from 30% to 25% */
+  height: 100vh; /* Use viewport height for full height stickiness */
+  border-right: 2px solid #e0e0e0;
+  order: 1; /* Move panel to the left when position is left */
+  z-index: 100;
+}
+
+/* For panel in bottom position, modify the content-and-annotations-container */
+.panel-position-bottom .content-and-annotations-container {
+  flex-direction: column;
+}
+
+/* For panel in left or right position, keep the content-and-annotations-container as row */
+.panel-position-left .content-and-annotations-container,
+.panel-position-right .content-and-annotations-container {
+  flex-direction: row;
+}
+
+/* Reading Mode */
+.reading-mode .documents-container {
+  height: 100%;
+  width: 100%;
+}
+
+.reading-mode .annotations-panel-container {
+  display: none;
+}
+
+/* Annotations Mode */
+.annotations-mode {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Customize title headers based on document colors */
+.document-panel-wrapper .document-title-header {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Multi-document layout specific styles */
+.multi-document-layout .document-panel-wrapper {
+  margin-bottom: 0;
+}
+
+.multi-document-layout .document-title-header {
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  /* For mobile, always use bottom position for annotations regardless of setting */
+  .content-and-annotations-container {
+    flex-direction: column !important;
+  }
+  
+  .documents-container {
+    width: 100% !important;
+    order: 1 !important;
+  }
+  
+  .annotations-panel-container {
+    position: sticky !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 40% !important;
+    order: 2 !important;
+    border-top: 2px solid #e0e0e0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+  
+  /* Stack multiple documents vertically on mobile */
+  .multi-document-layout .documents-container {
+    flex-direction: column;
+  }
+  
+  .multi-document-layout .document-panel-wrapper {
+    max-height: 50vh;
+    border-right: none;
+  }
+  
+  .multi-document-layout .document-panel-wrapper:not(:last-child) {
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  /* Simplify panel position toggle on mobile */
+  .panel-position-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  /* Adjust document title header for mobile */
+  .document-title-header h2 {
+    font-size: 14px;
+  }
+}

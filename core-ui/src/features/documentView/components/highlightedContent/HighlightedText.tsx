@@ -1,5 +1,7 @@
+// src/documentView/components/HighlightedText.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import Highlight from './Highlight';
+import AnnotationCreationDialog from '../annotationCard/AnnotationCreationDialog';
 import { parseURI } from '@documentView/utils';
 import { debounce } from 'lodash';
 import { TextFormatting } from '@documentView/types'
@@ -15,7 +17,8 @@ import {
   selectAllAnnotationsForParagraph, 
   initSelection as initRedux,
   addSelectionSegment,
-  completeSelection as completeSelectionRedux
+  completeSelection as completeSelectionRedux,
+  selectAnnotationCreate
 } from '@store';
 
 import { fetchAnnotationByMotivation } from '@store'
@@ -41,7 +44,13 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
-  const notFetched = useRef(true)
+  const notFetched = useRef(true);
+
+  // Add state for dialog visibility
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Get the current annotation creation state to check if we need to show the dialog
+  const annotationCreate = useAppSelector(selectAnnotationCreate);
 
   const { isVisible, shouldPrefetch } = useVisibilityWithPrefetch(containerRef);
   
@@ -56,9 +65,20 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     selectAllAnnotationsForParagraph(state, paragraphId)
   );
 
+  // Check if we need to show the dialog when annotation creation state changes
+  useEffect(() => {
+    if (annotationCreate && annotationCreate.motivation && 
+        annotationCreate.target.segments.some(seg => seg.sourceURI === paragraphId)) {
+      setIsDialogOpen(true);
+    }
+  }, [annotationCreate, paragraphId]);
+
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
+
+  console.log(`Paragraph ${paragraphId} is visible (${isVisible}) or should prefetch (${shouldPrefetch})`)
+
       dispatch(fetchAnnotationByMotivation(parseURI(paragraphId) as unknown as number))
     }
   }, [dispatch, paragraphId, isVisible, shouldPrefetch]);
@@ -140,7 +160,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       setIsSelectionStart(false);
     }
     
-      updateSelectionSegment(selection);
+    updateSelectionSegment(selection);
   };
   
   // Helper to update the current paragraph's segment in a multi-paragraph selection
@@ -256,46 +276,55 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allAnnotations]);
-  // console.log(format)
+
+  // Handler to close the dialog
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+  };
+
   return (
-    <div 
-      id={`DocumentElements/${paragraphId}`}
-      ref={containerRef} 
-      // className={`annotatable-paragraph ${isSegmentSelected(paragraphId) ? 'has-selection' : ''}`}
-      className={`annotatable-paragraph`}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseMove={debouncedHandleMouseMove}
-      style={{ 
+    <>
+      <div 
+        id={`DocumentElements/${paragraphId}`}
+        ref={containerRef} 
+        className={`annotatable-paragraph`}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseMove={debouncedHandleMouseMove}
+        style={{ 
         position: 'relative',
         textIndent: format.first_line_indent ? `${format.first_line_indent}in` : '0',
         paddingLeft: format.left_indent ? `${format.left_indent}in` : '0',
         textAlign: format.alignment || 'left',
         writingMode: 'horizontal-tb'
        }}
-    >
-      {text}
-      
-      
-      {/* Render highlight containers */}
-      {Array.from(highlightPositions.entries()).map(([annotationId, position_elems]) => (
-        <div 
-          key={annotationId}
-          className={`highlight-container-${annotationId}`}
-          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 1 }}
-        >
-          {position_elems.positions.map((position, index) => (
-            <Highlight
-              key={`${annotationId}-${index}`}
-              motivation={position_elems.motivation}
-              id={`highlight-${annotationId}`}
-              annotationId={`${annotationId}`}
-              position={position}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
+      >
+        {text}
+        
+        {/* Render highlight containers */}
+        {Array.from(highlightPositions.entries()).map(([annotationId, position_elems]) => (
+          <div 
+            key={annotationId}
+            className={`highlight-container-${annotationId}`}
+            style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 1 }}
+          >
+            {position_elems.positions.map((position, index) => (
+              <Highlight
+                key={`${annotationId}-${index}`}
+                motivation={position_elems.motivation}
+                id={`highlight-${annotationId}`}
+                annotationId={`${annotationId}`}
+                position={position}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Render annotation creation dialog if open */}
+      {isDialogOpen && <AnnotationCreationDialog onClose={handleCloseDialog} />}
+    </>
+
   );
 };
 

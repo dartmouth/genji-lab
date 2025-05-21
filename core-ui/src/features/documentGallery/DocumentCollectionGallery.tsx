@@ -32,7 +32,6 @@ const DocumentCollectionGallery: React.FC<DocumentCollectionGalleryProps> = ({
 
   const handleCollectionClick = (collectionId: number) => {
     dispatch(setSelectedCollectionId(collectionId));
-    console.log(`Collection ${collectionId} selected`);
     if (onCollectionSelect) {
       onCollectionSelect(collectionId);
     }

@@ -44,8 +44,12 @@ export {
     fetchDocumentElements,
     clearElements,
     setCurrentDocumentId,
-    selectAllDocumentElements,
-    selectDocumentElementsStatus,
-    selectDocumentElementsError,
-    selectCurrentDocumentId
+    selectElementsByDocumentId,
+    selectDocumentStatusById,
+    selectDocumentErrorById,
+    selectCurrentDocumentId,
+    // Legacy selectors for backward compatibility
+    // selectAllDocumentElements,
+    // selectDocumentElementsStatus,
+    // selectDocumentElementsError
 } from './documentElementsSlice'

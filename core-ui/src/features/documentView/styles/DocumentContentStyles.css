@@ -1,52 +1,234 @@
-/* DocumentContentStyles.css */
-  /* Styling for individual paragraphs */
-  .document-content {
-    padding: 0.75rem;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-    
-    /* Standard scroll margin for paragraphs */
-    scroll-margin-top: 100px;
-  }
-  
-  /* Special handling for the first paragraph */
-  .document-content:first-child {
-    scroll-margin-top: 150px; /* Extra large margin for first paragraph */
-  }
-  
-  /* Styling for active paragraph */
-  .document-content.active-paragraph {
-    background-color: rgba(0, 123, 255, 0.05);
-    border-left: 3px solid #007bff;
-  }
-  
-  /* Optional: Add a highlight animation for the target paragraph */
-  @keyframes highlight-fade {
-    0%, 20% { background-color: rgba(255, 230, 0, 0.2); }
-    100% { background-color: transparent; }
-  }
-  
-  .highlight-target {
-    animation: highlight-fade 3s ease;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .document-content {
-      padding: 0.5rem;
-      scroll-margin-top: 80px;
-    }
-    
-    .document-content:first-child {
-      scroll-margin-top: 120px;
-    }
-  }
+/* Document View Container */
+.document-view-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 
-  .document-title {
-    margin: 1rem 0 1.5rem;
-    padding-bottom: 0.75rem;
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #333;
-    border-bottom: 1px solid #e0e0e0;
+/* Document Content Panel Layout */
+.document-content-panel {
+  display: flex;
+  position: relative;
+  width: 100%;
+}
+
+.document-columns-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+/* Document Container Styling */
+.document-content-container, 
+.compare-content-container {
+  padding: 1rem;
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+  border: 1px solid #e0e0e0;
+  background-color: #ffffff;
+}
+
+.compare-content-container {
+  border-left: none;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Split View Layout */
+.document-content-panel.with-compare-view .document-content-container,
+.document-content-panel.with-compare-view .compare-content-container {
+  flex: 1;
+  max-width: 50%;
+}
+
+/* Document Title Styling */
+.document-title {
+  margin: 1rem 0 1.5rem;
+  padding-bottom: 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Styling for individual paragraphs */
+.document-content {
+  padding: 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  
+  /* Standard scroll margin for paragraphs */
+  scroll-margin-top: 100px;
+}
+
+/* Special handling for the first paragraph */
+.document-content:first-child {
+  scroll-margin-top: 150px; /* Extra large margin for first paragraph */
+}
+
+/* Styling for active paragraph */
+.document-content.active-paragraph {
+  background-color: rgba(0, 123, 255, 0.05);
+  border-left: 3px solid #007bff;
+}
+
+/* Highlight animations */
+@keyframes highlight-fade {
+  0%, 20% { background-color: rgba(255, 230, 0, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.highlight-target {
+  animation: highlight-fade 3s ease;
+}
+
+/* Document Selector & Compare View Controls */
+.document-compare-selector {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  flex-wrap: wrap;
+}
+
+.document-selector-controls {
+  display: flex;
+  flex: 1;
+  margin: 0 1rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.collection-selector-dropdown,
+.document-selector-dropdown {
+  flex: 1;
+  min-width: 200px;
+}
+
+.collection-select,
+.document-select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.collection-select {
+  background-color: #f8f8f8;
+  border-color: #bbb;
+}
+
+.document-select:disabled {
+  background-color: #e9e9e9;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.compare-toggle-button,
+.annotation-toggle-button {
+  padding: 0.5rem 1rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.compare-toggle-button:hover,
+.annotation-toggle-button:hover {
+  background-color: #3a80d2;
+}
+
+.annotation-toggle-button {
+  margin-left: auto;
+  background-color: #6c757d;
+}
+
+.annotation-toggle-button:hover {
+  background-color: #5a6268;
+}
+
+/* Sidebars container */
+.sidebars-container {
+  display: flex;
+  position: sticky;
+  top: 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .document-columns-container {
+    flex-direction: column;
+  }
+  
+  .document-content-panel.with-compare-view .document-content-container,
+  .document-content-panel.with-compare-view .compare-content-container {
+    max-width: 100%;
+  }
+  
+  .document-compare-selector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .document-selector-controls {
+    flex-direction: column;
+    margin: 0.5rem 0;
+    width: 100%;
+  }
+  
+  .collection-selector-dropdown,
+  .document-selector-dropdown {
+    width: 100%;
+    margin: 0.25rem 0;
+  }
+  
+  .annotation-toggle-button {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+  
+  .document-content {
+    padding: 0.5rem;
+    scroll-margin-top: 80px;
+  }
+  
+  .document-content:first-child {
+    scroll-margin-top: 120px;
+  }
+}
+
+/* Style highlight colors based on annotation type */
+.highlight.commenting {
+  background-color: rgba(79, 170, 232, 0.2); /* Light blue */
+  border-bottom: 2px solid #4faae8;
+}
+
+.highlight.scholarly {
+  background-color: rgba(247, 209, 84, 0.2); /* Light gold */
+  border-bottom: 2px solid #f7d154;
+}
+
+/* Hover states */
+.highlight.commenting:hover {
+  background-color: rgba(79, 170, 232, 0.4); /* Darker blue on hover */
+}
+
+.highlight.scholarly:hover {
+  background-color: rgba(247, 209, 84, 0.4); /* Darker gold on hover */
+}
+
+/* Add a star for scholarly annotations */
+.highlight.scholarly::after {
+  content: "★"; /* Star character */
+  font-size: 8px;
+  position: relative;
+  top: -8px;
+  color: #cc8800;
+  margin-left: 2px;
 }
