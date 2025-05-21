@@ -9,7 +9,7 @@ import '../styles/TabbedAnnotationsPanel.css';
 
 import { Annotation } from "@documentView/types/annotation";
 
-import { TagList, TagInput } from '@documentView/components';
+import { TagInput } from '@documentView/components';
 import { AnnotationEditor, ReplyForm } from '.';
 
 export type AnnotationType = 'commenting' | 'scholarly' | 'replying' | 'tagging' | 'upvoting' | 'flagging';
