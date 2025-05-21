@@ -14,12 +14,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 # Function to create schema if it doesn't exist
-def create_schema():
-    schema_name = os.environ.get("DB_SCHEMA")
-    sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name};")
-    with engine.connect() as conn:
-        conn.execute(sql)
-        conn.commit()
+# def create_schema():
+#     schema_name = os.environ.get("DB_SCHEMA")
+#     sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name};")
+#     with engine.connect() as conn:
+#         conn.execute(sql)
+#         conn.commit()
 
 # Dependency to get DB session
 def get_db():

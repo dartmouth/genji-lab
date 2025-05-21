@@ -1,5 +1,6 @@
 // store/highlightRegistrySlice.ts
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createSelector, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '@store';
 
 // Define types
 export interface HighlightBoundingBox {
@@ -58,6 +59,12 @@ const highlightRegistrySlice = createSlice({
     },
   },
 });
+
+export const selectHoveredHighlightIds = createSelector(
+  [(state: RootState) => state.highlightRegistry.hoveredHighlightIds, 
+   (_state, documentId: number) => documentId],
+  (hoveredHighlightIds, documentId) => hoveredHighlightIds[documentId] || []
+);
 
 export const { 
   registerHighlight, 

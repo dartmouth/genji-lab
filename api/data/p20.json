@@ -1,0 +1,17 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 42
+  },
+  "content": {
+    "text": "“Even as I gaze on the empty, lifeless body of my child,” the mother said, “I cannot help thinking that she is still alive. So I shall watch as my precious daughter is turned to ash and smoke that I may resign myself to her passing.”",
+    "formatting": {
+      "left_indent": 0,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": []
+    }
+  }
+}

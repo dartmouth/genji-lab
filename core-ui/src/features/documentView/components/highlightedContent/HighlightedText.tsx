@@ -4,6 +4,7 @@ import Highlight from './Highlight';
 import AnnotationCreationDialog from '../annotationCard/AnnotationCreationDialog';
 import { parseURI } from '@documentView/utils';
 import { debounce } from 'lodash';
+import { TextFormatting } from '@documentView/types'
 
 import { useVisibilityWithPrefetch } from '@/hooks/useVisibilityWithPrefetch';
 
@@ -28,6 +29,7 @@ import {
 
 interface HighlightedTextProps {
   text: string;
+  format: TextFormatting,
   documentCollectionId: number;
   documentId: number;
   paragraphId: string;
@@ -35,6 +37,7 @@ interface HighlightedTextProps {
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
   text,
+  format,
   paragraphId,
   documentCollectionId,
   documentId,
@@ -73,7 +76,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
-      console.log(`Paragraph ${paragraphId} is visible (${isVisible}) or should prefetch (${shouldPrefetch})`)
+
+  console.log(`Paragraph ${paragraphId} is visible (${isVisible}) or should prefetch (${shouldPrefetch})`)
+
       dispatch(fetchAnnotationByMotivation(parseURI(paragraphId) as unknown as number))
     }
   }, [dispatch, paragraphId, isVisible, shouldPrefetch]);
@@ -286,7 +291,13 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={debouncedHandleMouseMove}
-        style={{ position: 'relative' }}
+        style={{ 
+        position: 'relative',
+        textIndent: format.first_line_indent ? `${format.first_line_indent}in` : '0',
+        paddingLeft: format.left_indent ? `${format.left_indent}in` : '0',
+        textAlign: format.alignment || 'left',
+        writingMode: 'horizontal-tb'
+       }}
       >
         {text}
         
@@ -313,6 +324,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       {/* Render annotation creation dialog if open */}
       {isDialogOpen && <AnnotationCreationDialog onClose={handleCloseDialog} />}
     </>
+
   );
 };
 

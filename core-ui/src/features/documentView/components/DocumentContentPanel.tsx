@@ -9,8 +9,7 @@ import {
   fetchDocumentElements,
   selectElementsByDocumentId,
   selectDocumentStatusById,
-  selectDocumentErrorById,
-  // selectAllDocuments,
+  selectDocumentErrorById
 } from '@store';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@store/hooks';
@@ -62,6 +61,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   useEffect(() => {
     if (documentId) {
       dispatch(fetchDocumentElements(documentId));
+
     }
   }, [dispatch, documentId]);
   
@@ -99,6 +99,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
           Retry Loading
         </button>
       </div>
+
     );
   }
 

@@ -2,7 +2,8 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import axios from 'axios';
 
-// API client setup
+import { DocumentElement } from '@/types';
+// API client setup (reusing the same configuration as in documentSlice)
 const api = axios.create({
   baseURL: '/api/v1',
   timeout: 10000,
@@ -16,6 +17,7 @@ export interface DocumentElement {
   };
   document_id: number;
 }
+
 
 interface DocumentElementsState {
   // Normalized state structure for multiple documents

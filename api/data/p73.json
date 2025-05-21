@@ -1,0 +1,25 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 135
+  },
+  "content": {
+    "text": "How could it shine clearly on that rustic hut",
+    "formatting": {
+      "left_indent": 0.5,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": [
+        {
+          "start": 0,
+          "end": 46,
+          "type": [
+            "italic"
+          ]
+        }
+      ]
+    }
+  }
+}

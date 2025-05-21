@@ -10,7 +10,8 @@ export {
     registerHighlight, 
     updateHighlightPosition, 
     removeHighlight,
-    setHoveredHighlights  
+    setHoveredHighlights ,
+    selectHoveredHighlightIds
 } from './highlightRegistrySlice' 
 
 export * from './annotationCreate'
