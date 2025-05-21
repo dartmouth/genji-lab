@@ -29,6 +29,12 @@ const AppHeader: React.FC = () => {
                 <div className="user-info">
                   {`Welcome, ${user.first_name} ${user.last_name}`}
                 </div>
+                <button className="admin-button" onClick={() => 
+                  window.open("/admin")}
+                >
+                  Administration
+                </button>
+                <br/><br/>
                 <button className="logout-button" onClick={() => {
                   toggleDropdown()
                   logout()

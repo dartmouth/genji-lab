@@ -4,4 +4,7 @@ uvicorn
 sqlalchemy 
 psycopg2-binary
 alembic
+python-docx
+python-multipart
 httpx
+
