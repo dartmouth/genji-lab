@@ -1,0 +1,25 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 203
+  },
+  "content": {
+    "text": "Our hearts as tightly as your son’s hair never fade",
+    "formatting": {
+      "left_indent": 0.5,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": [
+        {
+          "start": 0,
+          "end": 51,
+          "type": [
+            "italic"
+          ]
+        }
+      ]
+    }
+  }
+}

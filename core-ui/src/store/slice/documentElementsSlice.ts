@@ -1,8 +1,8 @@
-// store/slice/documentElementsSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import axios from 'axios';
 
+import { DocumentElement } from '@/types';
 // API client setup (reusing the same configuration as in documentSlice)
 const api = axios.create({
   baseURL: '/api/v1',
@@ -15,24 +15,36 @@ export interface DocumentElement {
   content: {
     text: string;
   };
+  document_id: number;
 }
 
+
 interface DocumentElementsState {
-  elements: DocumentElement[];
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | null;
+  // Normalized state structure for multiple documents
+  elementsByDocumentId: {
+    [documentId: number]: DocumentElement[];
+  };
+  // Track loading state for each document
+  documentStatus: {
+    [documentId: number]: 'idle' | 'loading' | 'succeeded' | 'failed';
+  };
+  // Track errors for each document
+  documentErrors: {
+    [documentId: number]: string | null;
+  };
+  // Primary document being viewed
   currentDocumentId: number | null;
 }
 
 // Initial state
 const initialState: DocumentElementsState = {
-  elements: [],
-  status: 'idle',
-  error: null,
+  elementsByDocumentId: {},
+  documentStatus: {},
+  documentErrors: {},
   currentDocumentId: null
 };
 
-// Thunk
+// Thunk for fetching elements for any document
 export const fetchDocumentElements = createAsyncThunk(
   'documentElements/fetchElements',
   async (documentId: number, { rejectWithValue }) => {
@@ -56,33 +68,61 @@ const documentElementsSlice = createSlice({
   name: 'documentElements',
   initialState,
   reducers: {
-    clearElements: (state) => {
-      state.elements = [];
-      state.status = 'idle';
-      state.currentDocumentId = null;
+    clearElements: (state, action: PayloadAction<number | undefined>) => {
+      // If documentId provided, clear just that document
+      if (action.payload !== undefined) {
+        const documentId = action.payload;
+        delete state.elementsByDocumentId[documentId];
+        delete state.documentStatus[documentId];
+        delete state.documentErrors[documentId];
+        
+        // If it's the current document, clear that too
+        if (state.currentDocumentId === documentId) {
+          state.currentDocumentId = null;
+        }
+      } else {
+        // Clear everything
+        state.elementsByDocumentId = {};
+        state.documentStatus = {};
+        state.documentErrors = {};
+        state.currentDocumentId = null;
+      }
     },
     setCurrentDocumentId: (state, action: PayloadAction<number | null>) => {
       state.currentDocumentId = action.payload;
-      if (action.payload === null) {
-        state.elements = [];
-        state.status = 'idle';
+      
+      // If setting to null, clear the elements for the current document
+      if (action.payload === null && state.currentDocumentId !== null) {
+        const oldDocumentId = state.currentDocumentId;
+        delete state.elementsByDocumentId[oldDocumentId];
+        delete state.documentStatus[oldDocumentId];
+        delete state.documentErrors[oldDocumentId];
       }
     }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchDocumentElements.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
+      // Handle document fetch
+      .addCase(fetchDocumentElements.pending, (state, action) => {
+        const documentId = action.meta.arg;
+        state.documentStatus[documentId] = 'loading';
+        state.documentErrors[documentId] = null;
       })
-      .addCase(fetchDocumentElements.fulfilled, (state, action: PayloadAction<{elements: DocumentElement[], documentId: number}>) => {
-        state.status = 'succeeded';
-        state.elements = action.payload.elements;
-        state.currentDocumentId = action.payload.documentId;
+      .addCase(fetchDocumentElements.fulfilled, (state, action) => {
+        const { elements, documentId } = action.payload;
+        state.elementsByDocumentId[documentId] = elements;
+        state.documentStatus[documentId] = 'succeeded';
+        
+        // Set currentDocumentId only if not already set
+        // This prevents comparison documents from becoming the main document
+        if (state.currentDocumentId === null) {
+          state.currentDocumentId = documentId;
+        }
       })
       .addCase(fetchDocumentElements.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload as string;
+        const documentId = action.meta.arg;
+        state.documentStatus[documentId] = 'failed';
+        state.documentErrors[documentId] = action.payload as string || 'Unknown error';
       });
   }
 });
@@ -91,9 +131,16 @@ const documentElementsSlice = createSlice({
 export const { clearElements, setCurrentDocumentId } = documentElementsSlice.actions;
 
 // Export selectors
-export const selectAllDocumentElements = (state: RootState) => state.documentElements.elements;
-export const selectDocumentElementsStatus = (state: RootState) => state.documentElements.status;
-export const selectDocumentElementsError = (state: RootState) => state.documentElements.error;
-export const selectCurrentDocumentId = (state: RootState) => state.documentElements.currentDocumentId;
+export const selectElementsByDocumentId = (state: RootState, documentId: number | null) => 
+  documentId ? state.documentElements.elementsByDocumentId[documentId] || [] : [];
+
+export const selectDocumentStatusById = (state: RootState, documentId: number | null) =>
+  documentId ? state.documentElements.documentStatus[documentId] || 'idle' : 'idle';
+
+export const selectDocumentErrorById = (state: RootState, documentId: number | null) =>
+  documentId ? state.documentElements.documentErrors[documentId] || null : null;
+
+export const selectCurrentDocumentId = (state: RootState) => 
+  state.documentElements.currentDocumentId;
 
 export default documentElementsSlice.reducer;

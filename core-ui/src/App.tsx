@@ -11,6 +11,7 @@ import DocumentViewerContainer from "./features/documentGallery/DocumentViewerCo
 
 // Main app component
 const AppContent: React.FC = () => {
+
   return (
     <div className="main">
       <AppHeader />

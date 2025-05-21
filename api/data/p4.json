@@ -1,0 +1,17 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 10
+  },
+  "content": {
+    "text": "Now, as it so happened, the Crown Prince had been born three years earlier to the Kokiden Consort, who was the daughter of the Minister of the Right. As the unquestioned heir to the throne, the boy had many supporters and the courtiers all treated him with the utmost respect and deference. He was, however, no match for the radiant beauty of the newborn Prince; and even though the Emperor was bound to acknowledge the higher status of his older son and to favor him in public, in private he could not resist treating the younger Prince as his favorite and lavishing attention upon him.",
+    "formatting": {
+      "left_indent": 0,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": []
+    }
+  }
+}

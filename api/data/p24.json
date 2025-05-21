@@ -1,0 +1,17 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 50
+  },
+  "content": {
+    "text": "The days passed in a meaningless blur for the Emperor, who dutifully observed each of the seven-day ceremonies leading up to the forty-ninth day after the funeral. Despite the passage of time, His Majesty was so lost in grief he could find no comfort. He was indifferent to the consorts and ladies-in-waiting who attended him in the evenings and instead passed his days and nights distracted and disconsolate. For all who observed his grief, it was truly an autumn drenched by a dew of tears.",
+    "formatting": {
+      "left_indent": 0,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": []
+    }
+  }
+}

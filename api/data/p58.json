@@ -1,0 +1,17 @@
+{
+  "document_id": 1,
+  "hierarchy": {
+    "chapter": 1,
+    "paragraph": 111
+  },
+  "content": {
+    "text": "How should I reply to your most gracious offer? Your words throw my troubled heart into dark confusion.",
+    "formatting": {
+      "left_indent": 0,
+      "right_indent": 0,
+      "first_line_indent": 0.5,
+      "alignment": "left",
+      "text_styles": []
+    }
+  }
+}

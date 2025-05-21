@@ -10,7 +10,8 @@ export {
     registerHighlight, 
     updateHighlightPosition, 
     removeHighlight,
-    setHoveredHighlights  
+    setHoveredHighlights ,
+    selectHoveredHighlightIds
 } from './highlightRegistrySlice' 
 
 export * from './annotationCreate'
@@ -47,8 +48,12 @@ export {
     fetchDocumentElements,
     clearElements,
     setCurrentDocumentId,
-    selectAllDocumentElements,
-    selectDocumentElementsStatus,
-    selectDocumentElementsError,
-    selectCurrentDocumentId
+    selectElementsByDocumentId,
+    selectDocumentStatusById,
+    selectDocumentErrorById,
+    selectCurrentDocumentId,
+    // Legacy selectors for backward compatibility
+    // selectAllDocumentElements,
+    // selectDocumentElementsStatus,
+    // selectDocumentElementsError
 } from './documentElementsSlice'

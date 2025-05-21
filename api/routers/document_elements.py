@@ -34,7 +34,7 @@ def create_element(element: DocumentElementCreate, db: AsyncSession = Depends(ge
     """
     # Verify the document exists
     document = db.execute(
-        select(Document).filter(Document.id == element.document_id)
+        select(Document).filter(Document.id == element.document_id).order_by(DocumentElement.id)
     ).scalar_one_or_none()
     
     if not document:

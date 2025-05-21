@@ -26,6 +26,8 @@
       "@/*": ["src/*"],
       "@store/*": ["src/store/*"],
       "@store": ["src/store", "src/store/index.ts"],
+      "@types/": ["src/types/*"],
+      "@types": ["src/types", "src/types/index.ts"],
       "@components/*": ["src/components/*"],
       "@components": ["src/components", "src/components/index.ts"],
       "@features/*": ["src/features/*"],
