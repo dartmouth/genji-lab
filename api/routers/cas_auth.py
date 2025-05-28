@@ -10,6 +10,17 @@ from database import get_db
 from models import models
 from fastapi import Depends
 from typing import Optional, Dict, Any
+import logging
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 router = APIRouter(
     prefix="/api/v1",
@@ -30,7 +41,9 @@ class UserResponse(BaseModel):
     ttl: str  # ISO format timestamp for when the authentication expires
 
 def extract_and_format_email(xml_string):
+    
     # Parse the XML
+
     root = ET.fromstring(xml_string)
     
     # Find the user element (which contains the email)
@@ -185,6 +198,7 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
     Validates a CAS ticket with Dartmouth's CAS server and returns user information.
     Includes a TTL (time to live) value set to one week from now.
     """
+    logger.debug("CAS endpoint accessed")
     if not data.ticket:
         raise HTTPException(status_code=400, detail="Missing CAS ticket")
     
@@ -215,7 +229,7 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
             
             # Extract email from user metadata
             email = user.user_metadata.get('email') if user.user_metadata else None
-            
+            logger.info("CAS success")
             # Return user information with TTL
             return UserResponse(
                 id=user.id,
@@ -229,10 +243,14 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
     
     except httpx.HTTPStatusError as e:
         detail = f"CAS server returned error: {e.response.status_code}"
+        logger.error(detail)
         raise HTTPException(status_code=500, detail=detail)
     except httpx.RequestError as e:
         detail = f"Error communicating with CAS server: {str(e)}"
+        logger.error(detail)
         raise HTTPException(status_code=500, detail=detail)
     except Exception as e:
+        
         detail = f"CAS validation failed: {str(e)}"
+        logger.error(detail)
         raise HTTPException(status_code=500, detail=detail)
