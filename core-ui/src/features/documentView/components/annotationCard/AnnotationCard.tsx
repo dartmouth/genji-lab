@@ -1,44 +1,61 @@
-// AnnotationCard.tsx
-import React, { useState } from "react";
-
+import React, { useState, useRef, useEffect } from "react";
 import { 
     RootState, 
-    replyingAnnotations, 
+    replyingAnnotations,
     upvoteAnnotations,
     sliceMap, 
     useAppDispatch, 
     useAppSelector  
 } from "@store";
-
 import { Annotation } from "@documentView/types";
-import { TagList, TagInput } from '@documentView/components'
 import { useAnnotationTags } from "@documentView/hooks";
 import { useAuth } from "@hooks/useAuthContext";
-import '@documentView/styles/AnnotationCardStyles.css'
+import '@documentView/styles/AnnotationCardStyles.css';
 import { parseURI, makeTextAnnotationBody } from "@documentView/utils";
-
 import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
-import { Menu, MenuItem, Chip, Tooltip, Avatar } from "@mui/material";
 
-import { AnnotationEditor, ReplyForm } from '.'
+import { createPortal } from 'react-dom';
+import AnnotationCardHeader from './AnnotationCardHeader';
+import AnnotationCardToolbar from './AnnotationCardToolbar';
+import AnnotationCardContent from './AnnotationCardContent';
+import AnnotationCardReplies from './AnnotationCardReplies';
+import { AnnotationEditor, ReplyForm } from './';
 
 interface AnnotationCardProps {
     id: string;
     annotation: Annotation;
     isHighlighted?: boolean;
-    depth: number
+    depth: number;
+    documentColor?: string;
+    documentTitle?: string;
+    showDocumentInfo?: boolean;
+    position?: 'bottom' | 'right' | 'left'; // Add position prop
 }
 
-const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighlighted = false, depth=0 }) => {
+const AnnotationCard: React.FC<AnnotationCardProps> = ({ 
+    id, 
+    annotation, 
+    isHighlighted = false, 
+    depth = 0,
+    documentColor = '#6c757d',
+    documentTitle = `Document ${annotation.document_id}`,
+    showDocumentInfo = false,
+    position = 'bottom' // Default to bottom
+}) => {
     const { user } = useAuth();
     const dispatch = useAppDispatch();
 
-    const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+    // Component state
     const [isReplying, setIsReplying] = useState(false);
     const [isFlagging, setIsFlagging] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [isCollapsed, setIsCollapsed] = useState(true);
+    const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null); // Add action menu state
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
+    // Ref for the action button to calculate position
+    const actionButtonRef = useRef<HTMLButtonElement>(null);
+
+    // Custom hooks
     const { 
         tags, 
         isTagging, 
@@ -48,9 +65,50 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         handleTagSubmit 
     } = useAnnotationTags(annotation, user?.id);
 
+    // Redux selectors
+    const replies = useAppSelector(
+        (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
+    );
+
+    const upvotes = useAppSelector(
+        (state: RootState) => upvoteAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
+    );
+
+    const hasUserUpvoted = !!(user?.id && upvotes?.some(u => u.creator.id === user.id));
+
+    // Calculate dropdown position when menu opens
+    useEffect(() => {
+        if (actionMenuAnchor && actionButtonRef.current) {
+            const buttonRect = actionButtonRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Calculate position based on available space
+            let top = buttonRect.bottom + 4; 
+            let left = buttonRect.left;
+            
+            // If dropdown would go off right edge, position it to the left of the button
+            if (left + 160 > viewportWidth) {
+                left = buttonRect.right - 160;
+            }
+            
+            // If dropdown would go off bottom edge, position it above the button
+            if (top + 200 > viewportHeight) { 
+                top = buttonRect.top - 200;
+            }
+            
+            // Ensure it doesn't go off the left edge
+            if (left < 8) {
+                left = 8;
+            }
+            
+            setDropdownPosition({ top, left });
+        }
+    }, [actionMenuAnchor]);
+
+    // Event handlers
     const handleEditClick = () => {
         setIsEditing(true);
-        closeMenu();
     };
 
     const handleEditCancel = () => {
@@ -63,47 +121,44 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
         const motivation = annotation.motivation;
         const slice = sliceMap[motivation];
 
-        if (!slice){
+        if (!slice) {
             console.error("Bad motivation in update: ", motivation);
+            return;
         }
 
-        dispatch(slice.thunks.patchAnnotation({"annotationId": annotation.id as unknown as number, "payload": {"body": editText}}));
+        dispatch(slice.thunks.patchAnnotation({
+            annotationId: parseInt(annotation.id),
+            payload: { body: editText }
+        }));
+        
         setIsEditing(false);
     };
 
-    const replies = useAppSelector(
-        (state: RootState) => replyingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
-    );
-
-    const upvotes = useAppSelector(
-        (state: RootState) => upvoteAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${id}`)
-    );
-
-    const hasUserUpvoted = !!(user?.id && upvotes?.some(u => u.creator.id === user.id));
-
-
-    const handleTagsMenuClick = () => {
-        handleTagsClick();
-        closeMenu(); 
-    };
-
     const handleCommentDelete = () => {
+        console.log("Attempting to delete annotation:", annotation.id, "with motivation:", annotation.motivation);
+        
         const motivation = annotation.motivation;
         const slice = sliceMap[motivation];
 
-        if (!slice){
-            console.error("Bad motivation in update: ", motivation);
+        if (!slice) {
+            console.error("Bad motivation in delete: ", motivation);
+            console.error("Available slices:", Object.keys(sliceMap));
+            return;
         }
-        dispatch(slice.thunks.deleteAnnotation({'annotationId': annotation.id as unknown as number}));
-        closeMenu();
-    };
 
-    const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setMenuAnchor(event.currentTarget);
-    };
+        if (!slice.thunks || !slice.thunks.deleteAnnotation) {
+            console.error("Delete thunk not available for motivation:", motivation);
+            return;
+        }
 
-    const closeMenu = () => {
-        setMenuAnchor(null);
+        try {
+            dispatch(slice.thunks.deleteAnnotation({
+                annotationId: parseInt(annotation.id)
+            }));
+            console.log("Delete dispatched successfully");
+        } catch (error) {
+            console.error("Error dispatching delete:", error);
+        }
     };
 
     const handleReplyClick = () => {
@@ -111,11 +166,37 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
     };
 
     const handleFlagClick = () => {
-        setIsFlagging(true)
-    }
-    
+        setIsFlagging(true);
+    };
+
+    const handleTagsMenuClick = () => {
+        handleTagsClick();
+    };
+
+    const handleReplySave = () => {
+        console.log("Reply saved successfully");
+        setIsReplying(false);
+    };
+
+    const handleFlagSave = () => {
+        console.log("Flag submitted successfully");
+        setIsFlagging(false);
+    };
+
+    const handleCloseTagging = () => {
+        setIsTagging(false);
+    };
+
+    // Action menu handlers for side panels
+    const handleActionMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setActionMenuAnchor(event.currentTarget);
+    };
+
+    const closeActionMenu = () => {
+        setActionMenuAnchor(null);
+    };
+
     const handleUpvote = () => {
-        console.log("upvoting")
         if (!user) return;
         if (!user.id) return;
     
@@ -128,9 +209,9 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             start: 1,
             end: 1,
             text: ""
-        }]
+        }];
         
-            const upvote = makeTextAnnotationBody(
+        const upvote = makeTextAnnotationBody(
             annotation.document_collection_id,
             annotation.document_id,
             deId,
@@ -138,104 +219,238 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
             'upvoting',
             "Upvote",
             segment
-            );
+        );
             
-            dispatch(upvoteAnnotations.thunks.saveAnnotation(upvote));
+        dispatch(upvoteAnnotations.thunks.saveAnnotation(upvote));
     };
+
+    // Dropdown menu component for portal
+    const DropdownMenu = () => (
+        <div
+            style={{
+                position: 'fixed',
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                backgroundColor: 'white',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                zIndex: 9999,
+                width: '160px',
+                padding: '4px 0'
+            }}
+            onClick={(e) => e.stopPropagation()}
+        >
+            {/* Upvote */}
+            <div
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!hasUserUpvoted) {
+                        handleUpvote();
+                    }
+                    closeActionMenu();
+                }}
+                style={{
+                    padding: '10px 12px',
+                    cursor: hasUserUpvoted ? 'not-allowed' : 'pointer',
+                    opacity: hasUserUpvoted ? 0.5 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    borderBottom: '1px solid #f0f0f0'
+                }}
+                onMouseEnter={(e) => {
+                    if (!hasUserUpvoted) e.currentTarget.style.backgroundColor = '#f5f5f5';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+            >
+                <ThumbUp sx={{ fontSize: '1rem', color: hasUserUpvoted ? '#aaa' : '#34A853' }} />
+                <span>Upvote ({upvotes?.length || 0})</span>
+            </div>
+
+            {/* Reply */}
+            <div
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsReplying(!isReplying);
+                    closeActionMenu();
+                }}
+                style={{
+                    padding: '10px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    borderBottom: '1px solid #f0f0f0'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+                <ChatBubbleOutline sx={{ fontSize: '1rem' }} />
+                <span>Reply</span>
+            </div>
+
+            {/* Flag */}
+            <div
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsFlagging(true);
+                    closeActionMenu();
+                }}
+                style={{
+                    padding: '10px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    borderBottom: user && user.id === annotation.creator.id ? '1px solid #f0f0f0' : 'none'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+                <Flag sx={{ fontSize: '1rem' }} />
+                <span>Flag</span>
+            </div>
+
+            {/* Edit/Delete/Tags (if user owns annotation) */}
+            {(user && user.id === annotation.creator.id) && (
+                <>
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsEditing(true);
+                            closeActionMenu();
+                        }}
+                        style={{
+                            padding: '10px 12px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '14px',
+                            borderBottom: '1px solid #f0f0f0'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                        <Settings sx={{ fontSize: '1rem' }} />
+                        <span>Edit</span>
+                    </div>
+
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleCommentDelete();
+                            closeActionMenu();
+                        }}
+                        style={{
+                            padding: '10px 12px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '14px',
+                            borderBottom: '1px solid #f0f0f0'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                        <Settings sx={{ fontSize: '1rem' }} />
+                        <span>Delete</span>
+                    </div>
+                </>
+            )}
+
+            {/* Tags */}
+            <div
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsTagging(true);
+                    closeActionMenu();
+                }}
+                style={{
+                    padding: '10px 12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+                <Settings sx={{ fontSize: '1rem' }} />
+                <span>Tags</span>
+            </div>
+        </div>
+    );
 
     return (
         <div 
             key={id} 
-            className={`comment-card ${isHighlighted ? 'highlighted' : ''} ${depth > 0 ? 'reply-card-rounded' : ''} ${depth == 0 ? 'comment-card-rounded' : ''}`}
             style={{
-                backgroundColor: isHighlighted ? '#c4dd88' : 'white',        
-                width: `${275 - (10*depth)}px`
+                backgroundColor: isHighlighted ? '#c4dd88' : '#ffffff',
+                borderRadius: '8px',
+                border: '1px solid #e2e6ea',
+                borderLeft: `4px solid ${documentColor}`,
+                padding: '16px',
+                marginBottom: depth > 0 ? '8px' : '12px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+                width: depth > 0 ? `${300 - (15*depth)}px` : (position === 'left' || position === 'right') ? '340px' : '100%',
+                maxWidth: '100%',
+                position: 'relative',
+                transition: 'all 0.2s ease',
+                overflow: 'visible',
+                isolation: 'isolate'
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)';
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.08)';
             }}
         >
-            <div className="comment-header" style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center' }}>
-                <span>{`${annotation.creator.first_name} ${annotation.creator.last_name}`}</span>
-                
-                <div>
-                    <button title="Upvote" onClick={handleUpvote} disabled={hasUserUpvoted} 
-                    style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: hasUserUpvoted ? 'not-allowed' : 'pointer',
-                        color: hasUserUpvoted ? '#aaa' : 'green',
-                        opacity: hasUserUpvoted ? 0.5 : 1,
-                        pointerEvents: hasUserUpvoted ? 'none' : 'auto' // fully prevents interaction
-                    }}
-                    >
-                        <ThumbUp sx={{ 
-                            fontSize: '1rem'
-                         }} />
-                    </button>
-                    <Tooltip
-                        title={
-                            upvotes && upvotes.length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                {upvotes?.map(upvote => (
-                                    <Chip
-                                        key={upvote.id}
-                                        avatar={<Avatar>{`${upvote.creator.first_name.charAt(0)}${upvote.creator.last_name.charAt(0)}`.toUpperCase()}</Avatar>}
-                                        label={`${upvote.creator.first_name} ${upvote.creator.last_name}`}
-                                        size="small"
-                                        color="primary"
-                                        // variant="outlined"
-                                    />
-                                ))}
-                            </div>
-                            ) : ""
-                        }
-                        arrow
-                        placement="bottom-start"
-                    >
-                    <Chip 
-                        label={upvotes?.length || 0} 
-                        size="small" 
-                        sx={{ backgroundColor: '#e0f2f1', fontWeight: 'bold', height: '24px' }} 
-                    />
-                    </Tooltip>
-                    <button title="Reply" onClick={handleReplyClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'blue' }}>
-                        <ChatBubbleOutline sx={{ fontSize: '1rem' }} />
-                    </button>
-                    <button title="Flag" onClick={handleFlagClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'red' }}>
-                        <Flag sx={{ fontSize: '1rem' }} />
-                    </button>
-                    <button title="Settings" onClick={toggleMenu} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'black' }}>
-                        <Settings sx={{ fontSize: '1rem' }}/>
-                    </button>
-                </div>
-            </div>
-
-            <div className="comment-body">{annotation.body.value}</div>
-
-            <TagList 
-                tags={tags} 
-                userId={user?.id} 
-                onRemoveTag={handleRemoveTag} 
+            {/* Header: Document info, type badge, and author */}
+            <AnnotationCardHeader
+                annotation={annotation}
+                documentColor={documentColor}
+                documentTitle={documentTitle}
+                showDocumentInfo={showDocumentInfo}
             />
-            <Menu
-                anchorEl={menuAnchor}
-                open={Boolean(menuAnchor)}
-                onClose={closeMenu}
-                disableScrollLock
-            >
-                {(user && user.id === annotation.creator.id) && (<MenuItem onClick={handleEditClick}>Edit</MenuItem>)}
-                {(user && user.id === annotation.creator.id) && (<MenuItem onClick={handleCommentDelete}>Delete</MenuItem>)}
-                <MenuItem onClick={handleTagsMenuClick}>Tags</MenuItem>
-            </Menu>
 
-            {isTagging && (
-                <TagInput 
-                    onSubmit={handleTagSubmit}
-                    onClose={() => setIsTagging(false)}
-                />
-            )}
+            {/* Toolbar: Upvote, reply, flag, settings */}
+            <AnnotationCardToolbar
+                annotation={annotation}
+                annotationId={id}
+                onReplyClick={handleReplyClick}
+                onFlagClick={handleFlagClick}
+                onEditClick={handleEditClick}
+                onDeleteClick={handleCommentDelete}
+                onTagsClick={handleTagsMenuClick}
+                isReplying={isReplying}
+                isFlagging={isFlagging}
+                position={position}
+                onActionMenuOpen={handleActionMenuOpen}
+                actionButtonRef={actionButtonRef} 
+            />
 
+            {/* Content: Body text and tags */}
+            <AnnotationCardContent
+                annotation={annotation}
+                tags={tags}
+                userId={user?.id}
+                isTagging={isTagging}
+                onRemoveTag={handleRemoveTag}
+                onTagSubmit={handleTagSubmit}
+                onCloseTagging={handleCloseTagging}
+            />
+
+            {/* Editing form */}
             {isEditing && (
                 <AnnotationEditor
                     initialText={annotation.body.value}
@@ -244,45 +459,94 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({ id, annotation, isHighl
                 />
             )}
 
+            {/* Reply/Flag forms */}
             {(isFlagging && !isReplying) && (
                 <ReplyForm
                     annotation={annotation}
                     motivation="flagging"
-                    onSave={() => setIsFlagging(false)}
+                    onSave={handleFlagSave}
                 />
-            )
-
-            }
+            )}
             {(isReplying && !isFlagging) && (
                 <ReplyForm
                     annotation={annotation}
                     motivation="replying"
-                    onSave={() => setIsReplying(false)}
+                    onSave={handleReplySave}
                 />
             )}
 
-            {replies && replies.length > 0 && (
-                <button 
-                    onClick={() => setIsCollapsed(!isCollapsed)} 
-                    className="toggle-replies-button"
-                >
-                    {isCollapsed ? `Show ${replies.length} repl${replies.length > 1 ? 'ies' : 'y'}` : 'Hide replies'}
-                </button>
+            {/* Replies section */}
+            <AnnotationCardReplies
+                replies={replies}
+                depth={depth}
+                documentColor={documentColor}
+                documentTitle={documentTitle}
+                AnnotationCardComponent={AnnotationCard}
+                position={position} 
+            />
+
+            {/* Action menu for side panels - USING PORTAL for left/right positions */}
+            {(position === 'left' || position === 'right') && actionMenuAnchor && (
+                <>
+                    {/* Portal the dropdown menu to document.body */}
+                    {createPortal(<DropdownMenu />, document.body)}
+                    
+                    {/* Portal the backdrop overlay to document.body */}
+                    {createPortal(
+                        <div
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                zIndex: 9998,
+                                backgroundColor: 'transparent'
+                            }}
+                            onClick={closeActionMenu}
+                        />,
+                        document.body
+                    )}
+                </>
             )}
 
-            {!isCollapsed && replies && (
-                replies.map(reply => (
-                    <AnnotationCard
-                        key={reply.id}
-                        id={`${reply.id}`}
-                        annotation={reply}
-                        isHighlighted={false}
-                        depth={depth + 1}
+            {/* Regular dropdown for bottom position (no portal needed) */}
+            {position === 'bottom' && actionMenuAnchor && (
+                <>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '40px',
+                            right: '80px',
+                            backgroundColor: 'white',
+                            border: '1px solid #ddd',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            zIndex: 9999,
+                            width: '160px',
+                            padding: '4px 0'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <DropdownMenu />
+                    </div>
+                    
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            zIndex: 9998,
+                            backgroundColor: 'transparent'
+                        }}
+                        onClick={closeActionMenu}
                     />
-                ))
+                </>
             )}
         </div>
     );
-}
+};
 
 export default AnnotationCard;

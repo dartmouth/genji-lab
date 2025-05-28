@@ -4,7 +4,7 @@
   flex-direction: column;
   height: 100%;
   background-color: #f9f9f9;
-  overflow: hidden;
+  overflow: visible;
   opacity: 1;
   box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.1);
 }
@@ -18,7 +18,7 @@
   background-color: #e9ecef;
   min-height: 40px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  padding: 0 8px 0 0; /* Add right padding for controls */
+  padding: 0 8px 0 0; 
   z-index: 5;
 }
 
@@ -26,13 +26,13 @@
   display: flex;
   overflow-x: auto;
   flex: 1;
-  padding-top: 0; /* Removed top padding causing cut-off */
+  padding-top: 0; 
 }
 
 /* Adjust tabs header for different panel positions */
 .position-left .tabs-header,
 .position-right .tabs-header {
-  padding-top: 64px; /* Add extra padding at the top to avoid cut-off behind header */
+  padding-top: 64px; 
 }
 
 .position-left .tabs-container,

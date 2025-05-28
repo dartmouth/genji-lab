@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
-import { useAppDispatch, useAppSelector, selectSegments, setMotivation  } from "@store";
+import { useAppDispatch, useAppSelector, selectSegments, setMotivation, selectAnnotationCreate } from "@store";
 import { createPortal } from 'react-dom';
 
 const MenuContext: React.FC = () => {
   const dispatch = useAppDispatch();
   const text = useAppSelector(selectSegments);
+  const annotationCreate = useAppSelector(selectAnnotationCreate);
 
   const [clicked, setClicked] = useState(false);
   
   const [coords, setCoords] = useState<{ x: number; y: number }>({
     x: 0, y: 0
   });
+
+  useEffect(() => {
+    if (annotationCreate && annotationCreate.motivation && clicked) {
+      setClicked(false);
+    }
+  }, [annotationCreate, clicked]);
 
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
@@ -24,16 +31,29 @@ const MenuContext: React.FC = () => {
       }
     };
 
-    const handleClick = () => {
-      setClicked(false);
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Element;
+      const contextMenu = document.querySelector('.context-menu');
+      
+      if (!contextMenu || !contextMenu.contains(target)) {
+        setClicked(false);
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setClicked(false);
+      }
     };
 
     document.addEventListener("contextmenu", handleContextMenu);
     document.addEventListener("click", handleClick);
+    document.addEventListener("keydown", handleEscape);
     
     return () => {
       document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("click", handleClick);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [text]);
 
@@ -49,7 +69,6 @@ const MenuContext: React.FC = () => {
             e.preventDefault();
             e.stopPropagation();
             dispatch(setMotivation("commenting"));
-            setClicked(false);
           }}
         >
           {"Create Comment"}
@@ -60,7 +79,6 @@ const MenuContext: React.FC = () => {
             e.preventDefault();
             e.stopPropagation();
             dispatch(setMotivation("scholarly"));
-            setClicked(false);
           }}
         >
           {"Create Scholarly Annotation"}

@@ -29,7 +29,7 @@ import {
 
 interface HighlightedTextProps {
   text: string;
-  format: TextFormatting,
+  format?: TextFormatting; // Make format optional since it can be undefined
   documentCollectionId: number;
   documentId: number;
   paragraphId: string;
@@ -76,8 +76,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
-
-  console.log(`Paragraph ${paragraphId} is visible (${isVisible}) or should prefetch (${shouldPrefetch})`)
 
       dispatch(fetchAnnotationByMotivation(parseURI(paragraphId) as unknown as number))
     }
@@ -293,9 +291,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         onMouseMove={debouncedHandleMouseMove}
         style={{ 
         position: 'relative',
-        textIndent: format.first_line_indent ? `${format.first_line_indent}in` : '0',
-        paddingLeft: format.left_indent ? `${format.left_indent}in` : '0',
-        textAlign: format.alignment || 'left',
+        textIndent: format?.first_line_indent ? `${format.first_line_indent}in` : '0',
+        paddingLeft: format?.left_indent ? `${format.left_indent}in` : '0',
+        textAlign: format?.alignment || 'left',
         writingMode: 'horizontal-tb'
        }}
       >
