@@ -1,4 +1,3 @@
-// src/documentView/components/AnnotationCreationDialog.tsx
 import React, { useEffect, useRef } from 'react';
 import { 
   useAppDispatch, 
@@ -11,7 +10,7 @@ import {
 
 import { debounce } from 'lodash';
 import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
-import { useIAM } from '@hooks/useIAM';
+import { useAuth } from "@hooks/useAuthContext";
 
 interface AnnotationCreationDialogProps {
   onClose: () => void;
@@ -19,7 +18,7 @@ interface AnnotationCreationDialogProps {
 
 const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onClose }) => {
   const dispatch = useAppDispatch();
-  const { user } = useIAM();
+  const { user } = useAuth();
   const newAnno = useAppSelector(selectAnnotationCreate);
   const dialogRef = useRef<HTMLDivElement>(null);
   
@@ -50,7 +49,10 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
   };
 
   const onSave = () => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user found");
+      return;
+    }
 
     const annoType: string = newAnno.motivation;
     const slice = sliceMap[annoType] || {};
@@ -59,7 +61,7 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
       console.error("Bad motivation");
       return;
     }
-
+    
     const annoBody = makeTextAnnotationBody(
       newAnno.target.documentCollectionId,
       newAnno.target.documentId,
@@ -82,7 +84,6 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
   
   const onTextChangeDebounce = debounce(onTextChange, 10);
 
-  // Don't render if there's no annotation being created
   if (!newAnno || !newAnno.motivation) {
     return null;
   }
@@ -143,6 +144,20 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
           </button>
         </div>
         
+        {!user && (
+          <div style={{
+            backgroundColor: '#fff3cd',
+            border: '1px solid #ffeaa7',
+            borderRadius: '4px',
+            padding: '8px',
+            marginBottom: '16px',
+            fontSize: '12px',
+            color: '#856404'
+          }}>
+            ⚠️ Authentication issue: No user found. Please ensure you're logged in.
+          </div>
+        )}
+        
         <div className="selected-text" style={{ 
           fontSize: '14px',
           padding: '12px',
@@ -194,14 +209,14 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
           </button>
           <button
             onClick={onSave}
-            disabled={!newAnno.content.trim()}
+            disabled={!newAnno.content.trim() || !user}
             style={{
               padding: '8px 16px',
-              backgroundColor: newAnno.content.trim() ? '#4285f4' : '#cccccc',
+              backgroundColor: (newAnno.content.trim() && user) ? '#4285f4' : '#cccccc',
               color: 'white',
               border: 'none',
               borderRadius: '6px',
-              cursor: newAnno.content.trim() ? 'pointer' : 'not-allowed',
+              cursor: (newAnno.content.trim() && user) ? 'pointer' : 'not-allowed',
               fontSize: '14px',
               fontWeight: 500
             }}

@@ -77,8 +77,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
 
-  console.log(`Paragraph ${paragraphId} is visible (${isVisible}) or should prefetch (${shouldPrefetch})`)
-
       dispatch(fetchAnnotationByMotivation(parseURI(paragraphId) as unknown as number))
     }
   }, [dispatch, paragraphId, isVisible, shouldPrefetch]);

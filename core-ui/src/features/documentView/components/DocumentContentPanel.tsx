@@ -1,4 +1,3 @@
-// Updated DocumentContentPanel.tsx without sidebar handling
 import React, { useEffect } from 'react';
 import { 
   HighlightedText,
@@ -14,17 +13,7 @@ import {
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@store/hooks';
 import '../styles/DocumentContentStyles.css';
-
-// Define a base interface that matches your actual data structure
-interface BaseDocumentElement {
-  id: number;
-  content: {
-    text: string;
-    [key: string]: unknown;
-  };
-  document_id?: number;
-  [key: string]: unknown;
-}
+import { DocumentElement } from '@documentView/types';
 
 interface DocumentContentPanelProps {
   documentId: number;
@@ -38,10 +27,9 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   // Redux
   const dispatch = useAppDispatch();
   
-  // Get document elements
   const documentElements = useSelector((state: RootState) => 
     selectElementsByDocumentId(state, documentId)
-  ) as BaseDocumentElement[];
+  ) as DocumentElement[];
   
   const documentStatus = useSelector((state: RootState) => 
     selectDocumentStatusById(state, documentId)
@@ -51,21 +39,12 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     selectDocumentErrorById(state, documentId)
   );
   
-  // Get all documents to find the current document title
-  // const documents = useSelector(selectAllDocuments);
-  // const currentDocument = documents.find(doc => doc.id === documentId);
-  
-  // FETCH DATA
-  
   // Fetch document elements
   useEffect(() => {
     if (documentId) {
       dispatch(fetchDocumentElements(documentId));
-
     }
   }, [dispatch, documentId]);
-  
-  // MAIN RENDER
   
   // Loading/Error states
   if (documentStatus === 'loading' && documentElements.length === 0) {
@@ -99,7 +78,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
           Retry Loading
         </button>
       </div>
-
     );
   }
 

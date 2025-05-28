@@ -1,4 +1,4 @@
-// createAnnotationSlice.ts
+// createAnnotationSlice.ts - Fixed Version
 import { 
   createSlice, 
   PayloadAction, 
@@ -70,7 +70,6 @@ export function createAnnotationSlice(bucketName: string) {
     error: null
   };
 
-
   const slice = createSlice({
     name: `annotations/${bucketName}`,
     initialState,
@@ -97,7 +96,6 @@ export function createAnnotationSlice(bucketName: string) {
         });
       },
 
-      
       addAnnotation(state, action: PayloadAction<Annotation>) {
         const annotation = action.payload;
         
@@ -119,15 +117,16 @@ export function createAnnotationSlice(bucketName: string) {
           }
         });
       },
+      
       deleteAnnotation(state, action: PayloadAction<AnnotationDelete>) {
         const { annotationId } = action.payload;
-        const stringId = String(annotationId); // Convert to string since your IDs are stored as strings
+        const stringId = String(annotationId);
         
         // Get the annotation to be deleted
         const annotation = state.byId[stringId];
         
         if (annotation) {
-          // Remove from byId index
+          // Remove from byId index first
           delete state.byId[stringId];
           
           // Remove from byParent indexes
@@ -138,6 +137,19 @@ export function createAnnotationSlice(bucketName: string) {
               state.byParent[sourceId] = state.byParent[sourceId]
                 .filter(id => id !== stringId);
               
+              // Clean up empty arrays to prevent memory leaks
+              if (state.byParent[sourceId].length === 0) {
+                delete state.byParent[sourceId];
+              }
+            }
+          });
+          
+          // This handles edge cases where the annotation might be referenced elsewhere
+          Object.keys(state.byParent).forEach(parentId => {
+            state.byParent[parentId] = state.byParent[parentId].filter(id => id !== stringId);
+            // Clean up empty arrays
+            if (state.byParent[parentId].length === 0) {
+              delete state.byParent[parentId];
             }
           });
         }
@@ -145,14 +157,12 @@ export function createAnnotationSlice(bucketName: string) {
     }
   });
 
-
-    const thunks =  {
-      fetchAnnotations: createFetchAnnotationsThunk(bucketName, slice.actions),
-      saveAnnotation: createSaveAnnotationThunk(bucketName, slice.actions),
-      patchAnnotation: createPatchAnnotationThunk(bucketName, slice.actions),
-      deleteAnnotation: createDeleteAnnotationThunk(bucketName, slice.actions)
-    }
-
+  const thunks = {
+    fetchAnnotations: createFetchAnnotationsThunk(bucketName, slice.actions),
+    saveAnnotation: createSaveAnnotationThunk(bucketName, slice.actions),
+    patchAnnotation: createPatchAnnotationThunk(bucketName, slice.actions),
+    deleteAnnotation: createDeleteAnnotationThunk(bucketName, slice.actions)
+  }
 
   const getBucketState = (state: RootState): AnnotationState => {
     return state.annotations[bucketName] as AnnotationState;
@@ -166,37 +176,44 @@ export function createAnnotationSlice(bucketName: string) {
 
   const selectAnnotationsById = (state: RootState, ids: string[]) => {
     const bucketState = getBucketState(state);
-    return ids.map(key => bucketState.byId?.[key]);
+    // FIX: Filter out undefined values to prevent crashes
+    return ids.map(key => bucketState.byId?.[key]).filter((annotation): annotation is Annotation => annotation !== undefined);
   };
 
   const selectAllAnnotations = (state: RootState) => {
     const bucketState = getBucketState(state);
     const ids = Object.keys(bucketState.byId)
-    return ids.map(key => bucketState.byId[key]);
+    // FIX: Filter out undefined values
+    return ids.map(key => bucketState.byId[key]).filter((annotation): annotation is Annotation => annotation !== undefined);
   };
 
-   const makeSelectAnnotationsByParent= () => 
+  const makeSelectAnnotationsByParent = () => 
     createSelector(
       [
         getBucketState,
         (_: RootState, documentElementId: string) => documentElementId
       ],
       (bucketState, documentElementId) => {
-        const annotationIds = bucketState.byParent[documentElementId];
-        return annotationIds.map(id => bucketState.byId[id]);
+        const annotationIds = bucketState.byParent[documentElementId] || [];
+        // FIX: Filter out undefined annotations to prevent crashes
+        return annotationIds
+          .map(id => bucketState.byId[id])
+          .filter((annotation): annotation is Annotation => annotation !== undefined);
       }
     );
   
-  const selectAnnotationsByParent= createSelector(
+  const selectAnnotationsByParent = createSelector(
     [
-        getBucketState,
-        (_: RootState, documentElementId: string) => documentElementId
-      ],
-      (bucketState, documentElementId) => {
-        // console.log("In selector, id is", documentElementId)
-        const annotationIds = bucketState.byParent[documentElementId] || [];
-        return annotationIds.map(id => bucketState.byId[id]);
-      }
+      getBucketState,
+      (_: RootState, documentElementId: string) => documentElementId
+    ],
+    (bucketState, documentElementId) => {
+      const annotationIds = bucketState.byParent[documentElementId] || [];
+      // FIX: Filter out undefined annotations to prevent crashes
+      return annotationIds
+        .map(id => bucketState.byId[id])
+        .filter((annotation): annotation is Annotation => annotation !== undefined);
+    }
   );
 
   const makeSelectAnnotationsById = () => 
@@ -208,11 +225,13 @@ export function createAnnotationSlice(bucketName: string) {
       (byId, ids) => {
         if (!byId || !ids || ids.length === 0) return [];
         
-        const results = ids.map(key => byId[key]).filter(Boolean);
-        return results.length > 0 ? results : [];
+        // FIX: Filter out undefined values and ensure type safety
+        const results = ids
+          .map(key => byId[key])
+          .filter((annotation): annotation is Annotation => annotation !== undefined);
+        return results;
       }
     );
-
 
   return {
     name: bucketName,

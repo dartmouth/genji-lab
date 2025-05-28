@@ -1,3 +1,4 @@
+// src/features/documentView/components/tabbedAnnotationsPanel/AnnotationsList.tsx - Fixed Grid Spacing
 import React from 'react';
 import { Annotation } from "@documentView/types/annotation";
 import AnnotationCard from '../annotationCard/AnnotationCard';
@@ -49,11 +50,15 @@ const AnnotationsList: React.FC<AnnotationsListProps> = ({
   return (
     <div style={{
       display: 'grid',
-      gap: '12px',
-      gridTemplateColumns: position === 'bottom' ? 'repeat(auto-fill, minmax(300px, 1fr))' : '1fr'
+      gap: position === 'bottom' ? '40px' : '12px', 
+      gridTemplateColumns: position === 'bottom' 
+        ? 'repeat(auto-fill, minmax(340px, 1fr))' 
+        : '1fr',
+      padding: position === 'bottom' ? '0 16px 16px 16px' : '0', 
+      width: '100%',
+      boxSizing: 'border-box'
     }}>
       {annotations.map(annotation => {
-        // Get the document info for this annotation
         const document = documents.find(doc => doc.id === annotation.document_id);
         const documentColor = document?.color || '#6c757d';
         const documentTitle = document?.title || getDocumentTitle(annotation.document_id);
@@ -68,6 +73,7 @@ const AnnotationsList: React.FC<AnnotationsListProps> = ({
             documentColor={documentColor}
             documentTitle={documentTitle}
             showDocumentInfo={activeTab === 'all'}
+            position={position}
           />
         );
       })}
