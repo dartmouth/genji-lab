@@ -9,16 +9,6 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Types
-export interface DocumentElement {
-  id: number;
-  content: {
-    text: string;
-  };
-  document_id: number;
-}
-
-
 interface DocumentElementsState {
   // Normalized state structure for multiple documents
   elementsByDocumentId: {
