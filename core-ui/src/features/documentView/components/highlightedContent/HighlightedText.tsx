@@ -294,7 +294,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         textIndent: format?.first_line_indent ? `${format.first_line_indent}in` : '0',
         paddingLeft: format?.left_indent ? `${format.left_indent}in` : '0',
         textAlign: format?.alignment || 'left',
-        writingMode: 'horizontal-tb'
+        writingMode: 'horizontal-tb',
+        fontStyle: format?.text_styles?.is_italic ? 'italic' : 'normal',
+        whiteSpace: 'pre-wrap'
        }}
       >
         {text}

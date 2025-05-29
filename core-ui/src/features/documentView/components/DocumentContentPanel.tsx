@@ -95,6 +95,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
               <HighlightedText
                 text={content.content.text}
                 paragraphId={paragraphId}
+                format={content.content.formatting}
                 documentCollectionId={documentCollectionId}
                 documentId={documentId}
               />

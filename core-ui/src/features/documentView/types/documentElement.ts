@@ -3,13 +3,20 @@ interface TextStyle {
     end: number;
     type: string[];
   }
+
+interface TextStyles {
+    is_bold: boolean,
+    is_italic: boolean,
+    is_underlined: boolean,
+    formatting: TextStyle
+}
   
 interface TextFormatting {
-left_indent?: number;
-right_indent?: number;
-first_line_indent?: number;
-alignment?: 'left' | 'right' | 'center' | 'justify';
-text_styles?: TextStyle[];
+    left_indent?: number;
+    right_indent?: number;
+    first_line_indent?: number;
+    alignment?: 'left' | 'right' | 'center' | 'justify';
+    text_styles?: TextStyles;
 }
 
 interface DocumentElement {
