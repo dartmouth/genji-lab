@@ -18,7 +18,7 @@ interface AnnotationCreationDialogProps {
 
 const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onClose }) => {
   const dispatch = useAppDispatch();
-  const { user } = useAuth();
+  const { user, isAuthenticated, login, isLoading } = useAuth();
   const newAnno = useAppSelector(selectAnnotationCreate);
   const dialogRef = useRef<HTMLDivElement>(null);
   
@@ -36,21 +36,23 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
     };
   }, [onClose]);
   
-  // Focus on textarea when opened
+  // Focus on textarea when opened (only if authenticated)
   useEffect(() => {
-    const textArea = dialogRef.current?.querySelector('textarea');
-    if (textArea) {
-      textArea.focus();
+    if (isAuthenticated) {
+      const textArea = dialogRef.current?.querySelector('textarea');
+      if (textArea) {
+        textArea.focus();
+      }
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const onTextChange = (value: string) => {
     dispatch(setContent(value));
   };
 
   const onSave = () => {
-    if (!user) {
-      console.log("No user found");
+    if (!user || !isAuthenticated) {
+      console.log("User not authenticated");
       return;
     }
 
@@ -80,6 +82,11 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
   const onCancel = () => {
     dispatch(resetCreateAnnotation());
     onClose();
+  };
+
+  const handleLogin = () => {
+    login();
+    // Don't close the dialog - let user authenticate and come back
   };
   
   const onTextChangeDebounce = debounce(onTextChange, 10);
@@ -144,20 +151,6 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
           </button>
         </div>
         
-        {!user && (
-          <div style={{
-            backgroundColor: '#fff3cd',
-            border: '1px solid #ffeaa7',
-            borderRadius: '4px',
-            padding: '8px',
-            marginBottom: '16px',
-            fontSize: '12px',
-            color: '#856404'
-          }}>
-            ⚠️ Authentication issue: No user found. Please ensure you're logged in.
-          </div>
-        )}
-        
         <div className="selected-text" style={{ 
           fontSize: '14px',
           padding: '12px',
@@ -172,25 +165,58 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
           "{newAnno.target.selectedText}"
         </div>
         
-        <textarea
-          value={newAnno.content}
-          onChange={(e) => onTextChangeDebounce(e.target.value)}
-          placeholder={newAnno.motivation === 'commenting' 
-            ? "Enter your comment here..." 
-            : "Enter your scholarly annotation here..."}
-          style={{ 
-            width: '100%', 
-            minHeight: '120px',
-            padding: '12px',
-            marginBottom: '16px',
+        {!isAuthenticated ? (
+          // Show login prompt for anonymous users
+          <div style={{
+            textAlign: 'center',
+            padding: '20px',
+            backgroundColor: '#f8f9fa',
             borderRadius: '6px',
-            border: '1px solid #ddd',
-            fontSize: '14px',
-            fontFamily: 'inherit',
-            boxSizing: 'border-box',
-            resize: 'vertical'
-          }}
-        />
+            marginBottom: '16px'
+          }}>
+            <p style={{ marginBottom: '16px', color: '#666' }}>
+              You need to be logged in to create annotations.
+            </p>
+            <button
+              onClick={handleLogin}
+              disabled={isLoading}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#4285f4',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: 500,
+                opacity: isLoading ? 0.7 : 1
+              }}
+            >
+              {isLoading ? 'Authenticating...' : 'Login with Dartmouth ID'}
+            </button>
+          </div>
+        ) : (
+          // Show annotation form for authenticated users
+          <textarea
+            value={newAnno.content}
+            onChange={(e) => onTextChangeDebounce(e.target.value)}
+            placeholder={newAnno.motivation === 'commenting' 
+              ? "Enter your comment here..." 
+              : "Enter your scholarly annotation here..."}
+            style={{ 
+              width: '100%', 
+              minHeight: '120px',
+              padding: '12px',
+              marginBottom: '16px',
+              borderRadius: '6px',
+              border: '1px solid #ddd',
+              fontSize: '14px',
+              fontFamily: 'inherit',
+              boxSizing: 'border-box',
+              resize: 'vertical'
+            }}
+          />
+        )}
         
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
           <button
@@ -207,22 +233,24 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
           >
             Cancel
           </button>
-          <button
-            onClick={onSave}
-            disabled={!newAnno.content.trim() || !user}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: (newAnno.content.trim() && user) ? '#4285f4' : '#cccccc',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: (newAnno.content.trim() && user) ? 'pointer' : 'not-allowed',
-              fontSize: '14px',
-              fontWeight: 500
-            }}
-          >
-            Save
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={onSave}
+              disabled={!newAnno.content.trim()}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: newAnno.content.trim() ? '#4285f4' : '#cccccc',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: newAnno.content.trim() ? 'pointer' : 'not-allowed',
+                fontSize: '14px',
+                fontWeight: 500
+              }}
+            >
+              Save
+            </button>
+          )}
         </div>
       </div>
     </div>

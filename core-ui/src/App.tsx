@@ -8,6 +8,7 @@ import "./App.css";
 import { Provider } from 'react-redux';
 import { store } from "./store";
 import DocumentViewerContainer from "./features/documentGallery/DocumentViewerContainer";
+import './features/documentView/styles/AuthStyles.css';
 
 // Main app component
 const AppContent: React.FC = () => {
