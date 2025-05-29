@@ -1,17 +1,58 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 109
+    "document": 1,
+    "element_order": 58
   },
   "content": {
-    "text": "He questioned Myōbu in great detail about the conditions at the home of his lost love, and she privately conveyed to him how sad the visit had made her. He read the grandmother’s written response to his request:",
+    "text": "Had I sent a Taoist summoner\nTo seek the spirit of my beloved\nMight he have discovered where she went",
     "formatting": {
-      "left_indent": 0,
+      "left_indent": 1.0,
       "right_indent": 0,
-      "first_line_indent": 0.5,
+      "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 0,
+            "end": 28,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 28,
+            "end": 29,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 29,
+            "end": 61,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 28,
+            "end": 29,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 62,
+            "end": 101,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 117
+    "document": 1,
+    "element_order": 63
   },
   "content": {
-    "text": "The Emperor understood that these intemperate wordswhich implied that he would not be able to protect a motherless childwere written at a moment of emotional distress. He tried to suppress his feelings so as not to show how tormented he was, but he could not endure the pain. Obsessing over all of his memories of the womaneven the moment when he first laid eyes on herhe could scarcely believe that so much time had passed, especially when he recalled how hard it had been for him to be apart from her for even the briefest period.",
+    "text": "His thoughts strayed to that “lonely hut amidst tangled reeds.” The wicks in the lamps were trimmed and trimmed again, and he stayed up until the oil was exhausted. Hearing the voices of officers announcing the changing of the guard on the second watch, he knew it must be after one in the morning, since they had entered the Hour of the Ox. He knew that the eyes of the courtiers were all on him, so he withdrew behind the curtains to his private quarters. He found it impossible to sleep, however, and when he arose the next morning he could not get out of his mind a snatch of a poem by Lady Ise: “Unaware that the dawn has broken and the beaded curtains have been drawn up.”",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

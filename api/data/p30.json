@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 62
+    "document": 1,
+    "element_order": 31
   },
   "content": {
     "text": "Myōbu was genuinely moved and replied tearfully, “The head of the imperial household staff reported that when she called on you, she was so touched she felt as though her very soul would disappear. Although I am not exceptionally sensitive, I now understand what she meant.”",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

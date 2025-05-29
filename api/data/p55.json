@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 105
+    "document": 1,
+    "element_order": 56
   },
   "content": {
-    "text": "The more youthful women who had served the Prince’s late mother at court were of course saddened by her death, but they had also grown accustomed to being at the palace day and night and so naturally found their late mistress’s family home lonely and tedious. Recalling the splendid appearance of the Emperor, they urged the grandmother to take the boy to the palace right away. She was reluctant to do so, however, convinced that it would invite public censure for someone as inauspicious as she to accompany the little Prince. Moreover, she knew that if the child were at the palace on his own, she would not be able to see him very often. The thought of his absence caused her a great deal of anxiety and made it difficult for her to send him away.",
+    "text": "The Emperor took pity on the grandmother. “She told you how gratifying it was to be able to fulfill her late husband’s last request that their daughter serve at court. Now, judging from her poem, it seems she believes all her efforts have been in vain. She should not feel that way. Though her daughter may be gone, there will surely be occasions when I must do things for her grandson ... should the young Prince survive to manhood. She should thus be patient and live a long life in anticipation of his glorious future.”",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

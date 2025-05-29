@@ -1,25 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 76
+    "document": 1,
+    "element_order": 39
   },
   "content": {
-    "text": "And turn dew to pearls ... winds at the palace bring tears",
+    "text": "The boy’s grandmother was unable to read all the way through the letter. “Though I have experienced the tribulations that come with living so long, I feel insignificant and ashamed when I recall the ancient pines of Takasago. For that reason, I am all the more reluctant to leave, constrained by the thought of showing myself at the palace. I have been favored so often by the Emperor’s gracious consideration that I cannot bring myself to accept the invitation. I am not sure just how much the boy understands, but he frequently presses us to visit the palace. Naturally he wants to go to a place he finds familiar and interesting, but his inclinations make me feel sad, since it means he will leave me. Please convey my private thoughts to His Majesty. I regret that my own inauspicious circumstances have forced the boy to live in a place like this. It is not right that he should be here, and it is more than someone like me deserves.”",
     "formatting": {
-      "left_indent": 0.5,
+      "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 0,
-          "end": 58,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 131
+    "document": 1,
+    "element_order": 71
   },
   "content": {
-    "text": "The moon was waning.",
+    "text": "Eventually even the Kokiden Consort and her attendants were won over, and whenever the young Prince accompanied his father to the Kokiden chambers, he would be permitted entry behind the curtains where the ladies-in-waiting were serving His Majesty. The fiercest warriors and most implacable enemies would have smiled had they seen him, and the ladies of the court were reluctant to let him out of their sight. The Kokiden Consort had given the Emperor two princesses as well, but neither of them could compare in beauty to this boy. The other consorts and ladies felt no inhibitions around him⏤indeed, they allowed him to catch glimpses of their faces⏤and his own appearance was so elegant that they would experience an embarrassed excitement whenever they saw him. All the courtiers considered him exceptionally splendid, a playmate to be treated with special deference.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

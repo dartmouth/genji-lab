@@ -1,17 +1,58 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 172
+    "document": 1,
+    "element_order": 93
   },
   "content": {
-    "text": "Thinking that the Princess was now helpless and alone, His Majesty again approached the young lady. “I will think of you as an equal to my own daughters,” he assured her. Her ladies-in-waiting, her supporters from her mother’s family, and her older brother, Prince Hyōbu, who served in the Ministry of War, were all of the opinion that attending the Emperor would bring solace to herand in any case it certainly would be preferable to remaining in her current wretched circumstances.",
+    "text": "When you with purple cords first bound his hair\nDid you not also bind your heart and swear\nEternal vows to give him your daughter",
     "formatting": {
-      "left_indent": 0,
+      "left_indent": 1.0,
       "right_indent": 0,
-      "first_line_indent": 0.5,
+      "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": true,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 0,
+            "end": 47,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 47,
+            "end": 48,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 48,
+            "end": 90,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 47,
+            "end": 48,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 91,
+            "end": 129,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

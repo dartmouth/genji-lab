@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 5
+    "document": 1,
+    "element_order": 3
   },
   "content": {
     "text": "The woman’s father had risen to the third rank as a Major Counselor before he died. Her mother, the principal wife of her father, was a woman of old-fashioned upbringing and character who was well trained in the customs and rituals of the court. Thus, the reputation of her house was considered in no way inferior and did not suffer by comparison with the brilliance of the highest nobility. Unfortunately, her family had no patrons who could provide political support, and after her father’s death there was no one she could rely on. In the end, she found herself at the mercy of events and with uncertain prospects.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 119
+    "document": 1,
+    "element_order": 64
   },
   "content": {
-    "text": "The Emperor took pity on the grandmother. “She told you how gratifying it was to be able to fulfill her late husband’s last request that their daughter serve at court. Now, judging from her poem, it seems she believes all her efforts have been in vain. She should not feel that way. Though her daughter may be gone, there will surely be occasions when I must do things for her grandson ... should the young Prince survive to manhood. She should thus be patient and live a long life in anticipation of his glorious future.”",
+    "text": "He achingly recalled the nights he spent with the lady in her paulownia-courtyard chambers⏤how his lost love would sleep past dawn, and how he would lie awake, unable to meet her in their dreams. He ended up neglecting his morning offices, and he had no appetite for breakfast. It looked as though he was just going through the motions, picking at his food, distracted to the point that he paid no heed to the trays set in front of him. The servants were touched by his suffering, and his closest attendants sighed and whispered among themselves how troubling his behavior was, how it must be the effect of some karmic bond between him and the deceased lady forged in a former life. Some expressed their disapproval and resentment without reservations, and there were murmurs and rumblings that the Emperor’s obsessive love for the woman had gone beyond the bounds of propriety. For him to continue to ignore his official responsibilities as he was doing was an inauspicious and alarming state of affairs, and for some his behavior once more brought to mind the example of Emperor Xuanzong and Yang Guifei.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

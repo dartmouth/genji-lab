@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 182
+    "document": 1,
+    "element_order": 98
   },
   "content": {
-    "text": "It pained the Emperor that his son would eventually grow out of his youthful good looks, but when Genji turned twelve, preparations were made for the coming-of-age ceremony in which his hair would be done up and his clothes and cap worn in the style of an adult. His Majesty personally tended to every little detail of the ceremony, adding touches that went beyond custom and set a new standard. The ceremony that had initiated the Crown Prince into manhood had been a spectacular affair held in the Shishinden, the great ceremonial hall of the palace. The Emperor wanted Genji’s ceremony to be just as majestic and proper. He had various officesincluding the Treasury and the Imperial Granariesmake formal preparations for the many banquets and celebrations that would follow the ceremony, and he left special instructions that no expense should be spared and that his directives should be carried out so as to make the occasion one of utmost splendor.",
+    "text": "That evening, Genji departed for the residence of the Minister of the Left, which was located on Sanjō Avenue. The ceremony welcoming Genji as groom and solemnizing his wedding was conducted with unprecedented attention to proper form. Feeling a touch of dread, the Minister was captivated by the masculine beauty of Genji, who still looked quite boyish. In contrast his daughter, who at sixteen was four years older than her new husband, was put off by Genji’s youthfulness and considered their match inappropriate.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

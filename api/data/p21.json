@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 44
+    "document": 1,
+    "element_order": 22
   },
   "content": {
     "text": "Her voice was firm and steady, but then she swayed and very nearly fell from her carriage. The women attending her had anticipated this might happen, but they still did not know what to do for her.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

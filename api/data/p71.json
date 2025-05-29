@@ -1,25 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 133
+    "document": 1,
+    "element_order": 72
   },
   "content": {
-    "text": "If even at the palace above the clouds",
+    "text": "His formal training included instruction on the koto and flute, and word of his talents echoed throughout the palace⏤though if I were to go into all the details about his abilities my account would seem exaggerated, and he would come across as too good to be true.",
     "formatting": {
-      "left_indent": 0.5,
+      "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 0,
-          "end": 38,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

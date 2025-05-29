@@ -1,17 +1,58 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 89
+    "document": 1,
+    "element_order": 46
   },
   "content": {
-    "text": "Myōbu relayed the Emperor’s words, though she did not convey everything he said. Breaking down in tears, she told the grandmother, “The hour is late, and I must return with my report before the night is out.” With that she hurried back to the palace.",
+    "text": "Bell crickets seem to cry their hearts out\nBut the tears I weep are not confined\nTo a single long night in autumn",
     "formatting": {
-      "left_indent": 0,
+      "left_indent": 1.0,
       "right_indent": 0,
       "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": true,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 0,
+            "end": 42,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 42,
+            "end": 43,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 43,
+            "end": 80,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 42,
+            "end": 43,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 81,
+            "end": 113,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

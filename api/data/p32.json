@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 65
+    "document": 1,
+    "element_order": 33
   },
   "content": {
     "text": "For a time my thoughts and emotions were in such turmoil that I wondered if this wasn’t all just a dream. Now, as I slowly recover my equilibrium, I have come to the unbearable realization that her death is not a dream from which I will awaken. I have no one to confide in, no one to ask what I should do. Thus, I want to ask you to consider returning discreetly to the palace. I am concerned about the young Prince and imagine that it must be trying for him to pass his days in a place so steeped in dew and tears.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

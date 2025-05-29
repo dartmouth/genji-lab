@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 67
+    "document": 1,
+    "element_order": 34
   },
   "content": {
     "text": "“The Emperor’s voice was so choked with grief,” Myōbu added, “that he could not speak clearly. At the same time, he did not want the courtiers to think he was weak-willed and fragile, so he struggled to maintain control of himself. It was painful to see him in such a state, and I left without listening to everything he told me.”",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

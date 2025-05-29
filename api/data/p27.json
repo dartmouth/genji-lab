@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 56
+    "document": 1,
+    "element_order": 28
   },
   "content": {
     "text": "The moon that night was exquisite, and, having sent the woman on her way, His Majesty was soon lost in a reverie. He had always arranged for some form of entertainment with music and poetry on just such spectacular evenings as this. He conjured phantom images of playing the koto together with his lost love and recalled the special feeling and artistry of her performance. He remembered her way of speaking, so seemingly natural and unforced, and her looks and bearing, so superior to the others. These images clung to him, bringing to mind the old verse that claimed reality in the darkness was no better than dreams. How wrong that poet was, he thought. There is no substitute for her real presence here in the dark.",
@@ -11,22 +11,27 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 620,
-          "end": 644,
-          "type": [
-            "italic"
-          ]
-        },
-        {
-          "start": 657,
-          "end": 719,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 620,
+            "end": 644,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 657,
+            "end": 719,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

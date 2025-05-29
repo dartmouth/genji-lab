@@ -1,25 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 121
+    "document": 1,
+    "element_order": 65
   },
   "content": {
-    "text": "Myōbu had the mementos brought forth. Recalling how Emperor Xuanzong had dispatched a Taoist summoner to search for the spirit of Yang Guifei, the Emperor thought, If only this ornamental hair comb proved that the messenger had indeed visited the residence of my deceased love. But he knew these were idle thoughts.",
+    "text": "",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
-      "first_line_indent": 0.5,
+      "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 164,
-          "end": 276,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": true,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

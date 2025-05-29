@@ -1,25 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 168
+    "document": 1,
+    "element_order": 91
   },
   "content": {
-    "text": "Could this really be true? His Majesty, who could barely contain himself, began to make some discreet inquiries.",
+    "text": "After the ceremony, Genji withdrew into the attendant’s antechamber. As the party was making a celebratory toast in his honor, the Emperor gave permission for Genji, who had no rank, to sit at a place below the imperial princes but above the ministers. The Minister of the Left, who was seated next to him, casually dropped a few hints about his daughter, but Genji, who was still at an age when he felt diffident and embarrassed about such matters, did not respond.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 0,
-          "end": 25,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

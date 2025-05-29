@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 188
+    "document": 1,
+    "element_order": 101
   },
   "content": {
-    "text": "The Minister of the Left, who performed the capping ritual, had taken the younger sister of the Emperor as his principal wife. She gave him a daughter, whom he doted upon, raising her with the utmost care. The Minister was troubled when he learned that the Crown Prince evidently desired his daughter, because he was secretly planning to arrange a match for her with Genji. And so in the days leading up to the ceremony, he approached the Emperor with his proposal.",
+    "text": "When Genji stayed at the palace, he took up residence in the Kiritsubo. The women who had once served his mother had not been dismissed and scattered, and so they were now assigned to wait on him. Orders were sent down to the Office of Palace Repairs and to the Bureau of Skilled Artisans to rebuild and expand the former residence of Genji’s mother, a villa on Nijō Avenue. The project was to be carried out so splendidly that there would be no other villa like it. The setting of the surrounding woods and hills was already unparalleled, and when the garden pond was enlarged, the result was so eye-catching that it created a stir. Genji thought wistfully that such a villa would be the perfect residence for a wife who had all the qualities of his ideal woman, Fujitsubo.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

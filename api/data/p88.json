@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 164
+    "document": 1,
+    "element_order": 89
   },
   "content": {
-    "text": "Months and years passed, but there was never a moment when the Emperor forgot his love for the lady who had resided in the chambers looking out on the paulownia courtyard. Thinking he might find someone who could assuage his grief, he had women of appropriate breeding and talents brought before him. But it was all in vain, for where in the world could he expect to find her equal? Just when he had reached the point where he found everything tiresome and was contemplating retiring from the world, an Assistant Handmaid informed him of a young woman, the Fourth Princess of the previous Emperor, whose beauty was matchless, whose reputation at court was beyond reproof, and whose mother had raised her with extraordinary care and devotion. Since this Assistant Handmaid had once served at the court of the previous Emperor, she was familiar with the mother of this young woman and accustomed to waiting on her. In the course of her service she had been able to observe the Fourth Princess as she grew from childhood, and even now would occasionally see her.",
+    "text": "The Minister of the Left, who performed the capping ritual, had taken the younger sister of the Emperor as his principal wife. She gave him a daughter, whom he doted upon, raising her with the utmost care. The Minister was troubled when he learned that the Crown Prince evidently desired his daughter, because he was secretly planning to arrange a match for her with Genji. And so in the days leading up to the ceremony, he approached the Emperor with his proposal.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

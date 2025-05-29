@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 148
+    "document": 1,
+    "element_order": 81
   },
   "content": {
-    "text": "With both his mother and grandmother gone, the young Prince moved back to the palace for good. When he turned seven he underwent the ceremony of the First Reading, which initiated him into the study of the Chinese classics. The court had never known a child so precociously intelligent, and His Majesty, knowing how others felt and believing that talent and beauty die young, could not help but view such abilities with alarm.",
+    "text": "Thinking that the Princess was now helpless and alone, His Majesty again approached the young lady. “I will think of you as an equal to my own daughters,” he assured her. Her ladies-in-waiting, her supporters from her mother’s family, and her older brother, Prince Hyōbu, who served in the Ministry of War, were all of the opinion that attending the Emperor would bring solace to her⏤and in any case it certainly would be preferable to remaining in her current wretched circumstances.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

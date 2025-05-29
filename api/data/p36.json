@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 73
+    "document": 1,
+    "element_order": 37
   },
   "content": {
     "text": "His Majesty had revealed his true feelings in the letter. He had even attached a poem:",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

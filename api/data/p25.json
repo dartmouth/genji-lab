@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 52
+    "document": 1,
+    "element_order": 26
   },
   "content": {
     "text": "Over in the chambers of the Kokiden the mother of the Crown Prince and her faction remained implacably unforgiving. “Is he still so in love with her,” she complained, “that even after her death he doesn’t consider the feelings of others?” And indeed it was true that whenever the Emperor looked at the Crown Prince, his thoughts would inevitably drift in yearning to the younger Prince, and he would then dispatch his most trusted ladies-in-waiting or nurses to the family home of his late beloved to inquire after the boy.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

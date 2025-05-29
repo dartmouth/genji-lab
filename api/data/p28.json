@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 58
+    "document": 1,
+    "element_order": 29
   },
   "content": {
     "text": "As soon as Yugei no Myōbu arrived at the residence of the young Prince, her carriage was drawn in through the gate. The scene was quite touching. Although the grandmother of the little boy was a widow, she had carefully maintained appearances and made the residence a pleasant place to live in order to look after her only daughter in a proper and loving manner. Now, however, she had fallen into a dark mood. She had been so tearfully distraught ever since the death of her daughter that she had allowed the grasses and plants to grow untended in her garden, which appeared to have been buffeted by autumn winds. Moonlight filtered in through tangled vines of false cleavers growing in wild profusion.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 14
+    "document": 1,
+    "element_order": 7
   },
   "content": {
     "text": "Even though the mother of the newborn Prince relied on the Emperor’s benevolence for protection, many of the ladies at court scorned her. She grew physically weak, and because she felt powerless and had no one to turn to for help, she suffered greatly because of his love.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

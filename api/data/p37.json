@@ -1,25 +1,58 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 75
+    "document": 1,
+    "element_order": 38
   },
   "content": {
-    "text": "Winds rustle the bush clover at Miyagino",
+    "text": "Winds rustle the bush clover at Miyagino\nAnd turn dew to pearls ... winds at the palace bring tears\nAnd concerns for the young bush clover at your home",
     "formatting": {
-      "left_indent": 0.5,
+      "left_indent": 1.0,
       "right_indent": 0,
-      "first_line_indent": 0.5,
+      "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 0,
-          "end": 40,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 0,
+            "end": 40,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 40,
+            "end": 41,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 41,
+            "end": 99,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 40,
+            "end": 41,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 100,
+            "end": 151,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 91
+    "document": 1,
+    "element_order": 47
   },
   "content": {
-    "text": "At that moment the moon was setting, the clear sky was gradually becoming light, and a chill breeze arose. The chirping of the insects amid the grasses elicited profoundly sad emotions, and Myōbu found it hard to leave this desolate abode.",
+    "text": "Myōbu was reluctant to board her carriage. The grandmother sent a response through an intermediary to tell her, “This may perhaps sound like an accusation, but ...”",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
-      "first_line_indent": 0.5,
+      "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

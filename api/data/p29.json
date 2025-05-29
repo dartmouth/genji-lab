@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 60
+    "document": 1,
+    "element_order": 30
   },
   "content": {
     "text": "Yugei no Myōbu alighted from her carriage at the southern gate, but it was impossible for the grandmother to say anything to her at first. When the old woman finally found her voice, she said, “Although it is a bitter fate to live on after the death of my child, I am deeply humbled that a messenger from the Emperor should part the dew on these overgrown grasses just to make her way to my abode.” She found it hard to control her grief.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

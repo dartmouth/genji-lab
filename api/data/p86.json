@@ -1,17 +1,30 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 160
+    "document": 1,
+    "element_order": 87
   },
   "content": {
-    "text": "The Major Controller was himself a scholar of considerable learning and discernment, and his conversations with the men of the Korean mission were deeply engaging. The party composed and exchanged verses in Chinese, and because the mission planned to leave for home in a day or two, one of the diviner’s poems expressed the joy at having met such a remarkable boy face-to-face and the sorrow of having to part from him so soon. In response to the heartfelt expression of this poem, the young Prince composed an accomplished verse of his own. The diviner praised his effort as auspicious and bestowed lavish gifts on him. In return, the diviner received splendid presents from the imperial household. Naturally, news of this encounter spread through the court. His Majesty did not let on that he knew anything about it, but the grandfather of the Crown Prince, who happened to be the Minister of the Right, caught wind of the gossip and, not knowing quite what to make of it, grew suspicious.",
+    "text": "His Majesty was seated facing east under the eastern eaves of his residence in the Seiryōden, and the seats for Genji and the minister who would bestow the cap were located in front of him. Genji appeared before the Emperor at around four in the afternoon, during the Hour of the Monkey. The lambent glow of his face, which was still framed on either side by the twin loops of his boyish hairdo, made his father feel all the more regretful about the change in appearance that was about to take place. The honor of trimming back Genji’s hair fell to the Minister of the Treasury, whose face betrayed the pain he felt the moment he cut Genji’s beautiful locks. The Emperor had a hard time keeping his emotions in check. If only his mother were here to see this ceremony, he thought, struggling to maintain his composure.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 718,
+            "end": 767,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

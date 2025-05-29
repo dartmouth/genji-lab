@@ -1,25 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 123
+    "document": 1,
+    "element_order": 66
   },
   "content": {
-    "text": "Had I sent a Taoist summoner",
+    "text": "The days and months passed, and the young Prince finally came back to the palace. He had grown so splendid and handsome that he no longer seemed to belong to this mortal world. His worried father, knowing that the beautiful die young, took the boy’s good looks as an unlucky omen.",
     "formatting": {
-      "left_indent": 0.5,
+      "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 0,
-          "end": 28,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

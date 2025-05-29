@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 87
+    "document": 1,
+    "element_order": 45
   },
   "content": {
-    "text": "Our relationship could never have lasted long, because my love was so excessive it startled and offended those who saw us. Now I realize how cruel her fate was. I feel my love for her should not have given even the slightest offense, and yet for the sake of my love alone must I bear so much unjustified resentment from others. I have been abandoned, and have nothing to soothe my heart. I fear I am becoming a pathetic fool, the object of shameful gossip. Did I do something in a previous life to deserve this?",
+    "text": "At that moment the moon was setting, the clear sky was gradually becoming light, and a chill breeze arose. The chirping of the insects amid the grasses elicited profoundly sad emotions, and Myōbu found it hard to leave this desolate abode.",
     "formatting": {
-      "left_indent": 1.0,
+      "left_indent": 0,
       "right_indent": 0,
-      "first_line_indent": 0,
+      "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

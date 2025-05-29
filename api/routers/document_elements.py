@@ -34,7 +34,7 @@ def create_element(element: DocumentElementCreate, db: AsyncSession = Depends(ge
     """
     # Verify the document exists
     document = db.execute(
-        select(Document).filter(Document.id == element.document_id).order_by(DocumentElement.id)
+        select(Document).filter(Document.id == element.document_id).order_by(Document.id)
     ).scalar_one_or_none()
     
     if not document:
@@ -60,10 +60,11 @@ def read_elements(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Retrieve document elements with optional filtering
+    Retrieve document elements with optional filtering and sorting
     
     - document_id: Filter by document ID
-    - content_query: Search within the content JSONB field (requires PostgreSQL full-text search)
+    - content_query: Search within the content JSONB field
+    - Results are sorted by hierarchy->element_order in ascending order
     """
     query = select(DocumentElementModel)
     
@@ -71,13 +72,14 @@ def read_elements(
     if document_id:
         query = query.filter(DocumentElementModel.document_id == document_id)
     
-    # Content search (simplified - in a real app, you'd want more sophisticated JSONB querying)
+    # Content search
     if content_query:
-        # This is a simplified approach. For a real app, consider using PostgreSQL's 
-        # full-text search capabilities or more specific JSONB operators
         query = query.filter(
             DocumentElementModel.content.cast(String).ilike(f"%{content_query}%")
         )
+    
+    # Sort by element_order inside hierarchy JSONB field
+    query = query.order_by(DocumentElementModel.hierarchy['element_order'].as_integer())
     
     # Apply pagination
     query = query.offset(skip).limit(limit)

@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 32
+    "document": 1,
+    "element_order": 16
   },
   "content": {
     "text": "She evidently wanted to say more to him, but her breathing was labored. She was so weak and in such pain the Emperor longed to keep her at the palace and see it through to the end, come what may. But when he received an urgent message informing him that the most skilled of priests had been called to her family home to chant the requisite prayers of healing for her that evening, His Majesty at last agreed that his beloved should leave the palace, unbearable as it was for him to make that decision.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

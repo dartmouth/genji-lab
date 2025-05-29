@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 152
+    "document": 1,
+    "element_order": 83
   },
   "content": {
-    "text": "Eventually even the Kokiden Consort and her attendants were won over, and whenever the young Prince accompanied his father to the Kokiden chambers, he would be permitted entry behind the curtains where the ladies-in-waiting were serving His Majesty. The fiercest warriors and most implacable enemies would have smiled had they seen him, and the ladies of the court were reluctant to let him out of their sight. The Kokiden Consort had given the Emperor two princesses as well, but neither of them could compare in beauty to this boy. The other consorts and ladies felt no inhibitions around himindeed, they allowed him to catch glimpses of their facesand his own appearance was so elegant that they would experience an embarrassed excitement whenever they saw him. All the courtiers considered him exceptionally splendid, a playmate to be treated with special deference.",
+    "text": "Because the young Genji was always at his father’s side, he was constantly in the presence of the women who attended His Majesty most frequently. These women grew familiar with the boy and gradually came to feel that they did not have to be reserved around him. Of course, none of the consorts considered herself inferior to the others, but even though each one was very attractive in her own individual way, there was no denying that they all had passed, or were on the verge of passing, the peak of their charms ... all but Fujitsubo, that is. She still possessed the loveliness of youthful beauty and, try as she might to keep herself hidden away behind her screens, Genji, who was always nearby, would catch glimpses of her figure. He had no memory of his mother, and when he heard the head of the imperial household staff say that Fujitsubo looked just like her, his young heart ached with wistful longing⏤if only he could always be close to his father’s new consort!",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

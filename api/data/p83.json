@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 154
+    "document": 1,
+    "element_order": 84
   },
   "content": {
-    "text": "His formal training included instruction on the koto and flute, and word of his talents echoed throughout the palacethough if I were to go into all the details about his abilities my account would seem exaggerated, and he would come across as too good to be true.",
+    "text": "Genji and Fujitsubo were the two most precious people to the Emperor. “Do not be shy around the boy,” His Majesty told Fujitsubo. “It may seem strange and curious, but I feel as though it is fitting for him to think of you as his mother. Do not think him discourteous, but cherish him for my sake. His face and expressions are so like his mother’s ... and since you resemble her so closely, you can hardly blame him for thinking of you the way he does.”",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

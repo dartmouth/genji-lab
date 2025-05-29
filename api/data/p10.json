@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 22
+    "document": 1,
+    "element_order": 11
   },
   "content": {
     "text": "Resigned to the fact that the life of his true love was approaching its end and mindful of the taboo against defiling the palace with death, His Majesty was nonetheless grief-stricken beyond words that the dictates of protocol prevented him from seeing her off. The woman’s face, with its lambent beauty conveying that air of grace so precious to him, was now thin and wasted. She had tasted the sorrows of the world to the full, but as she slipped in and out of consciousness, she could not convey to him even those feelings that might have been put into words. The Emperor, who now realized that his beloved was on the verge of death, lost control and made all sorts of tearful vows to her, no longer able to distinguish past from future. She, however, could not respond to him. The expression of weariness in her eyes made her all the more alluringly vulnerable as she lay there in a semiconscious state. The Emperor was beside himself and had no idea what he should do. He had granted her the honor of leaving in a carriage drawn by servants, but when he returned to her chambers again, he simply could not bring himself to let her go.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

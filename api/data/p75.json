@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 139
+    "document": 1,
+    "element_order": 76
   },
   "content": {
-    "text": "He achingly recalled the nights he spent with the lady in her paulownia-courtyard chambershow his lost love would sleep past dawn, and how he would lie awake, unable to meet her in their dreams. He ended up neglecting his morning offices, and he had no appetite for breakfast. It looked as though he was just going through the motions, picking at his food, distracted to the point that he paid no heed to the trays set in front of him. The servants were touched by his suffering, and his closest attendants sighed and whispered among themselves how troubling his behavior was, how it must be the effect of some karmic bond between him and the deceased lady forged in a former life. Some expressed their disapproval and resentment without reservations, and there were murmurs and rumblings that the Emperor’s obsessive love for the woman had gone beyond the bounds of propriety. For him to continue to ignore his official responsibilities as he was doing was an inauspicious and alarming state of affairs, and for some his behavior once more brought to mind the example of Emperor Xuanzong and Yang Guifei.",
+    "text": "The Emperor in his wisdom had earlier sought out the opinion of a Japanese diviner, whose reading of the boy’s physiognomy accorded with his own thinking at the time. His Majesty had been holding back on installing the young Prince in the line of succession, and was thus impressed by the perspicacity of the Korean diviner, who recognized the boy’s imperial lineage. Even so, he could not be sure how long his own reign would last, and he hesitated to appoint his son prince-without-rank. He anxiously wondered whether the boy, who lacked support from his mother’s family, would not end up precariously adrift once he was no longer in the line of succession. For that reason he determined that the boy’s prospects might be better if he were made to serve as a loyal subject of the imperial court, and so he had his son tutored accordingly in the arts and in various fields of learning. The boy was so exceptionally bright it seemed a shame to demote him to commoner status, but the Emperor knew that designating his son heir apparent would invite the calumny and scorn of the court. He consulted yet another diviner who was wise in the ways of Indic astrology, and when this new reading proved to be in line with the others and with His Majesty’s own thoughts on the matter as well, he decided to confer on the boy the clan name of Minamoto⏤Genji⏤thereby making him a commoner.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

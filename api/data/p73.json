@@ -1,25 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 135
+    "document": 1,
+    "element_order": 74
   },
   "content": {
-    "text": "How could it shine clearly on that rustic hut",
+    "text": "“The young man’s features tell me he is destined to be ruler of this country,” the diviner declared, “and will perhaps even attain the supreme position of Emperor. Yet if that is what fate has in store for him, I foresee chaos and great sorrow for the court. On the other hand, if his destiny is to ascend to a position such as Chancellor and act as a guardian of imperial rule, then it appears he will be a great benefactor to the state. Still, I must say that judging by his features alone, the path leading to the Chancellorship seems less likely.”",
     "formatting": {
-      "left_indent": 0.5,
+      "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 0,
-          "end": 46,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

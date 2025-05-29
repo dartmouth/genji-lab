@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 170
+    "document": 1,
+    "element_order": 92
   },
   "content": {
-    "text": "The mother of the Fourth Princess warned her daughter about the situation at the palace. “The Kokiden Consort is a vindictive woman. Just look at the unfortunate example of the lady in the Kiritsubo. The treatment she suffered was truly appalling.” Unable to decide if she should allow her daughter to go to the palace, the mother was still struggling with the Emperor’s request when suddenly she passed away.",
+    "text": "An attendant from the imperial household staff brought a message from the Emperor to the Minister, requesting his presence. The Minister went to the imperial quarters, where a senior lady-in-waiting presented him with the appropriate gifts that custom demanded: a white oversized woman’s robe made especially for this presentation, along with a set of three robes. His Majesty vented his pent-up emotions, presenting a cup of rice wine to the Minister and reminding him of his responsibilities toward Genji:",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

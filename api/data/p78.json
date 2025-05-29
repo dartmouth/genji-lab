@@ -1,17 +1,30 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 144
+    "document": 1,
+    "element_order": 79
   },
   "content": {
-    "text": "In the spring of the following year the time came for the Emperor to formally designate the heir apparent. He was seized by a desire to pass over the presumed Crown Prince, his son by the Kokiden Consort, and appoint his favored younger son instead, but he knew that the little Prince had no supporters and that the court would never accept such a move, which might prove dangerous to the boy. So in the end he went against his personal wishes and confirmed the Crown Prince as his heir apparent, all the while keeping his true feelings concealed. The courtiers remarked among themselves that no matter how much His Majesty preferred the younger son, he knew there were limits to his affection. When the Kokiden Consort caught wind of these rumors, she felt both relief and satisfaction.",
+    "text": "Could this really be true? His Majesty, who could barely contain himself, began to make some discreet inquiries.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 0,
+            "end": 25,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

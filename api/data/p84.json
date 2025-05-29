@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 156
+    "document": 1,
+    "element_order": 85
   },
   "content": {
-    "text": "The Emperor learned that among the members of a mission from the Korean kingdom of Koryō was a diviner skilled at the art of physiognomy. An old edict by the Emperor Uda had forbidden the presence of foreigners within the palace, so His Majesty discreetly arranged to have the young Prince meet with this man at the Kōrōkan, the residence provided for foreign missions. The Major Controller of the Right assumed the role of guardian and accompanied the boy to the mission under the pretense that he was the father of the child. The diviner was both puzzled and astounded. He tilted his head back and forth, unable to believe that this child could really be the Major Controller’s son.",
+    "text": "After the Emperor made this request, Genji, in his boyish emotions, would try everything⏤even references to the transient blossoms of spring or the blazing leaves of autumn⏤to gain Fujitsubo’s recognition of his yearning affection for her. When the Kokiden Consort learned of the unprecedented favoritism His Majesty was displaying toward these two, she once more grew cold and distant toward Fujitsubo and her retinue. Moreover, her earlier ominous dislike of Genji and his mother flared up again, and she found the boy repellent. Her son, the Crown Prince, was considered flawlessly handsome, and his reputation was above reproach. Nonetheless, he was no match for the lustrous beauty of Genji, who possessed an aura that prompted the courtiers to call him “the Radiant Prince.” Because Fujitsubo was his equal in looks and in the affections of the Emperor, she came to be referred to as “the Princess of the Radiant Sun.”",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

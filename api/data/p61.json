@@ -1,25 +1,58 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 115
+    "document": 1,
+    "element_order": 62
   },
   "content": {
-    "text": "The bush clover to its uncertain fate",
+    "text": "If even at the palace above the clouds\nA mist of tears can obscure the autumn moon\nHow could it shine clearly on that rustic hut",
     "formatting": {
-      "left_indent": 0.5,
+      "left_indent": 1.0,
       "right_indent": 0,
-      "first_line_indent": 0.5,
+      "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 0,
-          "end": 37,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 0,
+            "end": 38,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 38,
+            "end": 39,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 39,
+            "end": 82,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 38,
+            "end": 39,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 83,
+            "end": 129,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

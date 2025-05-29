@@ -1,25 +1,58 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 93
+    "document": 1,
+    "element_order": 48
   },
   "content": {
-    "text": "Bell crickets seem to cry their hearts out",
+    "text": "A caller from beyond the clouds brings dewy tears\nAnd greater woe to this hut amidst tangled reeds\nEchoing with the lonely chirring of crickets",
     "formatting": {
-      "left_indent": 0.5,
+      "left_indent": 1.0,
       "right_indent": 0,
-      "first_line_indent": 0.5,
+      "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 0,
-          "end": 42,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 0,
+            "end": 49,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 49,
+            "end": 50,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 50,
+            "end": 98,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 49,
+            "end": 50,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 99,
+            "end": 143,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

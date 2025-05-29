@@ -1,17 +1,30 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 97
+    "document": 1,
+    "element_order": 51
   },
   "content": {
-    "text": "Myōbu was reluctant to board her carriage. The grandmother sent a response through an intermediary to tell her, “This may perhaps sound like an accusation, but ...”",
+    "text": "When Myōbu returned to the palace she found His Majesty still awake, unable to rest. She felt great pity for him. He had summoned four or five of his most elegant and refined ladies, and while gazing westward into the garden between the Seiryōden and the Kōrōden and pretending to admire the splendid autumn foliage, he conversed quietly with them. Lately he had taken to spending all his time looking at paintings depicting Bai Juyi’s Song of Everlasting Sorrow, which was so like his own story. These had been commissioned by Emperor Uda and included poems by one of Uda’s consorts, Lady Ise, and by Ki no Tsurayuki, as well as other verses in Chinese and Japanese that alluded to the story. It was the only thing the Emperor wanted to talk about.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
-      "first_line_indent": 0,
+      "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 436,
+            "end": 462,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

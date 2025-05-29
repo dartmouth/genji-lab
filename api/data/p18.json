@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 38
+    "document": 1,
+    "element_order": 19
   },
   "content": {
     "text": "His Majesty desperately wanted to see the young Prince his beloved had left behind at the palace, but there was no precedent for permitting anyone to serve at court while having to wear robes of mourning. So it was decided that the boy should be sent from the palace to his mother’s residence. Too young to fully comprehend what was going on, he knew from the way people around him were behaving, and from the Emperor’s ceaseless tears, that something was terribly wrong. The death of loved ones is always a source of grief, but the little boy’s puzzled expression only added to the unspeakable sadness of it all.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

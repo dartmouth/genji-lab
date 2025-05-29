@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 79
+    "document": 1,
+    "element_order": 41
   },
   "content": {
-    "text": "The boy’s grandmother was unable to read all the way through the letter. “Though I have experienced the tribulations that come with living so long, I feel insignificant and ashamed when I recall the ancient pines of Takasago. For that reason, I am all the more reluctant to leave, constrained by the thought of showing myself at the palace. I have been favored so often by the Emperor’s gracious consideration that I cannot bring myself to accept the invitation. I am not sure just how much the boy understands, but he frequently presses us to visit the palace. Naturally he wants to go to a place he finds familiar and interesting, but his inclinations make me feel sad, since it means he will leave me. Please convey my private thoughts to His Majesty. I regret that my own inauspicious circumstances have forced the boy to live in a place like this. It is not right that he should be here, and it is more than someone like me deserves.”",
+    "text": "“The darkness that envelops the heart of a parent who has lost a child is so hard to bear,” said the grandmother, “that I long to speak with you to lift that darkness. Please come again, not in your capacity as a messenger, but in private so that we may talk at our leisure. Over the years you have honored me with your visits in more auspicious times. Now, seeing you bring such tidings as this to me, I am amazed at how unpredictable life really is. From the moment of her birth we placed all our hopes and aspirations on our daughter. The Major Counselor, her father, told me on his deathbed that ‘we must realize our dream of having her serve at court. It would be unforgivable for you to abandon that dream just because I am dying.’ He was so insistent about the matter that I sent her to court to honor his last wishes, even though I knew she had no one there to protect and support her. Then His Majesty favored her with an unusual degree of affection, which she did not merit. Even as she had to hide the shame she incurred on account of her unprecedented position, her relationship with the Emperor deepened the envy of others and led to so many incidents that caused her heartache. Her situation was a cruel and strange one, and look how it all ended. I now consider the love His Majesty bestowed on her a heavy burden instead ... but of course it is the darkness of my heart that makes me say such outrageous things.” Her voice was choked with tears, and she could not continue. The night was now well advanced.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

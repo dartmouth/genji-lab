@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 180
+    "document": 1,
+    "element_order": 97
   },
   "content": {
-    "text": "After the Emperor made this request, Genji, in his boyish emotions, would try everythingeven references to the transient blossoms of spring or the blazing leaves of autumnto gain Fujitsubo’s recognition of his yearning affection for her. When the Kokiden Consort learned of the unprecedented favoritism His Majesty was displaying toward these two, she once more grew cold and distant toward Fujitsubo and her retinue. Moreover, her earlier ominous dislike of Genji and his mother flared up again, and she found the boy repellent. Her son, the Crown Prince, was considered flawlessly handsome, and his reputation was above reproach. Nonetheless, he was no match for the lustrous beauty of Genji, who possessed an aura that prompted the courtiers to call him “the Radiant Prince.” Because Fujitsubo was his equal in looks and in the affections of the Emperor, she came to be referred to as “the Princess of the Radiant Sun.”",
+    "text": "Decorative boxes of thin cypress wood filled with delicacies and baskets of fruit were among the items prepared for the Emperor that day. The Major Controller of the Right, who had acted earlier as Genji’s guardian, had been put in charge of the presentations. The garden overflowed with trays stacked with rice cakes flavored with various fillings and with four-legged chests of Chinese-style lacquer stuffed with presents for the lower-ranking attendants⏤so many that their numbers surpassed even the presentations made at the coming-of-age ceremony held for the Crown Prince. Indeed, it was an incomparably magnificent affair.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

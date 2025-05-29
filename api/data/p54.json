@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 103
+    "document": 1,
+    "element_order": 55
   },
   "content": {
-    "text": "It was inappropriate to send an elegant present on such an occasion. Instead, the grandmother sent a memento of her daughter: a set of robes and some hair ornaments, which apparently had been saved for this very purpose.",
+    "text": "The Emperor understood that these intemperate words⏤which implied that he would not be able to protect a motherless child⏤were written at a moment of emotional distress. He tried to suppress his feelings so as not to show how tormented he was, but he could not endure the pain. Obsessing over all of his memories of the woman⏤even the moment when he first laid eyes on her⏤he could scarcely believe that so much time had passed, especially when he recalled how hard it had been for him to be apart from her for even the briefest period.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

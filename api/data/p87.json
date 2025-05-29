@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 162
+    "document": 1,
+    "element_order": 88
   },
   "content": {
-    "text": "The Emperor in his wisdom had earlier sought out the opinion of a Japanese diviner, whose reading of the boy’s physiognomy accorded with his own thinking at the time. His Majesty had been holding back on installing the young Prince in the line of succession, and was thus impressed by the perspicacity of the Korean diviner, who recognized the boy’s imperial lineage. Even so, he could not be sure how long his own reign would last, and he hesitated to appoint his son prince-without-rank. He anxiously wondered whether the boy, who lacked support from his mother’s family, would not end up precariously adrift once he was no longer in the line of succession. For that reason he determined that the boy’s prospects might be better if he were made to serve as a loyal subject of the imperial court, and so he had his son tutored accordingly in the arts and in various fields of learning. The boy was so exceptionally bright it seemed a shame to demote him to commoner status, but the Emperor knew that designating his son heir apparent would invite the calumny and scorn of the court. He consulted yet another diviner who was wise in the ways of Indic astrology, and when this new reading proved to be in line with the others and with His Majesty’s own thoughts on the matter as well, he decided to confer on the boy the clan name of MinamotoGenjithereby making him a commoner.",
+    "text": "The capping ritual followed, and when that was finished, Genji withdrew to an antechamber to rest and change into the formal attire of an adult: an outer robe with the underarm vents sewn up. Stepping down into the garden east of the Seiryōden, he faced his father and performed obeisance, placing his ceremonial wand on the ground, rising and bowing left, right and left again, then sitting and repeating his actions to show his gratitude. He cut such a magnificent figure that all in attendance were moved to tears. As might be expected, the Emperor found it harder than the others to hide his feelings. At that moment the sad events of the past, which he normally kept himself from dwelling on, came flooding back. Since Genji was still at a tender age, His Majesty had fretted that cutting his locks and putting his hair up in the style of an adult man would spoil his looks. To his amazement the ceremony only added to Genji’s aura of masculine beauty.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

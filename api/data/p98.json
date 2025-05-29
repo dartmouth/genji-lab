@@ -1,25 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 184
+    "document": 1,
+    "element_order": 99
   },
   "content": {
-    "text": "His Majesty was seated facing east under the eastern eaves of his residence in the Seiryōden, and the seats for Genji and the minister who would bestow the cap were located in front of him. Genji appeared before the Emperor at around four in the afternoon, during the Hour of the Monkey. The lambent glow of his face, which was still framed on either side by the twin loops of his boyish hairdo, made his father feel all the more regretful about the change in appearance that was about to take place. The honor of trimming back Genji’s hair fell to the Minister of the Treasury, whose face betrayed the pain he felt the moment he cut Genji’s beautiful locks. The Emperor had a hard time keeping his emotions in check. If only his mother were here to see this ceremony, he thought, struggling to maintain his composure.",
+    "text": "The Minister enjoyed the full confidence of the Emperor. After all, his principal wife, the mother of the bride, was His Majesty’s full sister. Thus, the bride came from a distinguished line on both sides of her family. Moreover, the addition of Genji to the Minister’s family diminished the prestige of his rival the Minister of the Right, who as grandfather of the Crown Prince would eventually assume power as Chancellor. The Minister of the Left had numerous children by several wives. His principal wife had given him, in addition to Genji’s bride, a son who was now Middle Captain in the Inner Palace Guard. This young man, Tō no Chūjō, was exceptionally handsome, and the Minister of the Right could hardly ignore such a promising prospect, even though he was not on good terms with the Minister of the Left, his main rival for power. He therefore arranged to marry the young Tō no Chūjō to his fourth daughter, who was his greatest treasure in the world. His regard for his son-in-law was every bit as strong as that given to Genji by the Minister of the Left. For their part, the two young men forged an ideal friendship.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 718,
-          "end": 767,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

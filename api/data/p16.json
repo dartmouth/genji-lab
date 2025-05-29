@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 34
+    "document": 1,
+    "element_order": 17
   },
   "content": {
     "text": "His heart was full and he could not sleep as he impatiently waited for the short summer night to end. The messenger he sent had barely had time to get to the woman’s home and return with news of her condition, yet His Majesty was assailed by a sense of dark foreboding.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 158
+    "document": 1,
+    "element_order": 86
   },
   "content": {
-    "text": "“The young man’s features tell me he is destined to be ruler of this country,” the diviner declared, “and will perhaps even attain the supreme position of Emperor. Yet if that is what fate has in store for him, I foresee chaos and great sorrow for the court. On the other hand, if his destiny is to ascend to a position such as Chancellor and act as a guardian of imperial rule, then it appears he will be a great benefactor to the state. Still, I must say that judging by his features alone, the path leading to the Chancellorship seems less likely.”",
+    "text": "It pained the Emperor that his son would eventually grow out of his youthful good looks, but when Genji turned twelve, preparations were made for the coming-of-age ceremony in which his hair would be done up and his clothes and cap worn in the style of an adult. His Majesty personally tended to every little detail of the ceremony, adding touches that went beyond custom and set a new standard. The ceremony that had initiated the Crown Prince into manhood had been a spectacular affair held in the Shishinden, the great ceremonial hall of the palace. The Emperor wanted Genji’s ceremony to be just as majestic and proper. He had various offices⏤including the Treasury and the Imperial Granaries⏤make formal preparations for the many banquets and celebrations that would follow the ceremony, and he left special instructions that no expense should be spared and that his directives should be carried out so as to make the occasion one of utmost splendor.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

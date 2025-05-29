@@ -1,8 +1,8 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 40
+    "document": 1,
+    "element_order": 20
   },
   "content": {
     "text": "Despite grief and sorrow, forms and rituals have to be observed, and so the funeral was conducted according to prescribed customs. The late woman’s mother rode in a carriage that followed immediately behind the carriage bearing the corpse. Weeping inconsolably, longing to rise to the heavens with her daughter on the smoke from the pyre, how sad must she have been when the cortège reached Otagi, where a solemnly grand funeral ceremony was performed.",
@@ -11,7 +11,12 @@
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }

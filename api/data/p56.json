@@ -1,25 +1,37 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 107
+    "document": 1,
+    "element_order": 57
   },
   "content": {
-    "text": "When Myōbu returned to the palace she found His Majesty still awake, unable to rest. She felt great pity for him. He had summoned four or five of his most elegant and refined ladies, and while gazing westward into the garden between the Seiryōden and the Kōrōden and pretending to admire the splendid autumn foliage, he conversed quietly with them. Lately he had taken to spending all his time looking at paintings depicting Bai Juyi’s Song of Everlasting Sorrow, which was so like his own story. These had been commissioned by Emperor Uda and included poems by one of Uda’s consorts, Lady Ise, and by Ki no Tsurayuki, as well as other verses in Chinese and Japanese that alluded to the story. It was the only thing the Emperor wanted to talk about.",
+    "text": "Myōbu had the mementos brought forth. Recalling how Emperor Xuanzong had dispatched a Taoist summoner to search for the spirit of Yang Guifei, the Emperor thought, If only this ornamental hair comb proved that the messenger had indeed visited the residence of my deceased love. But he knew these were idle thoughts.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": [
-        {
-          "start": 436,
-          "end": 462,
-          "type": [
-            "italic"
-          ]
-        }
-      ]
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 164,
+            "end": 166,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 166,
+            "end": 276,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

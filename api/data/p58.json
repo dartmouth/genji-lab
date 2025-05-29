@@ -1,17 +1,30 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 111
+    "document": 1,
+    "element_order": 59
   },
   "content": {
-    "text": "How should I reply to your most gracious offer? Your words throw my troubled heart into dark confusion.",
+    "text": "There was a portrait of Yang Guifei among the illustrations of the Song of Everlasting Sorrow. A skilled artist had executed it, but there are limits to the powers of a brush, and the warm glow of real-life beauty was lacking. The lotus flowers of the Taiye Pond and the willow trees of the Weiyang Palace⏤truly these were apt metaphors for her beauty! And her Tang-style attire was unquestionably vivacious. But when he wistfully conjured up the sweet familiarity of his own lover, he could come up with no image that adequately expressed her beauty⏤no flower’s hue, no bird’s cry. They had been in the habit of exchanging vows constantly, mornings and evenings, swearing that they were as inseparable as trees whose branches have intertwined, or as the male and female birds of legend that, having only one eye and one wing each, always flew together. Fragile, transient life, however, pays no heed to vows of eternal love, and he was lost in melancholy regrets.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 67,
+            "end": 93,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

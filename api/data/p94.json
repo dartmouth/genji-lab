@@ -1,17 +1,58 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 176
+    "document": 1,
+    "element_order": 95
   },
   "content": {
-    "text": "Because the young Genji was always at his father’s side, he was constantly in the presence of the women who attended His Majesty most frequently. These women grew familiar with the boy and gradually came to feel that they did not have to be reserved around him. Of course, none of the consorts considered herself inferior to the others, but even though each one was very attractive in her own individual way, there was no denying that they all had passed, or were on the verge of passing, the peak of their charms ... all but Fujitsubo, that is. She still possessed the loveliness of youthful beauty and, try as she might to keep herself hidden away behind her screens, Genji, who was always nearby, would catch glimpses of her figure. He had no memory of his mother, and when he heard the head of the imperial household staff say that Fujitsubo looked just like her, his young heart ached with wistful longingif only he could always be close to his father’s new consort!",
+    "text": "So long as the deep purple of these cords that bind\nOur hearts as tightly as your son’s hair never fade\nSo our mutual vow will retain its deep hue",
     "formatting": {
-      "left_indent": 0,
+      "left_indent": 1.0,
       "right_indent": 0,
-      "first_line_indent": 0.5,
+      "first_line_indent": 0,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": [
+          {
+            "start": 0,
+            "end": 51,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 51,
+            "end": 52,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 52,
+            "end": 103,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 51,
+            "end": 52,
+            "type": [
+              "italic"
+            ]
+          },
+          {
+            "start": 104,
+            "end": 146,
+            "type": [
+              "italic"
+            ]
+          }
+        ]
+      }
     }
   }
 }

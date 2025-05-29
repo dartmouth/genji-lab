@@ -1,17 +1,22 @@
 {
   "document_id": 1,
   "hierarchy": {
-    "chapter": 1,
-    "paragraph": 166
+    "document": 1,
+    "element_order": 90
   },
   "content": {
-    "text": "“I have served at court for three successive reigns,” she told the Emperor, “and I have never before seen anyone who even closely resembles the late lady of the Kiritsubo. The daughter of the former Empress, however, definitely puts me in mind of her. She is a woman of exquisite refinement and beauty.”",
+    "text": "“I see,” His Majesty replied. “Well ... given that the boy seems to have no patrons for his coming-of-age ceremony, and since we have to select an aristocratic young woman to sleep with him on the night of his initiation, let’s choose your daughter.” Thus encouraged, the Minister followed through with his plans.",
     "formatting": {
       "left_indent": 0,
       "right_indent": 0,
       "first_line_indent": 0.5,
       "alignment": "left",
-      "text_styles": []
+      "text_styles": {
+        "is_bold": false,
+        "is_italic": false,
+        "is_underlined": false,
+        "formatting": []
+      }
     }
   }
 }
