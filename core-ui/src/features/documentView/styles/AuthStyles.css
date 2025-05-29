@@ -1,0 +1,165 @@
+/* Add these styles to your App.css or create a new auth.css file */
+
+/* Header authentication controls */
+.auth-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 25px; /* Add right margin to prevent cutoff */
+  }
+  
+  .login-button {
+    background-color: #004d2e !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    opacity: 1 !important;
+    white-space: nowrap; /* Prevent text wrapping */
+    flex-shrink: 0; /* Prevent button from shrinking */
+  }
+  
+  .login-button:hover:not(:disabled) {
+    background-color: #00693e !important;
+    color: white !important;
+  }
+  
+  .login-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .auth-error {
+    font-size: 12px;
+    color: #d93025;
+    margin-top: 4px;
+  }
+  
+  /* Auth required prompt component */
+  .auth-required-prompt {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e1e4e8;
+    margin: 16px 0;
+  }
+  
+  .prompt-content {
+    text-align: center;
+  }
+  
+  .prompt-content p {
+    margin: 0 0 16px 0;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .prompt-login-button {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+  
+  .prompt-login-button:hover:not(:disabled) {
+    background-color: #3367d6;
+  }
+  
+  .prompt-login-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  /* Inline auth prompts for smaller spaces */
+  .auth-required-prompt.inline {
+    padding: 12px;
+    margin: 8px 0;
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+  }
+  
+  .auth-required-prompt.inline .prompt-content p {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .auth-required-prompt.inline .prompt-login-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  /* Anonymous user indicators */
+  .anonymous-notice {
+    background-color: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 12px;
+    color: #1565c0;
+  }
+  
+  .anonymous-notice a {
+    color: #1565c0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  
+  /* Disabled interactive elements for anonymous users */
+  .disabled-for-anonymous {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  /* Tooltip for disabled elements */
+  .auth-tooltip {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .auth-tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .auth-tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .auth-tooltip .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+  }
