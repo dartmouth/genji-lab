@@ -98,7 +98,7 @@ export const DocumentContentView: React.FC = () => {
   const [selectedCollectionId, setSelectedCollectionId] = useState<number>(Number(collectionId));
   
   // State for management panel collapse
-  const [isManagementPanelCollapsed, setIsManagementPanelCollapsed] = useState(false);
+  const [isManagementPanelCollapsed, setIsManagementPanelCollapsed] = useState(true);
   
   // State for view mode (reading vs annotations)
   const [viewMode, setViewMode] = useState<'reading' | 'annotations'>('reading');

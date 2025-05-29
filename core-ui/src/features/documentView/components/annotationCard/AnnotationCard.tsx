@@ -29,7 +29,7 @@ interface AnnotationCardProps {
     documentColor?: string;
     documentTitle?: string;
     showDocumentInfo?: boolean;
-    position?: 'bottom' | 'right' | 'left'; // Add position prop
+    position?: 'bottom' | 'right' | 'left';
 }
 
 const AnnotationCard: React.FC<AnnotationCardProps> = ({ 
@@ -40,16 +40,16 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
     documentColor = '#6c757d',
     documentTitle = `Document ${annotation.document_id}`,
     showDocumentInfo = false,
-    position = 'bottom' // Default to bottom
+    position = 'bottom'
 }) => {
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth(); // Add isAuthenticated
     const dispatch = useAppDispatch();
 
     // Component state
     const [isReplying, setIsReplying] = useState(false);
     const [isFlagging, setIsFlagging] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null); // Add action menu state
+    const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null);
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
     // Ref for the action button to calculate position
@@ -83,21 +83,17 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             
-            // Calculate position based on available space
             let top = buttonRect.bottom + 4; 
             let left = buttonRect.left;
             
-            // If dropdown would go off right edge, position it to the left of the button
             if (left + 160 > viewportWidth) {
                 left = buttonRect.right - 160;
             }
             
-            // If dropdown would go off bottom edge, position it above the button
             if (top + 200 > viewportHeight) { 
                 top = buttonRect.top - 200;
             }
             
-            // Ensure it doesn't go off the left edge
             if (left < 8) {
                 left = 8;
             }
@@ -423,35 +419,67 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
                 showDocumentInfo={showDocumentInfo}
             />
 
-            {/* Toolbar: Upvote, reply, flag, settings */}
-            <AnnotationCardToolbar
-                annotation={annotation}
-                annotationId={id}
-                onReplyClick={handleReplyClick}
-                onFlagClick={handleFlagClick}
-                onEditClick={handleEditClick}
-                onDeleteClick={handleCommentDelete}
-                onTagsClick={handleTagsMenuClick}
-                isReplying={isReplying}
-                isFlagging={isFlagging}
-                position={position}
-                onActionMenuOpen={handleActionMenuOpen}
-                actionButtonRef={actionButtonRef} 
-            />
+            {/* Toolbar: Only show for authenticated users */}
+            {isAuthenticated && (
+                <AnnotationCardToolbar
+                    annotation={annotation}
+                    annotationId={id}
+                    onReplyClick={handleReplyClick}
+                    onFlagClick={handleFlagClick}
+                    onEditClick={handleEditClick}
+                    onDeleteClick={handleCommentDelete}
+                    onTagsClick={handleTagsMenuClick}
+                    isReplying={isReplying}
+                    isFlagging={isFlagging}
+                    position={position}
+                    onActionMenuOpen={handleActionMenuOpen}
+                    actionButtonRef={actionButtonRef} 
+                />
+            )}
 
-            {/* Content: Body text and tags */}
+            {/* Content: Body text and tags - Show to everyone */}
             <AnnotationCardContent
                 annotation={annotation}
                 tags={tags}
                 userId={user?.id}
-                isTagging={isTagging}
+                isTagging={isTagging && isAuthenticated} // Only allow tagging if authenticated
                 onRemoveTag={handleRemoveTag}
                 onTagSubmit={handleTagSubmit}
                 onCloseTagging={handleCloseTagging}
             />
 
-            {/* Editing form */}
-            {isEditing && (
+            {/* Show interaction counts for anonymous users */}
+            {!isAuthenticated && (
+                <div style={{
+                    marginTop: '12px',
+                    padding: '8px 0',
+                    borderTop: '1px solid #f0f0f0',
+                    display: 'flex',
+                    gap: '16px',
+                    fontSize: '14px',
+                    color: '#666'
+                }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <ThumbUp sx={{ fontSize: '1rem' }} />
+                        {upvotes?.length || 0} upvotes
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <ChatBubbleOutline sx={{ fontSize: '1rem' }} />
+                        {replies?.length || 0} replies
+                    </span>
+                    <span style={{ 
+                        marginLeft: 'auto', 
+                        fontSize: '12px', 
+                        fontStyle: 'italic',
+                        color: '#999'
+                    }}>
+                        Login to interact
+                    </span>
+                </div>
+            )}
+
+            {/* Editing form - Only for authenticated users */}
+            {isEditing && isAuthenticated && (
                 <AnnotationEditor
                     initialText={annotation.body.value}
                     onSave={handleEditSave}
@@ -459,15 +487,15 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
                 />
             )}
 
-            {/* Reply/Flag forms */}
-            {(isFlagging && !isReplying) && (
+            {/* Reply/Flag forms - Only for authenticated users */}
+            {isAuthenticated && (isFlagging && !isReplying) && (
                 <ReplyForm
                     annotation={annotation}
                     motivation="flagging"
                     onSave={handleFlagSave}
                 />
             )}
-            {(isReplying && !isFlagging) && (
+            {isAuthenticated && (isReplying && !isFlagging) && (
                 <ReplyForm
                     annotation={annotation}
                     motivation="replying"
@@ -475,7 +503,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
                 />
             )}
 
-            {/* Replies section */}
+            {/* Replies section - Show to everyone */}
             <AnnotationCardReplies
                 replies={replies}
                 depth={depth}
@@ -485,13 +513,10 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
                 position={position} 
             />
 
-            {/* Action menu for side panels - USING PORTAL for left/right positions */}
-            {(position === 'left' || position === 'right') && actionMenuAnchor && (
+            {/* Action menu for side panels - Only for authenticated users */}
+            {isAuthenticated && (position === 'left' || position === 'right') && actionMenuAnchor && (
                 <>
-                    {/* Portal the dropdown menu to document.body */}
                     {createPortal(<DropdownMenu />, document.body)}
-                    
-                    {/* Portal the backdrop overlay to document.body */}
                     {createPortal(
                         <div
                             style={{
@@ -510,8 +535,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
                 </>
             )}
 
-            {/* Regular dropdown for bottom position (no portal needed) */}
-            {position === 'bottom' && actionMenuAnchor && (
+            {/* Regular dropdown for bottom position - Only for authenticated users */}
+            {isAuthenticated && position === 'bottom' && actionMenuAnchor && (
                 <>
                     <div
                         style={{
