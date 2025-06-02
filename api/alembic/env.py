@@ -22,12 +22,7 @@ from models.models import Base, metadata
 config = context.config
 
 
-schema = os.environ.get('DB_SCHEMA')
-if not schema:
-    schema = 'app'  # Default fallback
-    print(f"Warning: DB_SCHEMA environment variable not set, using '{schema}'")
-else:
-    print(f"Using schema: {schema}")
+schema = 'app'
 
 Base.metadata.schema = schema
 

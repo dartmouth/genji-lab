@@ -11,16 +11,16 @@ import os
 load_dotenv(find_dotenv())
 
 # Create metadata with schema
-metadata = MetaData(schema=os.environ.get('DB_SCHEMA'))
+metadata = MetaData(schema='app')
 
 
 # Define a sequence
-annotation_body_id_seq = Sequence('annotation_body_id_seq', schema=os.environ.get('DB_SCHEMA'))
-annotation_target_id_seq = Sequence('annotation_target_id_seq', schema=os.environ.get('DB_SCHEMA'))
+annotation_body_id_seq = Sequence('annotation_body_id_seq', schema='app')
+annotation_target_id_seq = Sequence('annotation_target_id_seq', schema='app')
 
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = {'schema': os.environ.get('DB_SCHEMA')}
+    __table_args__ = {'schema': 'app'}
     
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(255))
@@ -35,7 +35,7 @@ class User(Base):
 
 class DocumentCollection(Base):
     __tablename__ = "document_collections"
-    __table_args__ = {'schema': os.environ.get('DB_SCHEMA')}
+    __table_args__ = {'schema': 'app'}
     
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255))
@@ -43,8 +43,8 @@ class DocumentCollection(Base):
     text_direction = Column(String(50))
     created = Column(DateTime, default=func.current_timestamp())
     modified = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
-    created_by_id = Column(Integer, ForeignKey(f"{os.environ.get('DB_SCHEMA')}.users.id")) 
-    modified_by_id = Column(Integer, ForeignKey(f"{os.environ.get('DB_SCHEMA')}.users.id")) 
+    created_by_id = Column(Integer, ForeignKey(f"{'app'}.users.id")) 
+    modified_by_id = Column(Integer, ForeignKey(f"{'app'}.users.id")) 
     language = Column(String(50))
     hierarchy = Column(JSONB)
     collection_metadata = Column(JSONB)
@@ -58,10 +58,10 @@ class DocumentCollection(Base):
 
 class Document(Base):
     __tablename__ = "documents"
-    __table_args__ = {'schema': os.environ.get('DB_SCHEMA')}
+    __table_args__ = {'schema': 'app'}
     
     id = Column(Integer, primary_key=True, index=True)
-    document_collection_id = Column(Integer, ForeignKey(f"{os.environ.get('DB_SCHEMA')}.document_collections.id")) 
+    document_collection_id = Column(Integer, ForeignKey(f"{'app'}.document_collections.id")) 
     title = Column(String(255))
     description = Column(Text)
     created = Column(DateTime, default=func.current_timestamp())
@@ -75,10 +75,10 @@ class Document(Base):
 
 class DocumentElement(Base):
     __tablename__ = "document_elements"
-    __table_args__ = {'schema': os.environ.get('DB_SCHEMA')}
+    __table_args__ = {'schema': 'app'}
     
     id = Column(Integer, primary_key=True, index=True)
-    document_id = Column(Integer, ForeignKey(f"{os.environ.get('DB_SCHEMA')}.documents.id")) 
+    document_id = Column(Integer, ForeignKey(f"{'app'}.documents.id")) 
     created = Column(DateTime, default=func.current_timestamp())
     modified = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     hierarchy = Column(JSONB)
@@ -91,13 +91,13 @@ class DocumentElement(Base):
 
 class Annotation(Base):
     __tablename__ = "annotations"
-    __table_args__ = {'schema': os.environ.get('DB_SCHEMA')}
+    __table_args__ = {'schema': 'app'}
     
     id = Column(Integer, primary_key=True, index=True)
-    document_collection_id = Column(Integer, ForeignKey(f"{os.environ.get('DB_SCHEMA')}.document_collections.id")) 
-    document_id = Column(Integer, ForeignKey(f"{os.environ.get('DB_SCHEMA')}.documents.id")) 
-    document_element_id = Column(Integer, ForeignKey(f"{os.environ.get('DB_SCHEMA')}.document_elements.id")) 
-    creator_id = Column(Integer, ForeignKey(f"{os.environ.get('DB_SCHEMA')}.users.id")) 
+    document_collection_id = Column(Integer, ForeignKey(f"{'app'}.document_collections.id")) 
+    document_id = Column(Integer, ForeignKey(f"{'app'}.documents.id")) 
+    document_element_id = Column(Integer, ForeignKey(f"{'app'}.document_elements.id")) 
+    creator_id = Column(Integer, ForeignKey(f"{'app'}.users.id")) 
     
     type = Column(String(100))
     created = Column(DateTime)
