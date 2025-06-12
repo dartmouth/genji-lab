@@ -51,6 +51,7 @@ def create_element(element: DocumentElementCreate, db: AsyncSession = Depends(ge
     db.refresh(db_element)
     return db_element
 
+
 @router.get("/", response_model=List[DocumentElement])
 def read_elements(
     skip: int = 0,
@@ -353,8 +354,6 @@ def upload_word_doc(file: UploadFile=File(...), document_collection_id: int = 1,
         paragraph_count = len(doc.paragraphs)
         # Extract paragraphs and other information
         text = extract_paragraphs(doc, document_collection_id, document_number)
-
-
 
 
         return JSONResponse(
