@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Tabs, Tab, Box, Typography, styled, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Tabs, Tab, Box, Typography, styled, FormControl, 
+  InputLabel, Select, MenuItem, Snackbar, Alert, 
+  Dialog, DialogActions, DialogContent, DialogContentText, 
+  DialogTitle, Button } from '@mui/material';
 import { createDocumentCollection, useAppDispatch } from '@store';
 import { useAuth } from "@hooks/useAuthContext.ts";
 import { useAppSelector } from "@store/hooks";
@@ -89,6 +92,32 @@ const ManageCollections: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<number>(0);
   const dispatch = useAppDispatch();
 
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({ open: false, message: '', severity: 'info' });
+  
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', message: '', onConfirm: () => {} });
+ 
+  const showNotification = (message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialog({ ...confirmDialog, open: false });
+  };
+
+
   const documentCollections = useAppSelector(selectAllDocumentCollections) as Array<{
     id: number;
     title: string;
@@ -111,36 +140,42 @@ const ManageCollections: React.FC = () => {
     setActiveSubTab(newValue);
   };
 
+  const initiateDeleteCollection = () => {
+    if (!selectedCollection) return;
+    
+    setConfirmDialog({
+      open: true,
+      title: 'Confirm Deletion',
+      message: 'Are you sure you want to delete this collection? This action cannot be undone.',
+      onConfirm: handleDeleteCollection
+    });
+  };
+
   const handleDeleteCollection = async () => {
     if (!selectedCollection) return;
     
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this collection? This action cannot be undone.'
-    );
+    setConfirmDialog({ ...confirmDialog, open: false });
+    setIsDeleting(true);
     
-    if (confirmed) {
-      setIsDeleting(true);
-      try {
-        const response = await fetch(`/api/v1/collections/${selectedCollection}`, {
-          method: 'DELETE',
-        });
-        
-        if (response.ok) {
-          // Refresh the collections list after successful deletion
-          dispatch(fetchDocumentCollections());
-          setSelectedCollection('');
-          alert('Collection deleted successfully');
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Failed to delete collection');
-        }
-      } catch (error) {
-        console.error('Failed to delete collection:', error);
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-        alert(`Failed to delete collection: ${errorMessage}`);
-      } finally {
-        setIsDeleting(false);
+    try {
+      const response = await fetch(`/api/v1/collections/${selectedCollection}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // Refresh the collections list after successful deletion
+        dispatch(fetchDocumentCollections());
+        setSelectedCollection('');
+        showNotification('Collection deleted successfully', 'success');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to delete collection');
       }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      showNotification(`Failed to delete collection: ${errorMessage}`, 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -331,7 +366,7 @@ interface FormData {
                 type="button"
                 className="delete-button"
                 disabled={!selectedCollection || isDeleting}
-                onClick={handleDeleteCollection}
+                onClick={initiateDeleteCollection}
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
@@ -382,6 +417,43 @@ interface FormData {
             </StyledForm>
           </div>
         </SubTabPanel>
+
+        {/* Notification Snackbar */}
+        <Snackbar 
+          open={notification.open} 
+          autoHideDuration={6000} 
+          onClose={handleCloseNotification}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseNotification} 
+            severity={notification.severity} 
+            sx={{ width: '100%' }}
+          >
+            {notification.message}
+          </Alert>
+        </Snackbar>
+
+        {/* Confirmation Dialog */}
+        <Dialog
+          open={confirmDialog.open}
+          onClose={handleCloseConfirmDialog}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{confirmDialog.title}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              {confirmDialog.message}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseConfirmDialog}>Cancel</Button>
+            <Button onClick={confirmDialog.onConfirm} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Box>
   );

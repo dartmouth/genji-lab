@@ -27,7 +27,7 @@ const AppHeader: React.FC = () => {
                   {`Welcome, ${user.first_name} ${user.last_name}`}
                 </div>
                 <button className="admin-button" onClick={() =>
-                   window.open("/admin")}
+                   window.location.href = "/admin"}
                 >
                   Administration
                 </button>
