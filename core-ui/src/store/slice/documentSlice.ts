@@ -25,6 +25,14 @@ interface DocumentState {
   selectedCollectionId: number | null;
 }
 
+interface DocumentCreate {
+  title: string,
+  description: string,
+  document_collection_id: number,
+}
+
+export type {DocumentCreate}
+
 // Initial state
 const initialState: DocumentState = {
   documents: [],
@@ -46,6 +54,25 @@ export const fetchDocumentsByCollection = createAsyncThunk(
       
       const documents: Document[] = response.data;
       return { documents, collectionId };
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+);
+
+// aje: new thunk for creating a document
+export const createDocument = createAsyncThunk(
+  'documents/create',
+  async (newDocument: DocumentCreate, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/documents/', newDocument);
+
+      if (!(response.status === 201)) {
+        return rejectWithValue(`Failed to create document: ${response.statusText}`);
+      }
+
+      const createdDocument: Document = response.data;
+      return createdDocument;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
     }
@@ -82,6 +109,21 @@ const documentSlice = createSlice({
         state.selectedCollectionId = action.payload.collectionId;
       })
       .addCase(fetchDocumentsByCollection.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+      // aje: added handlers for createDocument
+      .addCase(createDocument.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(createDocument.fulfilled, (state, action: PayloadAction<Document>) => {
+        state.status = 'succeeded';
+        if (action.payload.document_collection_id === state.selectedCollectionId) {
+          state.documents.push(action.payload);
+        }
+      })
+      .addCase(createDocument.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       });

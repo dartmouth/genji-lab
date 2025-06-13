@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, Tab, Box, Typography, styled, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '@store';
+import { createDocument, useAppDispatch } from '@store';
 import { useAuth } from "@hooks/useAuthContext.ts";
+import { useAppSelector } from "@store/hooks";
 import { 
   selectAllDocumentCollections,
   fetchDocumentCollections,
@@ -89,21 +90,21 @@ const ManageDocuments: React.FC = () => {
   const dispatch = useAppDispatch();
   const documentCollections = useAppSelector(selectAllDocumentCollections);
 
-  const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setActiveSubTab(newValue);
-  };
-
   //fetch collections
   useEffect(() => {
     dispatch(fetchDocumentCollections());
   }, [dispatch]);
   
+  const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveSubTab(newValue);
+  };
+
   interface FormData {
     title: string;
     description: string;
     document_collection_id?: number;
   }
-  
+
   const { user } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -115,6 +116,10 @@ const ManageDocuments: React.FC = () => {
   const [selectedCollection, setSelectedCollection] = useState<string>('');
   const handleCollectionSelect = (event: any) => {
     setSelectedCollection(event.target.value);
+    setFormData(prevData => ({
+      ...prevData,
+      document_collection_id: parseInt(event.target.value) || undefined
+    }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -125,16 +130,19 @@ const ManageDocuments: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      title: formData.title,
-      description: formData.description,
-      document_collection_id: formData.document_collection_id
-    }
-    dispatch(createDocument(payload));
-    setSubmitted(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const payload: { title: string; description: string; document_collection_id?: number } = {
+    title: formData.title,
+    description: formData.description,
   };
+  if (formData.document_collection_id !== undefined) {
+    payload.document_collection_id = formData.document_collection_id;
+  }
+  
+  dispatch(createDocument(payload as any));
+  setSubmitted(true);
+};
 
   return (
     <Box>
