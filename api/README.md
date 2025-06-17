@@ -6,31 +6,31 @@ Steps:
 
 ## Using Docker Compose
 
-### Generate Initial Migration
+### Generate Migration
 ```bash
-docker-compose run migrations revision --autogenerate -m "Initial migration"
+docker compose run --remove-orphans migrations revision --autogenerate -m "MIGRATION TITLE HERE"
 ```
 
 ### Other Common Migration Commands
 
 #### Apply migrations (upgrade to latest)
 ```bash
-docker-compose run migrations upgrade head
+docker compose run --remove-orphans migrations upgrade head
 ```
 
 #### Rollback one migration
 ```bash
-docker-compose run migrations downgrade -1
+docker compose run --remove-orphans migrations downgrade -1
 ```
 
 #### Check current migration status
 ```bash
-docker-compose run migrations current
+docker compose run --remove-orphans migrations current
 ```
 
 #### View migration history
 ```bash
-docker-compose run migrations history
+docker compose run --remove-orphans migrations history
 ```
 
 ## Notes
