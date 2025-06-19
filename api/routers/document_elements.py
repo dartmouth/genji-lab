@@ -356,6 +356,8 @@ def upload_word_doc(file: UploadFile=File(...), document_collection_id: int = 1,
         text = extract_paragraphs(doc, document_collection_id, document_number)
 
 
+
+
         return JSONResponse(
             content={
                 "filename": file.filename,
