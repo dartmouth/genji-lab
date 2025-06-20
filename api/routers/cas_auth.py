@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from database import get_db
 from models import models
 from fastapi import Depends
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List  # Add List to the import
 import logging
 
 
@@ -38,6 +38,7 @@ class UserResponse(BaseModel):
     netid: str
     email: Optional[str] = None
     user_metadata: Optional[Dict[str, Any]] = None
+    roles: List[str] = []  # Add this line
     ttl: str  # ISO format timestamp for when the authentication expires
 
 def extract_and_format_email(xml_string):
@@ -122,6 +123,47 @@ def extract_cas_metadata(xml_string):
     
     return metadata
 
+def assign_default_role_to_user(db_session: Session, user: models.User, role_name: str = "general_user"):
+    """
+    Assign a default role to a user if they don't already have it.
+    
+    Args:
+        db_session: SQLAlchemy database session
+        user: User object
+        role_name: Name of the role to assign (default: "general_user")
+    """
+    # Check if user already has this role
+    existing_role = db_session.query(models.Role).filter(
+        models.Role.name == role_name,
+        models.Role.users.contains(user)
+    ).first()
+    
+    if not existing_role:
+        # Get the role
+        role = db_session.query(models.Role).filter(models.Role.name == role_name).first()
+        if role:
+            # Assign role to user
+            user.roles.append(role)
+            db_session.commit()
+            logger.info(f"Assigned role '{role_name}' to user {user.id}")
+        else:
+            logger.warning(f"Role '{role_name}' not found in database")
+
+def get_user_roles(db_session: Session, user: models.User) -> List[str]:
+    """
+    Get list of role names for a user.
+    
+    Args:
+        db_session: SQLAlchemy database session
+        user: User object
+        
+    Returns:
+        List of role names
+    """
+    # Refresh user to get latest roles
+    db_session.refresh(user)
+    return [role.name for role in user.roles]
+
 def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
     """
     Process CAS response and either retrieve an existing user or create a new one.
@@ -196,6 +238,7 @@ def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
 async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_db)):
     """
     Validates a CAS ticket with Dartmouth's CAS server and returns user information.
+    Automatically assigns 'general_user' role to new users and returns user roles.
     Includes a TTL (time to live) value set to one week from now.
     """
     logger.debug("CAS endpoint accessed")
@@ -221,16 +264,20 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
             
             netid = netid_match.group(1).strip()
             
-            # Create or get user from database
+            # Create or get user from database (this now handles role assignment)
             user = get_or_create_user_from_cas(db, xml)
+            
+            # Get user roles
+            user_roles = get_user_roles(db, user)
             
             # Calculate TTL (1 week from now)
             ttl = (datetime.now() + timedelta(weeks=1)).isoformat()
             
             # Extract email from user metadata
             email = user.user_metadata.get('email') if user.user_metadata else None
-            logger.info("CAS success")
-            # Return user information with TTL
+            logger.info(f"CAS success for user {user.id} with roles: {user_roles}")
+            
+            # Return user information with roles and TTL
             return UserResponse(
                 id=user.id,
                 first_name=user.first_name,
@@ -238,6 +285,7 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
                 netid=netid,
                 email=email,
                 user_metadata=user.user_metadata,
+                roles=user_roles,  # Add this line
                 ttl=ttl
             )
     
@@ -250,7 +298,6 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
         logger.error(detail)
         raise HTTPException(status_code=500, detail=detail)
     except Exception as e:
-        
         detail = f"CAS validation failed: {str(e)}"
         logger.error(detail)
         raise HTTPException(status_code=500, detail=detail)

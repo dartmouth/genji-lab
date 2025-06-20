@@ -16,9 +16,9 @@ services:
       - "8000:8000"
     volumes:
       - ./api:/app
-  # migrations:
-  #   build:
-  #     context: ./api
-  #     dockerfile: Dockerfile.migrations
-  #   volumes:
-  #     - ./api:/app
+  migrations:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.migrations
+    volumes:
+      - ./api:/app

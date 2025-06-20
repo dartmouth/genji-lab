@@ -2,6 +2,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
+from sqlalchemy.orm import joinedload  # Add this import
 
 from database import get_db
 from models.models import User as UserModel
@@ -33,9 +34,9 @@ def read_users(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Retrieve users with optional filtering
+    Retrieve users with optional filtering (includes roles via joinedload)
     """
-    query = select(UserModel)
+    query = select(UserModel).options(joinedload(UserModel.roles))  # Add joinedload here
     
     # Apply filters if provided
     if first_name:
@@ -47,15 +48,16 @@ def read_users(
     query = query.offset(skip).limit(limit)
     
     result = db.execute(query)
-    users = result.scalars().all()
+    users = result.scalars().unique().all() 
     return users
 
 @router.get("/{user_id}", response_model=User)
 def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
     """
-    Get a specific user by ID
+    Get a specific user by ID (includes roles via joinedload)
     """
-    user = db.execute(select(UserModel).filter(UserModel.id == user_id)).scalar_one_or_none()
+    query = select(UserModel).options(joinedload(UserModel.roles)).filter(UserModel.id == user_id)  # Add joinedload here
+    user = result.scalars().unique().first() 
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -63,9 +65,11 @@ def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
 @router.put("/{user_id}", response_model=User)
 def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends(get_db)):
     """
-    Update a user
+    Update a user (includes roles in response)
     """
-    db_user = db.execute(select(UserModel).filter(UserModel.id == user_id)).scalar_one_or_none()
+    # First get the user with roles
+    query = select(UserModel).options(joinedload(UserModel.roles)).filter(UserModel.id == user_id)
+    db_user = result.scalars().unique().first() 
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -85,9 +89,11 @@ def partial_update_user(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Partially update a user
+    Partially update a user (includes roles in response)
     """
-    db_user = db.execute(select(UserModel).filter(UserModel.id == user_id)).scalar_one_or_none()
+    # First get the user with roles
+    query = select(UserModel).options(joinedload(UserModel.roles)).filter(UserModel.id == user_id)
+    db_user = result.scalars().unique().first() 
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     

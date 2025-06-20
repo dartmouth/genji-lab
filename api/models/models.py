@@ -65,6 +65,8 @@ class User(Base):
     owned_collections = relationship("DocumentCollection", foreign_keys="DocumentCollection.owner_id", back_populates="owner")
     created_groups = relationship("Group", foreign_keys="Group.created_by_id", back_populates="created_by")
     created_shares = relationship("ObjectSharing", foreign_keys="ObjectSharing.created_by_id", back_populates="created_by")
+    roles = relationship("Role", secondary=user_roles, back_populates="users")  # This line is MISSING
+    groups = relationship("Group", secondary=group_members, back_populates="members")
 
 class Role(Base):
     __tablename__ = "roles"
