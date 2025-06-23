@@ -12,7 +12,7 @@ import { useAnnotationTags } from "@documentView/hooks";
 import { useAuth } from "@hooks/useAuthContext";
 import '@documentView/styles/AnnotationCardStyles.css';
 import { parseURI, makeTextAnnotationBody } from "@documentView/utils";
-import { ThumbUp, ChatBubbleOutline, Flag, Settings } from "@mui/icons-material";
+import { ThumbUp, ChatBubbleOutline, Flag, Settings, Link as LinkIcon } from "@mui/icons-material";
 
 import { createPortal } from 'react-dom';
 import AnnotationCardHeader from './AnnotationCardHeader';
@@ -42,7 +42,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
     showDocumentInfo = false,
     position = 'bottom'
 }) => {
-    const { user, isAuthenticated } = useAuth(); // Add isAuthenticated
+    const { user, isAuthenticated } = useAuth();
     const dispatch = useAppDispatch();
 
     // Component state
@@ -167,6 +167,20 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
 
     const handleTagsMenuClick = () => {
         handleTagsClick();
+    };
+
+    // New link handler - only for annotation creators
+    const handleLinkClick = () => {
+        // Only allow link functionality for annotation creators
+        if (!user || user.id !== annotation.creator.id) {
+            return;
+        }
+        
+        if (!isEditing) {
+            // If not currently editing, start editing mode
+            setIsEditing(true);
+        }
+        // If already editing, the AnnotationEditor will handle the link functionality
     };
 
     const handleReplySave = () => {
@@ -304,7 +318,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
                     alignItems: 'center',
                     gap: '8px',
                     fontSize: '14px',
-                    borderBottom: user && user.id === annotation.creator.id ? '1px solid #f0f0f0' : 'none'
+                    borderBottom: '1px solid #f0f0f0'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -312,6 +326,31 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
                 <Flag sx={{ fontSize: '1rem' }} />
                 <span>Flag</span>
             </div>
+
+            {/* Add Link - Show when user owns annotation */}
+            {(user && user.id === annotation.creator.id) && (
+                <div
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleLinkClick();
+                        closeActionMenu();
+                    }}
+                    style={{
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '14px',
+                        borderBottom: '1px solid #f0f0f0'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                    <LinkIcon sx={{ fontSize: '1rem' }} />
+                    <span>Add Link</span>
+                </div>
+            )}
 
             {/* Edit/Delete/Tags (if user owns annotation) */}
             {(user && user.id === annotation.creator.id) && (
@@ -429,8 +468,10 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
                     onEditClick={handleEditClick}
                     onDeleteClick={handleCommentDelete}
                     onTagsClick={handleTagsMenuClick}
+                    onLinkClick={user && user.id === annotation.creator.id ? handleLinkClick : undefined} // Only for creators
                     isReplying={isReplying}
                     isFlagging={isFlagging}
+                    isEditing={isEditing} // Pass editing state
                     position={position}
                     onActionMenuOpen={handleActionMenuOpen}
                     actionButtonRef={actionButtonRef} 
