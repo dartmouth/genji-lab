@@ -149,31 +149,33 @@ def assign_default_role_to_user(db_session: Session, user: models.User, role_nam
         else:
             logger.warning(f"Role '{role_name}' not found in database")
 
-def get_user_roles(db_session: Session, user: models.User) -> List[str]:
+def get_user_roles(user: models.User) -> List[str]:
     """
     Get list of role names for a user.
     
     Args:
-        db_session: SQLAlchemy database session
-        user: User object
+        user: User object with roles already loaded
         
     Returns:
         List of role names
     """
-    # Refresh user to get latest roles
-    db_session.refresh(user)
     return [role.name for role in user.roles]
+
+from sqlalchemy.orm import joinedload
+from sqlalchemy import select
 
 def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
     """
     Process CAS response and either retrieve an existing user or create a new one.
+    Also ensures user has the default 'general_user' role.
+    Returns user with roles loaded (same structure as GET endpoints).
     
     Args:
         db_session: SQLAlchemy database session
         cas_xml_string: XML string from CAS response
         
     Returns:
-        User object (either existing or newly created)
+        User object with roles loaded (either existing or newly created)
     """
     # Extract email and name from CAS response
     email = extract_and_format_email(cas_xml_string)
@@ -189,22 +191,26 @@ def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
     existing_user = None
     
     if netid:
-        # Try to find by netid in metadata first
-        existing_user = db_session.query(models.User).filter(
+        # Try to find by netid in metadata first (with roles loaded)
+        query = select(models.User).options(joinedload(models.User.roles)).filter(
             models.User.user_metadata.has_key('cas_data'),
             models.User.user_metadata['cas_data']['netid'].astext == netid
-        ).first()
+        )
+        result = db_session.execute(query)
+        existing_user = result.scalars().unique().first()
     
     if not existing_user:
-        # Try to find by name and email
-        existing_user = db_session.query(models.User).filter(
+        # Try to find by name and email (with roles loaded)
+        query = select(models.User).options(joinedload(models.User.roles)).filter(
             models.User.first_name == first_name,
             models.User.last_name == last_name,
             or_(
                 models.User.user_metadata.has_key('email'),
                 models.User.user_metadata['email'].astext == email
             )
-        ).first()
+        )
+        result = db_session.execute(query)
+        existing_user = result.scalars().unique().first()
     
     if existing_user:
         # User exists, update metadata if needed
@@ -217,7 +223,17 @@ def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
         })
         existing_user.user_metadata = current_metadata
         db_session.commit()
-        return existing_user
+        
+        # Ensure user has default role
+        assign_default_role_to_user(db_session, existing_user)
+        
+        # Reload user with fresh roles after potential role assignment
+        query = select(models.User).options(joinedload(models.User.roles)).filter(
+            models.User.id == existing_user.id
+        )
+        result = db_session.execute(query)
+        return result.scalars().unique().first()
+        
     else:
         # Create new user
         new_user = models.User(
@@ -232,7 +248,16 @@ def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
         )
         db_session.add(new_user)
         db_session.commit()
-        return new_user
+        
+        # Assign default role to new user
+        assign_default_role_to_user(db_session, new_user)
+        
+        # Reload user with roles loaded (same structure as GET endpoints)
+        query = select(models.User).options(joinedload(models.User.roles)).filter(
+            models.User.id == new_user.id
+        )
+        result = db_session.execute(query)
+        return result.scalars().unique().first()
 
 @router.post("/validate-cas-ticket", response_model=UserResponse)
 async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_db)):
@@ -264,11 +289,11 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
             
             netid = netid_match.group(1).strip()
             
-            # Create or get user from database (this now handles role assignment)
+            # Create or get user from database (now returns user with roles loaded)
             user = get_or_create_user_from_cas(db, xml)
             
-            # Get user roles
-            user_roles = get_user_roles(db, user)
+            # Get user roles (simplified since roles are already loaded)
+            user_roles = get_user_roles(user)
             
             # Calculate TTL (1 week from now)
             ttl = (datetime.now() + timedelta(weeks=1)).isoformat()
@@ -285,7 +310,7 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
                 netid=netid,
                 email=email,
                 user_metadata=user.user_metadata,
-                roles=user_roles,  # Add this line
+                roles=user_roles,
                 ttl=ttl
             )
     

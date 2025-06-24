@@ -76,6 +76,7 @@ export const useCasAuth = ({
         }
         
         const userData = await response.json();
+        console.log(userData)
         
         // Set auth state with expiration
         const expiresAt = Date.now() + (sessionExpirationHours * 60 * 60 * 1000);
