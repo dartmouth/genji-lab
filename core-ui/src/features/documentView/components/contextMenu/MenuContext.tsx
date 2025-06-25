@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import { useAppDispatch, useAppSelector, selectSegments, setMotivation, selectAnnotationCreate } from "@store";
 import { createPortal } from 'react-dom';
+import { useAuth } from "@hooks/useAuthContext";
 
 const MenuContext: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { user } = useAuth();
   const text = useAppSelector(selectSegments);
   const annotationCreate = useAppSelector(selectAnnotationCreate);
-
+  
   const [clicked, setClicked] = useState(false);
   
   const [coords, setCoords] = useState<{ x: number; y: number }>({
@@ -73,16 +75,18 @@ const MenuContext: React.FC = () => {
         >
           {"Create Comment"}
         </ContextButton>
-        <ContextButton 
-          key={`context-button-${2}`} 
-          onClick={(e: React.MouseEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            dispatch(setMotivation("scholarly"));
-          }}
-        >
+        {(user?.roles?.includes('admin') || user?.roles?.includes('verified_scholar')) && (
+          <ContextButton 
+            key={`context-button-${2}`} 
+            onClick={(e: React.MouseEvent) => {
+              e.preventDefault();
+              e.stopPropagation();
+              dispatch(setMotivation("scholarly"));
+            }}
+          >
           {"Create Scholarly Annotation"}
         </ContextButton>
+      )}
     </ContextMenu>,
     document.body
   );

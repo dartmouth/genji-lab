@@ -17,6 +17,7 @@ interface AuthState {
     netid: string;
     email?: string;
     user_metadata?: Record<string, string|number>;
+    roles?: Array<string>,
     ttl: string; // ISO format timestamp for expiration
   } | null;
   expiresAt?: number; // Unix timestamp in milliseconds when the session expires

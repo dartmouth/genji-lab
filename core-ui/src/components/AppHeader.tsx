@@ -26,11 +26,14 @@ const AppHeader: React.FC = () => {
                 <div className="user-info">
                   {`Welcome, ${user.first_name} ${user.last_name}`}
                 </div>
-                <button className="admin-button" onClick={() =>
+                {user.roles && user.roles.includes('admin') ?
+                (<button className="admin-button" onClick={() =>
                    window.location.href = "/admin"}
                 >
                   Administration
-                </button>
+                </button>):(
+                  <div></div>
+                  )}
                 <br/><br/>
                 <button className="logout-button" onClick={() => {
                   toggleDropdown()
