@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { Tabs, Tab, Box, Typography, styled } from '@mui/material';
+import React, { useState, useEffect } from "react";
+import { Tabs, Tab, Box, Typography, styled, FormControl, 
+  InputLabel, Select, MenuItem, Snackbar, Alert, 
+  Dialog, DialogActions, DialogContent, DialogContentText, 
+  DialogTitle, Button } from '@mui/material';
 import { createDocumentCollection, useAppDispatch } from '@store';
 import { useAuth } from "@hooks/useAuthContext.ts";
+import { useAppSelector } from "@store/hooks";
+import { 
+  selectAllDocumentCollections,
+  fetchDocumentCollections,
+} from "@store";
 
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
@@ -52,6 +60,9 @@ const StyledForm = styled('form')(({ theme }) => ({
     borderRadius: theme.shape.borderRadius,
     border: `1px solid ${theme.palette.divider}`,
   },
+  '& .MuiFormControl-root': {
+    marginBottom: theme.spacing(2),
+  },
   '& button': {
     marginTop: theme.spacing(2),
     padding: theme.spacing(1, 2),
@@ -63,14 +74,109 @@ const StyledForm = styled('form')(({ theme }) => ({
     '&:hover': {
       backgroundColor: theme.palette.primary.dark,
     },
+    '&:disabled': {
+      opacity: 0.5,
+      cursor: 'not-allowed',
+      backgroundColor: theme.palette.action.disabled,
+    },
+  },
+  '& .delete-button': {
+    backgroundColor: theme.palette.error.main,
+    '&:hover': {
+      backgroundColor: theme.palette.error.dark,
+    },
   },
 }));
 
 const ManageCollections: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<number>(0);
+  const dispatch = useAppDispatch();
+
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({ open: false, message: '', severity: 'info' });
+  
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', message: '', onConfirm: () => {} });
+ 
+  const showNotification = (message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialog({ ...confirmDialog, open: false });
+  };
+
+
+  const documentCollections = useAppSelector(selectAllDocumentCollections) as Array<{
+    id: number;
+    title: string;
+    description?: string;
+  }>;
+
+  //fetch collections
+  useEffect(() => {
+    dispatch(fetchDocumentCollections());
+  }, [dispatch]);
+
+  const [selectedCollection, setSelectedCollection] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  const handleCollectionSelect = (event: any) => {
+    setSelectedCollection(event.target.value);
+  };
 
   const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveSubTab(newValue);
+  };
+
+  const initiateDeleteCollection = () => {
+    if (!selectedCollection) return;
+    
+    setConfirmDialog({
+      open: true,
+      title: 'Confirm Deletion',
+      message: 'Are you sure you want to delete this collection? This action cannot be undone.',
+      onConfirm: handleDeleteCollection
+    });
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!selectedCollection) return;
+    
+    setConfirmDialog({ ...confirmDialog, open: false });
+    setIsDeleting(true);
+    
+    try {
+      const response = await fetch(`/api/v1/collections/${selectedCollection}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // Refresh the collections list after successful deletion
+        dispatch(fetchDocumentCollections());
+        setSelectedCollection('');
+        showNotification('Collection deleted successfully', 'success');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to delete collection');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      showNotification(`Failed to delete collection: ${errorMessage}`, 'error');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
 interface FormData {
@@ -79,7 +185,6 @@ interface FormData {
   text_direction: string;
   language: string;
 }
-  const dispatch = useAppDispatch();
   const { user } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -138,9 +243,9 @@ interface FormData {
           }}
         >
           <Tab label="Overview" {...a11yPropsSubTab(0)} />
-          <Tab label="Create Document Collection" {...a11yPropsSubTab(1)} />
-          <Tab label="Delete Document Collection" {...a11yPropsSubTab(2)} />
-          <Tab label="Rename Document Collection" {...a11yPropsSubTab(3)} />
+          <Tab label="Add" {...a11yPropsSubTab(1)} />
+          <Tab label="Delete" {...a11yPropsSubTab(2)} />
+          <Tab label="Rename" {...a11yPropsSubTab(3)} />
         </Tabs>
         
         {/* Sub-tab content */}
@@ -155,10 +260,10 @@ interface FormData {
 
         <SubTabPanel value={activeSubTab} index={1}>
             <Typography variant="h5" gutterBottom>
-            Create Document Collection
+            Add Document Collection
             </Typography>
             <div>
-            <p>Complete the form to create your new Document Collection.</p>
+            <p>Complete this form to add your new Document Collection.</p>
             </div>
             <StyledForm onSubmit={handleSubmit}>
             <div className="form-group">
@@ -216,12 +321,12 @@ interface FormData {
                 </select>
             </div>
 
-            <button type="submit">Submit</button>
+            <button type="submit">Add</button>
             </StyledForm>
 
             {submitted && (
             <div className="submitted-data">
-                <h2>A new Document Collection has been created:</h2>
+                <h2>A new Document Collection has been added:</h2>
                 <p><strong>Title:</strong> {formData.title}</p>
                 <p><strong>Visibility:</strong> {formData.visibility}</p>
                 <p><strong>Text Direction:</strong> {formData.text_direction}</p>
@@ -237,18 +342,35 @@ interface FormData {
           </Typography>
           <div>
             <p>Select a document collection to delete:</p>
-            {/* Add your delete collection UI here */}
-            {/* For example: */}
-            <select style={{ padding: '8px', width: '100%', maxWidth: '300px' }}>
-              <option value="">-- Select a collection --</option>
-              <option value="1">Collection 1</option>
-              <option value="2">Collection 2</option>
-            </select>
-            <div style={{ marginTop: '16px' }}>
-              <button style={{ padding: '8px 16px', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '4px' }}>
-                Delete Document Collection
+            <StyledForm>
+              <FormControl fullWidth sx={{ maxWidth: '300px' }}>
+                <InputLabel id="delete-collection-label">Select a collection</InputLabel>
+                <Select
+                  labelId="delete-collection-label"
+                  id="delete-collection-select"
+                  value={selectedCollection}
+                  label="Select a collection"
+                  onChange={handleCollectionSelect}
+                >
+                  <MenuItem value="">
+                    <em>-- Select a collection --</em>
+                  </MenuItem>
+                  {documentCollections.map((collection) => (
+                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                      {collection.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <button 
+                type="button"
+                className="delete-button"
+                disabled={!selectedCollection || isDeleting}
+                onClick={initiateDeleteCollection}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
-            </div>
+            </StyledForm>
           </div>
         </SubTabPanel>
         
@@ -258,30 +380,80 @@ interface FormData {
           </Typography>
           <div>
             <p>Select a document collection to rename:</p>
-            {/* Add your rename collection UI here */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px' }}>
-              <select style={{ padding: '8px' }}>
-                <option value="">-- Select a collection --</option>
-                <option value="1">Collection 1</option>
-                <option value="2">Collection 2</option>
-              </select>
-              <div>
-                <label htmlFor="new-name" style={{ display: 'block', marginBottom: '8px' }}>New Name:</label>
+            <StyledForm>
+              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+                <InputLabel id="rename-collection-label">Select a collection</InputLabel>
+                <Select
+                  labelId="rename-collection-label"
+                  id="rename-collection-select"
+                  value={selectedCollection}
+                  label="Select a collection"
+                  onChange={handleCollectionSelect}
+                >
+                  <MenuItem value="">
+                    <em>-- Select a collection --</em>
+                  </MenuItem>
+                  {documentCollections.map((collection) => (
+                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                      {collection.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <div className="form-group">
+                <label htmlFor="new-name">New Name:</label>
                 <input 
                   type="text" 
                   id="new-name" 
-                  style={{ padding: '8px', width: '100%' }} 
+                  name="new-name"
                   placeholder="Enter new collection name"
                 />
               </div>
-              <div>
-                <button style={{ padding: '8px 16px', backgroundColor: '#2196f3', color: 'white', border: 'none', borderRadius: '4px' }}>
-                  Rename Document Collection
-                </button>
-              </div>
-            </div>
+              
+              <button type="button">
+                Rename
+              </button>
+            </StyledForm>
           </div>
         </SubTabPanel>
+
+        {/* Notification Snackbar */}
+        <Snackbar 
+          open={notification.open} 
+          autoHideDuration={6000} 
+          onClose={handleCloseNotification}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseNotification} 
+            severity={notification.severity} 
+            sx={{ width: '100%' }}
+          >
+            {notification.message}
+          </Alert>
+        </Snackbar>
+
+        {/* Confirmation Dialog */}
+        <Dialog
+          open={confirmDialog.open}
+          onClose={handleCloseConfirmDialog}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{confirmDialog.title}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              {confirmDialog.message}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseConfirmDialog}>Cancel</Button>
+            <Button onClick={confirmDialog.onConfirm} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Box>
   );

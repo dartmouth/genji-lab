@@ -51,6 +51,7 @@ def create_element(element: DocumentElementCreate, db: AsyncSession = Depends(ge
     db.refresh(db_element)
     return db_element
 
+
 @router.get("/", response_model=List[DocumentElement])
 def read_elements(
     skip: int = 0,
@@ -340,7 +341,13 @@ import docx
 from routers.test import extract_paragraphs
 
 @router.post("/upload-word-doc", status_code=status.HTTP_201_CREATED)
-def upload_word_doc(file: UploadFile=File(...), document_collection_id: int = 1, document_number: int = 1):
+def upload_word_doc(
+    document_collection_id: int,
+    document_id: int,
+    file: UploadFile = File(...), 
+    db: AsyncSession = Depends(get_db)
+):
+    # upload Word doc into document elements
     if not file.filename.endswith('.docx'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -351,23 +358,69 @@ def upload_word_doc(file: UploadFile=File(...), document_collection_id: int = 1,
         contents = file.file.read()
         doc = docx.Document(BytesIO(contents))
         paragraph_count = len(doc.paragraphs)
+        
         # Extract paragraphs and other information
-        text = extract_paragraphs(doc, document_collection_id, document_number)
+        paragraphs = extract_paragraphs(doc, document_collection_id, document_id)
+        
+        # Verify the document exists if provided
+        if document_id:
+            document = db.execute(
+                select(Document).filter(Document.id == document_id)
+            )
+            document = document.scalar_one_or_none()
+            
+            if not document:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Document with ID {document_id} not found"
+                )
+        
+        # Create document elements in a transaction
+        created_elements = []
+        try:
+            # Add each element to the database
+            for idx, element_data in enumerate(paragraphs):
+                # Create new document element
+                db_element = DocumentElementModel(
+                    document_id=document_id,
+                    content=element_data.get("content", {}),
+                    hierarchy=element_data.get("hierarchy", 0),
+                    created=datetime.now(),
+                    modified=datetime.now()
+                )
+                
+                db.add(db_element)
+                created_elements.append(db_element)
+            
+            # Commit the transaction
+            db.commit()
+            
+            # Refresh all elements to get their IDs
+            for element in created_elements:
+                db.refresh(element)
 
-
-
+        except Exception as db_error:
+            # Rollback in case of error
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Database error: {str(db_error)}"
+            )
 
         return JSONResponse(
             content={
                 "filename": file.filename,
                 "paragraph_count": paragraph_count,
+                "elements_created": len(created_elements),
                 "message": "File processed successfully",
-                "text": text
+                "document_collection_id": document_collection_id,
+                "document_id": document_id,
             },
             status_code=status.HTTP_201_CREATED
         )
     except Exception as e:
-       raise HTTPException(
-           status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-           detail=f"Error processing file: {e}"
-       )
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing file: {str(e)}"
+        )

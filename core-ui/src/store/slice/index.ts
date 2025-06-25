@@ -29,6 +29,7 @@ export type {DocumentCollectionCreate, Hierarchy, CollectionMetadata} from './do
 
 
 export {
+    createDocument,
     clearDocuments,
     setSelectedCollectionId,
     fetchDocumentsByCollection,

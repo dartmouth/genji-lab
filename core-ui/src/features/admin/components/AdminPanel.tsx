@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Tabs, Tab, Box, Typography } from '@mui/material';
-import ManageCollections from './ManageCollections'; 
+import ManageCollections from './ManageCollections';
+import ManageDocuments from './ManageDocuments';
 
 interface AdminPanelProps {}
 
@@ -79,7 +80,8 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
       >
         <Tab label="Overview" {...a11yProps(0)} />
         <Tab label="Manage Document Collections" {...a11yProps(1)} />
-        <Tab label="Application Settings" {...a11yProps(2)} />
+        <Tab label="Manage Documents" {...a11yProps(2)} />
+        <Tab label="Application Settings" {...a11yProps(3)} />
       </Tabs>
       
       {/* Tab content area */}
@@ -95,8 +97,12 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
       <TabPanel value={activeTab} index={1}>
         <ManageCollections />
       </TabPanel>
-      
+
       <TabPanel value={activeTab} index={2}>
+        <ManageDocuments />
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={3}>
         <Typography variant="h4" component="h1" gutterBottom>
           Application Settings
         </Typography>
