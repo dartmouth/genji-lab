@@ -384,6 +384,7 @@ def upload_word_doc(
                 db_element = DocumentElementModel(
                     document_id=document_id,
                     content=element_data.get("content", {}),
+                    hierarchy=element_data.get("hierarchy", 0),
                     created=datetime.now(),
                     modified=datetime.now()
                 )
