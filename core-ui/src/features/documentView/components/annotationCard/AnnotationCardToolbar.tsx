@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { ThumbUp, ChatBubbleOutline, Flag, Settings, MoreVert } from "@mui/icons-material";
+import { 
+    ThumbUp, 
+    ChatBubbleOutline, 
+    Flag, 
+    Settings, 
+    MoreVert,
+    Link as LinkIcon 
+} from "@mui/icons-material";
 import { Menu, MenuItem, Chip, Tooltip, Avatar } from "@mui/material";
 import { 
     RootState, 
@@ -19,8 +26,10 @@ interface AnnotationCardToolbarProps {
     onEditClick: () => void;
     onDeleteClick: () => void;
     onTagsClick: () => void;
+    onLinkClick?: () => void; 
     isReplying: boolean;
     isFlagging: boolean;
+    isEditing?: boolean;
     position?: 'bottom' | 'right' | 'left';
     onActionMenuOpen: (event: React.MouseEvent<HTMLButtonElement>) => void;
     actionButtonRef?: React.RefObject<HTMLButtonElement | null>;
@@ -34,8 +43,10 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
     onEditClick,
     onDeleteClick,
     onTagsClick,
+    onLinkClick,
     isReplying,
     isFlagging,
+    isEditing = false,
     position = 'bottom',
     onActionMenuOpen,
     actionButtonRef
@@ -100,6 +111,13 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
 
     const handleTagsClick = () => {
         onTagsClick();
+        closeMenu();
+    };
+
+    const handleLinkClick = () => {
+        if (onLinkClick) {
+            onLinkClick();
+        }
         closeMenu();
     };
 
@@ -191,6 +209,25 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
                     }}>
                         <Flag sx={{ fontSize: '1rem' }} />
                     </button>
+
+                    {/* Add Link button - only show for annotation creators when editing */}
+                    {(isEditing && user && user.id === annotation.creator.id && onLinkClick) && (
+                        <button 
+                            title="Add External Link" 
+                            onClick={handleLinkClick} 
+                            style={{ 
+                                background: 'none', 
+                                border: 'none', 
+                                cursor: 'pointer', 
+                                color: '#1976d2',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            <LinkIcon sx={{ fontSize: '1rem' }} />
+                        </button>
+                    )}
                     
                     <button title="Settings" onClick={toggleMenu} style={{ 
                         background: 'none', 
@@ -218,6 +255,13 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
                         <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
                     )}
                     <MenuItem onClick={handleTagsClick}>Tags</MenuItem>
+                    {/* Add Link option in menu - only for annotation creators */}
+                    {onLinkClick && user && user.id === annotation.creator.id && (
+                        <MenuItem onClick={handleLinkClick}>
+                            <LinkIcon sx={{ fontSize: '1rem', marginRight: '8px' }} />
+                            Add Link
+                        </MenuItem>
+                    )}
                 </Menu>
             </>
         );

@@ -113,8 +113,7 @@ const PanelHeader: React.FC<PanelHeaderProps> = ({
       style={{
         ...getHeaderStyles(),
         position: 'sticky',
-        top: 0,
-        zIndex: 10,
+        top: 0
       }}
     >
       <div className="tabs-container" style={getTabsContainerStyles()}>
