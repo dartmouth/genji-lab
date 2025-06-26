@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth } from "../hooks/useAuthContext";
+import { useAuth } from "@hooks/useAuthContext";
 
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
@@ -26,7 +26,7 @@ const AppHeader: React.FC = () => {
                 <div className="user-info">
                   {`Welcome, ${user.first_name} ${user.last_name}`}
                 </div>
-                {user.roles && user.roles.includes('admin') ?
+                {user?.roles && user.roles.includes('admin') ?
                 (<button className="admin-button" onClick={() =>
                    window.location.href = "/admin"}
                 >

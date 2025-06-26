@@ -109,10 +109,5 @@ alter table app.document_elements add column links JSONB;
 create index idx_element_links on document_elements using GIN (links);
 
 select * from users;
-
-
-INSERT INTO app.user_roles (user_id, role_id)
-SELECT 7, r.id 
-FROM app.roles r 
-WHERE r.name = 'verified_scholar';
-select * from user_roles ur;
+select * from user_roles;
+delete from user_roles where user_id = 6 and role_id = 1;
