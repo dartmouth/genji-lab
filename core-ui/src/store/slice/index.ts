@@ -4,7 +4,8 @@ export {
     scholarlyAnnotations, 
     taggingAnnotations,
     upvoteAnnotations,
-    sliceMap
+    sliceMap,
+    linkingAnnotations
 } from './annotationSlices'
 export {  
     registerHighlight, 

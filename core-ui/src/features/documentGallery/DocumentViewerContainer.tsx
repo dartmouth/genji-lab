@@ -13,6 +13,7 @@ import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGaller
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
 import { DocumentComparisonContainer } from "@documentView";
 import RouterSwitchBoard from "@/RouterSwitchBoard";
+import DocumentLinkingOverlay from '@/features/documentView/components/annotationCard/DocumentLinkingOverlay';
 import "./styles/DocumentViewerStyles.css";
 
 const DocumentViewerContainer: React.FC = () => {  
@@ -82,6 +83,7 @@ export const DocumentContentView: React.FC = () => {
   const [documentsByCollection, setDocumentsByCollection] = useState<{
     [collectionId: number]: Array<{ id: number, title: string }>
   }>({});
+  const [isLinkingModeActive, setIsLinkingModeActive] = useState(false);
   
   // Get all documents and collections
   const documents = useAppSelector(selectAllDocuments);
@@ -274,6 +276,33 @@ export const DocumentContentView: React.FC = () => {
                 <span className="icon">💬</span> Annotations
               </button>
             </div>
+
+            {viewedDocuments.length === 2 && (
+              <div className="document-linking-controls">
+                <button
+                  onClick={() => setIsLinkingModeActive(true)}
+                  className="link-documents-btn"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    backgroundColor: isLinkingModeActive ? '#1976d2' : '#e3f2fd',
+                    border: '1px solid #1976d2',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: isLinkingModeActive ? 'white' : '#1976d2',
+                    marginBottom: '12px'
+                  }}
+                >
+                  <span className="icon">🔗</span>
+                  {isLinkingModeActive ? 'Linking Mode Active' : 'Link Documents'}
+                </button>
+              </div>
+            )}
             
             {/* Viewed documents section with compact styling */}
             <div className="viewed-documents">
@@ -378,6 +407,14 @@ export const DocumentContentView: React.FC = () => {
         <div className="no-documents-message">
           No documents selected for viewing
         </div>
+      )}
+
+      {/* Document Linking Dialog */}
+      {isLinkingModeActive && (
+        <DocumentLinkingOverlay
+          documents={viewedDocuments}
+          onClose={() => setIsLinkingModeActive(false)}
+        />
       )}
     </div>
   );

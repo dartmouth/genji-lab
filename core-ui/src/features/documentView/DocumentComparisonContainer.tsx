@@ -23,11 +23,13 @@ interface DocumentComparisonContainerProps {
   documents: Array<DocumentProps>;
   viewMode?: 'reading' | 'annotations';
   handleViewModeChange?: (mode: 'reading' | 'annotations') => void;
+  isLinkingModeActive?: boolean;  // ADD THIS
 }
 
 const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = ({
   documents,
-  viewMode = 'reading'
+  viewMode = 'reading',
+  isLinkingModeActive = false  // ADD THIS
 }) => {
   // State for active document (for highlight tracking)
   const [activeDocumentId, setActiveDocumentId] = useState<number | undefined>(
@@ -187,6 +189,7 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
       ${layoutClass} 
       ${viewMode}-mode 
       panel-position-${annotationPanelPosition}
+      ${isLinkingModeActive ? 'linking-mode-active' : ''}
     `} style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Document toolbar completely removed to prevent overlay with annotation tabs */}
       
@@ -224,14 +227,39 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
           {documents.map((doc, index) => (
             <div 
               key={doc.id} 
-              className={`document-panel-wrapper panel-${index} ${doc.id === activeDocumentId ? 'active' : ''}`}
+              className={`document-panel-wrapper panel-${index} ${doc.id === activeDocumentId ? 'active' : ''} ${isLinkingModeActive ? 'linking-mode' : ''}`}
               onMouseEnter={() => handleDocumentFocus(doc.id)}
+              data-document-id={doc.id}
+              style={{
+                ...(isLinkingModeActive ? {
+                  cursor: 'crosshair',
+                  border: '2px dashed #1976d2',
+                  borderRadius: '8px',
+                  margin: '4px',
+                  transition: 'all 0.2s ease'
+                } : {})
+              }}
             >
               {/* Document title header */}
-              <div className="document-title-header">
+              <div className="document-title-header" style={{
+                ...(isLinkingModeActive ? {
+                  backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                  borderBottom: '1px solid #1976d2'
+                } : {})
+              }}>
                 <h2>
                   <span className="color-indicator" style={{ backgroundColor: documentColors[doc.id] }} />
                   {doc.title}
+                  {isLinkingModeActive && (
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: '#1976d2', 
+                      fontWeight: 'normal',
+                      marginLeft: '8px'
+                    }}>
+                      (Select text to link)
+                    </span>
+                  )}
                 </h2>
               </div>
               

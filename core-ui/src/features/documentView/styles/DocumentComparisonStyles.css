@@ -291,3 +291,28 @@
     font-size: 14px;
   }
 }
+
+.document-panel-wrapper.linking-mode {
+  transition: all 0.2s ease;
+}
+
+.document-panel-wrapper.linking-mode:hover {
+  border-color: #1976d2 !important;
+  box-shadow: 0 0 10px rgba(25, 118, 210, 0.3);
+}
+
+.document-panel-wrapper.linking-mode .document-content-panel {
+  user-select: text;
+}
+
+.document-panel-wrapper.linking-mode .document-content-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(25, 118, 210, 0.02);
+  pointer-events: none;
+  z-index: 1;
+}
