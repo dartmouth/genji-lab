@@ -282,3 +282,61 @@ def get_collection_documents(
         result.append(doc_dict)
     
     return result
+
+@router.delete("/{collection_id}/documents", status_code=status.HTTP_204_NO_CONTENT)
+def delete_all_collection_documents(
+    collection_id: int, 
+    force: bool = True,  # Default to True for collection-wide deletion
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Delete all documents in a collection with cascading delete
+    
+    - force=True (default): Delete documents and all associated elements/annotations
+    - This operation cascades through: Collection -> Documents -> Elements -> Annotations
+    """
+    # Verify collection exists
+    db_collection = db.execute(
+        select(DocumentCollectionModel).filter(DocumentCollectionModel.id == collection_id)
+    ).scalar_one_or_none()
+    
+    if db_collection is None:
+        raise HTTPException(status_code=404, detail="Document collection not found")
+    
+    # Get all documents in this collection
+    documents = db.execute(
+        select(Document.id).filter(Document.document_collection_id == collection_id)
+    ).scalars().all()
+    
+    if not documents:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    
+    # Cascading delete: Annotations -> Elements -> Documents
+    if force:
+        from models.models import Annotation as AnnotationModel, DocumentElement
+        
+        # Get all element IDs for documents in this collection
+        element_ids = db.execute(
+            select(DocumentElement.id).filter(
+                DocumentElement.document_id.in_(documents)
+            )
+        ).scalars().all()
+        
+        if element_ids:
+            # Delete all annotations for these elements
+            db.execute(
+                delete(AnnotationModel).where(AnnotationModel.document_element_id.in_(element_ids))
+            )
+            
+            # Delete all elements for these documents
+            db.execute(
+                delete(DocumentElement).where(DocumentElement.document_id.in_(documents))
+            )
+    
+    # Delete all documents in the collection
+    db.execute(
+        delete(Document).where(Document.document_collection_id == collection_id)
+    )
+    
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

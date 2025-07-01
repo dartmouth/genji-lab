@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Tabs, Tab, Box, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import ManageCollections from './ManageCollections';
 import ManageDocuments from './ManageDocuments';
+import "../../documentGallery/styles/CollectionGalleryStyles.css";
 
 interface AdminPanelProps {}
 
@@ -45,9 +47,14 @@ function a11yProps(index: number) {
 const AdminPanel: React.FC<AdminPanelProps> = () => {  
   // State to manage which tab is active
   const [activeTab, setActiveTab] = useState<number>(0);
+  const navigate = useNavigate();
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+  };
+
+  const handleBackToCollections = () => {
+    navigate('/');
   };
 
   return (
@@ -56,60 +63,73 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
         flexGrow: 1,
         bgcolor: 'background.paper',
         display: 'flex',
+        flexDirection: 'column',
         height: 'auto',
         minHeight: '500px',
       }}
     >
-      {/* Vertical Tabs on the left */}
-      <Tabs
-        orientation="vertical"
-        variant="scrollable"
-        value={activeTab}
-        onChange={handleTabChange}
-        aria-label="Admin panel vertical tabs"
-        sx={{ 
-          borderRight: 1, 
-          borderColor: 'divider',
-          minWidth: '200px',
-          '& .MuiTab-root': {
-            alignItems: 'flex-start',
-            textAlign: 'left',
-            paddingLeft: 2
-          }
-        }}
-      >
-        <Tab label="Overview" {...a11yProps(0)} />
-        <Tab label="Manage Document Collections" {...a11yProps(1)} />
-        <Tab label="Manage Documents" {...a11yProps(2)} />
-        <Tab label="Application Settings" {...a11yProps(3)} />
-      </Tabs>
+      {/* Back to Collections Button */}
+      <Box sx={{ padding: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <button 
+          onClick={handleBackToCollections}
+          className="back-button"
+        >
+          ← Back to Collections
+        </button>
+      </Box>
       
-      {/* Tab content area */}
-      <TabPanel value={activeTab} index={0}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Administration Overview
-        </Typography>
-        <div>
-          <p>Here you can Manage Document Collections and change Application Settings.</p>
-        </div>
-      </TabPanel>
+      {/* Main content area with tabs */}
+      <Box sx={{ display: 'flex', flexGrow: 1 }}>
+        {/* Vertical Tabs on the left */}
+        <Tabs
+          orientation="vertical"
+          variant="scrollable"
+          value={activeTab}
+          onChange={handleTabChange}
+          aria-label="Admin panel vertical tabs"
+          sx={{ 
+            borderRight: 1, 
+            borderColor: 'divider',
+            minWidth: '200px',
+            '& .MuiTab-root': {
+              alignItems: 'flex-start',
+              textAlign: 'left',
+              paddingLeft: 2
+            }
+          }}
+        >
+          <Tab label="Overview" {...a11yProps(0)} />
+          <Tab label="Manage Document Collections" {...a11yProps(1)} />
+          <Tab label="Manage Documents" {...a11yProps(2)} />
+          <Tab label="Application Settings" {...a11yProps(3)} />
+        </Tabs>
+        {/* Tab content area */}
+        <TabPanel value={activeTab} index={0}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Administration Overview
+          </Typography>
+          <div>
+            <p>Here you can Manage Document Collections and change Application Settings.</p>
+          </div>
+        </TabPanel>
 
-      <TabPanel value={activeTab} index={1}>
-        <ManageCollections />
-      </TabPanel>
+        <TabPanel value={activeTab} index={1}>
+          <ManageCollections />
+        </TabPanel>
 
-      <TabPanel value={activeTab} index={2}>
-        <ManageDocuments />
-      </TabPanel>
+        <TabPanel value={activeTab} index={2}>
+          <ManageDocuments />
+        </TabPanel>
 
-      <TabPanel value={activeTab} index={3}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Application Settings
-        </Typography>
-        <div>
-          <p>Configure your application settings here.</p>
-        </div>
-      </TabPanel>
+        <TabPanel value={activeTab} index={3}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Application Settings
+          </Typography>
+          <div>
+            <p>Configure your application settings here.</p>
+          </div>
+        </TabPanel>
+      </Box>
     </Box>
   );
 };
