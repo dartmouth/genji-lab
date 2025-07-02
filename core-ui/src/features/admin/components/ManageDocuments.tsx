@@ -518,29 +518,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
             <StyledForm onSubmit={handleSubmit}>
             <div className="form-group">
-                <label htmlFor="title">Title: </label>
-                <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                />
-            </div>
-
-            <div className="form-group">
-                <label htmlFor="description">Description: </label>
-                <input
-                type="text"
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                />
-            </div>
-
-            <div className="form-group">
                 <FormControl fullWidth>
                     <InputLabel id="collection-select-label">Collection</InputLabel>
                     <Select
@@ -561,6 +538,28 @@ const handleSubmit = async (e: React.FormEvent) => {
                         ))}
                     </Select>
                 </FormControl>
+            </div>
+            <div className="form-group">
+                <label htmlFor="title">Title: </label>
+                <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                />
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="description">Description: </label>
+                <input
+                type="text"
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                />
             </div>
 
             <button type="submit">Add</button>
