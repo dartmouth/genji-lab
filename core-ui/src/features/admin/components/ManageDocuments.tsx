@@ -187,6 +187,15 @@ const ManageDocuments: React.FC = () => {
     onConfirm: () => {} 
   });
 
+  // Delete document content state
+  const [selectedContentDeleteCollection, setSelectedContentDeleteCollection] = useState<string>('');
+  const [selectedContentDeleteDocument, setSelectedContentDeleteDocument] = useState<string>('');
+  const [isDeletingContent, setIsDeletingContent] = useState<boolean>(false);
+  const [contentDeleteStats, setContentDeleteStats] = useState<{
+    element_count: number;
+    annotation_count: number;
+  } | null>(null);
+
   // Notification state
   const [notification, setNotification] = useState<{
     open: boolean;
@@ -467,6 +476,118 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
   };
 
+  // Delete document content handlers
+  const handleContentDeleteCollectionSelect = async (event: any) => {
+    const collectionId = parseInt(event.target.value);
+    setSelectedContentDeleteCollection(event.target.value);
+    setSelectedContentDeleteDocument(''); // Reset document selection
+    setContentDeleteStats(null); // Reset stats
+    
+    if (collectionId) {
+      // Fetch documents for this collection
+      dispatch(fetchDocumentsByCollection(collectionId));
+    }
+  };
+
+  const handleContentDeleteDocumentSelect = async (event: any) => {
+    const documentId = parseInt(event.target.value);
+    setSelectedContentDeleteDocument(event.target.value);
+    setContentDeleteStats(null); // Reset stats
+    
+    if (documentId) {
+      // Fetch stats for this document
+      try {
+        const response = await fetch(`/api/v1/elements/document/${documentId}/stats`);
+        if (response.ok) {
+          const stats = await response.json();
+          setContentDeleteStats({
+            element_count: stats.element_count,
+            annotation_count: stats.annotation_count
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch document content stats:', error);
+        showNotification('Failed to fetch document statistics', 'error');
+      }
+    }
+  };
+
+  const initiateContentDelete = () => {
+    if (!selectedContentDeleteDocument || !contentDeleteStats) {
+      showNotification('Please select a document first', 'error');
+      return;
+    }
+
+    const selectedDoc = documents.find(d => d.id === parseInt(selectedContentDeleteDocument));
+    const selectedCollection = documentCollections.find(c => c.id === parseInt(selectedContentDeleteCollection));
+    
+    if (!selectedDoc || !selectedCollection) {
+      showNotification('Invalid document or collection selection', 'error');
+      return;
+    }
+
+    const message = `Are you sure you want to delete ALL CONTENT from "${selectedDoc.title}" in collection "${selectedCollection.title}"?
+
+This will permanently delete:
+• ${contentDeleteStats.element_count} paragraphs
+• ${contentDeleteStats.annotation_count} annotations
+
+The document itself will remain but will be empty. This action cannot be undone.`;
+
+    setDeleteConfirmDialog({
+      open: true,
+      title: 'Confirm Document Content Deletion',
+      message,
+      documentsToDelete: [{
+        id: selectedDoc.id,
+        title: selectedDoc.title,
+        element_count: contentDeleteStats.element_count,
+        scholarly_annotation_count: contentDeleteStats.annotation_count,
+        comment_count: 0
+      }],
+      onConfirm: handleConfirmContentDelete
+    });
+  };
+
+  const handleConfirmContentDelete = async () => {
+    if (!selectedContentDeleteDocument) return;
+
+    setIsDeletingContent(true);
+    setDeleteConfirmDialog({ ...deleteConfirmDialog, open: false });
+
+    try {
+      const documentId = parseInt(selectedContentDeleteDocument);
+      const response = await fetch(`/api/v1/elements/document/${documentId}/all-elements?force=true`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const selectedDoc = documents.find(d => d.id === documentId);
+        const selectedCollection = documentCollections.find(c => c.id === parseInt(selectedContentDeleteCollection));
+        
+        // Reset form
+        setSelectedContentDeleteDocument('');
+        setContentDeleteStats(null);
+        
+        showNotification(
+          `Successfully deleted all content from document '${selectedDoc?.title}' in collection '${selectedCollection?.title}'`, 
+          'success'
+        );
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to delete document content');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      showNotification(`Failed to delete document content: ${errorMessage}`, 'error');
+    } finally {
+      setIsDeletingContent(false);
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -496,7 +617,8 @@ const handleSubmit = async (e: React.FormEvent) => {
           <Tab label="Add" {...a11yPropsSubTab(1)} />
           <Tab label="Add Word Content to Document" {...a11yPropsSubTab(2)} />
           <Tab label="Delete" {...a11yPropsSubTab(3)} />
-          <Tab label="Rename" {...a11yPropsSubTab(4)} />
+          <Tab label="Delete Document Content" {...a11yPropsSubTab(4)} />
+          <Tab label="Rename" {...a11yPropsSubTab(5)} />
         </Tabs>
         
         {/* Sub-tab content */}
@@ -767,6 +889,86 @@ const handleSubmit = async (e: React.FormEvent) => {
         
         <SubTabPanel value={activeSubTab} index={4}>
           <Typography variant="h5" gutterBottom>
+            Delete Document Content
+          </Typography>
+          <div>
+            <p>Select a document to delete all of its content. The document itself will remain but all content and annotations will be permanently deleted.</p>
+            <p style={{ color: 'red', fontWeight: 'bold' }}>⚠️ Warning: This action cannot be undone!</p>
+          </div>
+          <StyledForm>
+            <div className="form-group">
+              <FormControl fullWidth>
+                <InputLabel id="content-delete-collection-select-label">Collection</InputLabel>
+                <Select
+                  labelId="content-delete-collection-select-label"
+                  id="content-delete-collection-select"
+                  value={selectedContentDeleteCollection}
+                  onChange={handleContentDeleteCollectionSelect}
+                  name="content_delete_collection_id"
+                >
+                  <MenuItem value="">
+                    <em>Select a collection...</em>
+                  </MenuItem>
+                  {documentCollections.map((collection) => (
+                    <MenuItem key={collection.id} value={collection.id}>
+                      {collection.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+
+            {selectedContentDeleteCollection && (
+              <div className="form-group">
+                <FormControl fullWidth>
+                  <InputLabel id="content-delete-document-select-label">Document</InputLabel>
+                  <Select
+                    labelId="content-delete-document-select-label"
+                    id="content-delete-document-select"
+                    value={selectedContentDeleteDocument}
+                    onChange={handleContentDeleteDocumentSelect}
+                    name="content_delete_document_id"
+                  >
+                    <MenuItem value="">
+                      <em>Select a document...</em>
+                    </MenuItem>
+                    {documents.map((document) => (
+                      <MenuItem key={document.id} value={document.id}>
+                        {document.title}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+            )}
+
+            {contentDeleteStats && (
+              <div style={{ marginTop: '16px', padding: '16px', backgroundColor: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '4px' }}>
+                <Typography variant="h6" gutterBottom>Content to be deleted:</Typography>
+                <Typography variant="body2">• {contentDeleteStats.element_count} paragraphs</Typography>
+                <Typography variant="body2">• {contentDeleteStats.annotation_count} annotations</Typography>
+              </div>
+            )}
+
+            <button 
+              type="button" 
+              onClick={initiateContentDelete}
+              disabled={!selectedContentDeleteDocument || isDeletingContent}
+              className="delete-button"
+            >
+              {isDeletingContent ? 'Deleting Content...' : 'Delete Document Content'}
+            </button>
+
+            {selectedContentDeleteCollection && documents.length === 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ marginTop: 2 }}>
+                No documents found in this collection.
+              </Typography>
+            )}
+          </StyledForm>
+        </SubTabPanel>
+        
+        <SubTabPanel value={activeSubTab} index={5}>
+          <Typography variant="h5" gutterBottom>
             Rename Document
           </Typography>
           <div>
@@ -804,11 +1006,11 @@ const handleSubmit = async (e: React.FormEvent) => {
           {deleteConfirmDialog.title}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="delete-dialog-description" sx={{ marginBottom: 2 }}>
+          <DialogContentText id="delete-dialog-description" sx={{ marginBottom: 2, whiteSpace: 'pre-line' }}>
             {deleteConfirmDialog.message}
           </DialogContentText>
           
-          {deleteConfirmDialog.documentsToDelete.length > 0 && (
+          {deleteConfirmDialog.title !== 'Confirm Document Content Deletion' && deleteConfirmDialog.documentsToDelete.length > 0 && (
             <div>
               <Typography variant="subtitle2" gutterBottom>
                 Documents to be deleted:
@@ -844,7 +1046,9 @@ const handleSubmit = async (e: React.FormEvent) => {
         <DialogActions>
           <Button onClick={handleCloseDeleteConfirmDialog}>Cancel</Button>
           <Button onClick={deleteConfirmDialog.onConfirm} color="error" variant="contained" autoFocus>
-            Delete {deleteConfirmDialog.documentsToDelete.length} Document(s)
+            {deleteConfirmDialog.title === 'Confirm Document Content Deletion' 
+              ? 'DELETE DOCUMENT CONTENT' 
+              : `Delete ${deleteConfirmDialog.documentsToDelete.length} Document(s)`}
           </Button>
         </DialogActions>
       </Dialog>
