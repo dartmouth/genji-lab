@@ -1,5 +1,6 @@
 import React from "react";
 import { useAuth } from "@hooks/useAuthContext";
+import { SimpleSearchBar } from "@/features/search";
 
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
@@ -14,6 +15,7 @@ const AppHeader: React.FC = () => {
       <div className="header-left">
         <h1 className="app-title">The Tale of Genji</h1>
       </div>
+      <SimpleSearchBar></SimpleSearchBar>
       <div className="header-right">
         {isAuthenticated && user ? (
           // Authenticated user - show avatar and dropdown

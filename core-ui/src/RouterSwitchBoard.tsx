@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuthContext";
 const RouterSwitchBoard: React.FC = () => {
   
   const { user } = useAuth();
-  console.log("isadmin", user?.roles?.includes('admin'))
+  // console.log("isadmin", user?.roles?.includes('admin'))
   return (
     <Routes>
       <Route path="/" element={<CollectionsView />} />
