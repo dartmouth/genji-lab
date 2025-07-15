@@ -83,7 +83,7 @@ def read_collections(
 @router.get("/{collection_id}", response_model=DocumentCollectionWithStats)
 def read_collection(collection_id: int, db: AsyncSession = Depends(get_db)):
     """
-    Get a specific document collection by ID with detailed information
+    Get a specific document collection by ID with detailed information including full statistics
     """
     # Query for collection with joined users
     query = (
@@ -107,8 +107,47 @@ def read_collection(collection_id: int, db: AsyncSession = Depends(get_db)):
         .filter(Document.document_collection_id == collection_id)
     ).scalar_one()
     
-    # Add the count to the collection object
+    # Get element count for all documents in this collection
+    from models.models import DocumentElement
+    element_count = db.execute(
+        select(func.count())
+        .select_from(DocumentElement)
+        .join(Document, DocumentElement.document_id == Document.id)
+        .filter(Document.document_collection_id == collection_id)
+    ).scalar_one()
+    
+    # Get annotation count for all elements in this collection
+    from models.models import Annotation as AnnotationModel
+    
+    # Count scholarly annotations (motivation = 'scholarly' or similar)
+    scholarly_annotation_count = db.execute(
+        select(func.count())
+        .select_from(AnnotationModel)
+        .join(DocumentElement, AnnotationModel.document_element_id == DocumentElement.id)
+        .join(Document, DocumentElement.document_id == Document.id)
+        .filter(
+            Document.document_collection_id == collection_id,
+            AnnotationModel.motivation.in_(['scholarly', 'highlighting', 'bookmarking', 'classifying'])
+        )
+    ).scalar_one()
+    
+    # Count comments (motivation = 'commenting')
+    comment_count = db.execute(
+        select(func.count())
+        .select_from(AnnotationModel)
+        .join(DocumentElement, AnnotationModel.document_element_id == DocumentElement.id)
+        .join(Document, DocumentElement.document_id == Document.id)
+        .filter(
+            Document.document_collection_id == collection_id,
+            AnnotationModel.motivation == 'commenting'
+        )
+    ).scalar_one()
+    
+    # Add the counts to the collection object
     setattr(collection, "document_count", document_count)
+    setattr(collection, "element_count", element_count)
+    setattr(collection, "scholarly_annotation_count", scholarly_annotation_count)
+    setattr(collection, "comment_count", comment_count)
     
     return collection
 
@@ -204,12 +243,12 @@ def partial_update_collection(
     return db_collection
 
 @router.delete("/{collection_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_collection(collection_id: int, force: bool = False, db: AsyncSession = Depends(get_db)):
+def delete_collection(collection_id: int, force: bool = True, db: AsyncSession = Depends(get_db)):
     """
-    Delete a document collection
+    Delete a document collection with cascading delete
     
-    - If force=False (default), will only delete if no documents are associated
-    - If force=True, will delete the collection and all associated documents
+    - If force=False, will only delete if no documents are associated
+    - If force=True (default), will delete the collection and all associated documents, elements, and annotations
     """
     db_collection = db.execute(
         select(DocumentCollectionModel).filter(DocumentCollectionModel.id == collection_id)
@@ -231,14 +270,40 @@ def delete_collection(collection_id: int, force: bool = False, db: AsyncSession 
             detail=f"Cannot delete collection with {document_count} documents. Use force=True to delete anyway."
         )
     
-    # If force=True, delete all associated documents first
+    # If force=True, delete all associated content with proper cascading
     if force and document_count > 0:
-        # Note: This doesn't handle document elements and annotations
-        # In a real application, you would need to handle those as well
-        db.execute(
-            delete(Document).where(Document.document_collection_id == collection_id)
-        )
+        from models.models import Annotation as AnnotationModel, DocumentElement
+        
+        # Get all document IDs in this collection
+        document_ids = db.execute(
+            select(Document.id).filter(Document.document_collection_id == collection_id)
+        ).scalars().all()
+        
+        if document_ids:
+            # Get all element IDs for documents in this collection
+            element_ids = db.execute(
+                select(DocumentElement.id).filter(
+                    DocumentElement.document_id.in_(document_ids)
+                )
+            ).scalars().all()
+            
+            if element_ids:
+                # Delete all annotations for these elements
+                db.execute(
+                    delete(AnnotationModel).where(AnnotationModel.document_element_id.in_(element_ids))
+                )
+                
+                # Delete all elements for these documents
+                db.execute(
+                    delete(DocumentElement).where(DocumentElement.document_id.in_(document_ids))
+                )
+            
+            # Delete all documents in the collection
+            db.execute(
+                delete(Document).where(Document.id.in_(document_ids))
+            )
     
+    # Delete the collection
     db.delete(db_collection)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
