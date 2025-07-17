@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Tabs, Tab, Box, Typography, styled, FormControl, InputLabel, Select, MenuItem, 
   Snackbar, Alert, Dialog, DialogActions, DialogContent, DialogContentText, 
   DialogTitle, Button, Checkbox, FormControlLabel } from '@mui/material';
-import { createDocument, useAppDispatch } from '@store';
+import { createDocument, updateDocument, useAppDispatch } from '@store';
 import { useAuth } from "@hooks/useAuthContext.ts";
 import { useAppSelector } from "@store/hooks";
 import { 
@@ -102,6 +102,15 @@ const ManageDocuments: React.FC = () => {
   
   const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveSubTab(newValue);
+    
+    // Reset form states when changing tabs
+    if (newValue === 5) {
+      // Reset rename form when entering rename tab
+      setRenameSelectedCollection('');
+      setRenameSelectedDocument('');
+      setRenameNewName('');
+      setRenameDocuments([]);
+    }
   };
 
   interface FormData {
@@ -119,6 +128,13 @@ const ManageDocuments: React.FC = () => {
   const [submitted, setSubmitted] = useState<boolean>(false);
   
   const [selectedCollection, setSelectedCollection] = useState<string>('');
+  
+  // Memoized collection name lookup to prevent unnecessary re-renders
+  const selectedCollectionName = useMemo(() => {
+    if (!selectedCollection) return 'None';
+    return documentCollections.find(c => c.id === parseInt(selectedCollection))?.title || 'None';
+  }, [selectedCollection, documentCollections]);
+  
   const handleCollectionSelect = (event: any) => {
     setSelectedCollection(event.target.value);
     setFormData(prevData => ({
@@ -203,17 +219,37 @@ const ManageDocuments: React.FC = () => {
     severity: 'success' | 'error' | 'info' | 'warning';
   }>({ open: false, message: '', severity: 'info' });
 
+  // Rename-specific state
+  const [renameSelectedCollection, setRenameSelectedCollection] = useState<string>('');
+  const [renameSelectedDocument, setRenameSelectedDocument] = useState<string>('');
+  const [renameNewName, setRenameNewName] = useState<string>('');
+  const [isRenaming, setIsRenaming] = useState<boolean>(false);
+  const [isLoadingRenameDocuments, setIsLoadingRenameDocuments] = useState<boolean>(false);
+  const [renameDocuments, setRenameDocuments] = useState<Array<{
+    id: number;
+    title: string;
+    description: string;
+  }>>([]);
+
+  // Memoized documents for content deletion dropdown
+  const documentsInSelectedCollection = useMemo(() => {
+    if (!selectedContentDeleteCollection) return [];
+    return documents.filter(doc => 
+      doc.document_collection_id === parseInt(selectedContentDeleteCollection)
+    );
+  }, [selectedContentDeleteCollection, documents]);
+
   // Fetch documents when collection is selected for word upload
   const handleWordUploadCollectionSelect = (event: any) => {
     const collectionId = parseInt(event.target.value);
     const selectedCollection = documentCollections.find(c => c.id === collectionId);
     
     setSelectedWordUploadCollection(event.target.value);
-    setSelectedDocument(''); // Reset document selection
+    setSelectedDocument('');
     setWordUploadFormData(prevData => ({
       ...prevData,
       document_collection_id: collectionId || undefined,
-      document_id: undefined // Reset document selection
+      document_id: undefined 
     }));
     
     // Store collection name for success message
@@ -480,8 +516,8 @@ const handleSubmit = async (e: React.FormEvent) => {
   const handleContentDeleteCollectionSelect = async (event: any) => {
     const collectionId = parseInt(event.target.value);
     setSelectedContentDeleteCollection(event.target.value);
-    setSelectedContentDeleteDocument(''); // Reset document selection
-    setContentDeleteStats(null); // Reset stats
+    setSelectedContentDeleteDocument(''); 
+    setContentDeleteStats(null); 
     
     if (collectionId) {
       // Fetch documents for this collection
@@ -492,7 +528,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   const handleContentDeleteDocumentSelect = async (event: any) => {
     const documentId = parseInt(event.target.value);
     setSelectedContentDeleteDocument(event.target.value);
-    setContentDeleteStats(null); // Reset stats
+    setContentDeleteStats(null); 
     
     if (documentId) {
       // Fetch stats for this document
@@ -588,6 +624,115 @@ The document itself will remain but will be empty. This action cannot be undone.
     }
   };
 
+  // Rename functionality handlers
+  const handleRenameCollectionSelect = async (event: any) => {
+    const collectionId = event.target.value;
+    setRenameSelectedCollection(collectionId);
+    setRenameSelectedDocument('');
+    setRenameNewName('');
+    setRenameDocuments([]);
+    
+    if (collectionId) {
+      setIsLoadingRenameDocuments(true);
+      try {
+        // Fetch documents for the selected collection
+        const result = await dispatch(fetchDocumentsByCollection(parseInt(collectionId))).unwrap();
+        // Use the documents from the result
+        setRenameDocuments(result.documents);
+      } catch (error) {
+        console.error('Failed to fetch documents for collection:', error);
+        showNotification('Failed to load documents for selected collection', 'error');
+      } finally {
+        setIsLoadingRenameDocuments(false);
+      }
+    }
+  };
+
+  const handleRenameDocumentSelect = (event: any) => {
+    const documentId = event.target.value;
+    setRenameSelectedDocument(documentId);
+    
+    // Pre-fill the new name field with current document title
+    if (documentId) {
+      const selectedDoc = renameDocuments.find(d => d.id === parseInt(documentId));
+      setRenameNewName(selectedDoc?.title || '');
+    } else {
+      setRenameNewName('');
+    }
+  };
+
+  const handleRenameNewNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRenameNewName(event.target.value);
+  };
+
+  const handleRenameDocument = async () => {
+    if (!renameSelectedDocument || !renameNewName.trim()) {
+      showNotification('Please select a document and enter a new name', 'error');
+      return;
+    }
+
+    const selectedDocument = renameDocuments.find(d => d.id === parseInt(renameSelectedDocument));
+    if (!selectedDocument) {
+      showNotification('Selected document not found', 'error');
+      return;
+    }
+
+    if (renameNewName.trim() === selectedDocument.title) {
+      showNotification('New name must be different from current name', 'error');
+      return;
+    }
+
+    // Check if name already exists in the same collection
+    const nameExists = renameDocuments.some(d => 
+      d.title.toLowerCase() === renameNewName.trim().toLowerCase() && 
+      d.id !== parseInt(renameSelectedDocument)
+    );
+    
+    if (nameExists) {
+      showNotification('A document with this name already exists in this collection', 'error');
+      return;
+    }
+
+    setIsRenaming(true);
+    
+    try {
+      await dispatch(updateDocument({
+        id: parseInt(renameSelectedDocument),
+        updates: {
+          title: renameNewName.trim()
+        }
+      })).unwrap();
+      
+      // Refresh documents to show updated data
+      if (renameSelectedCollection) {
+        const result = await dispatch(fetchDocumentsByCollection(parseInt(renameSelectedCollection))).unwrap();
+        setRenameDocuments(result.documents);
+      }
+      
+      showNotification(
+        `Document renamed from "${selectedDocument.title}" to "${renameNewName.trim()}"`, 
+        'success'
+      );
+      
+      // Reset form
+      setRenameSelectedDocument('');
+      setRenameNewName('');
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showNotification(`Failed to rename document: ${errorMessage}`, 'error');
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  const isRenameFormValid = () => {
+    return renameSelectedCollection && 
+           renameSelectedDocument && 
+           renameNewName.trim() && 
+           renameNewName.trim().length > 0;
+  };
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -652,7 +797,6 @@ The document itself will remain but will be empty. This action cannot be undone.
                         <MenuItem value="">
                             <em>None</em>
                         </MenuItem>
-                        {/* Assuming you have a selector to get collections */}
                         {documentCollections.map((collection) => (
                             <MenuItem key={collection.id} value={collection.id}>
                                 {collection.title}
@@ -692,7 +836,7 @@ The document itself will remain but will be empty. This action cannot be undone.
                 <h2>A new document has been added: </h2>
                 <p><strong>Title:</strong> {formData.title}</p>
                 <p><strong>Description:</strong> {formData.description}</p>
-                <p><strong>Collection:</strong> {selectedCollection ? documentCollections.find(c => c.id === parseInt(selectedCollection))?.title : 'None'}</p>
+                <p><strong>Collection:</strong> {selectedCollectionName}</p>
                 <p><strong>User:</strong> {user?.first_name} {user?.last_name}</p>
             </div>
             )}
@@ -932,7 +1076,7 @@ The document itself will remain but will be empty. This action cannot be undone.
                     <MenuItem value="">
                       <em>Select a document...</em>
                     </MenuItem>
-                    {documents.map((document) => (
+                    {documentsInSelectedCollection.map((document) => (
                       <MenuItem key={document.id} value={document.id}>
                         {document.title}
                       </MenuItem>
@@ -959,7 +1103,7 @@ The document itself will remain but will be empty. This action cannot be undone.
               {isDeletingContent ? 'Deleting Content...' : 'Delete Document Content'}
             </button>
 
-            {selectedContentDeleteCollection && documents.length === 0 && (
+            {selectedContentDeleteCollection && documentsInSelectedCollection.length === 0 && (
               <Typography variant="body2" color="text.secondary" sx={{ marginTop: 2 }}>
                 No documents found in this collection.
               </Typography>
@@ -974,6 +1118,77 @@ The document itself will remain but will be empty. This action cannot be undone.
           <div>
             <p>Select a document to rename:</p>
           </div>
+          <StyledForm>
+            <div className="form-group">
+              <FormControl fullWidth>
+                <InputLabel id="rename-collection-select-label">Collection</InputLabel>
+                <Select
+                  labelId="rename-collection-select-label"
+                  id="rename-collection-select"
+                  value={renameSelectedCollection}
+                  onChange={handleRenameCollectionSelect}
+                  name="rename_collection_id"
+                  disabled={isRenaming}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {documentCollections.map((collection) => (
+                    <MenuItem key={collection.id} value={collection.id}>
+                      {collection.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+
+            <div className="form-group">
+              <FormControl fullWidth>
+                <InputLabel id="rename-document-select-label">Document</InputLabel>
+                <Select
+                  labelId="rename-document-select-label"
+                  id="rename-document-select"
+                  value={renameSelectedDocument}
+                  onChange={handleRenameDocumentSelect}
+                  name="rename_document_id"
+                  disabled={!renameSelectedCollection || isRenaming || isLoadingRenameDocuments}
+                >
+                  <MenuItem value="">
+                    <em>{isLoadingRenameDocuments ? 'Loading documents...' : 'Select a document'}</em>
+                  </MenuItem>
+                  {renameDocuments.map((document) => (
+                    <MenuItem key={document.id} value={document.id}>
+                      {document.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="rename-new-name">New Name: </label>
+              <input
+                type="text"
+                id="rename-new-name"
+                name="rename_new_name"
+                value={renameNewName}
+                onChange={handleRenameNewNameChange}
+                disabled={isRenaming}
+                maxLength={200}
+                placeholder="Enter new document name"
+                required
+              />
+            </div>
+
+            <Button
+              variant="contained"
+              onClick={handleRenameDocument}
+              disabled={isRenaming || !isRenameFormValid()}
+              sx={{ marginTop: 2 }}
+            >
+              {isRenaming ? 'Renaming...' : 'Rename Document'}
+            </Button>
+          </StyledForm>
         </SubTabPanel>
       </Box>
 
