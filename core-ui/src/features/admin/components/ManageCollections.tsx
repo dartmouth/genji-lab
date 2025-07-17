@@ -3,7 +3,7 @@ import { Tabs, Tab, Box, Typography, styled, FormControl,
   InputLabel, Select, MenuItem, Snackbar, Alert, 
   Dialog, DialogActions, DialogContent, DialogContentText, 
   DialogTitle, Button, LinearProgress, TextField } from '@mui/material';
-import { createDocumentCollection, useAppDispatch } from '@store';
+import { createDocumentCollection, updateDocumentCollection, useAppDispatch } from '@store';
 import { useAuth } from "@hooks/useAuthContext.ts";
 import { useAppSelector } from "@store/hooks";
 import { 
@@ -144,6 +144,12 @@ const ManageCollections: React.FC = () => {
   const [selectedCollection, setSelectedCollection] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(false);
+  
+  // Rename-specific state
+  const [renameNewName, setRenameNewName] = useState<string>('');
+  const [isRenaming, setIsRenaming] = useState<boolean>(false);
+  const [renameSelectedCollection, setRenameSelectedCollection] = useState<string>('');
+  
   const [collectionStats, setCollectionStats] = useState<{
     document_count: number;
     element_count: number;
@@ -196,6 +202,13 @@ const ManageCollections: React.FC = () => {
 
   const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveSubTab(newValue);
+    
+    // Reset form states when changing tabs
+    if (newValue === 3) {
+      // Reset rename form when entering rename tab
+      setRenameSelectedCollection('');
+      setRenameNewName('');
+    }
   };
 
   const initiateDeleteCollection = () => {
@@ -236,7 +249,6 @@ To confirm, please type the collection name exactly as shown:
     setDeleteProgress(0);
     
     try {
-      // Simulate progress steps
       setDeleteProgress(20);
       
       const response = await fetch(`/api/v1/collections/${selectedCollection}?force=true`, {
@@ -309,6 +321,89 @@ interface FormData {
     }
     dispatch(createDocumentCollection(payload));
     setSubmitted(true);
+  };
+
+  // Rename functionality handlers
+  const handleRenameCollectionSelect = (event: any) => {
+    const collectionId = event.target.value;
+    setRenameSelectedCollection(collectionId);
+    
+    // Pre-fill the new name field with current collection title
+    if (collectionId) {
+      const selectedCollection = documentCollections.find(c => c.id === parseInt(collectionId));
+      setRenameNewName(selectedCollection?.title || '');
+    } else {
+      setRenameNewName('');
+    }
+  };
+
+  const handleRenameNewNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRenameNewName(event.target.value);
+  };
+
+  const handleRenameCollection = async () => {
+    if (!renameSelectedCollection || !renameNewName.trim()) {
+      showNotification('Please select a collection and enter a new name', 'error');
+      return;
+    }
+
+    const selectedCollection = documentCollections.find(c => c.id === parseInt(renameSelectedCollection));
+    if (!selectedCollection) {
+      showNotification('Selected collection not found', 'error');
+      return;
+    }
+
+    if (renameNewName.trim() === selectedCollection.title) {
+      showNotification('New name must be different from current name', 'error');
+      return;
+    }
+
+    // Check if name already exists
+    const nameExists = documentCollections.some(c => 
+      c.title.toLowerCase() === renameNewName.trim().toLowerCase() && 
+      c.id !== parseInt(renameSelectedCollection)
+    );
+    
+    if (nameExists) {
+      showNotification('A collection with this name already exists', 'error');
+      return;
+    }
+
+    setIsRenaming(true);
+    
+    try {
+      await dispatch(updateDocumentCollection({
+        id: parseInt(renameSelectedCollection),
+        updates: {
+          title: renameNewName.trim(),
+          modified_by_id: user?.id || 1
+        }
+      })).unwrap();
+      
+      // Refresh collections to show updated data
+      dispatch(fetchDocumentCollections());
+      
+      showNotification(
+        `Collection renamed from "${selectedCollection.title}" to "${renameNewName.trim()}"`, 
+        'success'
+      );
+      
+      // Reset form
+      setRenameSelectedCollection('');
+      setRenameNewName('');
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showNotification(`Failed to rename collection: ${errorMessage}`, 'error');
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  const isRenameFormValid = () => {
+    return renameSelectedCollection && 
+           renameNewName.trim() && 
+           renameNewName.trim().length > 0;
   };
 
   return (
@@ -534,9 +629,10 @@ interface FormData {
                 <Select
                   labelId="rename-collection-label"
                   id="rename-collection-select"
-                  value={selectedCollection}
+                  value={renameSelectedCollection}
                   label="Select a collection"
-                  onChange={handleCollectionSelect}
+                  onChange={handleRenameCollectionSelect}
+                  disabled={isRenaming}
                 >
                   <MenuItem value="">
                     <em>-- Select a collection --</em>
@@ -556,12 +652,22 @@ interface FormData {
                   id="new-name" 
                   name="new-name"
                   placeholder="Enter new collection name"
+                  value={renameNewName}
+                  onChange={handleRenameNewNameChange}
+                  disabled={isRenaming}
+                  maxLength={200}
                 />
               </div>
               
-              <button type="button">
-                Rename
-              </button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleRenameCollection}
+                disabled={!isRenameFormValid() || isRenaming}
+                sx={{ marginTop: 2 }}
+              >
+                {isRenaming ? 'Renaming...' : 'Rename Collection'}
+              </Button>
             </StyledForm>
           </div>
         </SubTabPanel>

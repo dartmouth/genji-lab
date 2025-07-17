@@ -18,7 +18,7 @@ export * from './annotationCreate'
 
 export {
     createDocumentCollection,
-    clearCollections,
+    updateDocumentCollection,
     fetchDocumentCollections,
     selectAllDocumentCollections,
     selectDocumentCollectionsStatus,
@@ -30,6 +30,7 @@ export type {DocumentCollectionCreate, Hierarchy, CollectionMetadata} from './do
 
 export {
     createDocument,
+    updateDocument,
     clearDocuments,
     setSelectedCollectionId,
     fetchDocumentsByCollection,
@@ -38,6 +39,8 @@ export {
     selectDocumentsError,
     selectSelectedCollectionId
 } from './documentSlice'
+
+export type {DocumentCreate, DocumentUpdate} from './documentSlice'
 
 export {
     setActiveParagraph,

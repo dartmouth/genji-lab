@@ -41,11 +41,21 @@ interface DocumentCollectionCreate {
   created_by_id: number,
 }
 
+interface DocumentCollectionUpdate {
+  title?: string;
+  visibility?: string;
+  text_direction?: string;
+  language?: string;
+  hierarchy?: Hierarchy;
+  collection_metadata?: CollectionMetadata;
+  modified_by_id?: number;
+}
+
 interface CollectionMetadata {
   [key: string]: string | number | boolean
 }
 
-export type {DocumentCollectionCreate}
+export type {DocumentCollectionCreate, DocumentCollectionUpdate}
 export type {Hierarchy}
 export type {CollectionMetadata}
 
@@ -93,6 +103,24 @@ export const createDocumentCollection = createAsyncThunk(
   }
 );
 
+export const updateDocumentCollection = createAsyncThunk(
+  'documentCollections/update',
+  async ({ id, updates }: { id: number; updates: DocumentCollectionUpdate }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/collections/${id}`, updates);
+      
+      if (!(response.status === 200)) {
+        return rejectWithValue(`Failed to update document collection: ${response.statusText}`);
+      }
+      
+      const updatedCollection: DocumentCollection = response.data;
+      return updatedCollection;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+);
+
 // Slice
 const documentCollectionSlice = createSlice({
   name: 'documentCollections',
@@ -121,6 +149,22 @@ const documentCollectionSlice = createSlice({
       .addCase(createDocumentCollection.fulfilled, (state, action: PayloadAction<DocumentCollection>) => {
         state.status = 'succeeded';
         state.collections = [...state.collections, action.payload];
+      })
+      .addCase(updateDocumentCollection.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateDocumentCollection.fulfilled, (state, action: PayloadAction<DocumentCollection>) => {
+        state.status = 'succeeded';
+        // Update the collection in the array
+        const index = state.collections.findIndex(c => c.id === action.payload.id);
+        if (index !== -1) {
+          state.collections[index] = action.payload;
+        }
+      })
+      .addCase(updateDocumentCollection.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
       })
       ;
   }
