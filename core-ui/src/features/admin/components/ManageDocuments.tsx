@@ -1041,7 +1041,7 @@ The document itself will remain but will be empty. This action cannot be undone.
           </div>
           <StyledForm>
             <div className="form-group">
-              <FormControl fullWidth>
+              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
                 <InputLabel id="content-delete-collection-select-label">Collection</InputLabel>
                 <Select
                   labelId="content-delete-collection-select-label"
