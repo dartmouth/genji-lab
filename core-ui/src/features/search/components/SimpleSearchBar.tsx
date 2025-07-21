@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import '../styles/SimpleSearchStyles.css'
 import axios, {AxiosInstance} from "axios";
+
 // TypeScript interface for parsed search terms
 interface ParsedQueryItem {
   type: "term" | "group" | string;
@@ -12,8 +13,8 @@ interface ParsedQueryItem {
 interface Query {
   query: string;
   parsedQuery: ParsedQueryItem[];
-  searchTypes: ("documents" | "elements" | "annotations")[];
-  tags: string[] | null;
+  searchTypes: ("documents" | "elements" | "comments"| "annotations")[];
+  tags: string[];
   sortBy: "relevance" | "date" | string;
   sortOrder: "asc" | "desc";
   limit: number;
@@ -36,16 +37,28 @@ interface SearchResponse {
 
 const SimpleSearchBar: React.FC = () => {
   const [query, setQuery] = useState("");
-  const [result, setResult] = useState<SearchResponse|null>(null);
+  const [result, setResult] = useState<SearchResponse | null>(null);
 
   const api: AxiosInstance = axios.create({
     baseURL: '/api/v1',
     timeout: 10000,
   });
 
+  // Function to create the API query structure
+  const createQueryStructure = (searchQuery: string): Query => {
+    return {
+      query: searchQuery,
+      parsedQuery: parseSearchQuery(searchQuery),
+      searchTypes: ["documents", "elements", "comments", "annotations"],
+      tags: [],
+      sortBy: "relevance",
+      sortOrder: "desc",
+      limit: 50
+    };
+  };
 
   // Main parsing function - handles AND/OR operations with parentheses support
-  const parseSearchQuery = (query: string): ParsedSearchTerm[] => {
+  const parseSearchQuery = (query: string): ParsedQueryItem[] => {
     if (!query.trim()) return [];
     
     // Tokenize the input, preserving parentheses and operators
@@ -84,8 +97,8 @@ const SimpleSearchBar: React.FC = () => {
     };
     
     // Parse tokens into a structured format
-    const parseTokens = (tokens: string[], startIndex = 0): { result: ParsedSearchTerm[], endIndex: number } => {
-      const result: ParsedSearchTerm[] = [];
+    const parseTokens = (tokens: string[], startIndex = 0): { result: ParsedQueryItem[], endIndex: number } => {
+      const result: ParsedQueryItem[] = [];
       let i = startIndex;
       
       while (i < tokens.length) {
@@ -101,6 +114,7 @@ const SimpleSearchBar: React.FC = () => {
           
           result.push({
             type: 'group',
+            term: null,
             group: groupResult.result,
             operator
           });
@@ -119,6 +133,7 @@ const SimpleSearchBar: React.FC = () => {
           result.push({
             type: 'term',
             term: cleanTerm,
+            group: null,
             operator
           });
           
@@ -155,9 +170,9 @@ const SimpleSearchBar: React.FC = () => {
   };
 
   // Fallback simple parsing (original implementation)
-  const parseSimpleQuery = (query: string): ParsedSearchTerm[] => {
+  const parseSimpleQuery = (query: string): ParsedQueryItem[] => {
     const tokens = query.split(/\s+(AND|OR)\s+/i);
-    const parsed: ParsedSearchTerm[] = [];
+    const parsed: ParsedQueryItem[] = [];
     
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i].trim();
@@ -174,6 +189,7 @@ const SimpleSearchBar: React.FC = () => {
         parsed.push({
           type: 'term',
           term: token.replace(/^"(.*)"$/, '$1'),
+          group: null,
           operator: parsed.length === 0 ? null : operator || 'AND'
         });
       }
@@ -182,13 +198,23 @@ const SimpleSearchBar: React.FC = () => {
     return parsed;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(parseSearchQuery(query))
-    if (onSearch) {
-      const parsedQuery = parseSearchQuery(query);
-      onSearch(query, parsedQuery);
+    
+    const queryStructure = createQueryStructure(query);
+    console.log('Query structure:', queryStructure);
+    
+    try {
+      const response = await api.post('/search/', queryStructure);
+      setResult(response.data);
+      console.log('Search results:', result);
+    } catch (error) {
+      console.error('Search failed:', error);
     }
+  };
+
+  const onAdvancedSearch = () => {
+    console.log('Advanced search clicked - placeholder functionality');
   };
 
   return (

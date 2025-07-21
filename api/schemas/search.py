@@ -5,7 +5,8 @@ from enum import Enum
 class SearchType(str, Enum):
     DOCUMENTS = "documents"
     COMMENTS = "comments"
-    SCHOLARLY_ANNOTATIONS = "scholarly-annotations"
+    ELEMENTS = 'elements'
+    ANNOTATIONS = "annotations"
 
 class SortBy(str, Enum):
     RELEVANCE = "relevance"
@@ -37,7 +38,7 @@ class SearchQuery(BaseModel):
         default=[SearchType.DOCUMENTS],
         description="Types of content to search in"
     )
-    tags: List[str] = Field(
+    tags: Optional[List[str]] = Field(
         default_factory=list,
         description="Tags to filter by"
     )
@@ -60,7 +61,7 @@ class SearchQuery(BaseModel):
         # Use enum values in JSON output
         use_enum_values = True
         # Example of the expected JSON structure
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "query": "(python OR java) AND \"machine learning\"",
                 "parsedQuery": [

@@ -28,11 +28,11 @@ router = APIRouter(
 )
 
 # List[Annotation]
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.post("/", status_code=status.HTTP_200_OK)
 def read_annotations(query: SearchQuery,
                      db: AsyncSession = Depends(get_db)
                      ):
-
+    print(f"Query is {query}")
     q = tsquery_generator.Query(**query.dict())
     search_sql = text("""
         SELECT 
