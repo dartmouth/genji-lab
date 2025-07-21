@@ -58,3 +58,5 @@ export {
     // selectDocumentElementsStatus,
     // selectDocumentElementsError
 } from './documentElementsSlice'
+
+export * from './searchResultsSlice'

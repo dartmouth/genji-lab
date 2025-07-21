@@ -4,6 +4,7 @@ import highlightRegistryReducer from './slice/highlightRegistrySlice';
 import createAnnotationSliceReducer from './slice/annotationCreate'
 import documentNavigationReducer from './slice/documentNavigationSlice';
 import documentElementsReducer from './slice/documentElementsSlice';
+import searchResultReducer from './slice/searchResultsSlice'
 
 import { 
   commentingAnnotations, 
@@ -45,7 +46,8 @@ const rootReducer = {
   documentElements: documentElementsReducer,
   documentCollections: documentCollectionsReducer,
   documents: documentsReducer,
-  documentNavigation: documentNavigationReducer
+  documentNavigation: documentNavigationReducer,
+  searchResults: searchResultReducer
 };
 
 

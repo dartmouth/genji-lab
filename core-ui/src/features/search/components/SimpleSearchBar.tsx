@@ -1,41 +1,13 @@
 import React, { useState } from "react";
 import '../styles/SimpleSearchStyles.css'
 import axios, {AxiosInstance} from "axios";
+import { SearchResponse, Query, ParsedQueryItem } from "../types/query";
+import { setResults } from "@/store/slice/searchResultsSlice";
+import { useDispatch } from "react-redux";
 
-// TypeScript interface for parsed search terms
-interface ParsedQueryItem {
-  type: "term" | "group" | string;
-  term: string | null;
-  group: ParsedQueryItem[] | null;
-  operator: "AND" | "OR" | null;
-}
-
-interface Query {
-  query: string;
-  parsedQuery: ParsedQueryItem[];
-  searchTypes: ("documents" | "elements" | "comments"| "annotations")[];
-  tags: string[];
-  sortBy: "relevance" | "date" | string;
-  sortOrder: "asc" | "desc";
-  limit: number;
-}
-
-interface SearchResult {
-  id: number;
-  content: string;
-  motivation: "commenting" | "scholarly" | null;
-  source: string;
-  type: "annotation" | "element" | string;
-  relevance_score: number;
-}
-
-interface SearchResponse {
-  query: Query;
-  total_results: number;
-  results: SearchResult[];
-}
 
 const SimpleSearchBar: React.FC = () => {
+  const dispatch = useDispatch();
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<SearchResponse | null>(null);
 
@@ -202,11 +174,12 @@ const SimpleSearchBar: React.FC = () => {
     e.preventDefault();
     
     const queryStructure = createQueryStructure(query);
-    console.log('Query structure:', queryStructure);
     
     try {
       const response = await api.post('/search/', queryStructure);
       setResult(response.data);
+      dispatch(setResults(response.data))
+
       console.log('Search results:', result);
     } catch (error) {
       console.error('Search failed:', error);
