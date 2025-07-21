@@ -4,10 +4,12 @@ import axios, {AxiosInstance} from "axios";
 import { SearchResponse, Query, ParsedQueryItem } from "../types/query";
 import { setResults } from "@/store/slice/searchResultsSlice";
 import { useDispatch } from "react-redux";
-
+import { useNavigate } from "react-router-dom";
 
 const SimpleSearchBar: React.FC = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<SearchResponse | null>(null);
 
@@ -179,6 +181,7 @@ const SimpleSearchBar: React.FC = () => {
       const response = await api.post('/search/', queryStructure);
       setResult(response.data);
       dispatch(setResults(response.data))
+      navigate('/search')
 
       console.log('Search results:', result);
     } catch (error) {
