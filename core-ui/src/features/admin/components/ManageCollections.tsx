@@ -150,6 +150,17 @@ const ManageCollections: React.FC = () => {
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
   const [renameSelectedCollection, setRenameSelectedCollection] = useState<string>('');
   
+  // Update visibility-specific state
+  const [updateVisibilitySelectedCollection, setUpdateVisibilitySelectedCollection] = useState<string>('');
+  const [updateVisibilityNewVisibility, setUpdateVisibilityNewVisibility] = useState<string>('');
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState<boolean>(false);
+  const [isLoadingVisibilityCollection, setIsLoadingVisibilityCollection] = useState<boolean>(false);
+  const [updateVisibilityCollectionDetails, setUpdateVisibilityCollectionDetails] = useState<{
+    title: string;
+    visibility: string;
+    description?: string;
+  } | null>(null);
+  
   const [collectionStats, setCollectionStats] = useState<{
     document_count: number;
     element_count: number;
@@ -406,6 +417,97 @@ interface FormData {
            renameNewName.trim().length > 0;
   };
 
+  // Update visibility functionality handlers
+  const handleUpdateVisibilityCollectionSelect = async (event: any) => {
+    const collectionId = event.target.value;
+    setUpdateVisibilitySelectedCollection(collectionId);
+    setUpdateVisibilityNewVisibility('');
+    setUpdateVisibilityCollectionDetails(null);
+    
+    if (collectionId) {
+      setIsLoadingVisibilityCollection(true);
+      try {
+        const response = await fetch(`/api/v1/collections/${collectionId}`);
+        if (response.ok) {
+          const collectionData = await response.json();
+          setUpdateVisibilityCollectionDetails({
+            title: collectionData.title,
+            visibility: collectionData.visibility,
+            description: collectionData.description
+          });
+          setUpdateVisibilityNewVisibility(collectionData.visibility);
+        } else {
+          showNotification('Failed to fetch collection details', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to fetch collection details:', error);
+        showNotification('Error fetching collection details', 'error');
+      } finally {
+        setIsLoadingVisibilityCollection(false);
+      }
+    }
+  };
+
+  const handleUpdateVisibilityNewVisibilityChange = (event: any) => {
+    setUpdateVisibilityNewVisibility(event.target.value);
+  };
+
+  const handleUpdateCollectionVisibility = async () => {
+    if (!updateVisibilitySelectedCollection || !updateVisibilityNewVisibility) {
+      showNotification('Please select a collection and visibility option', 'error');
+      return;
+    }
+
+    if (!updateVisibilityCollectionDetails) {
+      showNotification('Collection details not loaded', 'error');
+      return;
+    }
+
+    if (updateVisibilityNewVisibility === updateVisibilityCollectionDetails.visibility) {
+      showNotification('New visibility must be different from current visibility', 'error');
+      return;
+    }
+
+    setIsUpdatingVisibility(true);
+    
+    try {
+      await dispatch(updateDocumentCollection({
+        id: parseInt(updateVisibilitySelectedCollection),
+        updates: {
+          visibility: updateVisibilityNewVisibility,
+          modified_by_id: user?.id || 1
+        }
+      })).unwrap();
+      
+      // Refresh collections to show updated data
+      dispatch(fetchDocumentCollections());
+      
+      // Update the local collection details to reflect the change
+      setUpdateVisibilityCollectionDetails({
+        ...updateVisibilityCollectionDetails,
+        visibility: updateVisibilityNewVisibility
+      });
+      
+      showNotification(
+        `Collection visibility updated from "${updateVisibilityCollectionDetails.visibility}" to "${updateVisibilityNewVisibility}" for collection "${updateVisibilityCollectionDetails.title}"`, 
+        'success'
+      );
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showNotification(`Failed to update collection visibility: ${errorMessage}`, 'error');
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
+
+  const isUpdateVisibilityFormValid = () => {
+    return updateVisibilitySelectedCollection && 
+           updateVisibilityNewVisibility && 
+           updateVisibilityCollectionDetails &&
+           updateVisibilityNewVisibility !== updateVisibilityCollectionDetails.visibility;
+  };
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -435,6 +537,7 @@ interface FormData {
           <Tab label="Add" {...a11yPropsSubTab(1)} />
           <Tab label="Delete" {...a11yPropsSubTab(2)} />
           <Tab label="Rename" {...a11yPropsSubTab(3)} />
+          <Tab label="Update Visibility" {...a11yPropsSubTab(4)} />
         </Tabs>
         
         {/* Sub-tab content */}
@@ -667,6 +770,89 @@ interface FormData {
                 sx={{ marginTop: 2 }}
               >
                 {isRenaming ? 'Renaming...' : 'Rename Collection'}
+              </Button>
+            </StyledForm>
+          </div>
+        </SubTabPanel>
+
+        <SubTabPanel value={activeSubTab} index={4}>
+          <Typography variant="h5" gutterBottom>
+            Update Collection Visibility
+          </Typography>
+          <div>
+            <p>Select a collection to update its visibility setting:</p>
+            <StyledForm>
+              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+                <InputLabel id="update-visibility-collection-label">Select a collection</InputLabel>
+                <Select
+                  labelId="update-visibility-collection-label"
+                  id="update-visibility-collection-select"
+                  value={updateVisibilitySelectedCollection}
+                  label="Select a collection"
+                  onChange={handleUpdateVisibilityCollectionSelect}
+                  disabled={isUpdatingVisibility}
+                >
+                  <MenuItem value="">
+                    <em>-- Select a collection --</em>
+                  </MenuItem>
+                  {documentCollections.map((collection) => (
+                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                      {collection.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {isLoadingVisibilityCollection && (
+                <Box sx={{ width: '100%', mt: 2 }}>
+                  <LinearProgress />
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Loading collection details...
+                  </Typography>
+                </Box>
+              )}
+
+              {updateVisibilityCollectionDetails && (
+                <Box sx={{ mt: 2, p: 2, backgroundColor: '#e3f2fd', border: '1px solid #bbdefb', borderRadius: '4px' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Collection Details:
+                  </Typography>
+                  <Typography variant="body2"><strong>Name:</strong> {updateVisibilityCollectionDetails.title}</Typography>
+                  {updateVisibilityCollectionDetails.description && (
+                    <Typography variant="body2"><strong>Description:</strong> {updateVisibilityCollectionDetails.description}</Typography>
+                  )}
+                  <Typography variant="body2"><strong>Current Visibility:</strong> {updateVisibilityCollectionDetails.visibility}</Typography>
+                </Box>
+              )}
+              
+              {updateVisibilityCollectionDetails && (
+                <div className="form-group" style={{ marginTop: '16px' }}>
+                  <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+                    <InputLabel id="update-visibility-new-visibility-label">New Visibility</InputLabel>
+                    <Select
+                      labelId="update-visibility-new-visibility-label"
+                      id="update-visibility-new-visibility-select"
+                      value={updateVisibilityNewVisibility}
+                      label="New Visibility"
+                      onChange={handleUpdateVisibilityNewVisibilityChange}
+                      disabled={isUpdatingVisibility}
+                    >
+                      <MenuItem value="public">Public</MenuItem>
+                      <MenuItem value="private">Private</MenuItem>
+                      <MenuItem value="restricted">Restricted</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              )}
+              
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleUpdateCollectionVisibility}
+                disabled={!isUpdateVisibilityFormValid() || isUpdatingVisibility}
+                sx={{ marginTop: 2 }}
+              >
+                {isUpdatingVisibility ? 'Updating...' : 'Update Visibility'}
               </Button>
             </StyledForm>
           </div>
