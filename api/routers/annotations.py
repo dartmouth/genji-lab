@@ -163,3 +163,34 @@ def read_annotations_by_motivation(
     
     # Convert defaultdict to regular dict for response
     return dict(grouped_annotations)
+
+@router.get("/links/{document_element_id}", response_model=List[Annotation], status_code=status.HTTP_200_OK)
+def fetch_links(
+    document_element_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    # Query linking annotations where the target field contains our document element
+    query = select(AnnotationModel).options(
+        joinedload(AnnotationModel.creator)
+    ).filter(
+        AnnotationModel.motivation == "linking"
+    )
+    
+    result = db.execute(query)
+    all_linking_annotations = result.scalars().all()
+    
+    # Filter annotations that have our document_element_id in their target sources
+    target_sources = [
+        f"DocumentElements/{document_element_id}",
+        f"DocumentElements/DocumentElements/{document_element_id}"  # Handle both formats
+    ]
+    
+    matching_annotations = []
+    for annotation in all_linking_annotations:
+        if annotation.target:  # target is stored as JSON
+            for target in annotation.target:
+                if target.get("source") in target_sources:
+                    matching_annotations.append(annotation)
+                    break  # Found a match, no need to check other targets
+    
+    return matching_annotations

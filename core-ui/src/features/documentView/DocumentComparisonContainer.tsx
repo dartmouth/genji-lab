@@ -23,13 +23,19 @@ interface DocumentComparisonContainerProps {
   documents: Array<DocumentProps>;
   viewMode?: 'reading' | 'annotations';
   handleViewModeChange?: (mode: 'reading' | 'annotations') => void;
-  isLinkingModeActive?: boolean;  // ADD THIS
+  isLinkingModeActive?: boolean;
+  onOpenLinkedDocument?: (documentId: number, collectionId: number, targetInfo: {
+    sourceURI: string;
+    start: number;
+    end: number;
+  }) => void;
 }
 
 const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = ({
   documents,
   viewMode = 'reading',
-  isLinkingModeActive = false  // ADD THIS
+  isLinkingModeActive = false,
+  onOpenLinkedDocument
 }) => {
   // State for active document (for highlight tracking)
   const [activeDocumentId, setActiveDocumentId] = useState<number | undefined>(
@@ -268,6 +274,8 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
                 <DocumentContentPanel
                   documentId={doc.id}
                   documentCollectionId={doc.collectionId}
+                  viewedDocuments={documents}
+                  onOpenLinkedDocument={onOpenLinkedDocument}
                 />
               </div>
             </div>

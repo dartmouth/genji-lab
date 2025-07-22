@@ -10,28 +10,28 @@ const api: AxiosInstance = axios.create({
   timeout: 10000,
 });
 
+// In annotationsByMotivation.ts, modify fetchAnnotationByMotivation:
 export const fetchAnnotationByMotivation = createAsyncThunk(
   'annotations/fetchByDocumentElement',
   async (documentElementId: number, { dispatch }) => {
     try {
-      // Call the new endpoint
+      // Regular endpoint for most annotations
       const response = await api.get(`/annotations/by-motivation/${documentElementId}`);
-      
-      if (!(response.status === 200)) {
-        throw new Error('Failed to fetch annotations');
-      }
-      
-      // Parse the response data
       const annotationsByMotivation: AnnotationsByMotivation = await response.data;
-    //   console.log(annotationsByMotivation)
+
+      // SPECIAL CASE: Fetch linking annotations using the new endpoint
+      const linkingResponse = await api.get(`/annotations/links/${documentElementId}`);
+      const linkingAnnotations = await linkingResponse.data;
       
-      // Iterate through each motivation group
+      if (linkingAnnotations.length > 0) {
+        annotationsByMotivation.linking = linkingAnnotations;
+      }
+
+      console.log('Motivations returned by API:', Object.keys(annotationsByMotivation));
+      
+      // Dispatch to Redux slices
       Object.entries(annotationsByMotivation).forEach(([motivation, annotations]) => {
-        // Check if we have a slice for this motivation
         if (sliceMap[motivation]) {
-          // Dispatch the annotations to the appropriate slice
-        //   console.log(`slice is ${motivation}`)
-          
           dispatch(sliceMap[motivation].actions.addAnnotations(annotations));
         } else {
           console.warn(`No slice defined for motivation: ${motivation}`);
@@ -45,3 +45,4 @@ export const fetchAnnotationByMotivation = createAsyncThunk(
     }
   }
 );
+

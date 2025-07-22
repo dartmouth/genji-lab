@@ -1,4 +1,3 @@
-// NEW APPROACH: Replace DocumentLinkingDialog with a non-modal overlay
 // src/features/documentView/components/annotationCard/DocumentLinkingOverlay.tsx
 
 import React, { useState, useEffect } from 'react';
@@ -64,8 +63,11 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       
       if (!elementWithId) return;
       
-      // Extract document element ID
-      const elementId = elementWithId.id.replace('DocumentElements/', '');
+      // Extract document element ID - get just the numeric part
+      const fullId = elementWithId.id;
+      const elementId = fullId.split('/').pop(); // Get the last part after the last slash
+      
+      if (!elementId) return;
       
       // Find which document this belongs to
       const documentPanel = elementWithId.closest('.document-panel-wrapper') as HTMLElement;
@@ -88,7 +90,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         text: selectedText,
         start: startOffset,
         end: endOffset,
-        sourceURI: `DocumentElements/${elementId}`
+        sourceURI: `/DocumentElements/${elementId}` // Fixed: ensure single prefix with leading slash
       };
       
       if (currentStep === 'first') {

@@ -18,7 +18,7 @@ import {
   initSelection as initRedux,
   addSelectionSegment,
   completeSelection as completeSelectionRedux,
-  selectAnnotationCreate
+  selectAnnotationCreate,
 } from '@store';
 
 import { fetchAnnotationByMotivation } from '@store'

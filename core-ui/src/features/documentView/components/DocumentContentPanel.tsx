@@ -1,7 +1,9 @@
+// src/features/documentView/components/DocumentContentPanel.tsx
+
 import React, { useEffect } from 'react';
 import { 
   HighlightedText,
-  MenuContext
+  MenuContext  // Keep using the existing MenuContext
 } from '.';
 import { 
   RootState, 
@@ -18,11 +20,25 @@ import { DocumentElement } from '@documentView/types';
 interface DocumentContentPanelProps {
   documentId: number;
   documentCollectionId: number;
+  // Documents currently being viewed (for context menu)
+  viewedDocuments?: Array<{
+    id: number;
+    collectionId: number;
+    title: string;
+  }>;
+  // Callback to open a linked document
+  onOpenLinkedDocument?: (documentId: number, collectionId: number, targetInfo: {
+    sourceURI: string;
+    start: number;
+    end: number;
+  }) => void;
 }
 
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   documentId,
-  documentCollectionId
+  documentCollectionId,
+  viewedDocuments = [],
+  onOpenLinkedDocument
 }) => {
   // Redux
   const dispatch = useAppDispatch();
@@ -103,7 +119,11 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
           );
         })}
         
-        <MenuContext/>
+        {/* Use the existing MenuContext but pass the new props */}
+        <MenuContext
+          viewedDocuments={viewedDocuments}
+          onOpenLinkedDocument={onOpenLinkedDocument}
+        />
       </div>
     </div>
   );

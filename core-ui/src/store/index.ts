@@ -11,7 +11,8 @@ import {
   scholarlyAnnotations, 
   taggingAnnotations,
   upvoteAnnotations,
-  flaggingAnnotations
+  flaggingAnnotations,
+  linkingAnnotations
 } from './slice/annotationSlices';
 
 import documentsReducer from './slice/documentSlice';
@@ -32,6 +33,7 @@ const annotationReducersMap: AnnotationReducers = {
   [taggingAnnotations.name]: taggingAnnotations.reducer,
   [upvoteAnnotations.name]: upvoteAnnotations.reducer,
   [flaggingAnnotations.name]: flaggingAnnotations.reducer,
+  [linkingAnnotations.name]: linkingAnnotations.reducer
 };
 
 // Combine the reducers
