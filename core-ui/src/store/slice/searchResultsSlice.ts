@@ -1,9 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from '../index';
-import { SearchResponse } from "@/features/search/types/query";
+import { SearchResponse, SearchSettings } from "@/features/search/types/query";
 
 interface SearchResultState {
-    searchResults: SearchResponse
+    searchResults: SearchResponse,
+    settings: SearchSettings
 }
 
 const initialState: SearchResultState = {
@@ -19,6 +20,12 @@ const initialState: SearchResultState = {
         },
         total_results: 0,
         results: []
+    },
+    settings: {
+        searchTypes: ["documents", "comments", "annotations"],
+        sortBy: "relevance",
+        sortOrder: "desc",
+        limit: 50
     }
 }
 
@@ -28,12 +35,32 @@ const searchResultSlice = createSlice({
     reducers: {
         setResults: (state, action: PayloadAction<SearchResponse>) =>{
             state.searchResults = action.payload
+        },
+        setSearchType: (state, action: PayloadAction<("documents" | "comments" | "annotations")[]>) =>{
+            state.settings.searchTypes = action.payload
+        },
+        setSortBy: (state, action: PayloadAction<("relevance" | "date" | string)>) =>{
+            state.settings.sortBy = action.payload
+        },
+        setSortOrder: (state, action: PayloadAction<("asc" | "desc")>) =>{
+            state.settings.sortOrder = action.payload
+        },
+        setLimit:  (state, action: PayloadAction<number>) =>{
+            state.settings.limit = action.payload
+        },
+        setSettingsState: (state, action: PayloadAction<SearchSettings>) => {
+            state.settings = action.payload
         }
     }
 })
 
 export const {
-    setResults
+    setResults,
+    setSearchType,
+    setSortBy,
+    setSortOrder,
+    setLimit,
+    setSettingsState
 } = searchResultSlice.actions;
 
 export const selectSearchResults = (state: RootState) => state.searchResults

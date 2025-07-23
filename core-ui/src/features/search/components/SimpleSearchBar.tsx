@@ -5,6 +5,8 @@ import { SearchResponse, Query, ParsedQueryItem } from "../types/query";
 import { setResults } from "@/store/slice/searchResultsSlice";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const SimpleSearchBar: React.FC = () => {
   const dispatch = useDispatch();
@@ -17,17 +19,22 @@ const SimpleSearchBar: React.FC = () => {
     baseURL: '/api/v1',
     timeout: 10000,
   });
+  const limit = useSelector((state: RootState) => state.searchResults.settings.limit)
+  const searchTypes = useSelector((state: RootState) => state.searchResults.settings.searchTypes)
+  const sortBy = useSelector((state: RootState) => state.searchResults.settings.sortBy)
+  const sortOrder = useSelector((state: RootState) => state.searchResults.settings.sortOrder)
 
   // Function to create the API query structure
   const createQueryStructure = (searchQuery: string): Query => {
+    
     return {
       query: searchQuery,
       parsedQuery: parseSearchQuery(searchQuery),
-      searchTypes: ["documents", "elements", "comments", "annotations"],
+      searchTypes: searchTypes,
       tags: [],
-      sortBy: "relevance",
-      sortOrder: "desc",
-      limit: 50
+      sortBy: sortBy,
+      sortOrder: sortOrder,
+      limit: limit
     };
   };
 

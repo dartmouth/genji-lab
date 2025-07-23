@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SearchResult } from "../types/query";
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
+import AdvancedSettings from './AdvancedSettings';
 
 const styles = {
   container: {
@@ -338,7 +339,8 @@ const SearchResultsContainer: React.FC= () => {
           </div>
         </div>
       </div>
-
+      <AdvancedSettings></AdvancedSettings>
+      <hr style={styles.divider} />
       {/* Results */}
       <div>
         {results.length > 0 ? (

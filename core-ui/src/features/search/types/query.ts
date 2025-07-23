@@ -9,7 +9,7 @@ export interface ParsedQueryItem {
 export interface Query {
   query: string;
   parsedQuery: ParsedQueryItem[];
-  searchTypes: ("documents" | "elements" | "comments"| "annotations")[];
+  searchTypes: ("documents" | "comments"| "annotations")[];
   tags: string[];
   sortBy: "relevance" | "date" | string;
   sortOrder: "asc" | "desc";
@@ -29,4 +29,11 @@ export interface SearchResponse {
   query: Query;
   total_results: number;
   results: SearchResult[];
+}
+
+export interface SearchSettings {
+    searchTypes: ("documents" | "comments"| "annotations")[];
+    sortBy: "relevance" | "date" | string;
+    sortOrder: "asc" | "desc";
+    limit: number;
 }
