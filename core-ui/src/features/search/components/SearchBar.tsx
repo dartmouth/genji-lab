@@ -12,7 +12,7 @@ interface ParsedSearchTerm {
 interface SearchQuery {
   query: string;
   parsedQuery: ParsedSearchTerm[];
-  searchTypes: ('documents' | 'comments' | 'scholarly-annotations')[];
+  searchTypes: ('documents' | 'comments' | 'annotations')[];
   tags: string[];
   sortBy: 'relevance' | 'title' | 'created' | 'modified';
   sortOrder: 'asc' | 'desc';

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal, Union
+from typing import List, Optional, Literal
 from enum import Enum
 
 class SearchType(str, Enum):
@@ -97,3 +97,16 @@ class SearchQuery(BaseModel):
 
 # Update the forward reference for recursive model
 ParsedSearchTerm.model_rebuild()
+
+class SearchResult(BaseModel):
+    id: int
+    content: str
+    motivation: str | None
+    source: str
+    type: str
+    relevance_score: float
+
+class SearchResponse(BaseModel):
+    query: SearchQuery
+    total_results: int
+    results: List[SearchResult]
