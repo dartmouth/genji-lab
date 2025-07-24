@@ -18,6 +18,7 @@ import documentsReducer from './slice/documentSlice';
 
 import { AnnotationState } from './slice/factory/createAnnotationSlice';
 import documentCollectionsReducer from './slice/documentCollectionSlice';
+import usersReducer from './slice/usersSlice';
 
 // Define the structure of our annotations reducers
 interface AnnotationReducers {
@@ -45,7 +46,8 @@ const rootReducer = {
   documentElements: documentElementsReducer,
   documentCollections: documentCollectionsReducer,
   documents: documentsReducer,
-  documentNavigation: documentNavigationReducer
+  documentNavigation: documentNavigationReducer,
+  users: usersReducer
 };
 
 

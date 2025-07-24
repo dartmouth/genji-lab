@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     """
     Create a new user
     """
@@ -26,7 +26,7 @@ def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     return db_user
 
 @router.get("/", response_model=List[User])
-def read_users(
+async def read_users(
     skip: int = 0, 
     limit: int = 100, 
     first_name: Optional[str] = None,
@@ -52,7 +52,7 @@ def read_users(
     return users
 
 @router.get("/{user_id}", response_model=User)
-def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
+async def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
     """
     Get a specific user by ID (includes roles via joinedload)
     """
@@ -64,7 +64,7 @@ def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
     return user
 
 @router.put("/{user_id}", response_model=User)
-def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends(get_db)):
+async def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends(get_db)):
     """
     Update a user (includes roles in response)
     """
@@ -85,7 +85,7 @@ def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends(get_d
     return db_user
 
 @router.patch("/{user_id}", response_model=User)
-def partial_update_user(
+async def partial_update_user(
     user_id: int, 
     user_data: Dict[str, Any], 
     db: AsyncSession = Depends(get_db)
@@ -110,11 +110,12 @@ def partial_update_user(
     return db_user
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
     """
     Delete a user
     """
-    db_user = db.execute(select(UserModel).filter(UserModel.id == user_id)).scalar_one_or_none()
+    result = db.execute(select(UserModel).filter(UserModel.id == user_id))
+    db_user = result.scalar_one_or_none()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     
