@@ -33,6 +33,7 @@ interface HighlightedTextProps {
   documentCollectionId: number;
   documentId: number;
   paragraphId: string;
+  isLinkingModeActive?: boolean; // Add this prop
 }
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
@@ -41,6 +42,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   paragraphId,
   documentCollectionId,
   documentId,
+  isLinkingModeActive = false, // Default to false
 }) => {
   const dispatch = useAppDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -133,8 +135,14 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     setHighlightPositions(newPositions);
   };
 
-  // Handle selection start
+  // Handle selection start - skip during linking mode
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Skip selection handling during linking mode
+    if (isLinkingModeActive) {
+      console.log('HighlightedText: Skipping mouseDown due to linking mode'); // DEBUG
+      return;
+    }
+    
     // Only track primary mouse button
     if (e.button !== 0) return;
     // initSelection(documentId, documentCollectionId);
@@ -146,8 +154,13 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     }
   };
   
-  // Handle selection changes
+  // Handle selection changes - skip during linking mode
   const handleSelectionChange = () => {
+    // Skip selection handling during linking mode
+    if (isLinkingModeActive) {
+      return;
+    }
+    
     const selection = window.getSelection();
     if (!selection) return;
     
@@ -164,6 +177,11 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   // Helper to update the current paragraph's segment in a multi-paragraph selection
   const updateSelectionSegment = (selection: Selection) => {
     if (!containerRef.current) return;
+    
+    // Safety check: ensure there are ranges available
+    if (!selection || selection.rangeCount === 0) {
+      return;
+    }
     
     // Check if this paragraph is part of the selection
     const range = selection.getRangeAt(0);
@@ -187,9 +205,17 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       }))
     }
   };
+
+  // console.log('HighlightedText paragraphId:', paragraphId);
   
-  // Handle selection end
+  // Handle selection end - skip during linking mode
   const handleMouseUp = () => {
+    // Skip selection handling during linking mode
+    if (isLinkingModeActive) {
+      console.log('HighlightedText: Skipping mouseUp due to linking mode'); // DEBUG
+      return;
+    }
+    
     const selection = window.getSelection();
     if (!selection) return;
     
@@ -240,19 +266,22 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   // Debounce the mouse move handler for better performance
   const debouncedHandleMouseMove = debounce(handleMouseMove, 50);
 
-  // Add selection change event listener
+  // Add selection change event listener - skip during linking mode
   useEffect(() => {
     const handleGlobalSelectionChange = () => {
       handleSelectionChange();
     };
     
-    document.addEventListener('selectionchange', handleGlobalSelectionChange);
+    // Only add listener if not in linking mode
+    if (!isLinkingModeActive) {
+      document.addEventListener('selectionchange', handleGlobalSelectionChange);
+    }
     
     return () => {
       document.removeEventListener('selectionchange', handleGlobalSelectionChange);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSelectionStart]);
+  }, [isSelectionStart, isLinkingModeActive]);
 
   // Recalculate on component mount and when annotations or text changes
   useEffect(() => {
@@ -283,9 +312,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   return (
     <>
       <div 
-        id={`DocumentElements/${paragraphId}`}
+        id={`${paragraphId}`}
         ref={containerRef} 
-        className={`annotatable-paragraph`}
+        className={`annotatable-paragraph ${isLinkingModeActive ? 'linking-mode' : ''}`}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={debouncedHandleMouseMove}
@@ -296,7 +325,12 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         textAlign: format?.alignment || 'left',
         writingMode: 'horizontal-tb',
         fontStyle: format?.text_styles?.is_italic ? 'italic' : 'normal',
-        whiteSpace: 'pre-wrap'
+        whiteSpace: 'pre-wrap',
+        // Add visual indication for linking mode
+        ...(isLinkingModeActive ? {
+          cursor: 'crosshair',
+          userSelect: 'text'
+        } : {})
        }}
       >
         {text}
@@ -321,10 +355,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         ))}
       </div>
 
-      {/* Render annotation creation dialog if open */}
-      {isDialogOpen && <AnnotationCreationDialog onClose={handleCloseDialog} />}
+      {/* Render annotation creation dialog if open - but not during linking mode */}
+      {isDialogOpen && !isLinkingModeActive && <AnnotationCreationDialog onClose={handleCloseDialog} />}
     </>
-
   );
 };
 

@@ -276,6 +276,7 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
                   documentCollectionId={doc.collectionId}
                   viewedDocuments={documents}
                   onOpenLinkedDocument={onOpenLinkedDocument}
+                  isLinkingModeActive={isLinkingModeActive}
                 />
               </div>
             </div>

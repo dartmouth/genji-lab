@@ -32,13 +32,16 @@ interface DocumentContentPanelProps {
     start: number;
     end: number;
   }) => void;
+  // Add linking mode prop
+  isLinkingModeActive?: boolean;
 }
 
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   documentId,
   documentCollectionId,
   viewedDocuments = [],
-  onOpenLinkedDocument
+  onOpenLinkedDocument,
+  isLinkingModeActive = false // Default to false
 }) => {
   // Redux
   const dispatch = useAppDispatch();
@@ -114,6 +117,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 format={content.content.formatting}
                 documentCollectionId={documentCollectionId}
                 documentId={documentId}
+                isLinkingModeActive={isLinkingModeActive} // Pass linking mode status
               />
             </div>
           );

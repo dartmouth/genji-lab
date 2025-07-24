@@ -95,6 +95,12 @@ export const DocumentContentView: React.FC = () => {
       start: number;
       end: number;
     };
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>;
   } | null>(null);
   
   // Get all documents and collections
@@ -204,18 +210,20 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [documentId, collectionId, documentsByCollection, documents]);
   
-  // Handle scrolling to text when document is loaded
+  // Handle scrolling to text when document is loaded - ENHANCED to support allTargets
   useEffect(() => {
     if (pendingScrollTarget && viewedDocuments.some(doc => doc.id === pendingScrollTarget.documentId)) {
       // Document is now loaded, scroll to the target text
+      console.log('Executing pending scroll with allTargets:', pendingScrollTarget.allTargets?.length || 0);
+      
       setTimeout(() => {
-        scrollToAndHighlightText(pendingScrollTarget.targetInfo);
+        scrollToAndHighlightText(pendingScrollTarget.targetInfo, pendingScrollTarget.allTargets);
         setPendingScrollTarget(null);
       }, 1000); // Wait for document content to render
     }
   }, [pendingScrollTarget, viewedDocuments]);
   
-  // Handle opening a linked document
+  // Handle opening a linked document - ENHANCED to support allTargets
   const handleOpenLinkedDocument = (
     linkedDocumentId: number, 
     linkedCollectionId: number, 
@@ -223,14 +231,23 @@ export const DocumentContentView: React.FC = () => {
       sourceURI: string;
       start: number;
       end: number;
-    }
+    },
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>
   ) => {
+    console.log('handleOpenLinkedDocument called with allTargets:', allTargets?.length || 0);
+    
     // Check if the document is already being viewed
     const isAlreadyViewed = viewedDocuments.some(doc => doc.id === linkedDocumentId);
     
     if (isAlreadyViewed) {
       // Document is already open, just scroll to the target text
-      scrollToAndHighlightText(targetInfo);
+      console.log('Document already viewed, scrolling immediately with allTargets:', allTargets?.length || 0);
+      scrollToAndHighlightText(targetInfo, allTargets);
     } else {
       // Need to open the document first
       const linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
@@ -242,10 +259,12 @@ export const DocumentContentView: React.FC = () => {
         title: linkedDocTitle
       }]);
       
-      // Set up pending scroll target
+      // Set up pending scroll target with allTargets
+      console.log('Setting pending scroll target with allTargets:', allTargets?.length || 0);
       setPendingScrollTarget({
         documentId: linkedDocumentId,
-        targetInfo
+        targetInfo,
+        allTargets // CRUCIAL: Include allTargets in pending scroll
       });
     }
   };

@@ -31,7 +31,12 @@ interface MenuContextProps {
     sourceURI: string;
     start: number;
     end: number;
-  }) => void;
+  }, allTargets?: Array<{
+    sourceURI: string;
+    start: number;
+    end: number;
+    text: string;
+  }>) => void;
 }
 
 // Import the actual Annotation type from your types
@@ -78,7 +83,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     x: 0, y: 0
   });
 
-  // Function to find linked documents for current selection (removed documentsMap dependency)
+  // BACK TO WORKING VERSION - Simple function to find linked documents with allTargets support
   const findLinkedDocuments = React.useCallback((selection: LinkedTextSelection): LinkedDocument[] => {
     if (!selection) return [];
     
@@ -98,7 +103,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
           return false;
         }
         
-        // Check if the text ranges overlap using your actual selector structure
+        // Check if the text ranges overlap
         const targetStart = target.selector?.refined_by?.start;
         const targetEnd = target.selector?.refined_by?.end;
         
@@ -113,32 +118,37 @@ const MenuContext: React.FC<MenuContextProps> = ({
     
     // Extract linked documents from relevant annotations
     relevantAnnotations.forEach((annotation: Annotation) => {
-      annotation.target.forEach((target) => {
-        // Skip the target that matches our current selection
+      // COLLECT ALL TARGETS from this annotation for proper highlighting
+      const allTargets = annotation.target.map(target => ({
+        sourceURI: target.source,
+        start: target.selector?.refined_by?.start || 0,
+        end: target.selector?.refined_by?.end || 0,
+        text: target.selector?.value || 'Linked text'
+      }));
+      
+      // Find targets from OTHER documents for navigation
+      const otherDocumentTargets = annotation.target.filter(target => 
+        target.source !== selection.sourceURI
+      );
+      
+      otherDocumentTargets.forEach((target) => {
         const targetSourceURI = target.source;
-        if (targetSourceURI === selection.sourceURI) {
-          return;
-        }
         
-        // Extract document element ID from sourceURI (e.g., "/DocumentElements/1" -> 1)
+        // Extract document element ID from sourceURI
         const targetElementMatch = targetSourceURI.match(/\/DocumentElements\/(\d+)/);
         if (!targetElementMatch) return;
         
-        // For linking annotations, we need to determine which documents are linked
-        // This could be from annotation metadata or by checking all viewed documents
-        // For now, we'll use a more comprehensive approach to find all possible linked documents
-        
-        // Try to find the document ID from the annotation structure
+        // Try to find which document this element belongs to
         let targetDocumentId: number | null = null;
         let targetDocumentTitle = 'Unknown Document';
         let targetCollectionId: number | null = null;
         
-        // Method 1: Check if annotation has document metadata in body or other fields
+        // Method 1: Use annotation's document_id
         if (annotation.document_id && annotation.document_id !== selection.documentId) {
           targetDocumentId = annotation.document_id;
         }
         
-        // Method 2: Extract from viewed documents if available
+        // Method 2: For multi-document views, find the other document
         if (!targetDocumentId && viewedDocuments.length > 1) {
           const otherDoc = viewedDocuments.find(doc => doc.id !== selection.documentId);
           if (otherDoc) {
@@ -148,19 +158,8 @@ const MenuContext: React.FC<MenuContextProps> = ({
           }
         }
         
-        // Method 3: For comprehensive linking, we might need to query all documents
-        // This could be done via an API call or from a documents store
-        // For now, we'll use what we have and potentially show "Unknown Document"
-        
         if (targetDocumentId) {
-          // Find document info if we have it
-          const docInfo = viewedDocuments.find(doc => doc.id === targetDocumentId);
-          if (docInfo) {
-            targetDocumentTitle = docInfo.title;
-            targetCollectionId = docInfo.collectionId;
-          }
-          
-          // Extract text from the target selector or use annotation body value as fallback
+          // Extract text from the target selector
           const linkedText = target.selector?.value || annotation.body.value || 'Linked text';
           
           linkedDocs.push({
@@ -173,15 +172,20 @@ const MenuContext: React.FC<MenuContextProps> = ({
               start: target.selector?.refined_by?.start || 0,
               end: target.selector?.refined_by?.end || 0,
             },
-            collectionId: targetCollectionId || 0 // Add collection ID for opening documents
+            collectionId: targetCollectionId || 0,
+            // CRUCIAL: Include ALL targets for proper multi-element highlighting
+            allTargets: allTargets
           });
         }
       });
     });
     
-    // Remove duplicates based on document ID
+    // Remove duplicates based on document ID and annotation ID
     const uniqueLinkedDocs = linkedDocs.reduce((acc, current) => {
-      const existing = acc.find(item => item.documentId === current.documentId);
+      const existing = acc.find(item => 
+        item.documentId === current.documentId && 
+        item.linkingAnnotationId === current.linkingAnnotationId
+      );
       if (!existing) {
         acc.push(current);
       }
@@ -258,31 +262,29 @@ const MenuContext: React.FC<MenuContextProps> = ({
     e.stopPropagation();
     
     if (linkedDocuments.length === 1) {
-      // If only one linked document, open it directly
+      // Single linked document - open directly
       handleLinkedDocumentSelect(linkedDocuments[0]);
     } else if (linkedDocuments.length > 1) {
-      // If multiple linked documents, show submenu
+      // Multiple linked documents - show submenu
       setShowLinkedSubmenu(true);
     }
   };
 
   const handleLinkedDocumentSelect = (linkedDoc: LinkedDocument) => {
-    console.log('Opening linked document:', {
+    console.log('Opening linked document with allTargets:', {
       documentId: linkedDoc.documentId,
-      collectionId: linkedDoc.collectionId,
       linkedText: linkedDoc.linkedText,
-      targetInfo: {
-        sourceURI: linkedDoc.targetInfo.sourceURI,
-        start: linkedDoc.targetInfo.start,
-        end: linkedDoc.targetInfo.end
-      }
-    }); // DEBUG
+      targetInfo: linkedDoc.targetInfo,
+      allTargets: linkedDoc.allTargets?.length || 0
+    });
     
     if (onOpenLinkedDocument) {
+      // CRUCIAL: Pass allTargets for proper multi-element highlighting
       onOpenLinkedDocument(
         linkedDoc.documentId, 
         linkedDoc.collectionId || 0, 
-        linkedDoc.targetInfo
+        linkedDoc.targetInfo,
+        linkedDoc.allTargets // This enables multi-element highlighting and recovery
       );
     }
     setShowLinkedSubmenu(false);
@@ -300,7 +302,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     <>
       {clicked && text && createPortal(
         <ContextMenu top={coords.y} left={coords.x}>
-          {/* EXISTING OPTIONS - Keep these exactly as they were */}
+          {/* EXISTING OPTIONS */}
           <ContextButton 
             key={`context-button-${1}`} 
             onClick={(e: React.MouseEvent) => {
@@ -325,7 +327,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
             </ContextButton>
           )}
           
-          {/* NEW OPTION - View Linked Text - show if there are any linked documents */}
+          {/* LINKED TEXT OPTION */}
           {selectionHasLinks && (
             <ContextButton 
               key={`context-button-linked`} 
@@ -335,14 +337,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
                 fontWeight: '500',
                 color: '#1976d2',
                 position: 'relative'
-              }}
-              onMouseEnter={(e) => {
-                if (linkedDocuments.length > 1) {
-                  e.currentTarget.style.backgroundColor = '#f5f5f5';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
               View Linked Text ({linkedDocuments.length})
@@ -357,84 +351,62 @@ const MenuContext: React.FC<MenuContextProps> = ({
               )}
             </ContextButton>
           )}
-        </ContextMenu>,
-        document.body
-      )}
 
-      {/* Linked documents submenu - positioned to the right of the main menu */}
-      {showLinkedSubmenu && linkedDocuments.length > 1 && createPortal(
-        <div
-          className="linked-text-submenu context-menu"
-          style={{
-            position: 'fixed',
-            top: `${coords.y}px`,
-            left: `${coords.x + 200}px`, // Position to the right of main menu
-            zIndex: 10001, // Higher than main menu
-            backgroundColor: 'white',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            minWidth: '200px',
-            maxWidth: '300px',
-            maxHeight: '300px',
-            overflowY: 'auto'
-          }}
-        >
-          <div
-            style={{
-              padding: '8px 12px',
-              borderBottom: '1px solid #eee',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              color: '#666',
-              backgroundColor: '#f8f9fa'
-            }}
-          >
-            Linked Documents ({linkedDocuments.length})
-          </div>
-          
-          {linkedDocuments.map((linkedDoc, index) => (
-            <ContextButton
-              key={`linked-doc-${linkedDoc.documentId}-${index}`}
-              onClick={() => handleLinkedDocumentSelect(linkedDoc)}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '10px 12px',
-                border: 'none',
-                borderBottom: index < linkedDocuments.length - 1 ? '1px solid #f0f0f0' : 'none',
-                borderRadius: '0',
-                fontSize: '13px'
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: '500',
-                  color: '#333',
-                  marginBottom: '4px'
-                }}
-              >
-                {linkedDoc.documentTitle}
+          {/* SIMPLE SUBMENU - Only if multiple linked documents */}
+          {selectionHasLinks && showLinkedSubmenu && linkedDocuments.length > 1 && (
+            <>
+              <div style={{
+                padding: '6px 12px',
+                borderTop: '1px solid #eee',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                color: '#666',
+                backgroundColor: '#f8f9fa'
+              }}>
+                ← Back / Select Document:
               </div>
-              <div
+              
+              {linkedDocuments.map((linkedDoc, index) => (
+                <ContextButton
+                  key={`linked-doc-${linkedDoc.documentId}-${index}`}
+                  onClick={() => handleLinkedDocumentSelect(linkedDoc)}
+                  style={{
+                    padding: '8px 12px',
+                    borderBottom: index < linkedDocuments.length - 1 ? '1px solid #f0f0f0' : 'none',
+                    fontSize: '13px'
+                  }}
+                >
+                  <div style={{ fontWeight: '500', color: '#333', marginBottom: '2px' }}>
+                    📄 {linkedDoc.documentTitle}
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#666',
+                    fontStyle: 'italic',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    "{linkedDoc.linkedText.length > 50 
+                      ? linkedDoc.linkedText.substring(0, 50) + '...' 
+                      : linkedDoc.linkedText}"
+                  </div>
+                </ContextButton>
+              ))}
+              
+              <ContextButton
+                onClick={() => setShowLinkedSubmenu(false)}
                 style={{
+                  borderTop: '1px solid #eee',
                   fontSize: '11px',
-                  color: '#666',
-                  fontStyle: 'italic',
-                  lineHeight: '1.3',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  color: '#666'
                 }}
               >
-                "{linkedDoc.linkedText.length > 50 
-                  ? linkedDoc.linkedText.substring(0, 50) + '...' 
-                  : linkedDoc.linkedText}"
-              </div>
-            </ContextButton>
-          ))}
-        </div>,
+                ← Back to Menu
+              </ContextButton>
+            </>
+          )}
+        </ContextMenu>,
         document.body
       )}
     </>

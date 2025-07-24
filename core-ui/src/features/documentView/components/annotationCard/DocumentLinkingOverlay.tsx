@@ -1,19 +1,24 @@
 // src/features/documentView/components/annotationCard/DocumentLinkingOverlay.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch } from '@store/hooks';
 import { useAuth } from "@hooks/useAuthContext";
 import { linkingAnnotations } from '@store';
 import { makeTextAnnotationBody } from '@documentView/utils';
 import { Link as LinkIcon, Close as CloseIcon, Check as CheckIcon } from "@mui/icons-material";
 
-interface LinkingSelection {
-  documentId: number;
+interface ElementSelection {
   documentElementId: number;
+  sourceURI: string;
   text: string;
   start: number;
   end: number;
-  sourceURI: string;
+}
+
+interface MultiElementSelection {
+  documentId: number;
+  elements: ElementSelection[];
+  fullText: string;
 }
 
 interface DocumentLinkingOverlayProps {
@@ -32,87 +37,411 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAuth();
   
-  const [firstSelection, setFirstSelection] = useState<LinkingSelection | null>(null);
-  const [secondSelection, setSecondSelection] = useState<LinkingSelection | null>(null);
+  const [firstSelection, setFirstSelection] = useState<MultiElementSelection | null>(null);
+  const [secondSelection, setSecondSelection] = useState<MultiElementSelection | null>(null);
   const [currentStep, setCurrentStep] = useState<'first' | 'second' | 'confirm'>('first');
   const [description, setDescription] = useState('');
+  
+  // Add a ref to prevent double processing
+  const lastProcessedText = useRef<string>('');
+
+  // Helper function to safely extract numeric ID from element ID
+  const extractNumericId = (elementId: string): string | null => {
+    console.log('Extracting numeric ID from:', elementId);
+    
+    let numericId: string;
+    
+    if (elementId.startsWith('DocumentElements/')) {
+      numericId = elementId.substring('DocumentElements/'.length);
+    } else if (elementId.includes('/DocumentElements/')) {
+      const match = elementId.match(/\/DocumentElements\/(\d+)$/);
+      numericId = match ? match[1] : '';
+    } else {
+      console.warn('Unexpected element ID format:', elementId);
+      return null;
+    }
+    
+    // Validate that we got a valid numeric ID
+    if (!numericId || isNaN(parseInt(numericId))) {
+      console.warn('Invalid numeric ID extracted:', { elementId, numericId });
+      return null;
+    }
+    
+    console.log('Successfully extracted numeric ID:', { elementId, numericId });
+    return numericId;
+  };
+
+  // Function to analyze a DOM selection and extract all involved elements
+  const analyzeMultiElementSelection = (range: Range): MultiElementSelection | null => {
+    console.log('Analyzing multi-element selection'); // DEBUG
+    console.log('Range details:', {
+      startContainer: range.startContainer,
+      endContainer: range.endContainer,
+      startOffset: range.startOffset,
+      endOffset: range.endOffset,
+      commonAncestor: range.commonAncestorContainer
+    });
+    
+    const selectedText = range.toString().trim();
+    if (selectedText.length === 0) return null;
+    
+    console.log('Selected text:', selectedText.substring(0, 100) + (selectedText.length > 100 ? '...' : ''));
+    
+    // Find all document elements that intersect with the selection
+    const elementSelections: ElementSelection[] = [];
+    
+    // Alternative approach: Start from the range boundaries and find DocumentElement ancestors
+    const startElement = range.startContainer.nodeType === Node.ELEMENT_NODE ? 
+      range.startContainer as HTMLElement : range.startContainer.parentElement as HTMLElement;
+    const endElement = range.endContainer.nodeType === Node.ELEMENT_NODE ? 
+      range.endContainer as HTMLElement : range.endContainer.parentElement as HTMLElement;
+    
+    console.log('Start and end elements:', { 
+      startElement: startElement?.tagName + '#' + startElement?.id, 
+      endElement: endElement?.tagName + '#' + endElement?.id 
+    });
+    
+    // Find all DocumentElement containers that might be involved
+    const documentElements = new Set<HTMLElement>();
+    
+    // Method 1: Tree walker approach (original)
+    const commonAncestor = range.commonAncestorContainer;
+    const walker = window.document.createTreeWalker(
+      commonAncestor,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node: Node) => {
+          if (range.intersectsNode(node)) {
+            return NodeFilter.FILTER_ACCEPT;
+          }
+          return NodeFilter.FILTER_REJECT;
+        }
+      }
+    );
+    
+    let textNode = walker.nextNode() as Text;
+    while (textNode) {
+      let parentElement = textNode.parentElement;
+      while (parentElement && !parentElement.id?.includes('DocumentElements')) {
+        parentElement = parentElement.parentElement;
+      }
+      
+      if (parentElement && parentElement.id?.includes('DocumentElements')) {
+        documentElements.add(parentElement);
+      }
+      
+      textNode = walker.nextNode() as Text;
+    }
+    
+    // Method 2: Direct ancestor traversal from start/end points
+    [startElement, endElement].forEach(element => {
+      if (element) {
+        let current: HTMLElement | null = element;
+        while (current && current !== document.body) {
+          if (current.id?.includes('DocumentElements')) {
+            documentElements.add(current);
+            break;
+          }
+          current = current.parentElement;
+        }
+      }
+    });
+    
+    // Method 3: Query selector within the common ancestor
+    if (commonAncestor.nodeType === Node.ELEMENT_NODE) {
+      const ancestorElement = commonAncestor as HTMLElement;
+      const foundElements = ancestorElement.querySelectorAll('[id*="DocumentElements"]');
+      foundElements.forEach(el => {
+        if (range.intersectsNode(el)) {
+          documentElements.add(el as HTMLElement);
+        }
+      });
+    }
+    
+    console.log('Found DocumentElements:', Array.from(documentElements).map(el => el.id));
+    
+    // If we still haven't found any elements, try a broader search
+    if (documentElements.size === 0) {
+      console.log('No elements found with primary methods, trying broader search...');
+      
+      // Get all DocumentElements in the document and check intersection
+      const allDocElements = document.querySelectorAll('[id*="DocumentElements"]');
+      console.log('Total DocumentElements in document:', allDocElements.length);
+      
+      allDocElements.forEach(element => {
+        try {
+          if (range.intersectsNode(element)) {
+            console.log('Found intersecting element:', element.id);
+            documentElements.add(element as HTMLElement);
+          }
+        } catch (error) {
+          // Ignore errors from intersectsNode
+          console.log('Error checking intersection with element:', element.id, error);
+        }
+      });
+    }
+    
+    if (documentElements.size === 0) {
+      console.warn('No DocumentElements found for selection');
+      return null;
+    }
+    
+    console.log('Final DocumentElements to process:', Array.from(documentElements).map(el => el.id));
+    
+    // Process each DocumentElement to calculate precise text ranges
+    documentElements.forEach((element) => {
+      const elementId = element.id;
+      
+      // Extract numeric ID safely
+      const numericId = extractNumericId(elementId);
+      if (!numericId) {
+        console.warn('Skipping element with invalid ID:', elementId);
+        return;
+      }
+      
+      console.log('Processing element:', { elementId, numericId }); // DEBUG
+      
+      // Get the element's text content
+      const elementText = element.textContent || '';
+      
+      if (elementText.length === 0) {
+        console.warn('Element has no text content:', elementId);
+        return;
+      }
+      
+      // Find where the selected text intersects with this element's text
+      let intersectionText = '';
+      let elementStart = -1;
+      let elementEnd = -1;
+      
+      try {
+        // Create intersection range for this specific element
+        const elementRange = window.document.createRange();
+        elementRange.selectNodeContents(element);
+        
+        // Check if there's actually an intersection
+        if (!range.intersectsNode(element)) {
+          console.log('Range does not intersect element:', elementId);
+          return;
+        }
+        
+        // Calculate the intersection between the selection and this element
+        const intersectionRange = window.document.createRange();
+        
+        // Set intersection start
+        if (range.compareBoundaryPoints(Range.START_TO_START, elementRange) >= 0) {
+          intersectionRange.setStart(range.startContainer, range.startOffset);
+        } else {
+          intersectionRange.setStart(elementRange.startContainer, elementRange.startOffset);
+        }
+        
+        // Set intersection end
+        if (range.compareBoundaryPoints(Range.END_TO_END, elementRange) <= 0) {
+          intersectionRange.setEnd(range.endContainer, range.endOffset);
+        } else {
+          intersectionRange.setEnd(elementRange.endContainer, elementRange.endOffset);
+        }
+        
+        intersectionText = intersectionRange.toString().trim();
+        
+        console.log('Intersection text for element', elementId, ':', intersectionText.substring(0, 50) + '...');
+        
+        if (intersectionText.length > 0) {
+          // Find the position of this text within the element
+          elementStart = elementText.indexOf(intersectionText);
+          if (elementStart !== -1) {
+            elementEnd = elementStart + intersectionText.length;
+          } else {
+            // Fallback: try to find a portion of the text
+            const searchTexts = [
+              intersectionText.trim(),
+              intersectionText.length > 50 ? intersectionText.substring(0, 50) : intersectionText,
+              intersectionText.length > 20 ? intersectionText.substring(0, 20) : intersectionText
+            ];
+            
+            for (const searchText of searchTexts) {
+              elementStart = elementText.indexOf(searchText);
+              if (elementStart !== -1) {
+                elementEnd = elementStart + searchText.length;
+                intersectionText = searchText;
+                console.log('Found text using fallback search:', searchText.substring(0, 30) + '...');
+                break;
+              }
+            }
+          }
+        }
+        
+      } catch (rangeError) {
+        console.warn('Range calculation failed for element:', elementId, rangeError);
+        
+        // Ultimate fallback: try simple text search
+        const searchOptions = [
+          selectedText,
+          selectedText.trim(),
+          selectedText.length > 50 ? selectedText.substring(0, 50) : selectedText
+        ];
+        
+        for (const searchText of searchOptions) {
+          if (elementText.includes(searchText)) {
+            elementStart = elementText.indexOf(searchText);
+            elementEnd = elementStart + searchText.length;
+            intersectionText = searchText;
+            console.log('Found text using ultimate fallback:', searchText.substring(0, 30) + '...');
+            break;
+          }
+        }
+      }
+      
+      if (intersectionText.length > 0 && elementStart >= 0 && elementEnd > elementStart) {
+        console.log(`Element ${numericId} selection:`, {
+          text: intersectionText.substring(0, 50) + (intersectionText.length > 50 ? '...' : ''),
+          start: elementStart,
+          end: elementEnd,
+          elementTextLength: elementText.length
+        }); // DEBUG
+        
+        elementSelections.push({
+          documentElementId: parseInt(numericId),
+          sourceURI: `/DocumentElements/${numericId}`, // Consistent format with leading slash
+          text: intersectionText,
+          start: elementStart,
+          end: elementEnd
+        });
+      } else {
+        console.warn(`Failed to calculate valid range for element ${numericId}:`, {
+          intersectionTextLength: intersectionText.length,
+          elementStart,
+          elementEnd,
+          elementTextLength: elementText.length,
+          elementId
+        });
+      }
+    });
+    
+    if (elementSelections.length === 0) {
+      console.warn('No valid element selections found after processing all methods'); // DEBUG
+      console.log('Debug info:', {
+        documentElementsFound: documentElements.size,
+        selectedTextLength: selectedText.length,
+        rangeCollapsed: range.collapsed,
+        commonAncestorType: range.commonAncestorContainer.nodeType,
+        commonAncestorTag: range.commonAncestorContainer.nodeName
+      });
+      return null;
+    }
+    
+    // Find which document this belongs to - use the first element found
+    const firstElement = Array.from(documentElements)[0];
+    if (!firstElement) return null;
+    
+    const documentPanel = firstElement.closest('.document-panel-wrapper') as HTMLElement;
+    if (!documentPanel) {
+      console.warn('No document panel found for element');
+      return null;
+    }
+    
+    const documentId = parseInt(documentPanel.getAttribute('data-document-id') || '0');
+    const foundDocument = documents.find(d => d.id === documentId);
+    
+    if (!foundDocument) {
+      console.warn('Document not found in current view:', documentId);
+      return null;
+    }
+    
+    console.log('Multi-element selection created:', {
+      documentId: foundDocument.id,
+      documentTitle: foundDocument.title,
+      elements: elementSelections.length,
+      fullText: selectedText.substring(0, 100) + (selectedText.length > 100 ? '...' : '')
+    }); // DEBUG
+    
+    return {
+      documentId: foundDocument.id,
+      elements: elementSelections,
+      fullText: selectedText
+    };
+  };
 
   // Listen for text selections
   useEffect(() => {
-    const handleSelection = () => {
+    const handleSelection = (e: MouseEvent) => {
+      console.log('DocumentLinkingOverlay: Selection event captured'); // DEBUG
+      console.log('DocumentLinkingOverlay: Current step:', currentStep); // DEBUG
+      console.log('DocumentLinkingOverlay: First selection:', firstSelection?.documentId); // DEBUG
+      
+      // Prevent event from being handled by other components
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      
       const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return;
+      if (!selection || selection.rangeCount === 0) {
+        console.log('DocumentLinkingOverlay: No selection found'); // DEBUG
+        return;
+      }
       
       const range = selection.getRangeAt(0);
       const selectedText = range.toString().trim();
       
+      console.log('DocumentLinkingOverlay: Selected text length:', selectedText.length); // DEBUG
+      
       if (selectedText.length === 0) return;
       
-      // Find which document element contains this selection
-      let targetElement = range.commonAncestorContainer as Node;
+      // Prevent double processing of the same text
+      if (selectedText === lastProcessedText.current) {
+        console.log('DocumentLinkingOverlay: Duplicate selection, ignoring'); // DEBUG
+        return;
+      }
+      lastProcessedText.current = selectedText;
       
-      // Walk up the DOM tree to find the document element
-      while (targetElement && targetElement.nodeType !== Node.ELEMENT_NODE) {
-        targetElement = targetElement.parentNode!;
+      // Analyze the selection for multiple elements
+      const multiElementSelection = analyzeMultiElementSelection(range);
+      
+      if (!multiElementSelection) {
+        console.log('DocumentLinkingOverlay: Could not create multi-element selection'); // DEBUG
+        return;
       }
       
-      let elementWithId = targetElement as HTMLElement;
-      while (elementWithId && !elementWithId.id?.startsWith('DocumentElements/')) {
-        elementWithId = elementWithId.parentElement!;
-      }
-      
-      if (!elementWithId) return;
-      
-      // Extract document element ID - get just the numeric part
-      const fullId = elementWithId.id;
-      const elementId = fullId.split('/').pop(); // Get the last part after the last slash
-      
-      if (!elementId) return;
-      
-      // Find which document this belongs to
-      const documentPanel = elementWithId.closest('.document-panel-wrapper') as HTMLElement;
-      if (!documentPanel) return;
-      
-      const documentId = parseInt(documentPanel.getAttribute('data-document-id') || '0');
-      const document = documents.find(d => d.id === documentId);
-      
-      if (!document) return;
-      
-      // Calculate text positions relative to the element
-      const elementText = elementWithId.textContent || '';
-      const rangeText = range.toString();
-      const startOffset = elementText.indexOf(rangeText);
-      const endOffset = startOffset + rangeText.length;
-      
-      const linkingSelection: LinkingSelection = {
-        documentId: document.id,
-        documentElementId: parseInt(elementId),
-        text: selectedText,
-        start: startOffset,
-        end: endOffset,
-        sourceURI: `/DocumentElements/${elementId}` // Fixed: ensure single prefix with leading slash
-      };
+      console.log('DocumentLinkingOverlay: Created selection for document:', multiElementSelection.documentId); // DEBUG
       
       if (currentStep === 'first') {
-        setFirstSelection(linkingSelection);
+        console.log('DocumentLinkingOverlay: Setting first selection'); // DEBUG
+        setFirstSelection(multiElementSelection);
         setCurrentStep('second');
       } else if (currentStep === 'second') {
         // Ensure we're not linking within the same document
-        if (firstSelection && linkingSelection.documentId === firstSelection.documentId) {
-          // Don't set selection, just show a message
+        if (firstSelection && multiElementSelection.documentId === firstSelection.documentId) {
+          console.log('DocumentLinkingOverlay: Same document selection, ignoring'); // DEBUG
           return;
         }
-        setSecondSelection(linkingSelection);
+        console.log('DocumentLinkingOverlay: Setting second selection'); // DEBUG
+        setSecondSelection(multiElementSelection);
         setCurrentStep('confirm');
       }
       
       // Clear the selection
       selection.removeAllRanges();
+      
+      // Reset the duplicate prevention after a short delay
+      setTimeout(() => {
+        lastProcessedText.current = '';
+      }, 500);
     };
     
-    document.addEventListener('mouseup', handleSelection);
+    const handleMouseDown = (e: MouseEvent) => {
+      console.log('DocumentLinkingOverlay: MouseDown captured'); // DEBUG
+      // Prevent HighlightedText from handling this
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    };
+    
+    // Use capture phase to intercept before HighlightedText
+    document.addEventListener('mousedown', handleMouseDown, true);
+    document.addEventListener('mouseup', handleSelection, true);
+    
     return () => {
-      document.removeEventListener('mouseup', handleSelection);
+      document.removeEventListener('mousedown', handleMouseDown, true);
+      document.removeEventListener('mouseup', handleSelection, true);
     };
   }, [currentStep, firstSelection, documents]);
 
@@ -121,27 +450,31 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       return;
     }
 
-    // Create segments for both selections
+    // Create segments for all elements in both selections
     const segments = [
-      {
-        sourceURI: firstSelection.sourceURI,
-        start: firstSelection.start,
-        end: firstSelection.end,
-        text: firstSelection.text
-      },
-      {
-        sourceURI: secondSelection.sourceURI,
-        start: secondSelection.start,
-        end: secondSelection.end,
-        text: secondSelection.text
-      }
+      // First selection segments
+      ...firstSelection.elements.map(element => ({
+        sourceURI: element.sourceURI,
+        start: element.start,
+        end: element.end,
+        text: element.text
+      })),
+      // Second selection segments
+      ...secondSelection.elements.map(element => ({
+        sourceURI: element.sourceURI,
+        start: element.start,
+        end: element.end,
+        text: element.text
+      }))
     ];
+
+    console.log('Saving multi-element link with segments:', segments); // DEBUG
 
     // Use the first document's collection and element for the main annotation body
     const annoBody = makeTextAnnotationBody(
       documents[0].collectionId,
       firstSelection.documentId,
-      firstSelection.documentElementId,
+      firstSelection.elements[0].documentElementId,
       user.id,
       'linking',
       description || 'Document link',
@@ -157,6 +490,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     setSecondSelection(null);
     setCurrentStep('first');
     setDescription('');
+    lastProcessedText.current = ''; // Reset duplicate prevention
   };
 
   const getDocumentTitle = (docId: number) => {
@@ -174,6 +508,11 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       default:
         return '';
     }
+  };
+
+  // Helper to get a preview of multi-element selection
+  const getSelectionPreview = (selection: MultiElementSelection) => {
+    return selection.fullText.substring(0, 100) + (selection.fullText.length > 100 ? '...' : '');
   };
 
   return (
@@ -287,9 +626,14 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           }}>
             <div style={{ fontWeight: 500, marginBottom: '4px' }}>
               ✓ First: {getDocumentTitle(firstSelection.documentId)}
+              {firstSelection.elements.length > 1 && (
+                <span style={{ color: '#666', fontSize: '11px', marginLeft: '4px' }}>
+                  ({firstSelection.elements.length} elements)
+                </span>
+              )}
             </div>
             <div style={{ color: '#666', fontStyle: 'italic' }}>
-              "{firstSelection.text.substring(0, 50)}{firstSelection.text.length > 50 ? '...' : ''}"
+              "{getSelectionPreview(firstSelection)}"
             </div>
           </div>
         )}
@@ -305,9 +649,14 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           }}>
             <div style={{ fontWeight: 500, marginBottom: '4px' }}>
               ✓ Second: {getDocumentTitle(secondSelection.documentId)}
+              {secondSelection.elements.length > 1 && (
+                <span style={{ color: '#666', fontSize: '11px', marginLeft: '4px' }}>
+                  ({secondSelection.elements.length} elements)
+                </span>
+              )}
             </div>
             <div style={{ color: '#666', fontStyle: 'italic' }}>
-              "{secondSelection.text.substring(0, 50)}{secondSelection.text.length > 50 ? '...' : ''}"
+              "{getSelectionPreview(secondSelection)}"
             </div>
           </div>
         )}
