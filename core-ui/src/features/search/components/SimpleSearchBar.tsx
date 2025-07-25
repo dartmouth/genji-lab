@@ -197,7 +197,7 @@ const SimpleSearchBar: React.FC = () => {
   };
 
   const onAdvancedSearch = () => {
-    console.log('Advanced search clicked - placeholder functionality');
+    navigate('/search', {state: {advanced: true}})
   };
 
   return (

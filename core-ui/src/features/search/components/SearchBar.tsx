@@ -210,7 +210,7 @@ const AnnotationSearchBar: React.FC<SearchBarProps> = ({
   //   }));
   // };
 
-  const toggleSearchType = (type: 'documents' | 'comments' | 'scholarly-annotations') => {
+  const toggleSearchType = (type: 'documents' | 'comments' | 'annotations') => {
     setSearchQuery(prev => {
       const currentTypes = prev.searchTypes;
       const isSelected = currentTypes.includes(type);
@@ -235,7 +235,7 @@ const AnnotationSearchBar: React.FC<SearchBarProps> = ({
     const typeLabels = {
       'documents': 'Documents',
       'comments': 'Comments', 
-      'scholarly-annotations': 'Scholarly Annotations'
+      'annotations': 'Scholarly Annotations'
     };
     
     if (searchQuery.searchTypes.length === 3) {
@@ -438,10 +438,10 @@ const AnnotationSearchBar: React.FC<SearchBarProps> = ({
                   <label className="flex items-center px-2 py-1 hover:bg-gray-50 cursor-pointer rounded">
                     <input
                       type="checkbox"
-                      checked={searchQuery.searchTypes.includes('scholarly-annotations')}
-                      onChange={() => toggleSearchType('scholarly-annotations')}
+                      checked={searchQuery.searchTypes.includes('annotations')}
+                      onChange={() => toggleSearchType('annotations')}
                       className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      disabled={searchQuery.searchTypes.length === 1 && searchQuery.searchTypes.includes('scholarly-annotations')}
+                      disabled={searchQuery.searchTypes.length === 1 && searchQuery.searchTypes.includes('annotations')}
                     />
                     <span className="text-sm">Scholarly Annotations</span>
                   </label>

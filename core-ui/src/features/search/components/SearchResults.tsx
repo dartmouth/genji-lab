@@ -3,6 +3,7 @@ import { SearchResult } from "../types/query";
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import AdvancedSettings from './AdvancedSettings';
+import { useLocation } from 'react-router-dom';
 
 const styles = {
   container: {
@@ -180,6 +181,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
   const [expanded, setExpanded] = useState(false);
   const maxLength = 200;
   const shouldTruncate = result.content.length > maxLength;
+
   const displayContent = expanded || !shouldTruncate 
     ? result.content 
     : result.content.substring(0, maxLength) + '...';
@@ -284,6 +286,8 @@ const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
 const SearchResultsContainer: React.FC= () => {
   const searchData = useSelector((state: RootState) => state.searchResults.searchResults)
   const { query, total_results, results } = searchData;
+  const location = useLocation();
+  const advanced = location.state?.advanced ?? false;
 
   const formatSearchTypes = (types: string[]) => {
     return types.map(type => type.charAt(0).toUpperCase() + type.slice(1)).join(', ');
@@ -339,7 +343,7 @@ const SearchResultsContainer: React.FC= () => {
           </div>
         </div>
       </div>
-      <AdvancedSettings></AdvancedSettings>
+      <AdvancedSettings advanced={advanced}></AdvancedSettings>
       <hr style={styles.divider} />
       {/* Results */}
       <div>

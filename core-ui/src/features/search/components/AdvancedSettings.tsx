@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SearchSettings } from '../types/query';
 import { setSettingsState, RootState } from '@/store';
 import { useDispatch, useSelector } from 'react-redux';
@@ -198,14 +198,20 @@ const styles = {
   } as React.CSSProperties
 };
 
-
-const AdvancedSettings: React.FC = () => {
+interface AdvancedSearchProps{
+  advanced: boolean | null
+}
+const AdvancedSettings: React.FC<AdvancedSearchProps> = (advanced) => {
   const dispatch = useDispatch()
   const [isExpanded, setIsExpanded] = useState(false);
   const [headerHovered, setHeaderHovered] = useState(false);
   const [resetHovered, setResetHovered] = useState(false);
   const settings = useSelector((state: RootState) => state.searchResults.settings)
 
+  useEffect(() => {
+    setIsExpanded(advanced.advanced === null ? false: advanced.advanced);
+  }, [advanced]);
+  
   const defaultSettings: SearchSettings = {
     searchTypes: ["documents", "comments", "annotations"],
     sortBy: "relevance",
