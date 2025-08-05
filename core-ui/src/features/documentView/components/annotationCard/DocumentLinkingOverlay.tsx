@@ -176,7 +176,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           }
         } catch (error) {
           // Ignore errors from intersectsNode
-          console.log('Error checking intersection with element:', element.id, error);
+          console.log('Error checking intersection with element:', element.id);
         }
       });
     }
@@ -252,20 +252,42 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           if (elementStart !== -1) {
             elementEnd = elementStart + intersectionText.length;
           } else {
-            // Fallback: try to find a portion of the text
+            // Enhanced fallback with multiple search strategies
             const searchTexts = [
               intersectionText.trim(),
               intersectionText.length > 50 ? intersectionText.substring(0, 50) : intersectionText,
-              intersectionText.length > 20 ? intersectionText.substring(0, 20) : intersectionText
-            ];
+              intersectionText.length > 20 ? intersectionText.substring(0, 20) : intersectionText,
+              // Try the last part of the text too
+              intersectionText.length > 50 ? intersectionText.substring(intersectionText.length - 50) : null
+            ].filter(text => text && text.length > 0);
             
             for (const searchText of searchTexts) {
+              if (!searchText) continue;
+              
               elementStart = elementText.indexOf(searchText);
               if (elementStart !== -1) {
-                elementEnd = elementStart + searchText.length;
-                intersectionText = searchText;
+                // Use the length of the original intersection text, not the search text
+                elementEnd = elementStart + Math.min(intersectionText.length, elementText.length - elementStart);
+                intersectionText = elementText.substring(elementStart, elementEnd);
                 console.log('Found text using fallback search:', searchText.substring(0, 30) + '...');
                 break;
+              }
+            }
+            
+            // If still not found, try a character-by-character approach for Unicode text
+            if (elementStart === -1 && intersectionText.length > 10) {
+              // For non-ASCII text, try finding any substantial substring
+              for (let i = 0; i < intersectionText.length - 10; i += 5) {
+                const substring = intersectionText.substring(i, i + 10);
+                const foundIndex = elementText.indexOf(substring);
+                if (foundIndex !== -1) {
+                  elementStart = foundIndex;
+                  // Extend the range to include more context
+                  elementEnd = Math.min(foundIndex + intersectionText.length, elementText.length);
+                  intersectionText = elementText.substring(elementStart, elementEnd);
+                  console.log('Found text using substring search:', substring);
+                  break;
+                }
               }
             }
           }
@@ -292,12 +314,13 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         }
       }
       
-      if (intersectionText.length > 0 && elementStart >= 0 && elementEnd > elementStart) {
+      if (intersectionText.length > 0 && elementStart >= 0 && elementEnd > elementStart && elementEnd <= elementText.length) {
         console.log(`Element ${numericId} selection:`, {
           text: intersectionText.substring(0, 50) + (intersectionText.length > 50 ? '...' : ''),
           start: elementStart,
           end: elementEnd,
-          elementTextLength: elementText.length
+          elementTextLength: elementText.length,
+          isValidRange: elementStart >= 0 && elementEnd <= elementText.length && elementStart < elementEnd
         }); // DEBUG
         
         elementSelections.push({
@@ -313,8 +336,15 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           elementStart,
           elementEnd,
           elementTextLength: elementText.length,
-          elementId
+          elementId,
+          isValidRange: elementStart >= 0 && elementEnd <= elementText.length && elementStart < elementEnd,
+          issue: elementStart < 0 ? 'negative start' : 
+                 elementEnd > elementText.length ? 'end beyond text' :
+                 elementStart >= elementEnd ? 'start >= end' : 'unknown'
         });
+        
+        // Skip this element rather than creating invalid data
+        return;
       }
     });
     

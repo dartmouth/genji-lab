@@ -24,17 +24,24 @@ interface DocumentComparisonContainerProps {
   viewMode?: 'reading' | 'annotations';
   handleViewModeChange?: (mode: 'reading' | 'annotations') => void;
   isLinkingModeActive?: boolean;
+  showLinkedTextHighlights?: boolean; // New prop for showing linked text highlights
   onOpenLinkedDocument?: (documentId: number, collectionId: number, targetInfo: {
     sourceURI: string;
     start: number;
     end: number;
-  }) => void;
+  }, allTargets?: Array<{
+    sourceURI: string;
+    start: number;
+    end: number;
+    text: string;
+  }>) => void;
 }
 
 const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = ({
   documents,
   viewMode = 'reading',
   isLinkingModeActive = false,
+  showLinkedTextHighlights = false, // Default to false
   onOpenLinkedDocument
 }) => {
   // State for active document (for highlight tracking)
@@ -196,6 +203,7 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
       ${viewMode}-mode 
       panel-position-${annotationPanelPosition}
       ${isLinkingModeActive ? 'linking-mode-active' : ''}
+      ${showLinkedTextHighlights ? 'show-linked-text' : ''}
     `} style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Document toolbar completely removed to prevent overlay with annotation tabs */}
       
@@ -266,6 +274,16 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
                       (Select text to link)
                     </span>
                   )}
+                  {showLinkedTextHighlights && (
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: '#16A085', 
+                      fontWeight: 'normal',
+                      marginLeft: '8px'
+                    }}>
+                      (🔗 Linked text highlighted)
+                    </span>
+                  )}
                 </h2>
               </div>
               
@@ -277,6 +295,7 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
                   viewedDocuments={documents}
                   onOpenLinkedDocument={onOpenLinkedDocument}
                   isLinkingModeActive={isLinkingModeActive}
+                  showLinkedTextHighlights={showLinkedTextHighlights}
                 />
               </div>
             </div>
@@ -321,7 +340,6 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
               borderTop: annotationPanelPosition === 'bottom' ? '1px solid #ddd' : 'none',
               borderLeft: annotationPanelPosition === 'right' ? '1px solid #ddd' : 'none',
               borderRight: annotationPanelPosition === 'left' ? '1px solid #ddd' : 'none',
-              // Fix for content showing through panel
               opacity: 1, // Ensure full opacity
               backdropFilter: 'none', // Remove any backdrop filters
               WebkitBackdropFilter: 'none' // For Safari

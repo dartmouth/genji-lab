@@ -123,6 +123,9 @@ export const DocumentContentView: React.FC = () => {
   // State for view mode (reading vs annotations)
   const [viewMode, setViewMode] = useState<'reading' | 'annotations'>('reading');
   
+  // State for showing linked text highlights
+  const [showLinkedTextHighlights, setShowLinkedTextHighlights] = useState(false);
+  
   // Fetch document collections when component mounts
   useEffect(() => {
     dispatch(fetchDocumentCollections());
@@ -356,6 +359,13 @@ export const DocumentContentView: React.FC = () => {
                 >
                   <span className="icon">💬</span> Annotations
                 </button>
+                <button 
+                  className={`mode-button ${showLinkedTextHighlights ? 'active' : ''}`}
+                  onClick={() => setShowLinkedTextHighlights(!showLinkedTextHighlights)}
+                  title="Highlight all text that has links in both documents"
+                >
+                  <span className="icon">🔗</span> Show Links
+                </button>
               </div>
 
               {/* Linking controls - only show when exactly 2 documents */}
@@ -473,6 +483,7 @@ export const DocumentContentView: React.FC = () => {
           handleViewModeChange={handleViewModeChange}
           isLinkingModeActive={isLinkingModeActive}
           onOpenLinkedDocument={handleOpenLinkedDocument}
+          showLinkedTextHighlights={showLinkedTextHighlights}
         />
       ) : (
         <div className="no-documents-message">

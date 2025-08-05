@@ -31,9 +31,16 @@ interface DocumentContentPanelProps {
     sourceURI: string;
     start: number;
     end: number;
-  }) => void;
+  }, allTargets?: Array<{
+    sourceURI: string;
+    start: number;
+    end: number;
+    text: string;
+  }>) => void;
   // Add linking mode prop
   isLinkingModeActive?: boolean;
+  // Add show linked text highlights prop
+  showLinkedTextHighlights?: boolean;
 }
 
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
@@ -41,7 +48,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   documentCollectionId,
   viewedDocuments = [],
   onOpenLinkedDocument,
-  isLinkingModeActive = false // Default to false
+  isLinkingModeActive = false, // Default to false
+  showLinkedTextHighlights = false // Default to false
 }) => {
   // Redux
   const dispatch = useAppDispatch();
@@ -118,6 +126,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 documentCollectionId={documentCollectionId}
                 documentId={documentId}
                 isLinkingModeActive={isLinkingModeActive} // Pass linking mode status
+                showLinkedTextHighlights={showLinkedTextHighlights} // Pass show linked text highlights
+                viewedDocuments={viewedDocuments} // Pass viewed documents for link detection
               />
             </div>
           );
