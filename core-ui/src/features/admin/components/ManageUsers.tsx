@@ -162,14 +162,13 @@ const ManageUsers: React.FC = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell><strong>Name</strong></TableCell>
-                      <TableCell><strong>Email</strong></TableCell>
                       <TableCell><strong>Current Roles</strong></TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {users.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={3} align="center">
+                        <TableCell colSpan={2} align="center">
                           No users found
                         </TableCell>
                       </TableRow>
@@ -179,7 +178,6 @@ const ManageUsers: React.FC = () => {
                           <TableCell>
                             {user.last_name}, {user.first_name}
                           </TableCell>
-                          <TableCell>{user.email}</TableCell>
                           <TableCell>
                             {user.roles && user.roles.length > 0 ? (
                               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
