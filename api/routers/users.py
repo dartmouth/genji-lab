@@ -5,7 +5,7 @@ from sqlalchemy import select, update, delete
 from sqlalchemy.orm import joinedload  # Add this import
 
 from database import get_db
-from models.models import User as UserModel
+from models.models import User as UserModel, Role as RoleModel
 from schemas.users import User, UserCreate, UserUpdate
 
 router = APIRouter(
@@ -100,7 +100,19 @@ async def partial_update_user(
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Update only provided fields
+    # Handle roles separately if provided
+    if 'roles' in user_data:
+        role_ids = user_data.pop('roles')  # Remove from user_data to handle separately
+        
+        # Fetch the actual Role objects
+        roles_query = select(RoleModel).filter(RoleModel.id.in_(role_ids))
+        roles_result = db.execute(roles_query)
+        roles = roles_result.scalars().all()
+        
+        # Update the user's roles
+        db_user.roles = roles
+    
+    # Update other provided fields
     for key, value in user_data.items():
         if hasattr(db_user, key):
             setattr(db_user, key, value)

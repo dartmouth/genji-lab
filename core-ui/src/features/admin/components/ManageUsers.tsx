@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Tab, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip } from '@mui/material';
+import { 
+  Tabs, Tab, Box, Typography, Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow, Paper, Chip, Button, 
+  CircularProgress, Alert, Tooltip 
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchUsers, selectAllUsers, selectUsersStatus, selectUsersError, User } from '../../../store/slice/usersSlice';
+import { fetchUsers, selectAllUsers, selectUsersStatus, selectUsersError, updateUserRoles } from '../../../store/slice/usersSlice';
+import { fetchRoles, selectAllRoles, selectRolesStatus, selectRolesError } from '../../../store/slice/rolesSlice';
+import { useAuth } from '../../../hooks/useAuthContext';
+
+// Utility function to format role names for display
+const formatRoleName = (roleName: string): string => {
+  return roleName
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
 
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
@@ -39,45 +53,40 @@ function a11yPropsSubTab(index: number) {
 }
 
 // Styled components
-const StyledForm = styled('form')(({ theme }) => ({
-  '& .form-group': {
-    marginBottom: theme.spacing(2),
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  '& label': {
-    marginBottom: theme.spacing(0.5),
-  },
-  '& input, & select': {
-    padding: theme.spacing(1),
-    borderRadius: theme.shape.borderRadius,
-    border: `1px solid ${theme.palette.divider}`,
-  },
-  '& .MuiFormControl-root': {
-    marginBottom: theme.spacing(2),
-  },
-  '& button': {
-    marginTop: theme.spacing(2),
-    padding: theme.spacing(1, 2),
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
-    border: 'none',
-    borderRadius: theme.shape.borderRadius,
-    cursor: 'pointer',
+const RoleChip = styled(Chip)<{ assigned?: boolean }>(({ theme, assigned }) => ({
+  margin: theme.spacing(0.25),
+  cursor: 'pointer',
+  ...(assigned ? {
+    backgroundColor: '#00693e',
+    color: 'white',
     '&:hover': {
-      backgroundColor: theme.palette.primary.dark,
+      backgroundColor: '#004d2d',
     },
-    '&:disabled': {
-      opacity: 0.5,
-      cursor: 'not-allowed',
-      backgroundColor: theme.palette.action.disabled,
+    '& .MuiChip-deleteIcon': {
+      color: 'white',
+      '&:hover': {
+        color: '#cccccc',
+      },
     },
-  },
-  '& .delete-button': {
-    backgroundColor: theme.palette.error.main,
+  } : {
+    backgroundColor: 'transparent',
+    color: '#00693e',
+    border: `1px solid #00693e`,
     '&:hover': {
-      backgroundColor: theme.palette.error.dark,
+      backgroundColor: '#f0f8f5',
     },
+  }),
+}));
+
+const SaveButton = styled(Button)(({ theme }) => ({
+  backgroundColor: '#00693e',
+  color: 'white',
+  '&:hover': {
+    backgroundColor: '#004d2d',
+  },
+  '&:disabled': {
+    backgroundColor: theme.palette.action.disabled,
+    color: theme.palette.action.disabled,
   },
 }));
 
@@ -85,19 +94,109 @@ const StyledForm = styled('form')(({ theme }) => ({
 
 const ManageUsers: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<number>(0);
-  const dispatch = useAppDispatch();
+  const [userRoleChanges, setUserRoleChanges] = useState<{ [userId: number]: number[] }>({});
+  const [savingUsers, setSavingUsers] = useState<{ [userId: number]: boolean }>({});
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
-  // Use Redux selectors instead of local state
+  const dispatch = useAppDispatch();
+  const { user: currentUser } = useAuth();
+  
+  // User selectors
   const users = useAppSelector(selectAllUsers);
-  const loading = useAppSelector(selectUsersStatus) === 'loading';
-  const error = useAppSelector(selectUsersError);
+  const usersLoading = useAppSelector(selectUsersStatus) === 'loading';
+  const usersError = useAppSelector(selectUsersError);
+  
+  // Role selectors
+  const roles = useAppSelector(selectAllRoles);
+  const rolesLoading = useAppSelector(selectRolesStatus) === 'loading';
+  const rolesError = useAppSelector(selectRolesError);
 
-  // Fetch users when Update Roles tab is selected
+  // Fetch users and roles when Update Roles tab is selected
   useEffect(() => {
     if (activeSubTab === 1) {
       dispatch(fetchUsers());
+      dispatch(fetchRoles());
     }
   }, [activeSubTab, dispatch]);
+
+  // Initialize user role changes when users change
+  useEffect(() => {
+    const initialChanges: { [userId: number]: number[] } = {};
+    users.forEach(user => {
+      initialChanges[user.id] = user.roles?.map(role => role.id) || [];
+    });
+    setUserRoleChanges(initialChanges);
+  }, [users]);
+
+  const handleRoleToggle = (userId: number, roleId: number) => {
+    // Find the role being toggled
+    const role = roles.find(r => r.id === roleId);
+    
+    // Prevent users from removing their own admin role
+    if (currentUser && 
+        currentUser.id === userId && 
+        role?.name === 'admin' && 
+        (userRoleChanges[userId] || []).includes(roleId)) {
+      // Show a brief alert or just prevent the action
+      return;
+    }
+
+    setUserRoleChanges(prev => {
+      const currentRoles = prev[userId] || [];
+      const hasRole = currentRoles.includes(roleId);
+      
+      if (hasRole) {
+        // Remove role
+        return {
+          ...prev,
+          [userId]: currentRoles.filter(id => id !== roleId)
+        };
+      } else {
+        // Add role
+        return {
+          ...prev,
+          [userId]: [...currentRoles, roleId]
+        };
+      }
+    });
+  };
+
+  // Check if removing a role should be disabled (prevent self-lockout)
+  const isRoleRemovalDisabled = (userId: number, roleId: number) => {
+    const role = roles.find(r => r.id === roleId);
+    return (currentUser && 
+            currentUser.id === userId && 
+            role?.name === 'admin' && 
+            (userRoleChanges[userId] || []).includes(roleId));
+  };
+
+  const hasChanges = (userId: number) => {
+    const user = users.find(u => u.id === userId);
+    const originalRoles = user?.roles?.map(role => role.id).sort() || [];
+    const currentRoles = (userRoleChanges[userId] || []).sort();
+    
+    return JSON.stringify(originalRoles) !== JSON.stringify(currentRoles);
+  };
+
+  const handleSaveUserRoles = async (userId: number) => {
+    const roleIds = userRoleChanges[userId] || [];
+    const user = users.find(u => u.id === userId);
+    
+    setSavingUsers(prev => ({ ...prev, [userId]: true }));
+    
+    try {
+      await dispatch(updateUserRoles({ id: userId, roleIds })).unwrap();
+      // Show success message
+      setSuccessMessage(`Successfully updated roles for ${user?.first_name} ${user?.last_name}`);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      // Error handling is done by the rejected action
+      console.error('Failed to update user roles:', error);
+    } finally {
+      setSavingUsers(prev => ({ ...prev, [userId]: false }));
+    }
+  };
 
   const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveSubTab(newValue);
@@ -147,28 +246,61 @@ const ManageUsers: React.FC = () => {
             <Typography variant="h5" component="h2" gutterBottom>
               Update User Roles
             </Typography>
+
+            {/* Role Information Panel */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" component="h3" gutterBottom>
+                Available Roles
+              </Typography>
+              {rolesLoading ? (
+                <CircularProgress size={20} />
+              ) : rolesError ? (
+                <Alert severity="error">{rolesError}</Alert>
+              ) : (
+                <Box sx={{ ml: 2 }}>
+                  {roles.map((role) => (
+                    <Typography key={role.id} variant="body1" sx={{ mb: 0.5 }}>
+                      • <strong>{formatRoleName(role.name)}</strong>: {role.description || 'No description available'}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
+            </Box>
             
-            {error && (
-              <Box sx={{ mb: 2, p: 2, bgcolor: 'error.light', color: 'error.contrastText', borderRadius: 1 }}>
-                {error}
-              </Box>
+            {/* Success Message */}
+            {successMessage && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {successMessage}
+              </Alert>
             )}
             
-            {loading ? (
-              <Typography>Loading users...</Typography>
+            {/* Error Display */}
+            {usersError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {usersError}
+              </Alert>
+            )}
+            
+            {/* Users Table */}
+            {usersLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                <CircularProgress />
+                <Typography sx={{ ml: 2 }}>Loading users...</Typography>
+              </Box>
             ) : (
               <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
                     <TableRow>
                       <TableCell><strong>Name</strong></TableCell>
-                      <TableCell><strong>Current Roles</strong></TableCell>
+                      <TableCell><strong>Roles</strong></TableCell>
+                      <TableCell><strong>Actions</strong></TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {users.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={2} align="center">
+                        <TableCell colSpan={3} align="center">
                           No users found
                         </TableCell>
                       </TableRow>
@@ -179,22 +311,41 @@ const ManageUsers: React.FC = () => {
                             {user.last_name}, {user.first_name}
                           </TableCell>
                           <TableCell>
-                            {user.roles && user.roles.length > 0 ? (
-                              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                {user.roles.map((role) => (
-                                  <Chip 
-                                    key={role.id} 
-                                    label={role.name} 
-                                    size="small" 
-                                    variant="outlined"
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                              {roles.map((role) => {
+                                const isAssigned = (userRoleChanges[user.id] || []).includes(role.id);
+                                const isDisabled = isRoleRemovalDisabled(user.id, role.id);
+                                
+                                const chip = (
+                                  <RoleChip
+                                    key={role.id}
+                                    label={formatRoleName(role.name)}
+                                    assigned={isAssigned}
+                                    onClick={() => !isDisabled && handleRoleToggle(user.id, role.id)}
+                                    onDelete={isAssigned && !isDisabled ? () => handleRoleToggle(user.id, role.id) : undefined}
+                                    deleteIcon={isAssigned ? undefined : undefined}
+                                    sx={isDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                                   />
-                                ))}
-                              </Box>
-                            ) : (
-                              <Typography variant="body2" color="text.secondary">
-                                No roles assigned
-                              </Typography>
-                            )}
+                                );
+
+                                // Wrap with tooltip if disabled
+                                return isDisabled ? (
+                                  <Tooltip key={role.id} title="Cannot remove your own admin role">
+                                    <span>{chip}</span>
+                                  </Tooltip>
+                                ) : chip;
+                              })}
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <SaveButton
+                              size="small"
+                              disabled={!hasChanges(user.id) || savingUsers[user.id]}
+                              onClick={() => handleSaveUserRoles(user.id)}
+                              startIcon={savingUsers[user.id] ? <CircularProgress size={16} /> : undefined}
+                            >
+                              {savingUsers[user.id] ? 'Saving...' : 'Save'}
+                            </SaveButton>
                           </TableCell>
                         </TableRow>
                       ))

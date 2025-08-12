@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import users, documents, document_collections, document_elements, annotations
+from routers import users, documents, document_collections, document_elements, annotations, roles
 from routers.cas_auth import router as cas_router  # Import the new CAS router
 from database import engine
 from models import models
@@ -30,6 +30,7 @@ app.include_router(documents.router)
 app.include_router(document_collections.router)
 app.include_router(document_elements.router)
 app.include_router(annotations.router)
+app.include_router(roles.router)  # Add the roles router
 app.include_router(cas_router)  # Add the CAS authentication router
 
 @app.get("/api/v1")
