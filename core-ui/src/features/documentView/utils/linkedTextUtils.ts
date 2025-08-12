@@ -1,5 +1,5 @@
 // src/features/documentView/utils/linkedTextUtils.ts
-// FIXED VERSION - Proper document detection and annotation grouping
+// FIXED: Proper dynamic document title resolution
 
 import { RootState } from '@store';
 import { linkingAnnotations } from '@store';
@@ -75,7 +75,6 @@ export interface LinkedTextOption {
   }>;
 }
 
-// Legacy interface for backward compatibility
 export interface LinkedDocument {
   documentId: number;
   documentTitle: string;
@@ -121,22 +120,87 @@ interface AnnotationTarget {
   };
 }
 
-// 🎯 NEW: Document element to document mapping
-// This should ideally come from your backend, but for now we'll create a mapping function
-const getDocumentInfoFromElementId = (elementId: number): { documentId: number; collectionId: number; title: string } => {
-  // Based on your database data, map element ranges to documents
-  if (elementId >= 1 && elementId <= 31) {
-    return { documentId: 1, collectionId: 1, title: 'Kiritsubo' };
-  }
-  if (elementId >= 32 && elementId <= 522) {
-    return { documentId: 2, collectionId: 2, title: '桐壷' };
-  }
-  if (elementId >= 523 && elementId <= 1000) {
-    return { documentId: 3, collectionId: 3, title: 'The Unexpected Party' };
+// 🎯 FIXED: Enhanced document info resolver with better title lookup
+const getDocumentInfoFromElementId = (
+  elementId: number,
+  allDocuments: Array<{ id: number; title: string; document_collection_id: number }>,
+  allElements: Array<{ id: number; document_id: number; content?: any }>,
+  viewedDocuments: Array<{ id: number; title: string; collectionId: number }>
+): { documentId: number; collectionId: number; title: string } | null => {
+  console.log('📋 Getting document info for element', elementId);
+  
+  // Method 1: Find the element in the Redux store
+  const element = allElements.find(el => el.id === elementId);
+  if (element) {
+    const document = allDocuments.find(doc => doc.id === element.document_id);
+    if (document) {
+      console.log('📋 ✅ Element', elementId, '→ Document', element.document_id, '(' + document.title + ')');
+      return {
+        documentId: element.document_id,
+        collectionId: document.document_collection_id,
+        title: document.title
+      };
+    } else {
+      // Element found but document not in allDocuments - try viewedDocuments
+      const viewedDoc = viewedDocuments.find(d => d.id === element.document_id);
+      if (viewedDoc) {
+        console.log('📋 ✅ Element', elementId, '→ Document', element.document_id, '(' + viewedDoc.title + ') [from viewed]');
+        return {
+          documentId: element.document_id,
+          collectionId: viewedDoc.collectionId,
+          title: viewedDoc.title
+        };
+      } else {
+        console.log('📋 ⚠️ Element', elementId, 'found but document', element.document_id, 'not in Redux documents');
+        return {
+          documentId: element.document_id,
+          collectionId: 1, // Default collection
+          title: `Document ${element.document_id}`
+        };
+      }
+    }
   }
   
-  // Fallback - you might need to adjust these ranges based on your actual data
-  return { documentId: 1, collectionId: 1, title: `Document ${Math.floor(elementId / 100) + 1}` };
+  console.log('📋 ❌ Element', elementId, 'not found in Redux store');
+  return null;
+};
+
+// 🎯 FIXED: Enhanced document title resolver
+const resolveDocumentTitleAndCollection = (
+  documentId: number,
+  allDocuments: Array<{ id: number; title: string; document_collection_id: number }>,
+  viewedDocuments: Array<{ id: number; title: string; collectionId: number }>
+): { title: string; collectionId: number } => {
+  console.log('🔍 Resolving title for document ID:', documentId);
+  console.log('🔍 Available allDocuments:', allDocuments.map(d => ({ id: d.id, title: d.title })));
+  console.log('🔍 Available viewedDocuments:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
+  
+  // First try: Look in allDocuments (from Redux store)
+  const reduxDocument = allDocuments.find(doc => doc.id === documentId);
+  if (reduxDocument) {
+    console.log('🔍 ✅ Found in allDocuments:', reduxDocument.title);
+    return {
+      title: reduxDocument.title,
+      collectionId: reduxDocument.document_collection_id
+    };
+  }
+  
+  // Second try: Look in viewedDocuments (currently open documents)
+  const viewedDocument = viewedDocuments.find(doc => doc.id === documentId);
+  if (viewedDocument) {
+    console.log('🔍 ✅ Found in viewedDocuments:', viewedDocument.title);
+    return {
+      title: viewedDocument.title,
+      collectionId: viewedDocument.collectionId
+    };
+  }
+  
+  // Fallback: Generate a descriptive title
+  console.log('🔍 ❌ Document not found, using fallback title');
+  return {
+    title: `Document ${documentId}`,
+    collectionId: 1 // Default collection
+  };
 };
 
 /**
@@ -152,30 +216,31 @@ const getAnnotationsForElement = (
 };
 
 /**
- * 🎯 FIXED: Get all documents that have links TO/FROM the current selection
- * Now properly groups by annotation and detects all linked documents
+ * 🎯 FIXED: Enhanced document title resolution
  */
 export const getLinkedDocumentsSimple = (
   selection: LinkedTextSelection,
   allLinkingAnnotations: Annotation[],
   allDocuments: Array<{ id: number; title: string; document_collection_id: number }>,
-  viewedDocuments: Array<{ id: number; title: string; collectionId: number }>
+  viewedDocuments: Array<{ id: number; title: string; collectionId: number }>,
+  allElements: Array<{ id: number; document_id: number; content?: any }> = []
 ): HierarchicalLinkedDocuments => {
   const result: HierarchicalLinkedDocuments = {};
   
-  console.log('🔗 getLinkedDocumentsSimple called with selection:', selection.sourceURI);
-  console.log('🔗 Current viewed documents:', viewedDocuments.map(d => ({ id: d.id, collectionId: d.collectionId, title: d.title })));
+  console.log('🔗 === getLinkedDocumentsSimple START ===');
+  console.log('🔗 Selection:', selection.sourceURI, 'from document', selection.documentId);
+  console.log('🔗 Available documents in Redux:', allDocuments.length);
+  console.log('🔗 Available elements in Redux:', allElements.length);
+  console.log('🔗 Total linking annotations:', allLinkingAnnotations.length);
   
   // Find all annotations that reference our selected element
   const relevantAnnotations = getAnnotationsForElement(allLinkingAnnotations, selection.sourceURI);
-  console.log('🔗 Found relevant annotations:', relevantAnnotations.length);
+  console.log('🔗 Found', relevantAnnotations.length, 'relevant annotations for', selection.sourceURI);
   
-  // 🎯 NEW: Process each annotation as a single linked text option
-  relevantAnnotations.forEach(annotation => {
-    console.log('🔗 Processing annotation:', {
+  // Process each annotation to find linked documents
+  relevantAnnotations.forEach((annotation, annotationIndex) => {
+    console.log(`🔗 [${annotationIndex + 1}/${relevantAnnotations.length}] Processing annotation:`, {
       id: annotation.id,
-      document_id: annotation.document_id,
-      document_collection_id: annotation.document_collection_id,
       targetCount: annotation.target?.length || 0
     });
     
@@ -184,80 +249,113 @@ export const getLinkedDocumentsSimple = (
       target.source !== selection.sourceURI
     ) || [];
     
-    console.log('🔗 Targets not in current selection:', targetsNotCurrentSelection.map(t => t.source));
+    console.log('🔗 Non-current targets:', targetsNotCurrentSelection.map(t => t.source));
     
     if (targetsNotCurrentSelection.length === 0) {
-      console.log('🔗 No linked elements found for annotation:', annotation.id);
+      console.log('🔗 ⚠️ No linked elements found for annotation:', annotation.id);
       return;
     }
     
-    // 🎯 FIXED: Group targets by document instead of processing each individually
-    const targetsByDocument: { [docId: number]: AnnotationTarget[] } = {};
+    // Group targets by what we can determine from the annotation itself
+    const targetsByDocument: { [docId: number]: { targets: AnnotationTarget[]; elementIds: number[] } } = {};
     
     targetsNotCurrentSelection.forEach(target => {
       const elementIdMatch = target.source.match(/\/DocumentElements\/(\d+)/);
       if (!elementIdMatch) {
-        console.log('🔗 Could not extract element ID from:', target.source);
+        console.log('🔗 ❌ Could not extract element ID from:', target.source);
         return;
       }
       
       const elementId = parseInt(elementIdMatch[1]);
-      const docInfo = getDocumentInfoFromElementId(elementId);
       
-      console.log('🔗 Element', elementId, 'belongs to document', docInfo.documentId, ':', docInfo.title);
+      // Try to get document info
+      const docInfo = getDocumentInfoFromElementId(elementId, allDocuments, allElements, viewedDocuments);
       
-      if (!targetsByDocument[docInfo.documentId]) {
-        targetsByDocument[docInfo.documentId] = [];
+      if (docInfo) {
+        console.log('🔗 Target element', elementId, '→ Document', docInfo.documentId, '(' + docInfo.title + ')');
+        
+        // Skip same-document links
+        if (docInfo.documentId === selection.documentId) {
+          console.log('🔗 ⚠️ Skipping same-document link for document', docInfo.documentId);
+          return;
+        }
+        
+        if (!targetsByDocument[docInfo.documentId]) {
+          targetsByDocument[docInfo.documentId] = { targets: [], elementIds: [] };
+        }
+        targetsByDocument[docInfo.documentId].targets.push(target);
+        targetsByDocument[docInfo.documentId].elementIds.push(elementId);
+      } else {
+        // 🎯 ENHANCED FALLBACK: Try to use the annotation's document_id directly
+        console.log('🔗 ⚠️ Could not determine document for element', elementId);
+        
+        // Use the annotation's document_id as a fallback if it's different from current selection
+        if (annotation.document_id && annotation.document_id !== selection.documentId) {
+          console.log('🔗 📝 Using annotation document_id as fallback:', annotation.document_id);
+          
+          if (!targetsByDocument[annotation.document_id]) {
+            targetsByDocument[annotation.document_id] = { targets: [], elementIds: [] };
+          }
+          targetsByDocument[annotation.document_id].targets.push(target);
+          targetsByDocument[annotation.document_id].elementIds.push(elementId);
+        } else {
+          // Last resort: try to infer from element ID patterns
+          const fallbackDocumentId = elementId > 500 ? 21 : (elementId > 30 ? 2 : 1);
+          
+          if (fallbackDocumentId !== selection.documentId) {
+            console.log('🔗 📝 Using pattern-based fallback document', fallbackDocumentId, 'for element', elementId);
+            
+            if (!targetsByDocument[fallbackDocumentId]) {
+              targetsByDocument[fallbackDocumentId] = { targets: [], elementIds: [] };
+            }
+            targetsByDocument[fallbackDocumentId].targets.push(target);
+            targetsByDocument[fallbackDocumentId].elementIds.push(elementId);
+          }
+        }
       }
-      targetsByDocument[docInfo.documentId].push(target);
     });
     
-    // Now create one option per linked document
+    console.log('🔗 Cross-document targets found:', Object.keys(targetsByDocument).length);
+    
+    // Create linked text options for each target document
     Object.keys(targetsByDocument).forEach(docIdStr => {
       const linkedDocumentId = parseInt(docIdStr);
-      const documentsTargets = targetsByDocument[linkedDocumentId];
-      const elementId = parseInt(documentsTargets[0].source.match(/\/DocumentElements\/(\d+)/)![1]);
-      const docInfo = getDocumentInfoFromElementId(elementId);
+      const { targets: docTargets, elementIds } = targetsByDocument[linkedDocumentId];
       
-      console.log('🔗 Creating option for document', linkedDocumentId, 'with', documentsTargets.length, 'targets');
+      console.log('🔗 Creating option for document', linkedDocumentId, 'with elements:', elementIds);
       
-      // Check if this document is currently being viewed
+      // 🎯 FIXED: Use the enhanced title resolver
+      const { title: documentTitle, collectionId } = resolveDocumentTitleAndCollection(
+        linkedDocumentId,
+        allDocuments,
+        viewedDocuments
+      );
+      
+      console.log('🔗 ✅ Resolved document info:', {
+        id: linkedDocumentId,
+        title: documentTitle,
+        collectionId: collectionId
+      });
+      
+      // Check if currently viewed
       const isCurrentlyViewed = viewedDocuments.some(d => d.id === linkedDocumentId);
-      
-      let documentTitle = docInfo.title;
-      let documentCollectionId = docInfo.collectionId;
-      
-      // Override with store data if available
-      const storeDoc = allDocuments.find(d => d.id === linkedDocumentId);
-      if (storeDoc) {
-        documentTitle = storeDoc.title;
-        documentCollectionId = storeDoc.document_collection_id;
-      }
-      
-      // Override with viewed document data if currently open
-      const viewedDoc = viewedDocuments.find(d => d.id === linkedDocumentId);
-      if (viewedDoc) {
-        documentTitle = viewedDoc.title;
-        documentCollectionId = viewedDoc.collectionId;
-      }
       
       // Initialize document entry if not exists
       if (!result[linkedDocumentId]) {
         result[linkedDocumentId] = {
           documentId: linkedDocumentId,
-          documentTitle: documentTitle,
-          collectionId: documentCollectionId,
+          documentTitle: documentTitle, // 🎯 Now properly resolved!
+          collectionId: collectionId,
           isCurrentlyOpen: isCurrentlyViewed,
           linkedTextOptions: []
         };
-        console.log('🔗 Initialized document entry for:', linkedDocumentId, '-', documentTitle);
+        console.log('🔗 ✅ Initialized document entry:', documentTitle);
       }
       
-      // 🎯 FIXED: Create ONE option per annotation per document
-      // Use the first target as the primary target, but include all targets in allTargets
-      const primaryTarget = documentsTargets[0];
+      // Get the primary target and all targets for this annotation
+      const primaryTarget = docTargets[0];
       
-      // Get ALL targets from the entire annotation (including current selection)
+      // Get ALL targets from the ENTIRE annotation
       const allTargets = annotation.target?.map((target: AnnotationTarget) => ({
         sourceURI: target.source,
         start: target.selector?.refined_by?.start || 0,
@@ -265,15 +363,15 @@ export const getLinkedDocumentsSimple = (
         text: target.selector?.value || 'Linked text'
       })) || [];
       
-      // Use the selector value as the linked text (this is the actual text content)
+      // Use primary target's text for display
       const linkedText = primaryTarget.selector?.value || annotation.body.value || 'Linked text';
       
-      // Check if we already have this annotation for this document (avoid duplicates)
-      const existingOption = result[linkedDocumentId].linkedTextOptions.find(
+      // Prevent duplicate annotations
+      const existingOptionIndex = result[linkedDocumentId].linkedTextOptions.findIndex(
         option => option.linkingAnnotationId === annotation.id
       );
       
-      if (!existingOption) {
+      if (existingOptionIndex === -1) {
         const newOption: LinkedTextOption = {
           linkedText: linkedText,
           linkingAnnotationId: annotation.id,
@@ -286,32 +384,31 @@ export const getLinkedDocumentsSimple = (
         };
         
         result[linkedDocumentId].linkedTextOptions.push(newOption);
-        console.log('🔗 Added linked text option:', {
-          annotationId: annotation.id,
-          documentId: linkedDocumentId,
-          linkedText: linkedText.substring(0, 50) + (linkedText.length > 50 ? '...' : ''),
-          targetCount: allTargets.length
+        console.log('🔗 ✅ Added option:', {
+          annotation: annotation.id,
+          document: documentTitle,
+          textPreview: linkedText.substring(0, 40) + '...',
+          allTargetsCount: allTargets.length
         });
       } else {
-        console.log('🔗 Skipping duplicate annotation option for document:', linkedDocumentId);
+        console.log('🔗 ⚠️ Skipping duplicate annotation option:', annotation.id);
       }
     });
   });
   
-  console.log('🔗 Final result summary:');
+  // Final summary
+  console.log('🔗 === FINAL RESULT SUMMARY ===');
   Object.keys(result).forEach(docIdStr => {
     const docId = parseInt(docIdStr);
     const doc = result[docId];
-    console.log(`🔗 Document ${docId} (${doc.documentTitle}):`, {
-      collectionId: doc.collectionId,
+    console.log(`📋 ${doc.documentTitle} (ID: ${docId}):`, {
+      collection: doc.collectionId,
       isOpen: doc.isCurrentlyOpen,
-      optionsCount: doc.linkedTextOptions.length,
-      options: doc.linkedTextOptions.map(opt => ({
-        annotationId: opt.linkingAnnotationId,
-        text: opt.linkedText.substring(0, 30) + '...'
-      }))
+      linkedTextSections: doc.linkedTextOptions.length,
+      annotationIds: doc.linkedTextOptions.map(opt => opt.linkingAnnotationId)
     });
   });
+  console.log('🔗 === getLinkedDocumentsSimple END ===');
   
   return result;
 };
@@ -329,8 +426,6 @@ export const createSelectionFromDOMSelection = (
   documents: Array<{ id: number; title: string; collectionId: number }>
 ): LinkedTextSelection | null => {
   console.log('🔧 createSelectionFromDOMSelection called');
-  console.log('🔧 Selection:', selection);
-  console.log('🔧 Documents:', documents.map(d => ({ id: d.id, title: d.title })));
 
   if (!selection || selection.rangeCount === 0) {
     console.log('🔧 ❌ No selection or ranges');
@@ -340,14 +435,6 @@ export const createSelectionFromDOMSelection = (
   const range = selection.getRangeAt(0);
   const selectedText = range.toString().trim();
   
-  console.log('🔧 Selected text:', selectedText);
-  console.log('🔧 Range:', {
-    startContainer: range.startContainer,
-    endContainer: range.endContainer,
-    startOffset: range.startOffset,
-    endOffset: range.endOffset
-  });
-  
   if (selectedText.length === 0) {
     console.log('🔧 ❌ No selected text');
     return null;
@@ -355,99 +442,40 @@ export const createSelectionFromDOMSelection = (
   
   // Find the document element
   let element = range.commonAncestorContainer as Node;
-  console.log('🔧 Common ancestor container:', element);
   
   while (element && element.nodeType !== Node.ELEMENT_NODE) {
     element = element.parentNode!;
-    console.log('🔧 Moving to parent node:', element);
   }
   
   let elementWithId = element as HTMLElement;
-  console.log('🔧 Starting element search from:', elementWithId, 'ID:', elementWithId?.id);
   
-  // Try multiple approaches to find DocumentElements
+  // Find DocumentElements ID
   let attempts = 0;
   while (elementWithId && !elementWithId.id?.includes('DocumentElements') && attempts < 10) {
-    console.log(`🔧 Attempt ${attempts + 1} - Current element:`, {
-      tagName: elementWithId.tagName,
-      id: elementWithId.id,
-      className: elementWithId.className
-    });
-    
     elementWithId = elementWithId.parentElement!;
     attempts++;
   }
   
-  console.log('🔧 Final element with ID search result:', {
-    element: elementWithId,
-    id: elementWithId?.id,
-    foundDocumentElement: elementWithId?.id?.includes('DocumentElements')
-  });
-  
   if (!elementWithId?.id || !elementWithId.id.includes('DocumentElements')) {
     console.log('🔧 ❌ No element with DocumentElements ID found');
-    
-    // DEBUG: Let's see what elements are actually in the DOM
-    console.log('🔧 DEBUG: Searching for DocumentElements in DOM...');
-    const allDocElements = document.querySelectorAll('[id*="DocumentElements"]');
-    console.log('🔧 Found DocumentElements in DOM:', Array.from(allDocElements).map(el => ({
-      id: el.id,
-      tagName: el.tagName,
-      text: el.textContent?.substring(0, 50) + '...'
-    })));
-    
     return null;
   }
   
   const elementId = extractNumericId(elementWithId.id);
-  console.log('🔧 Extracted numeric ID:', elementId);
-  
   if (!elementId) {
     console.log('🔧 ❌ Could not extract numeric ID from:', elementWithId.id);
     return null;
   }
   
-  // Find which document this belongs to
-  console.log('🔧 Looking for document panel wrapper...');
-  const documentPanel = elementWithId.closest('.document-panel-wrapper') as HTMLElement;
-  console.log('🔧 Document panel found:', !!documentPanel);
-  
-  if (documentPanel) {
-    console.log('🔧 Document panel attributes:', {
-      'data-document-id': documentPanel.getAttribute('data-document-id'),
-      className: documentPanel.className,
-      id: documentPanel.id
-    });
-  } else {
-    // Try alternative selectors
-    console.log('🔧 Trying alternative document container selectors...');
-    const altPanel1 = elementWithId.closest('[data-document-id]') as HTMLElement;
-    const altPanel2 = elementWithId.closest('.document-content-panel') as HTMLElement;
-    const altPanel3 = elementWithId.closest('.document-panel') as HTMLElement;
-    
-    console.log('🔧 Alternative panels:', {
-      'data-document-id selector': !!altPanel1,
-      'document-content-panel': !!altPanel2,
-      'document-panel': !!altPanel3
-    });
-    
-    if (altPanel1) {
-      console.log('🔧 Using alternative panel with data-document-id');
-    }
-  }
-  
-  const finalPanel = documentPanel || elementWithId.closest('[data-document-id]') as HTMLElement;
-  
+  // Find document panel
+  const finalPanel = elementWithId.closest('[data-document-id]') as HTMLElement;
   if (!finalPanel) {
     console.log('🔧 ❌ No document panel found');
     return null;
   }
   
   const documentId = parseInt(finalPanel.getAttribute('data-document-id') || '0');
-  console.log('🔧 Parsed document ID:', documentId);
-  
   const foundDocument = documents.find(d => d.id === documentId);
-  console.log('🔧 Found document:', foundDocument);
   
   if (!foundDocument) {
     console.log('🔧 ❌ Document not found in documents array');

@@ -1,61 +1,72 @@
-export { 
-    commentingAnnotations, 
-    replyingAnnotations, 
-    scholarlyAnnotations, 
-    taggingAnnotations,
-    upvoteAnnotations,
-    sliceMap,
-    linkingAnnotations
+export {      
+    commentingAnnotations,      
+    replyingAnnotations,      
+    scholarlyAnnotations,      
+    taggingAnnotations,     
+    upvoteAnnotations,     
+    sliceMap,     
+    linkingAnnotations 
 } from './annotationSlices'
-export {  
-    registerHighlight, 
-    updateHighlightPosition, 
-    removeHighlight,
-    setHoveredHighlights ,
-    selectHoveredHighlightIds
-} from './highlightRegistrySlice' 
 
-export * from './annotationCreate'
+export {       
+    registerHighlight,      
+    updateHighlightPosition,      
+    removeHighlight,     
+    setHoveredHighlights,     
+    selectHoveredHighlightIds 
+} from './highlightRegistrySlice'   
 
-export {
-    createDocumentCollection,
-    clearCollections,
-    fetchDocumentCollections,
-    selectAllDocumentCollections,
-    selectDocumentCollectionsStatus,
-    selectDocumentCollectionsError
-} from './documentCollectionSlice'
+export * from './annotationCreate'  
 
-export type {DocumentCollectionCreate, Hierarchy, CollectionMetadata} from './documentCollectionSlice'
+export {     
+    createDocumentCollection,     
+    clearCollections,     
+    fetchDocumentCollections,     
+    selectAllDocumentCollections,     
+    selectDocumentCollectionsStatus,     
+    selectDocumentCollectionsError 
+} from './documentCollectionSlice'  
 
+export type {
+    DocumentCollectionCreate, 
+    Hierarchy, 
+    CollectionMetadata
+} from './documentCollectionSlice'   
 
-export {
-    createDocument,
+export {     
+    createDocument,     
     clearDocuments,
-    setSelectedCollectionId,
+    clearAllDocuments, // 🎯 NEW
+    setSelectedCollectionId,     
     fetchDocumentsByCollection,
+    fetchAllDocuments, // 🎯 NEW
+    fetchAllDocumentsByCollections, // 🎯 NEW
+    addToAllDocuments, // 🎯 NEW
     selectAllDocuments,
+    selectCollectionDocuments, // 🎯 NEW     
     selectDocumentsStatus,
-    selectDocumentsError,
-    selectSelectedCollectionId
-} from './documentSlice'
+    selectAllDocumentsStatus, // 🎯 NEW     
+    selectDocumentsError,     
+    selectSelectedCollectionId,
+    selectDocumentById // 🎯 NEW
+} from './documentSlice'  
 
-export {
-    setActiveParagraph,
-    clearActiveParagraph,
-    selectActiveParagraphId
-} from './documentNavigationSlice'
+export {     
+    setActiveParagraph,     
+    clearActiveParagraph,     
+    selectActiveParagraphId 
+} from './documentNavigationSlice'  
 
-export {
-    fetchDocumentElements,
-    clearElements,
-    setCurrentDocumentId,
-    selectElementsByDocumentId,
-    selectDocumentStatusById,
-    selectDocumentErrorById,
-    selectCurrentDocumentId,
-    // Legacy selectors for backward compatibility
-    // selectAllDocumentElements,
-    // selectDocumentElementsStatus,
-    // selectDocumentElementsError
+export {     
+    fetchDocumentElements,     
+    clearElements,     
+    setCurrentDocumentId,     
+    selectElementsByDocumentId,     
+    selectDocumentStatusById,     
+    selectDocumentErrorById,     
+    selectCurrentDocumentId,     
+    // Legacy selectors for backward compatibility     
+    // selectAllDocumentElements,     
+    // selectDocumentElementsStatus,     
+    // selectDocumentElementsError 
 } from './documentElementsSlice'

@@ -1,13 +1,14 @@
 // src/features/documentGallery/DocumentViewerContainer.tsx
-// FIXED VERSION - Proper exports and structure
+// CRITICAL FIXES - Single click functionality and atomic state updates
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import { 
   setSelectedCollectionId as setReduxSelectedCollectionId, 
   fetchDocumentsByCollection,
   fetchDocumentCollections,
+  fetchAllDocuments,
   selectAllDocuments,
   selectAllDocumentCollections
 } from "@store";
@@ -71,13 +72,16 @@ export const DocumentsView: React.FC = () => {
   );
 };
 
-// 🎯 FIXED: Main document content view component - NOW PROPERLY EXPORTED
+// 🎯 CRITICAL FIX: Main document content view component with single-click functionality
 export const DocumentContentView: React.FC = () => {
   const { collectionId, documentId } = useParams<{ collectionId: string; documentId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
-  // State to track the documents being viewed - NOW INCLUDES TITLE
+  // 🎯 FIX: Use useRef for atomic state updates
+  const isUpdatingDocuments = useRef(false);
+  
+  // State to track the documents being viewed
   const [viewedDocuments, setViewedDocuments] = useState<Array<{
     id: number, 
     collectionId: number,
@@ -90,7 +94,7 @@ export const DocumentContentView: React.FC = () => {
   }>({});
   const [isLinkingModeActive, setIsLinkingModeActive] = useState(false);
   
-  // State to track pending scroll target (for when a document is opened via linked text)
+  // 🎯 CRITICAL FIX: Simplified pending scroll target state
   const [pendingScrollTarget, setPendingScrollTarget] = useState<{
     documentId: number;
     targetInfo: {
@@ -117,7 +121,7 @@ export const DocumentContentView: React.FC = () => {
   // Track loading state
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   
-  // State for document selection dropdown - renamed to avoid conflicts
+  // State for document selection dropdown
   const [localSelectedCollectionId, setLocalSelectedCollectionId] = useState<number>(Number(collectionId));
   
   // State for management panel collapse
@@ -129,8 +133,46 @@ export const DocumentContentView: React.FC = () => {
   // State for showing linked text highlights
   const [showLinkedTextHighlights, setShowLinkedTextHighlights] = useState(false);
 
-  // 🎯 NEW: State to track if we're in comparison mode
+  // State to track if we're in comparison mode
   const [comparisonDocumentId, setComparisonDocumentId] = useState<number | null>(null);
+
+  const getElementBasedDocumentTitle = useCallback((documentId: number): string | null => {
+    // Try to find the document in Redux store first
+    const document = documents.find(doc => doc.id === documentId);
+    if (document && document.title && !document.title.includes('Document ')) {
+      return document.title;
+    }
+    
+    // Try to find in documentsByCollection cache
+    for (const collectionId in documentsByCollection) {
+      const doc = documentsByCollection[collectionId].find(d => d.id === documentId);
+      if (doc && doc.title && !doc.title.includes('Document ')) {
+        return doc.title;
+      }
+    }
+    
+    // Try to find in viewedDocuments
+    const viewedDoc = viewedDocuments.find(doc => doc.id === documentId);
+    if (viewedDoc && viewedDoc.title && !viewedDoc.title.includes('Document ')) {
+      return viewedDoc.title;
+    }
+    
+    return null; // Let the API response provide the title
+  }, [documents, documentsByCollection, viewedDocuments]);
+
+  useEffect(() => {
+    console.log('🎯 Dispatching fetchAllDocuments for linked text functionality...');
+    dispatch(fetchAllDocuments())
+      .unwrap()
+      .then((allDocuments) => {
+        console.log('🎯 ✅ Successfully loaded', allDocuments.length, 'documents for linked text');
+        console.log('🎯 Document titles:', allDocuments.map(doc => ({ id: doc.id, title: doc.title })));
+      })
+      .catch((error) => {
+        console.warn('🎯 ⚠️ Failed to load all documents for linked text:', error);
+        console.warn('🎯 Linked text titles may fall back to generic names');
+      });
+  }, [dispatch]);
   
   // Fetch document collections when component mounts
   useEffect(() => {
@@ -191,8 +233,8 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [localSelectedCollectionId, collectionId, documentsByCollection, dispatch]);
   
-  // ENHANCED: Helper function to get document title with better caching
-  const getDocumentTitle = (docId: number, docCollectionId: number): string => {
+  // 🎯 CRITICAL FIX: Helper function to get document title without circular dependency
+  const getDocumentTitle = useCallback((docId: number, docCollectionId: number): string => {
     // Method 1: Check documentsByCollection cache
     const docInCache = documentsByCollection[docCollectionId]?.find(d => d.id === docId);
     if (docInCache) {
@@ -205,17 +247,11 @@ export const DocumentContentView: React.FC = () => {
       return docInRedux.title;
     }
     
-    // Method 3: Check currently viewed documents
-    const viewedDoc = viewedDocuments.find(d => d.id === docId);
-    if (viewedDoc) {
-      return viewedDoc.title;
-    }
-    
-    // Fallback
+    // Fallback - don't check viewedDocuments to avoid circular dependency
     return `Document ${docId}`;
-  };
+  }, [documentsByCollection, documents]); // 🎯 REMOVED viewedDocuments dependency
   
-  // Set up initial document view when params change
+  // 🎯 CRITICAL FIX: Remove getDocumentTitle from dependency to prevent infinite loop
   useEffect(() => {
     if (documentId && collectionId) {
       const docId = Number(documentId);
@@ -223,18 +259,33 @@ export const DocumentContentView: React.FC = () => {
       
       console.log('📄 Setting up initial document view:', { docId, colId });
       
+      // 🎯 CRITICAL: Get title directly without relying on getDocumentTitle callback
+      let initialTitle = `Document ${docId}`; // Fallback
+      
+      // Try to get from documentsByCollection cache
+      const docInCache = documentsByCollection[colId]?.find(d => d.id === docId);
+      if (docInCache) {
+        initialTitle = docInCache.title;
+      } else {
+        // Try to get from Redux store
+        const docInRedux = documents.find(d => d.id === docId);
+        if (docInRedux) {
+          initialTitle = docInRedux.title;
+        }
+      }
+      
       setViewedDocuments([{
         id: docId,
         collectionId: colId,
-        title: getDocumentTitle(docId, colId)
+        title: initialTitle
       }]);
       
       // Reset comparison state
       setComparisonDocumentId(null);
     }
-  }, [documentId, collectionId, documentsByCollection, documents]);
+  }, [documentId, collectionId, documentsByCollection, documents]); // 🎯 REMOVED getDocumentTitle
 
-  // 🎯 NEW: Sync viewedDocuments with comparisonDocumentId
+  // Sync viewedDocuments with comparisonDocumentId
   useEffect(() => {
     if (viewedDocuments.length === 2) {
       // We have a comparison document - update the comparison state
@@ -248,21 +299,225 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [viewedDocuments]);
   
-  // Handle scrolling to text when document is loaded - ENHANCED to support allTargets
+  // 🎯 CRITICAL FIX: Handle scrolling with better timing and error handling
   useEffect(() => {
     if (pendingScrollTarget && viewedDocuments.some(doc => doc.id === pendingScrollTarget.documentId)) {
-      // Document is now loaded, scroll to the target text
-      console.log('🔄 Executing pending scroll with allTargets:', pendingScrollTarget.allTargets?.length || 0);
+      console.log('🔄 Document loaded, executing pending scroll with allTargets:', pendingScrollTarget.allTargets?.length || 0);
       
-      setTimeout(() => {
-        scrollToAndHighlightText(pendingScrollTarget.targetInfo, pendingScrollTarget.allTargets);
-        setPendingScrollTarget(null);
-      }, 1000); // Wait for document content to render
+      // Use a longer timeout and more robust checking
+      const scrollTimeout = setTimeout(() => {
+        try {
+          // Check if the document content is actually rendered
+          const documentPanel = document.querySelector(`[data-document-id="${pendingScrollTarget.documentId}"]`);
+          if (documentPanel) {
+            console.log('🔄 Document panel found, executing scroll');
+            scrollToAndHighlightText(pendingScrollTarget.targetInfo, pendingScrollTarget.allTargets);
+            setPendingScrollTarget(null);
+          } else {
+            console.warn('🔄 Document panel not found yet, will retry');
+            // Retry after a longer delay
+            setTimeout(() => {
+              console.log('🔄 Retrying scroll to target');
+              scrollToAndHighlightText(pendingScrollTarget.targetInfo, pendingScrollTarget.allTargets);
+              setPendingScrollTarget(null);
+            }, 2000);
+          }
+        } catch (error) {
+          console.error('🔄 Error executing scroll:', error);
+          setPendingScrollTarget(null);
+        }
+      }, 1500); // Increased from 1000ms to 1500ms
+      
+      return () => clearTimeout(scrollTimeout);
     }
   }, [pendingScrollTarget, viewedDocuments]);
+
+  // 🎯 CRITICAL FIX: Atomic document addition with proper state management
+  const addLinkedDocumentAsSecondary = useCallback(async (
+    linkedDocumentId: number,
+    linkedCollectionId: number,
+    targetInfo: {
+      sourceURI: string;
+      start: number;
+      end: number;
+    },
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>
+  ) => {
+    // 🎯 CRITICAL: Prevent concurrent updates
+    if (isUpdatingDocuments.current) {
+      console.log('➕ Document update already in progress, skipping');
+      return;
+    }
+    
+    isUpdatingDocuments.current = true;
+    console.log('➕ === ADDING LINKED DOCUMENT AS SECONDARY ===');
+    console.log('➕ Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
+    
+    try {
+      // Get the document title
+      let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
+      console.log('➕ Initial document title:', linkedDocTitle);
+      
+      // If we don't have the document in our cache, fetch the collection
+      if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
+        console.log('➕ === FETCHING COLLECTION FOR METADATA ===', linkedCollectionId);
+        setIsLoadingDocuments(true);
+        
+        try {
+          const payload = await dispatch(fetchDocumentsByCollection(linkedCollectionId)).unwrap();
+          console.log('➕ Fetched collection documents:', payload.documents.map(d => ({ id: d.id, title: d.title })));
+          
+          // Update documents cache
+          setDocumentsByCollection(prev => ({
+            ...prev,
+            [linkedCollectionId]: payload.documents.map(doc => ({
+              id: doc.id,
+              title: doc.title
+            }))
+          }));
+          
+          // Update the title with fresh data
+          const freshDoc = payload.documents.find(d => d.id === linkedDocumentId);
+          linkedDocTitle = freshDoc ? freshDoc.title : `Document ${linkedDocumentId}`;
+          console.log('➕ Updated document title after fetch:', linkedDocTitle);
+        } catch (error) {
+          console.error('➕ Failed to fetch collection for linked document:', error);
+          linkedDocTitle = `Document ${linkedDocumentId}`; // Fallback title
+        } finally {
+          setIsLoadingDocuments(false);
+        }
+      }
+      
+      console.log('➕ === ADDING DOCUMENT TO VIEWED LIST ===');
+      // 🎯 CRITICAL FIX: Atomic state update
+      setViewedDocuments(prev => {
+        const newDoc = {
+          id: linkedDocumentId,
+          collectionId: linkedCollectionId,
+          title: linkedDocTitle
+        };
+        const newList = [...prev, newDoc];
+        console.log('➕ New viewed documents:', newList.map(d => d.title));
+        return newList;
+      });
+      
+      // Set up pending scroll target immediately after state update
+      console.log('➕ === SETTING PENDING SCROLL TARGET ===');
+      setPendingScrollTarget({
+        documentId: linkedDocumentId,
+        targetInfo,
+        allTargets
+      });
+      
+    } finally {
+      // 🎯 CRITICAL: Always reset the update flag
+      isUpdatingDocuments.current = false;
+    }
+  }, [dispatch, documentsByCollection, getDocumentTitle]);
+
+  const replaceSecondaryDocument = useCallback(async (
+    linkedDocumentId: number,
+    linkedCollectionId: number,
+    targetInfo: {
+      sourceURI: string;
+      start: number;
+      end: number;
+    },
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>
+  ) => {
+    // 🎯 CRITICAL: Prevent concurrent updates
+    if (isUpdatingDocuments.current) {
+      console.log('🔄 Document update already in progress, skipping');
+      return;
+    }
+    
+    isUpdatingDocuments.current = true;
+    console.log('🔄 === REPLACING SECONDARY DOCUMENT ===');
+    console.log('🔄 Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
+    
+    try {
+      // Get the document title
+      let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
+      
+      // If we don't have the document in our cache, fetch the collection
+      if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
+        console.log('🔄 Fetching collection for document metadata:', linkedCollectionId);
+        setIsLoadingDocuments(true);
+        
+        try {
+          const payload = await dispatch(fetchDocumentsByCollection(linkedCollectionId)).unwrap();
+          setDocumentsByCollection(prev => ({
+            ...prev,
+            [linkedCollectionId]: payload.documents.map(doc => ({
+              id: doc.id,
+              title: doc.title
+            }))
+          }));
+          
+          // 🎯 CRITICAL FIX: Use element-based mapping to get correct title
+          const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
+          linkedDocTitle = elementBasedTitle || getDocumentTitle(linkedDocumentId, linkedCollectionId);
+        } catch (error) {
+          console.error('🔄 Failed to fetch collection for linked document:', error);
+          linkedDocTitle = `Document ${linkedDocumentId}`; // Fallback title
+        } finally {
+          setIsLoadingDocuments(false);
+        }
+      } else {
+        // 🎯 CRITICAL FIX: Even if we have cache, use element-based mapping for accurate titles
+        const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
+        if (elementBasedTitle) {
+          linkedDocTitle = elementBasedTitle;
+          console.log('🔄 Using element-based title:', linkedDocTitle);
+        }
+      }
+      
+      // 🎯 CRITICAL FIX: Atomic replacement
+      const primaryDocument = viewedDocuments[0];
+      
+      setViewedDocuments([
+        primaryDocument,
+        {
+          id: linkedDocumentId,
+          collectionId: linkedCollectionId,
+          title: linkedDocTitle
+        }
+      ]);
+      
+      // Clear any pending scroll target for the old secondary document
+      if (pendingScrollTarget && viewedDocuments.length > 1) {
+        const oldSecondaryId = viewedDocuments[1].id;
+        if (pendingScrollTarget.documentId === oldSecondaryId) {
+          setPendingScrollTarget(null);
+        }
+      }
+      
+      // Set up pending scroll target for the new document
+      console.log('🔄 Setting pending scroll target for replacement document');
+      setPendingScrollTarget({
+        documentId: linkedDocumentId,
+        targetInfo,
+        allTargets
+      });
+      
+    } finally {
+      // 🎯 CRITICAL: Always reset the update flag
+      isUpdatingDocuments.current = false;
+    }
+  }, [dispatch, documentsByCollection, getDocumentTitle, getElementBasedDocumentTitle, viewedDocuments, pendingScrollTarget]);
   
-  // 🎯 ENHANCED: Handle opening a linked document with proper comparison mode integration
-  const handleOpenLinkedDocument = async (
+  // 🎯 CRITICAL FIX: Enhanced handleOpenLinkedDocument with better error handling and logging
+  const handleOpenLinkedDocument = useCallback(async (
     linkedDocumentId: number, 
     linkedCollectionId: number, 
     targetInfo: {
@@ -283,6 +538,13 @@ export const DocumentContentView: React.FC = () => {
     console.log('🔗 Current viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
     console.log('🔗 Target Info:', targetInfo);
     console.log('🔗 All Targets Count:', allTargets?.length || 0);
+    console.log('🔗 Update in progress:', isUpdatingDocuments.current);
+    
+    // 🎯 CRITICAL: Prevent multiple calls while updating
+    if (isUpdatingDocuments.current) {
+      console.log('🔗 ⚠️ Update already in progress, skipping call');
+      return;
+    }
     
     // Check if the document is already being viewed
     const isAlreadyViewed = viewedDocuments.some(doc => doc.id === linkedDocumentId);
@@ -291,175 +553,37 @@ export const DocumentContentView: React.FC = () => {
     if (isAlreadyViewed) {
       // Document is already open, just scroll to the target text
       console.log('🔗 === SCROLLING TO EXISTING DOCUMENT ===');
-      scrollToAndHighlightText(targetInfo, allTargets);
+      try {
+        scrollToAndHighlightText(targetInfo, allTargets);
+      } catch (error) {
+        console.error('🔗 Error scrolling to existing document:', error);
+      }
     } else {
       console.log('🔗 === OPENING NEW DOCUMENT ===');
       console.log('🔗 Current document count:', viewedDocuments.length);
       
-      if (viewedDocuments.length === 1) {
-        // Only one document open - add as secondary document
-        console.log('🔗 === ADDING AS SECONDARY DOCUMENT ===');
-        await addLinkedDocumentAsSecondary(linkedDocumentId, linkedCollectionId, targetInfo, allTargets);
-      } else if (viewedDocuments.length === 2) {
-        // Two documents open - replace the secondary document
-        console.log('🔗 === REPLACING SECONDARY DOCUMENT ===');
-        await replaceSecondaryDocument(linkedDocumentId, linkedCollectionId, targetInfo, allTargets);
+      try {
+        if (viewedDocuments.length === 1) {
+          // Only one document open - add as secondary document
+          console.log('🔗 === ADDING AS SECONDARY DOCUMENT ===');
+          await addLinkedDocumentAsSecondary(linkedDocumentId, linkedCollectionId, targetInfo, allTargets);
+        } else if (viewedDocuments.length === 2) {
+          // Two documents open - replace the secondary document
+          console.log('🔗 === REPLACING SECONDARY DOCUMENT ===');
+          await replaceSecondaryDocument(linkedDocumentId, linkedCollectionId, targetInfo, allTargets);
+        } else {
+          console.warn('🔗 ⚠️ Unexpected document count:', viewedDocuments.length);
+        }
+      } catch (error) {
+        console.error('🔗 Error opening linked document:', error);
       }
     }
     
     console.log('🔗 === DOCUMENT VIEWER: handleOpenLinkedDocument completed ===');
-  };
-  
-  // NEW: Helper function to add a linked document as secondary
-  const addLinkedDocumentAsSecondary = async (
-    linkedDocumentId: number,
-    linkedCollectionId: number,
-    targetInfo: {
-      sourceURI: string;
-      start: number;
-      end: number;
-    },
-    allTargets?: Array<{
-      sourceURI: string;
-      start: number;
-      end: number;
-      text: string;
-    }>
-  ) => {
-    console.log('➕ === ADDING LINKED DOCUMENT AS SECONDARY ===');
-    console.log('➕ Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
-    
-    // First, ensure we have the document metadata
-    let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
-    console.log('➕ Initial document title:', linkedDocTitle);
-    
-    // If we don't have the document in our cache, fetch the collection
-    if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
-      console.log('➕ === FETCHING COLLECTION FOR METADATA ===', linkedCollectionId);
-      setIsLoadingDocuments(true);
-      
-      try {
-        const payload = await dispatch(fetchDocumentsByCollection(linkedCollectionId)).unwrap();
-        console.log('➕ Fetched collection documents:', payload.documents.map(d => ({ id: d.id, title: d.title })));
-        
-        setDocumentsByCollection(prev => ({
-          ...prev,
-          [linkedCollectionId]: payload.documents.map(doc => ({
-            id: doc.id,
-            title: doc.title
-          }))
-        }));
-        
-        // Update the title with fresh data
-        linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
-        console.log('➕ Updated document title after fetch:', linkedDocTitle);
-      } catch (error) {
-        console.error('➕ Failed to fetch collection for linked document:', error);
-      } finally {
-        setIsLoadingDocuments(false);
-      }
-    }
-    
-    console.log('➕ === ADDING DOCUMENT TO VIEWED LIST ===');
-    // Add the document to viewed documents
-    setViewedDocuments(prev => {
-      const newDoc = {
-        id: linkedDocumentId,
-        collectionId: linkedCollectionId,
-        title: linkedDocTitle
-      };
-      console.log('➕ Adding document:', newDoc);
-      console.log('➕ Previous viewed documents:', prev.map(d => ({ id: d.id, title: d.title })));
-      const newList = [...prev, newDoc];
-      console.log('➕ New viewed documents:', newList.map(d => ({ id: d.id, title: d.title })));
-      return newList;
-    });
-    
-    // Set up pending scroll target
-    console.log('➕ === SETTING PENDING SCROLL TARGET ===');
-    setPendingScrollTarget({
-      documentId: linkedDocumentId,
-      targetInfo,
-      allTargets
-    });
-  };
-  
-  // NEW: Helper function to replace the secondary document
-  const replaceSecondaryDocument = async (
-    linkedDocumentId: number,
-    linkedCollectionId: number,
-    targetInfo: {
-      sourceURI: string;
-      start: number;
-      end: number;
-    },
-    allTargets?: Array<{
-      sourceURI: string;
-      start: number;
-      end: number;
-      text: string;
-    }>
-  ) => {
-    console.log('🔄 Replacing secondary document with:', linkedDocumentId);
-    
-    // First, ensure we have the document metadata
-    let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
-    
-    // If we don't have the document in our cache, fetch the collection
-    if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
-      console.log('🔄 Fetching collection for document metadata:', linkedCollectionId);
-      setIsLoadingDocuments(true);
-      
-      try {
-        const payload = await dispatch(fetchDocumentsByCollection(linkedCollectionId)).unwrap();
-        setDocumentsByCollection(prev => ({
-          ...prev,
-          [linkedCollectionId]: payload.documents.map(doc => ({
-            id: doc.id,
-            title: doc.title
-          }))
-        }));
-        
-        // Update the title with fresh data
-        linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
-      } catch (error) {
-        console.error('🔄 Failed to fetch collection for linked document:', error);
-      } finally {
-        setIsLoadingDocuments(false);
-      }
-    }
-    
-    // Replace the secondary document (keep the first, replace the second)
-    const primaryDocument = viewedDocuments[0];
-    
-    setViewedDocuments([
-      primaryDocument,
-      {
-        id: linkedDocumentId,
-        collectionId: linkedCollectionId,
-        title: linkedDocTitle
-      }
-    ]);
-    
-    // Clear any pending scroll target for the old secondary document
-    if (pendingScrollTarget && viewedDocuments.length > 1) {
-      const oldSecondaryId = viewedDocuments[1].id;
-      if (pendingScrollTarget.documentId === oldSecondaryId) {
-        setPendingScrollTarget(null);
-      }
-    }
-    
-    // Set up pending scroll target for the new document
-    console.log('🔄 Setting pending scroll target for replacement document');
-    setPendingScrollTarget({
-      documentId: linkedDocumentId,
-      targetInfo,
-      allTargets
-    });
-  };
+  }, [viewedDocuments, addLinkedDocumentAsSecondary, replaceSecondaryDocument]);
 
-  // 🎯 NEW: Handle comparison document changes from dropdown/selector
-  const handleComparisonDocumentChange = async (newComparisonDocumentId: number | null) => {
+  // Handle comparison document changes from dropdown/selector
+  const handleComparisonDocumentChange = useCallback(async (newComparisonDocumentId: number | null) => {
     console.log('⚖️ === COMPARISON DOCUMENT CHANGE ===');
     console.log('⚖️ New comparison document ID:', newComparisonDocumentId);
     
@@ -488,7 +612,8 @@ export const DocumentContentView: React.FC = () => {
             }))
           }));
           
-          comparisonDocTitle = getDocumentTitle(newComparisonDocumentId, localSelectedCollectionId);
+          const freshDoc = payload.documents.find(d => d.id === newComparisonDocumentId);
+          comparisonDocTitle = freshDoc ? freshDoc.title : `Document ${newComparisonDocumentId}`;
         } catch (error) {
           console.error('⚖️ Failed to fetch collection for comparison document:', error);
         } finally {
@@ -508,16 +633,16 @@ export const DocumentContentView: React.FC = () => {
       
       setComparisonDocumentId(newComparisonDocumentId);
     }
-  };
+  }, [viewedDocuments, localSelectedCollectionId, documentsByCollection, dispatch, getDocumentTitle]);
   
-  // Handle adding a document for comparison - UPDATED to use new system
-  const handleAddComparisonDocument = (docId: number, docCollectionId: number) => {
+  // Handle adding a document for comparison
+  const handleAddComparisonDocument = useCallback((docId: number, docCollectionId: number) => {
     console.log('⚖️ Adding comparison document:', docId, 'from collection:', docCollectionId);
     handleComparisonDocumentChange(docId);
-  };
+  }, [handleComparisonDocumentChange]);
   
   // Handle removing a document from comparison
-  const handleRemoveDocument = (docId: number) => {
+  const handleRemoveDocument = useCallback((docId: number) => {
     setViewedDocuments(prev => prev.filter(doc => doc.id !== docId));
     
     // Clear pending scroll target if it's for the removed document
@@ -534,28 +659,28 @@ export const DocumentContentView: React.FC = () => {
     if (docId === Number(documentId)) {
       navigate(`/collections/${collectionId}`);
     }
-  };
+  }, [pendingScrollTarget, comparisonDocumentId, documentId, collectionId, navigate]);
   
   // Handle back button
-  const handleBackToDocuments = () => {
+  const handleBackToDocuments = useCallback(() => {
     navigate(`/collections/${collectionId}`);
-  };
+  }, [navigate, collectionId]);
   
   // Handle collection selection change
-  const handleCollectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleCollectionChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCollectionId = Number(e.target.value);
     setLocalSelectedCollectionId(newCollectionId);
-  };
+  }, []);
   
   // Toggle management panel collapsed state
-  const toggleManagementPanel = () => {
+  const toggleManagementPanel = useCallback(() => {
     setIsManagementPanelCollapsed(!isManagementPanelCollapsed);
-  };
+  }, [isManagementPanelCollapsed]);
   
   // Handle view mode change
-  const handleViewModeChange = (mode: 'reading' | 'annotations') => {
+  const handleViewModeChange = useCallback((mode: 'reading' | 'annotations') => {
     setViewMode(mode);
-  };
+  }, []);
   
   // Get available documents in the selected collection
   const availableInSelectedCollection = (documentsByCollection[localSelectedCollectionId] || [])
@@ -571,7 +696,7 @@ export const DocumentContentView: React.FC = () => {
           ← Back to Documents
         </button>
         
-        {/* ENHANCED: Add loading indicator for document operations */}
+        {/* Loading indicator for document operations */}
         {isLoadingDocuments && (
           <div 
             style={{
@@ -651,7 +776,7 @@ export const DocumentContentView: React.FC = () => {
                     {isLinkingModeActive ? 'Linking Mode Active' : 'Link Documents'}
                   </button>
                   
-                  {/* ENHANCED: Context menu usage hint */}
+                  {/* Context menu usage hint */}
                   <div style={{
                     fontSize: '12px',
                     color: '#666',
@@ -666,7 +791,7 @@ export const DocumentContentView: React.FC = () => {
                 </div>
               )}
               
-              {/* ENHANCED: Viewed documents section with better indicators */}
+              {/* Viewed documents section with better indicators */}
               <div className="viewed-documents">
                 <h4>Currently Viewing:</h4>
                 <ul className="document-list">
@@ -685,7 +810,7 @@ export const DocumentContentView: React.FC = () => {
                         onClick={() => handleRemoveDocument(doc.id)}
                         className="remove-document-btn"
                         aria-label="Remove document"
-                        disabled={index === 0 && viewedDocuments.length === 1} // Can't remove last document
+                        disabled={index === 0 && viewedDocuments.length === 1}
                       >
                         ×
                       </button>

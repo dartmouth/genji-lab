@@ -97,14 +97,14 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       // Get all linking annotations from the byId index
       const annotations = Object.values(linkingState.byId || {}).filter(Boolean);
       
-      console.log('Found linking annotations in state:', {
-        count: annotations.length,
-        stateStructure: {
-          hasLinkingState: !!linkingState,
-          byIdKeys: Object.keys(linkingState.byId || {}),
-          byParentKeys: Object.keys(linkingState.byParent || {})
-        }
-      });
+      // console.log('Found linking annotations in state:', {
+      //   count: annotations.length,
+      //   stateStructure: {
+      //     hasLinkingState: !!linkingState,
+      //     byIdKeys: Object.keys(linkingState.byId || {}),
+      //     byParentKeys: Object.keys(linkingState.byParent || {})
+      //   }
+      // });
       
       return annotations;
     } catch (error) {
@@ -145,34 +145,34 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const hasLinkedText = linkingAnnotations.length > 0;
 
   // DEBUG: Log annotation information when showLinkedTextHighlights is true
-  useEffect(() => {
-    if (showLinkedTextHighlights) {
-      console.log('HighlightedText DEBUG:', {
-        paragraphId,
-        showLinkedTextHighlights,
-        allAnnotationsCount: allAnnotations.length,
-        allLinkingAnnotationsCount: allLinkingAnnotations.length,
-        paragraphLinkingAnnotationsCount: paragraphLinkingAnnotations.length,
-        linkingAnnotationsCount: linkingAnnotations.length,
-        hasLinkedText,
-        allAnnotations: allAnnotations.map(a => ({
-          id: a.id,
-          motivation: a.motivation,
-          targets: a.target?.map(t => t.source) || []
-        })),
-        allLinkingAnnotations: allLinkingAnnotations.map(a => ({
-          id: a.id,
-          motivation: a.motivation,
-          targets: a.target?.map(t => t.source) || []
-        })),
-        paragraphLinkingAnnotations: paragraphLinkingAnnotations.map(a => ({
-          id: a.id,
-          motivation: a.motivation,
-          targets: a.target?.map(t => t.source) || []
-        }))
-      });
-    }
-  }, [showLinkedTextHighlights, allAnnotations, allLinkingAnnotations, paragraphLinkingAnnotations, linkingAnnotations, hasLinkedText, paragraphId]);
+  // useEffect(() => {
+  //   if (showLinkedTextHighlights) {
+  //     console.log('HighlightedText DEBUG:', {
+  //       paragraphId,
+  //       showLinkedTextHighlights,
+  //       allAnnotationsCount: allAnnotations.length,
+  //       allLinkingAnnotationsCount: allLinkingAnnotations.length,
+  //       paragraphLinkingAnnotationsCount: paragraphLinkingAnnotations.length,
+  //       linkingAnnotationsCount: linkingAnnotations.length,
+  //       hasLinkedText,
+  //       allAnnotations: allAnnotations.map(a => ({
+  //         id: a.id,
+  //         motivation: a.motivation,
+  //         targets: a.target?.map(t => t.source) || []
+  //       })),
+  //       allLinkingAnnotations: allLinkingAnnotations.map(a => ({
+  //         id: a.id,
+  //         motivation: a.motivation,
+  //         targets: a.target?.map(t => t.source) || []
+  //       })),
+  //       paragraphLinkingAnnotations: paragraphLinkingAnnotations.map(a => ({
+  //         id: a.id,
+  //         motivation: a.motivation,
+  //         targets: a.target?.map(t => t.source) || []
+  //       }))
+  //     });
+  //   }
+  // }, [showLinkedTextHighlights, allAnnotations, allLinkingAnnotations, paragraphLinkingAnnotations, linkingAnnotations, hasLinkedText, paragraphId]);
 
   // Check if we need to show the dialog when annotation creation state changes
   useEffect(() => {
@@ -308,24 +308,56 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       
       try {
         const { start, end } = target.selector.refined_by;
-        console.log('Creating range:', { start, end, textLength: textNode.textContent?.length });
+        const textLength = textNode.textContent?.length || 0;
         
-        const range = document.createRange();
-        range.setStart(textNode, start);
-        range.setEnd(textNode, end);
+        console.log('Creating range:', { start, end, textLength });
         
-        const rects = Array.from(range.getClientRects());
-        console.log('Range rects:', rects.length);
+        // 🎯 CRITICAL FIX: Validate range bounds before creating range
+        if (start < 0 || start > textLength) {
+          console.warn('Invalid start position:', start, 'for text length:', textLength);
+          return;
+        }
         
-        const positions = rects.map((rect) => ({
-          left: rect.left - containerRect.left,
-          top: rect.top - containerRect.top,
-          width: rect.width,
-          height: rect.height,
-        }));
-        
-        console.log('Calculated positions for annotation:', annotation.id, positions);
-        allLinkedPositions.push(...positions);
+        if (end > textLength) {
+          console.warn('End position', end, 'exceeds text length', textLength, '- adjusting to text length');
+          // Adjust end to maximum possible value
+          const adjustedEnd = Math.min(end, textLength);
+          
+          const range = document.createRange();
+          range.setStart(textNode, start);
+          range.setEnd(textNode, adjustedEnd);
+          
+          const rects = Array.from(range.getClientRects());
+          console.log('Range rects:', rects.length);
+          
+          const positions = rects.map((rect) => ({
+            left: rect.left - containerRect.left,
+            top: rect.top - containerRect.top,
+            width: rect.width,
+            height: rect.height,
+          }));
+          
+          console.log('Calculated positions for annotation:', annotation.id, `(${positions.length})`);
+          allLinkedPositions.push(...positions);
+        } else {
+          // Normal case - range is valid
+          const range = document.createRange();
+          range.setStart(textNode, start);
+          range.setEnd(textNode, end);
+          
+          const rects = Array.from(range.getClientRects());
+          console.log('Range rects:', rects.length);
+          
+          const positions = rects.map((rect) => ({
+            left: rect.left - containerRect.left,
+            top: rect.top - containerRect.top,
+            width: rect.width,
+            height: rect.height,
+          }));
+          
+          console.log('Calculated positions for annotation:', annotation.id, `(${positions.length})`);
+          allLinkedPositions.push(...positions);
+        }
       } catch (error) {
         console.error('Error calculating linked text positions:', error);
       }

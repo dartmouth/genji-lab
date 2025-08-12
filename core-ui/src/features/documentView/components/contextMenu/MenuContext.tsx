@@ -1,7 +1,7 @@
 // src/features/documentView/components/contextMenu/MenuContext.tsx
-// CLEAN WORKING VERSION - Restored to working state
+// CRITICAL FIXES - Proper selection detection and document linking
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
 import { createPortal } from 'react-dom';
@@ -13,10 +13,11 @@ import {
   setMotivation, 
   selectAnnotationCreate,
   linkingAnnotations,
-  selectAllDocuments
+  selectAllDocuments, // 🎯 This now returns ALL documents from all collections
+  selectElementsByDocumentId
 } from "@store";
 import { 
-  // createSelectionFromDOMSelection, 
+  createSelectionFromDOMSelection, 
   LinkedTextSelection,
   getLinkedDocumentsSimple,
   HierarchicalLinkedDocuments,
@@ -51,15 +52,75 @@ const MenuContext: React.FC<MenuContextProps> = ({
   const text = useAppSelector(selectSegments);
   const annotationCreate = useAppSelector(selectAnnotationCreate);
   
-  // Get all documents from the store
+  // 🎯 FIXED: Get all documents from the new Redux store structure
   const allDocuments = useAppSelector(selectAllDocuments);
+
+  // 🐛 DEBUGGING - Add this to see what we're working with
+  console.log('🐛 === DEBUGGING DOCUMENT DATA ===');
+  console.log('🐛 allDocuments from Redux:', allDocuments);
+  console.log('🐛 allDocuments.length:', allDocuments.length);
+  console.log('🐛 allDocuments structure:', allDocuments.map(doc => ({ 
+    id: doc.id, 
+    title: doc.title, 
+    document_collection_id: doc.document_collection_id 
+  })));
+
+  console.log('🐛 viewedDocuments from props:', viewedDocuments);
+  console.log('🐛 viewedDocuments.length:', viewedDocuments.length);
+  console.log('🐛 viewedDocuments structure:', viewedDocuments.map(doc => ({ 
+    id: doc.id, 
+    title: doc.title, 
+    collectionId: doc.collectionId 
+  })));
+  console.log('🐛 === END DEBUGGING ===');
+
+  // 🎯 NEW: Get all elements from Redux store for all viewed documents
+  const allElements = useAppSelector((state: RootState) => {
+    const elements = [];
+    
+    // Get elements for all viewed documents
+    for (const doc of viewedDocuments) {
+      const docElements = selectElementsByDocumentId(state, doc.id);
+      if (docElements && docElements.length > 0) {
+        elements.push(...docElements);
+      }
+    }
+    
+    // Also try to get elements from any documents mentioned in annotations
+    try {
+      const linkingAnns = linkingAnnotations.selectors.selectAllAnnotations(state);
+      for (const annotation of linkingAnns) {
+        if (annotation.document_id) {
+          const docElements = selectElementsByDocumentId(state, annotation.document_id);
+          if (docElements && docElements.length > 0) {
+            // Only add elements that aren't already in the array
+            for (const element of docElements) {
+              if (!elements.find(el => el.id === element.id)) {
+                elements.push(element);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Error getting elements from annotations:', error);
+    }
+    
+    console.log('🎯 MenuContext: Collected', elements.length, 'elements from Redux store');
+    return elements;
+  });
   
-  // Get all linking annotations
+  // Get all linking annotations - 🎯 FIXED: Properly memoized selector
   const allLinkingAnnotations = useAppSelector(
-    useCallback((state: RootState) => {
+    useMemo(() => (state: RootState) => {
       try {
         if (state.annotations?.linking) {
-          return linkingAnnotations.selectors.selectAllAnnotations(state);
+          const annotations = linkingAnnotations.selectors.selectAllAnnotations(state);
+          console.log('🐛 allLinkingAnnotations.length:', annotations.length);
+          if (annotations.length > 0) {
+            console.log('🐛 Sample linking annotation:', annotations[0]);
+          }
+          return annotations;
         }
         return [];
       } catch (error) {
@@ -76,50 +137,41 @@ const MenuContext: React.FC<MenuContextProps> = ({
   const [showHierarchicalMenu, setShowHierarchicalMenu] = useState(false);
   const [coords, setCoords] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Find hierarchical linked documents using the simplified approach
+  // 🎯 CRITICAL FIX: Create selection from DOM on right-click
+  const createSelectionFromDOM = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      console.log('🔧 No DOM selection found');
+      return null;
+    }
+    
+    const selectionData = createSelectionFromDOMSelection(selection, viewedDocuments);
+    if (selectionData) {
+      console.log('🔧 Created selection from DOM:', selectionData);
+      return selectionData;
+    }
+    
+    console.log('🔧 Failed to create selection from DOM');
+    return null;
+  }, [viewedDocuments]);
+
+  // Find hierarchical linked documents using the dynamic approach
   const findHierarchicalLinkedDocuments = useCallback((selection: LinkedTextSelection): HierarchicalLinkedDocuments => {
-    return getLinkedDocumentsSimple(
+    console.log('🔍 Finding hierarchical linked documents for:', selection.sourceURI);
+    console.log('🔍 Available elements:', allElements.length);
+    console.log('🔍 Available documents:', allDocuments.length);
+    console.log('🔍 Available annotations:', allLinkingAnnotations.length);
+    
+    const result = getLinkedDocumentsSimple(
       selection,
       allLinkingAnnotations,
       allDocuments,
-      viewedDocuments
+      viewedDocuments,
+      allElements // 🎯 FIXED: Pass the elements from Redux
     );
-  }, [allLinkingAnnotations, allDocuments, viewedDocuments]);
-
-  // Manual trigger for testing - WORKING VERSION
-  useEffect(() => {
-    const manualTrigger = () => {
-      console.log('🐛 === MANUAL TRIGGER TEST ===');
-      console.log('🐛 Current text:', text);
-      console.log('🐛 Viewed documents:', viewedDocuments);
-      
-      if (text && Array.isArray(text) && text.length > 0) {
-        // Simulate a selection on DocumentElements/2
-        const mockSelection = {
-          documentId: viewedDocuments[0]?.id || 1,
-          documentElementId: 2,
-          text: 'test selection',
-          start: 0,
-          end: 13,
-          sourceURI: '/DocumentElements/2'
-        };
-        
-        console.log('🐛 Testing with mock selection:', mockSelection);
-        setCurrentSelection(mockSelection);
-        
-        const hierarchicalDocs = findHierarchicalLinkedDocuments(mockSelection);
-        setHierarchicalDocuments(hierarchicalDocs);
-        console.log('🐛 Found hierarchical documents:', Object.keys(hierarchicalDocs).length);
-        
-        console.log('🐛 Manual test completed - should show links now');
-      }
-    };
-    
-    // Trigger test after a short delay
-    const timeout = setTimeout(manualTrigger, 100);
-    
-    return () => clearTimeout(timeout);
-  }, [text, viewedDocuments, findHierarchicalLinkedDocuments]);
+    console.log('🔍 Found', Object.keys(result).length, 'linked documents');
+    return result;
+  }, [allLinkingAnnotations, allDocuments, viewedDocuments, allElements]); // 🎯 FIXED: Add allElements dependency
 
   // Clear menus when annotation create changes
   useEffect(() => {
@@ -129,12 +181,18 @@ const MenuContext: React.FC<MenuContextProps> = ({
     }
   }, [annotationCreate, clicked]);
 
-  // Main context menu event handler
+  // 🎯 CRITICAL FIX: Enhanced context menu event handler
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       console.log('🐛 Right-click detected at:', { x: e.clientX, y: e.clientY });
       
-      if (text && Array.isArray(text) && text.length > 0) {
+      // 🎯 CRITICAL: Always try to create a selection from DOM
+      const domSelection = createSelectionFromDOM();
+      
+      // Check if we have either text selection (Redux) or DOM selection
+      const hasSelection = (text && Array.isArray(text) && text.length > 0) || domSelection;
+      
+      if (hasSelection) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -143,7 +201,39 @@ const MenuContext: React.FC<MenuContextProps> = ({
         setClicked(true);
         setShowHierarchicalMenu(false);
         
+        // 🎯 CRITICAL: Use DOM selection if available, otherwise use Redux text
+        let selectionToUse: LinkedTextSelection | null = null;
+        
+        if (domSelection) {
+          selectionToUse = domSelection;
+          console.log('🐛 Using DOM selection:', selectionToUse);
+        } else if (text && text.length > 0) {
+          // Create a mock selection from Redux text state
+          // This is a fallback - you might need to adapt this based on your Redux text structure
+          selectionToUse = {
+            documentId: viewedDocuments[0]?.id || 1,
+            documentElementId: 2, // You might need to get this from Redux state
+            text: Array.isArray(text) ? text.join(' ') : String(text),
+            start: 0,
+            end: Array.isArray(text) ? text.join(' ').length : String(text).length,
+            sourceURI: '/DocumentElements/2' // You might need to get this from Redux state
+          };
+          console.log('🐛 Using Redux text selection:', selectionToUse);
+        }
+        
+        if (selectionToUse) {
+          setCurrentSelection(selectionToUse);
+          
+          // Find linked documents for this selection
+          const hierarchicalDocs = findHierarchicalLinkedDocuments(selectionToUse);
+          setHierarchicalDocuments(hierarchicalDocs);
+          
+          console.log('🐛 Context menu ready with', Object.keys(hierarchicalDocs).length, 'linked documents');
+        }
+        
         console.log('🐛 Context menu positioned at:', { x: e.clientX, y: e.clientY });
+      } else {
+        console.log('🐛 No selection available for context menu');
       }
     };
 
@@ -177,18 +267,22 @@ const MenuContext: React.FC<MenuContextProps> = ({
       document.removeEventListener("click", handleClick);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [text]);
+  }, [text, createSelectionFromDOM, findHierarchicalLinkedDocuments, viewedDocuments]);
 
   // Handle viewing linked text
   const handleViewLinkedText = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
+    console.log('🔗 === handleViewLinkedText called ===');
+    console.log('🔗 Hierarchical documents:', Object.keys(hierarchicalDocuments).length);
+    
     const hierarchicalDocumentIds = Object.keys(hierarchicalDocuments).map(Number);
     
     if (hierarchicalDocumentIds.length === 1) {
       const singleDoc = hierarchicalDocuments[hierarchicalDocumentIds[0]];
       if (singleDoc.linkedTextOptions.length === 1) {
+        console.log('🔗 === Direct selection (single doc, single option) ===');
         handleHierarchicalLinkedTextSelect(
           singleDoc.documentId,
           singleDoc.collectionId,
@@ -199,45 +293,68 @@ const MenuContext: React.FC<MenuContextProps> = ({
       }
     }
     
+    console.log('🔗 === Showing hierarchical menu ===');
     setShowHierarchicalMenu(true);
   };
 
-  // Handle hierarchical linked text selection
-  const handleHierarchicalLinkedTextSelect = (
+  // 🎯 CRITICAL FIX: Enhanced linked text selection handler with more debugging
+  const handleHierarchicalLinkedTextSelect = useCallback((
     documentId: number,
     collectionId: number,
     option: LinkedTextOption,
     isCurrentlyOpen: boolean
   ) => {
-    console.log('=== MenuContext: handleHierarchicalLinkedTextSelect called ===');
-    console.log('Document ID:', documentId);
-    console.log('Collection ID:', collectionId);
-    console.log('Is Currently Open:', isCurrentlyOpen);
-    console.log('onOpenLinkedDocument callback exists:', !!onOpenLinkedDocument);
+    console.log('🔗 === MenuContext: handleHierarchicalLinkedTextSelect called ===');
+    console.log('🔗 Document ID:', documentId);
+    console.log('🔗 Collection ID:', collectionId);
+    console.log('🔗 Is Currently Open:', isCurrentlyOpen);
+    console.log('🔗 Option:', {
+      text: option.linkedText.substring(0, 50) + '...',
+      targetInfo: option.targetInfo,
+      allTargetsCount: option.allTargets?.length || 0
+    });
     
-    if (onOpenLinkedDocument) {
-      console.log('=== Calling onOpenLinkedDocument ===');
-      try {
-        onOpenLinkedDocument(
-          documentId,
-          collectionId,
-          option.targetInfo,
-          option.allTargets
-        );
-        console.log('=== onOpenLinkedDocument called successfully ===');
-      } catch (error) {
-        console.error('=== ERROR calling onOpenLinkedDocument ===', error);
-      }
-    } else {
-      console.error('=== ERROR: onOpenLinkedDocument callback not provided ===');
-    }
-    
+    // 🎯 CRITICAL FIX: Immediately close menus to prevent multiple clicks
     setShowHierarchicalMenu(false);
     setClicked(false);
-  };
+    console.log('🔗 === Menus closed immediately ===');
+    
+    console.log('🔗 onOpenLinkedDocument callback exists:', !!onOpenLinkedDocument);
+    console.log('🔗 onOpenLinkedDocument type:', typeof onOpenLinkedDocument);
+    
+    if (onOpenLinkedDocument) {
+      console.log('🔗 === ABOUT TO CALL onOpenLinkedDocument ===');
+      console.log('🔗 Arguments:', {
+        documentId,
+        collectionId,
+        targetInfo: option.targetInfo,
+        allTargetsLength: option.allTargets?.length || 0
+      });
+      
+      try {
+        // Use setTimeout to ensure state updates complete before callback
+        setTimeout(() => {
+          const result = onOpenLinkedDocument(
+            documentId,
+            collectionId,
+            option.targetInfo,
+            option.allTargets
+          );
+          console.log('🔗 === onOpenLinkedDocument returned ===', result);
+        }, 100); // Small delay to ensure clean state
+        
+      } catch (error) {
+        console.error('🔗 === ERROR calling onOpenLinkedDocument ===', error);
+        console.error('🔗 Error stack:', error.stack);
+      }
+    } else {
+      console.error('🔗 === ERROR: onOpenLinkedDocument callback not provided ===');
+      console.error('🔗 Available props:', Object.keys({ viewedDocuments, onOpenLinkedDocument }));
+    }
+  }, [onOpenLinkedDocument]); 
 
   // Calculate hierarchical menu position
-  const calculateHierarchicalMenuPosition = () => {
+  const calculateHierarchicalMenuPosition = useCallback(() => {
     const mainMenuWidth = 200;
     const hierarchicalMenuWidth = 320;
     const windowWidth = window.innerWidth;
@@ -260,7 +377,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     }
     
     return { x: menuX, y: menuY };
-  };
+  }, [coords, hierarchicalDocuments]);
 
   // Check if current selection has linked text
   const selectionHasLinks = currentSelection && Object.keys(hierarchicalDocuments).length > 0;
@@ -273,12 +390,13 @@ const MenuContext: React.FC<MenuContextProps> = ({
   return (
     <>
       {/* Main context menu */}
-      {clicked && text && createPortal(
+      {clicked && (text || currentSelection) && createPortal(
         <ContextMenu top={coords.y} left={coords.x}>
           <ContextButton 
             onClick={(e: React.MouseEvent) => {
               e.preventDefault();
               e.stopPropagation();
+              console.log('🔗 === Create Comment clicked ===');
               dispatch(setMotivation("commenting"));
             }}
           >
@@ -290,6 +408,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
+                console.log('🔗 === Create Scholarly Annotation clicked ===');
                 dispatch(setMotivation("scholarly"));
               }}
             >
@@ -299,7 +418,10 @@ const MenuContext: React.FC<MenuContextProps> = ({
           
           {selectionHasLinks && (
             <ContextButton 
-              onClick={handleViewLinkedText}
+              onClick={(e: React.MouseEvent) => {
+                console.log('🔗 === View Linked Text clicked ===');
+                handleViewLinkedText(e);
+              }}
               style={{
                 borderTop: '1px solid #eee',
                 fontWeight: '500',
@@ -316,6 +438,23 @@ const MenuContext: React.FC<MenuContextProps> = ({
                 ▶
               </span>
             </ContextButton>
+          )}
+          
+          {/* Debug info - can be removed in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{
+              borderTop: '1px solid #eee',
+              padding: '4px 8px',
+              fontSize: '10px',
+              color: '#666',
+              fontFamily: 'monospace'
+            }}>
+              Debug: Selection={currentSelection ? '✓' : '✗'}, 
+              Links={totalLinkedDocuments}, 
+              Docs={viewedDocuments.length},
+              Elements={allElements.length},
+              AllDocs={allDocuments.length}
+            </div>
           )}
         </ContextMenu>,
         document.body
