@@ -53,25 +53,49 @@ const HierarchicalLinkedTextMenu: React.FC<HierarchicalLinkedTextMenuProps> = ({
     const windowHeight = window.innerHeight;
     const itemHeight = 50;
     
+    console.log('🎯 Calculating submenu position:', {
+      mainMenuX,
+      mainMenuY,
+      itemIndex,
+      windowWidth,
+      windowHeight
+    });
+    
+    // 🎯 CRITICAL: Calculate position relative to the hovered item
     let submenuX = mainMenuX + mainMenuWidth + 5;
     let submenuY = mainMenuY + (itemIndex * itemHeight) - 10;
     
-    // Check if submenu would go off right edge
-    if (submenuX + submenuWidth > windowWidth) {
+    // 🎯 BOUNDARY CHECK: Right edge
+    if (submenuX + submenuWidth > windowWidth - 10) {
       submenuX = mainMenuX - submenuWidth - 5;
+      console.log('🎯 Submenu positioned to left due to right boundary');
     }
     
-    // Check bounds
+    // 🎯 BOUNDARY CHECK: Left edge (when positioned to left)
+    if (submenuX < 10) {
+      submenuX = 10;
+      console.log('🎯 Submenu repositioned due to left boundary');
+    }
+    
+    // 🎯 BOUNDARY CHECK: Top edge
     if (submenuY < 10) {
       submenuY = 10;
+      console.log('🎯 Submenu repositioned due to top boundary');
     }
     
-    const estimatedSubmenuHeight = Math.min(300, hierarchicalDocuments[documentIds[0]]?.linkedTextOptions.length * 60 + 50);
-    if (submenuY + estimatedSubmenuHeight > windowHeight) {
+    // 🎯 BOUNDARY CHECK: Bottom edge
+    const currentDoc = hierarchicalDocuments[documentIds[0]];
+    const estimatedSubmenuHeight = Math.min(300, (currentDoc?.linkedTextOptions.length || 1) * 60 + 80);
+    
+    if (submenuY + estimatedSubmenuHeight > windowHeight - 10) {
       submenuY = Math.max(10, windowHeight - estimatedSubmenuHeight - 10);
+      console.log('🎯 Submenu repositioned due to bottom boundary');
     }
     
-    return { x: submenuX, y: submenuY };
+    const finalPosition = { x: submenuX, y: submenuY };
+    console.log('🎯 Final submenu position:', finalPosition);
+    
+    return finalPosition;
   };
 
   // 🎯 FIX: Immediate submenu show with no delay

@@ -1,5 +1,5 @@
 // src/features/documentView/components/contextMenu/MenuContext.tsx
-// CRITICAL FIXES - Proper selection detection and document linking
+// CRITICAL FIXES - Proper selection detection, document linking, and enhanced positioning
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
@@ -181,10 +181,12 @@ const MenuContext: React.FC<MenuContextProps> = ({
     }
   }, [annotationCreate, clicked]);
 
-  // 🎯 CRITICAL FIX: Enhanced context menu event handler
+  // 🎯 CRITICAL FIX: Enhanced context menu event handler with better positioning
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
       console.log('🐛 Right-click detected at:', { x: e.clientX, y: e.clientY });
+      console.log('🐛 Page scroll:', { scrollX: window.scrollX, scrollY: window.scrollY });
+      console.log('🐛 Viewport size:', { width: window.innerWidth, height: window.innerHeight });
       
       // 🎯 CRITICAL: Always try to create a selection from DOM
       const domSelection = createSelectionFromDOM();
@@ -196,8 +198,23 @@ const MenuContext: React.FC<MenuContextProps> = ({
         e.preventDefault();
         e.stopPropagation();
         
-        // Set coordinates exactly where clicked
-        setCoords({ x: e.clientX, y: e.clientY });
+        // 🎯 CRITICAL FIX: Use clientX/Y directly without modifications
+        const menuX = e.clientX;
+        const menuY = e.clientY;
+        
+        console.log('🐛 Setting menu coordinates to:', { x: menuX, y: menuY });
+        
+        // 🎯 CRITICAL: Boundary checking to keep menu on screen
+        const menuWidth = 200;
+        const menuHeight = 150; // Estimated menu height
+        
+        const adjustedX = Math.min(menuX, window.innerWidth - menuWidth - 10);
+        const adjustedY = Math.min(menuY, window.innerHeight - menuHeight - 10);
+        
+        console.log('🐛 Adjusted coordinates:', { x: adjustedX, y: adjustedY });
+        
+        // Set coordinates exactly where clicked (with boundary adjustments)
+        setCoords({ x: adjustedX, y: adjustedY });
         setClicked(true);
         setShowHierarchicalMenu(false);
         
@@ -209,7 +226,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
           console.log('🐛 Using DOM selection:', selectionToUse);
         } else if (text && text.length > 0) {
           // Create a mock selection from Redux text state
-          // This is a fallback - you might need to adapt this based on your Redux text structure
           selectionToUse = {
             documentId: viewedDocuments[0]?.id || 1,
             documentElementId: 2, // You might need to get this from Redux state
@@ -231,7 +247,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
           console.log('🐛 Context menu ready with', Object.keys(hierarchicalDocs).length, 'linked documents');
         }
         
-        console.log('🐛 Context menu positioned at:', { x: e.clientX, y: e.clientY });
+        console.log('🐛 Context menu positioned at:', { x: adjustedX, y: adjustedY });
       } else {
         console.log('🐛 No selection available for context menu');
       }
@@ -258,12 +274,13 @@ const MenuContext: React.FC<MenuContextProps> = ({
       }
     };
 
-    document.addEventListener("contextmenu", handleContextMenu, true);
+    // 🎯 CRITICAL: Use capture: true to ensure we get the event before other handlers
+    document.addEventListener("contextmenu", handleContextMenu, { capture: true, passive: false });
     document.addEventListener("click", handleClick);
     document.addEventListener("keydown", handleEscape);
     
     return () => {
-      document.removeEventListener("contextmenu", handleContextMenu, true);
+      document.removeEventListener("contextmenu", handleContextMenu, { capture: true });
       document.removeEventListener("click", handleClick);
       document.removeEventListener("keydown", handleEscape);
     };
@@ -353,30 +370,49 @@ const MenuContext: React.FC<MenuContextProps> = ({
     }
   }, [onOpenLinkedDocument]); 
 
-  // Calculate hierarchical menu position
+  // 🎯 ENHANCED: Better submenu positioning logic
   const calculateHierarchicalMenuPosition = useCallback(() => {
     const mainMenuWidth = 200;
     const hierarchicalMenuWidth = 320;
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    let menuX = coords.x + mainMenuWidth + 5;
-    let menuY = coords.y;
+    console.log('🐛 Calculating submenu position from coords:', coords);
+    console.log('🐛 Window dimensions:', { width: windowWidth, height: windowHeight });
     
-    if (menuX + hierarchicalMenuWidth > windowWidth) {
+    // 🎯 CRITICAL: Start from the main menu position
+    let menuX = coords.x + mainMenuWidth + 5; // Position to the right of main menu
+    let menuY = coords.y; // Align with main menu top
+    
+    // 🎯 BOUNDARY CHECKING: If submenu would go off right edge, position to left
+    if (menuX + hierarchicalMenuWidth > windowWidth - 10) {
       menuX = coords.x - hierarchicalMenuWidth - 5;
+      console.log('🐛 Submenu positioned to left of main menu');
     }
     
+    // 🎯 BOUNDARY CHECKING: Ensure submenu doesn't go off left edge when positioned left
+    if (menuX < 10) {
+      menuX = 10;
+      console.log('🐛 Submenu moved right to avoid left edge');
+    }
+    
+    // 🎯 BOUNDARY CHECKING: Ensure submenu doesn't go off top
     if (menuY < 10) {
       menuY = 10;
+      console.log('🐛 Submenu moved down to avoid top edge');
     }
     
-    const estimatedMenuHeight = Math.min(400, Object.keys(hierarchicalDocuments).length * 60 + 50);
+    // 🎯 BOUNDARY CHECKING: Ensure submenu doesn't go off bottom
+    const estimatedMenuHeight = Math.min(400, Object.keys(hierarchicalDocuments).length * 60 + 100);
     if (menuY + estimatedMenuHeight > windowHeight - 10) {
       menuY = Math.max(10, windowHeight - estimatedMenuHeight - 10);
+      console.log('🐛 Submenu moved up to avoid bottom edge');
     }
     
-    return { x: menuX, y: menuY };
+    const finalPosition = { x: menuX, y: menuY };
+    console.log('🐛 Final submenu position:', finalPosition);
+    
+    return finalPosition;
   }, [coords, hierarchicalDocuments]);
 
   // Check if current selection has linked text

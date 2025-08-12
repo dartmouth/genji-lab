@@ -1,58 +1,95 @@
+/* 🎯 CRITICAL FIXES: Enhanced context menu positioning */
+
 .menu-context-container {
-    border: 1px solid #ffffff2d;
-    border-radius: 4px;
-    padding: 18px;
-    margin: 5px 0;
-    box-sizing: border-box;
-  }
-  
-  .context-button {
-    width: 100%;
-    padding: 12px 16px;
-    background-color: white;
-    border: none;
-    text-align: left;
-    color: #00693e; /* Dartmouth Green */
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 3px;
-    margin: 2px 0;
-  }
-  
-  .context-button:hover {
-    background-color: #f0f0f0;
-  }
-  
-  .context-button:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 105, 62, 0.3);
-  }
-  
-  .context-menu {
-    position: absolute;
-    width: 200px;
-    background-color: white;
-    border-radius: 5px;
-    box-sizing: border-box;
-    z-index: 1000;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+  border: 1px solid #ffffff2d;
+  border-radius: 4px;
+  padding: 18px;
+  margin: 5px 0;
+  box-sizing: border-box;
+}
 
-  /* Add to src/features/documentView/styles/ContextMenuStyles.css */
+.context-button {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: white;
+  border: none;
+  text-align: left;
+  color: #00693e; /* Dartmouth Green */
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 3px;
+  margin: 2px 0;
+  transition: background-color 0.2s ease;
+}
 
-/* Linked Text Dropdown Styles */
-.linked-text-dropdown {
+.context-button:hover {
+  background-color: #f0f0f0;
+}
+
+.context-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 105, 62, 0.3);
+}
+
+/* 🎯 CRITICAL FIX: Enhanced context menu positioning */
+.context-menu {
+  position: fixed; /* 🎯 CHANGED: Use fixed instead of absolute for better control */
+  width: 200px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box;
+  z-index: 10000; /* 🎯 INCREASED: Higher z-index to ensure visibility */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* 🎯 ENHANCED: Better shadow for visibility */
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 400px; /* 🎯 NEW: Prevent menu from being too tall */
+  overflow-y: auto; /* 🎯 NEW: Allow scrolling if needed */
+  /* 🎯 CRITICAL: Ensure pointer events work */
+  pointer-events: auto;
+}
+
+/* 🎯 NEW: Hierarchical menu specific styles */
+.hierarchical-linked-text-menu {
+  position: fixed; /* 🎯 CRITICAL: Use fixed positioning */
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  z-index: 10001; /* 🎯 CRITICAL: Higher than main menu */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  max-width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+/* 🎯 NEW: Submenu positioning helper */
+.linked-text-options-submenu {
   position: fixed;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10002; /* 🎯 CRITICAL: Highest z-index */
+  max-width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+/* 🎯 ENHANCED: Linked Text Dropdown Styles */
+.linked-text-dropdown {
+  position: fixed; /* 🎯 CHANGED: Use fixed positioning */
   background: white;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 10000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  pointer-events: auto; /* 🎯 NEW: Ensure clicks work */
 }
 
 .linked-text-dropdown:focus {
@@ -60,10 +97,12 @@
 }
 
 .linked-document-item {
-  padding: 10px 12px;
+  padding: 12px 16px; /* 🎯 INCREASED: Better padding for easier clicking */
   cursor: pointer;
   transition: background-color 0.2s ease;
   border-bottom: 1px solid #f0f0f0;
+  font-size: 14px; /* 🎯 NEW: Consistent font size */
+  line-height: 1.4; /* 🎯 NEW: Better line height */
 }
 
 .linked-document-item:last-child {
@@ -78,32 +117,60 @@
   background-color: #e8e8e8;
 }
 
+/* 🎯 NEW: Document item structure styling */
+.linked-document-item .document-title {
+  font-weight: 500;
+  color: #1976d2;
+  margin-bottom: 4px;
+}
+
+.linked-document-item .linked-text-preview {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
 /* Context button for linked text */
 .context-button[style*="border-top"] {
   margin-top: 4px;
   color: #1976d2 !important;
+  font-weight: 500;
 }
 
 .context-button[style*="border-top"]:hover {
   background-color: #e3f2fd;
 }
 
-/* Temporary highlight animation */
+/* 🎯 ENHANCED: Temporary highlight animation */
 .temp-highlight {
-  background-color: #ffeb3b;
+  background-color: #ffeb3b !important;
   transition: background-color 0.3s ease;
-  animation: highlight-pulse 2s ease-in-out;
+  animation: highlight-pulse 2.5s ease-in-out;
+  padding: 2px 4px;
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
 }
 
 @keyframes highlight-pulse {
   0% {
     background-color: #ffeb3b;
+    box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
+  }
+  25% {
+    background-color: #fff176;
+    box-shadow: 0 0 12px rgba(255, 241, 118, 0.8);
   }
   50% {
+    background-color: #ffeb3b;
+    box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
+  }
+  75% {
     background-color: #fff176;
+    box-shadow: 0 0 6px rgba(255, 241, 118, 0.4);
   }
   100% {
     background-color: transparent;
+    box-shadow: none;
   }
 }
 
@@ -117,19 +184,84 @@
   background-color: #e3f2fd;
 }
 
-/* Loading state for linked documents */
+/* 🎯 NEW: Loading and empty states */
 .linked-text-dropdown .loading {
-  padding: 12px;
+  padding: 16px;
   text-align: center;
   color: #666;
   font-style: italic;
-  font-size: 12px;
+  font-size: 13px;
 }
 
-/* Empty state for linked documents */
 .linked-text-dropdown .no-links {
-  padding: 12px;
+  padding: 16px;
   text-align: center;
   color: #999;
-  font-size: 12px;
+  font-size: 13px;
+}
+
+/* 🎯 NEW: Prevent text selection in menus */
+.context-menu,
+.hierarchical-linked-text-menu,
+.linked-text-dropdown,
+.linked-text-options-submenu {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 🎯 NEW: Ensure menus are always on top */
+.context-menu,
+.hierarchical-linked-text-menu,
+.linked-text-dropdown,
+.linked-text-options-submenu {
+  position: fixed !important;
+  z-index: 10000;
+}
+
+/* 🎯 NEW: Debug helpers for positioning (set opacity to 1 for debugging) */
+.context-menu::before {
+  content: "Main Menu";
+  position: absolute;
+  top: -15px;
+  left: 0;
+  font-size: 10px;
+  color: red;
+  background: white;
+  padding: 2px 4px;
+  border: 1px solid red;
+  opacity: 0; /* Set to 1 for debugging positioning */
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hierarchical-linked-text-menu::before {
+  content: "Hierarchical Menu";
+  position: absolute;
+  top: -15px;
+  left: 0;
+  font-size: 10px;
+  color: blue;
+  background: white;
+  padding: 2px 4px;
+  border: 1px solid blue;
+  opacity: 0; /* Set to 1 for debugging positioning */
+  pointer-events: none;
+  z-index: 1;
+}
+
+.linked-text-options-submenu::before {
+  content: "Submenu";
+  position: absolute;
+  top: -15px;
+  left: 0;
+  font-size: 10px;
+  color: green;
+  background: white;
+  padding: 2px 4px;
+  border: 1px solid green;
+  opacity: 0; /* Set to 1 for debugging positioning */
+  pointer-events: none;
+  z-index: 1;
 }
