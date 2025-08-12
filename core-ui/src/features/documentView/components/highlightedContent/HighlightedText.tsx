@@ -598,40 +598,28 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           <>
             {/* Link icon indicator - positioned to not interfere with text */}
             <div 
-              style={{
-                position: 'absolute',
-                top: '-2px',
-                right: '2px',
-                fontSize: '10px',
-                color: '#dc3545',
-                pointerEvents: 'none',
-                zIndex: 3,
-                textShadow: '0 0 2px rgba(255,255,255,0.9)',
-                opacity: 0.8
-              }}
+              className="linked-text-icon"
               title="This paragraph contains linked text"
             >
               🔗
             </div>
             
-            {/* Precise linked text range highlighting */}
-            {linkedTextPositions.map((position, index) => (
-              <div
-                key={`linked-${index}`}
-                style={{
-                  position: 'absolute',
-                  left: position.left,
-                  top: position.top,
-                  width: position.width,
-                  height: position.height,
-                  backgroundColor: 'rgba(220, 53, 69, 0.25)', // Red highlighting for linked text
-                  borderRadius: '1px',
-                  pointerEvents: 'none',
-                  zIndex: 2,
-                  transition: 'background-color 0.2s ease'
-                }}
-              />
-            ))}
+            {/* 🎯 CRITICAL FIX: Container to prevent opacity stacking */}
+            <div className="linked-text-highlights-container">
+              {linkedTextPositions.map((position, index) => (
+                <div
+                  key={`linked-${index}`}
+                  className="linked-text-highlight"
+                  style={{
+                    left: position.left,
+                    top: position.top,
+                    width: position.width,
+                    height: position.height,
+                    // 🎯 REMOVED: Inline backgroundColor to prevent overriding CSS
+                  }}
+                />
+              ))}
+            </div>
           </>
         )}
       </div>

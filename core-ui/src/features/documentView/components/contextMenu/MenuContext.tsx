@@ -362,7 +362,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
         
       } catch (error) {
         console.error('🔗 === ERROR calling onOpenLinkedDocument ===', error);
-        console.error('🔗 Error stack:', error.stack);
       }
     } else {
       console.error('🔗 === ERROR: onOpenLinkedDocument callback not provided ===');
