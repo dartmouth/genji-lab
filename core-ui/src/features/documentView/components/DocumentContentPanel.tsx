@@ -111,10 +111,14 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     console.log('📄 Parent callback exists:', !!onOpenLinkedDocument);
     console.log('📄 Document elements loaded:', documentElements.length);
     
-    // Check if this is the same document (shouldn't happen, but let's be safe)
+    // 🎯 REMOVED: Don't block same document calls - let the parent handle the logic
+    // The parent DocumentViewerContainer has sophisticated logic to handle:
+    // 1. Same document, same content (scroll)
+    // 2. Same document, but links to other documents (navigate)
+    // 3. Different documents (open/replace)
+    
     if (linkedDocumentId === documentId) {
-      console.log('📄 ⚠️ Same document requested, skipping');
-      return;
+      console.log('📄 ℹ️ Same document ID detected - passing to parent for cross-document analysis');
     }
     
     if (onOpenLinkedDocument) {
