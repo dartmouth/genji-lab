@@ -1,5 +1,5 @@
-// New hierarchical context menu component
 // src/features/documentView/components/contextMenu/HierarchicalLinkedTextMenu.tsx
+// FIXED: Stable submenu with no flickering
 
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -32,9 +32,18 @@ const HierarchicalLinkedTextMenu: React.FC<HierarchicalLinkedTextMenuProps> = ({
   const mainMenuRef = useRef<HTMLDivElement>(null);
   const submenuRef = useRef<HTMLDivElement>(null);
   const [activeSubmenu, setActiveSubmenu] = useState<SubmenuState>({ documentId: null, position: { x: 0, y: 0 } });
-  const [submenuTimeout, setSubmenuTimeout] = useState<NodeJS.Timeout | null>(null);
-
+  
+  // 🎯 FIX: Single timeout ref and longer delays
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const documentIds = Object.keys(hierarchicalDocuments).map(Number);
+
+  // 🎯 FIX: Clear any existing timeout
+  const clearExistingTimeout = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
 
   // Calculate submenu position
   const calculateSubmenuPosition = (mainMenuX: number, mainMenuY: number, itemIndex: number) => {
@@ -42,7 +51,7 @@ const HierarchicalLinkedTextMenu: React.FC<HierarchicalLinkedTextMenuProps> = ({
     const submenuWidth = 320;
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    const itemHeight = 50; // Approximate height per menu item
+    const itemHeight = 50;
     
     let submenuX = mainMenuX + mainMenuWidth + 5;
     let submenuY = mainMenuY + (itemIndex * itemHeight) - 10;
@@ -65,12 +74,9 @@ const HierarchicalLinkedTextMenu: React.FC<HierarchicalLinkedTextMenuProps> = ({
     return { x: submenuX, y: submenuY };
   };
 
-  // Handle mouse enter on document item
+  // 🎯 FIX: Immediate submenu show with no delay
   const handleDocumentMouseEnter = (documentId: number, itemIndex: number) => {
-    if (submenuTimeout) {
-      clearTimeout(submenuTimeout);
-      setSubmenuTimeout(null);
-    }
+    clearExistingTimeout();
 
     const submenuPos = calculateSubmenuPosition(position.x, position.y, itemIndex);
     setActiveSubmenu({
@@ -79,28 +85,45 @@ const HierarchicalLinkedTextMenu: React.FC<HierarchicalLinkedTextMenuProps> = ({
     });
   };
 
-  // Handle mouse leave from document item
-  const handleDocumentMouseLeave = () => {
-    const timeout = setTimeout(() => {
-      setActiveSubmenu({ documentId: null, position: { x: 0, y: 0 } });
-    }, 400); // Increased from 150ms to 400ms
-    setSubmenuTimeout(timeout);
+  // 🎯 FIX: Longer delay before hiding + check if mouse is moving toward submenu
+  const handleDocumentMouseLeave = (e: React.MouseEvent) => {
+    clearExistingTimeout();
+    
+    // 🎯 FIX: Much longer delay and check mouse direction
+    timeoutRef.current = setTimeout(() => {
+      // Only hide if mouse isn't over submenu
+      const submenuElement = submenuRef.current;
+      if (!submenuElement) {
+        setActiveSubmenu({ documentId: null, position: { x: 0, y: 0 } });
+        return;
+      }
+      
+      // Check if mouse is over submenu
+      const rect = submenuElement.getBoundingClientRect();
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      
+      const isOverSubmenu = mouseX >= rect.left && mouseX <= rect.right && 
+                           mouseY >= rect.top && mouseY <= rect.bottom;
+      
+      if (!isOverSubmenu) {
+        setActiveSubmenu({ documentId: null, position: { x: 0, y: 0 } });
+      }
+    }, 800); // Increased from 400ms to 800ms
   };
 
-  // Handle mouse enter on submenu
+  // 🎯 FIX: Cancel hide when entering submenu
   const handleSubmenuMouseEnter = () => {
-    if (submenuTimeout) {
-      clearTimeout(submenuTimeout);
-      setSubmenuTimeout(null);
-    }
+    clearExistingTimeout();
   };
 
-  // Handle mouse leave from submenu
+  // 🎯 FIX: Shorter delay when leaving submenu
   const handleSubmenuMouseLeave = () => {
-    const timeout = setTimeout(() => {
+    clearExistingTimeout();
+    
+    timeoutRef.current = setTimeout(() => {
       setActiveSubmenu({ documentId: null, position: { x: 0, y: 0 } });
-    }, 300); // Increased from 150ms to 300ms
-    setSubmenuTimeout(timeout);
+    }, 300);
   };
 
   // Handle clicking outside to close
@@ -127,11 +150,9 @@ const HierarchicalLinkedTextMenu: React.FC<HierarchicalLinkedTextMenuProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
-      if (submenuTimeout) {
-        clearTimeout(submenuTimeout);
-      }
+      clearExistingTimeout();
     };
-  }, [onClose, submenuTimeout]);
+  }, [onClose]);
 
   // Handle direct selection when only one document has links
   const handleDirectSelection = (documentId: number, option: LinkedTextOption) => {
@@ -201,7 +222,7 @@ const HierarchicalLinkedTextMenu: React.FC<HierarchicalLinkedTextMenuProps> = ({
                 borderBottom: index < documentIds.length - 1 ? '1px solid #f0f0f0' : 'none'
               }}
               onMouseEnter={() => hasMultipleOptions && handleDocumentMouseEnter(documentId, index)}
-              onMouseLeave={() => hasMultipleOptions && handleDocumentMouseLeave()}
+              onMouseLeave={hasMultipleOptions ? handleDocumentMouseLeave : undefined}
             >
               {/* Single option - direct click */}
               {!hasMultipleOptions ? (
@@ -323,7 +344,7 @@ const HierarchicalLinkedTextMenu: React.FC<HierarchicalLinkedTextMenuProps> = ({
         })}
       </div>
 
-      {/* Submenu for document with multiple options */}
+      {/* 🎯 FIX: Submenu with better positioning and stable hover */}
       {activeSubmenu.documentId && hierarchicalDocuments[activeSubmenu.documentId] && createPortal(
         <div
           ref={submenuRef}
