@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 from enum import Enum
+from datetime import datetime
 
 class SearchType(str, Enum):
     DOCUMENTS = "documents"
@@ -99,12 +100,16 @@ class SearchQuery(BaseModel):
 ParsedSearchTerm.model_rebuild()
 
 class SearchResult(BaseModel):
-    id: int
-    content: str
-    motivation: str | None
-    source: str
-    type: str
-    relevance_score: float
+    annotation_id: Optional[int] = Field(None, description="ID of the annotation (for annotation results)")
+    element_id: Optional[int] = Field(None, description="ID of the document element")
+    document_id: int = Field(..., description="ID of the document")
+    collection_id: int = Field(..., description="ID of the collection")
+    content: str = Field(..., description="The text content of the result")
+    type: str = Field(..., description="Type of result (annotation, element, etc.)")
+    source: str = Field(..., description="Source reference/path")
+    motivation: Optional[str] = Field(None, description="Motivation for annotations (e.g., 'commenting')")
+    created: datetime = Field(..., description="Creation timestamp")
+    relevance_score: float = Field(..., description="Text search relevance score")
 
 class SearchResponse(BaseModel):
     query: SearchQuery

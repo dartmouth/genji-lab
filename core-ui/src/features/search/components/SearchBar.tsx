@@ -476,7 +476,7 @@ const AnnotationSearchBar: React.FC<SearchBarProps> = ({
             const typeLabels = {
               'documents': 'Documents',
               'comments': 'Comments', 
-              'scholarly-annotations': 'Scholarly Annotations'
+              'annotations': 'Scholarly Annotations'
             };
             return (
               <span key={type} className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full">

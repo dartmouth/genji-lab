@@ -28,34 +28,40 @@ router = APIRouter(
 
 ELEMENT_QUERY = text("""
 WITH ranked_elements AS (
-    SELECT 
-        de.id,
+    select
+    	null as annotation_id,
+        de.id as element_id,
+        de.document_id,
+        d.id as collection_id,
         de.content ->> 'text' as content,
         'element' as type,
         null as motivation,
         'DocumentElements/' || de.id as source,
         de.created,
         ts_rank(
-            to_tsvector('english', de.content::text), 
+            to_tsvector('english', de.content::text),
             to_tsquery('english', :tsq)
         ) as relevance_score
     FROM app.document_elements de
+    JOIN app.documents d ON de.document_id  = d.id
     WHERE to_tsvector('english', de.content::text) @@ to_tsquery('english', :tsq)
 )
 SELECT * FROM ranked_elements
-ORDER BY 
+ORDER BY
     CASE WHEN :descending THEN relevance_score END DESC,
     CASE WHEN NOT :descending THEN relevance_score END ASC,
     CASE WHEN :descending THEN created END DESC,
     CASE WHEN NOT :descending THEN created END ASC
-LIMIT :limit
-;
+LIMIT :limit;
 """)
 
 COMMENTS_QUERY = text("""
 WITH ranked_annotations AS (
     select 
-        a.id, 
+        a.id as annotation_id,
+        split_part(a.target -> 0 ->> 'source', '/', 2)::int as element_id,
+        d.id as document_id,
+        d.id as collection_id,
         a.body ->> 'value' as content,
         'annotation' as type,
         a.target -> 0 ->> 'source' as source,
@@ -66,6 +72,7 @@ WITH ranked_annotations AS (
             to_tsquery('english', :tsq)
         ) as relevance_score
     from app.annotations a 
+    JOIN app.documents d ON split_part(a.target -> 0 ->> 'source', '/', 2)::int  = d.id
     WHERE to_tsvector('english', a.body ->> 'value'::text) @@ to_tsquery('english', :tsq)
     and a.motivation in ('commenting')
 )
@@ -82,7 +89,10 @@ LIMIT :limit
 ANNOTATIONS_QUERY = text("""
 WITH ranked_annotations AS (
     select 
-        a.id, 
+        a.id as annotation_id,
+        split_part(a.target -> 0 ->> 'source', '/', 2)::int as element_id,
+        d.id as document_id,
+        d.id as collection_id,
         a.body ->> 'value' as content,
         'annotation' as type,
         a.target -> 0 ->> 'source' as source,
@@ -93,6 +103,7 @@ WITH ranked_annotations AS (
             to_tsquery('english', :tsq)
         ) as relevance_score
     from app.annotations a 
+    JOIN app.documents d ON split_part(a.target -> 0 ->> 'source', '/', 2)::int  = d.id
     WHERE to_tsvector('english', a.body ->> 'value'::text) @@ to_tsquery('english', :tsq)
     and a.motivation in ('scholarly')
 )

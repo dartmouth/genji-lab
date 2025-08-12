@@ -13,6 +13,7 @@ const SimpleSearchBar: React.FC = () => {
   const navigate = useNavigate();
 
   const [query, setQuery] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [result, setResult] = useState<SearchResponse | null>(null);
 
   const api: AxiosInstance = axios.create({
@@ -190,7 +191,7 @@ const SimpleSearchBar: React.FC = () => {
       dispatch(setResults(response.data))
       navigate('/search')
 
-      console.log('Search results:', result);
+      // console.log('Search results:', result);
     } catch (error) {
       console.error('Search failed:', error);
     }

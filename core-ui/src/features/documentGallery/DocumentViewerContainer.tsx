@@ -7,13 +7,16 @@ import {
   fetchDocumentsByCollection,
   fetchDocumentCollections,
   selectAllDocuments,
-  selectAllDocumentCollections
+  selectAllDocumentCollections,
+  setHoveredHighlights
 } from "@store";
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
 import { DocumentComparisonContainer } from "@documentView";
 import RouterSwitchBoard from "@/RouterSwitchBoard";
 import "./styles/DocumentViewerStyles.css";
+
+import { useLocation } from "react-router-dom";
 
 const DocumentViewerContainer: React.FC = () => {  
   return <RouterSwitchBoard />;
@@ -38,6 +41,7 @@ export const CollectionsView: React.FC = () => {
 
 export const DocumentsView: React.FC = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
+  
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   
@@ -70,7 +74,29 @@ export const DocumentContentView: React.FC = () => {
   const { collectionId, documentId } = useParams<{ collectionId: string; documentId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const location = useLocation();
+
+
+
+  useEffect(() => {
+    const getAnnotationIdFromHash = (): string | null => {
+    const hash = location.hash; // e.g., "#annotation-21"
+    
+    if (hash.startsWith('#annotation-')) {
+      const annotationId = hash.replace('#annotation-', '');
+      // const id = parseInt(annotationId, 10);
+      return annotationId
+    }
+    
+    return null;
+  };
+  const hash = getAnnotationIdFromHash()
+  if (documentId && hash){
+    dispatch(setHoveredHighlights({documentId: documentId as unknown as number, highlightIds: [hash]}));
+  }
   
+    console.log('Hash in DocumentContentView:', getAnnotationIdFromHash());
+  }, [location.hash, dispatch, documentId]);
   // State to track the documents being viewed - NOW INCLUDES TITLE
   const [viewedDocuments, setViewedDocuments] = useState<Array<{
     id: number, 

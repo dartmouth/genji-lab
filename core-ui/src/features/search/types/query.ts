@@ -16,12 +16,25 @@ export interface Query {
   limit: number;
 }
 
+// export interface SearchResult {
+//   id: number;
+//   content: string;
+//   motivation: "commenting" | "scholarly" | null;
+//   source: string;
+//   type: "annotation" | "element" | string;
+//   relevance_score: number;
+// }
+
 export interface SearchResult {
-  id: number;
+  annotation_id: number;
+  element_id: number;
+  document_id: number;
+  collection_id: number;
   content: string;
-  motivation: "commenting" | "scholarly" | null;
-  source: string;
   type: "annotation" | "element" | string;
+  source: string;
+  motivation: "commenting" | "scholarly" | null;
+  created: string; // ISO date string
   relevance_score: number;
 }
 
