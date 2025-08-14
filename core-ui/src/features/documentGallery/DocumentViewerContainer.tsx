@@ -187,8 +187,8 @@ export const DocumentContentView: React.FC = () => {
   // Track loading state
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   
-  // State for document selection dropdown
-  const [localSelectedCollectionId, setLocalSelectedCollectionId] = useState<number>(Number(collectionId));
+  // FIXED: State for document selection dropdown (changed back to selectedCollectionId)
+  const [selectedCollectionId, setSelectedCollectionId] = useState<number>(Number(collectionId));
   
   // State for management panel collapse
   const [isManagementPanelCollapsed, setIsManagementPanelCollapsed] = useState(true);
@@ -201,6 +201,34 @@ export const DocumentContentView: React.FC = () => {
 
   // State to track if we're in comparison mode
   const [comparisonDocumentId, setComparisonDocumentId] = useState<number | null>(null);
+
+  // FIXED: Add this useEffect from the working version for collection loading
+  useEffect(() => {
+    if (selectedCollectionId && selectedCollectionId !== Number(collectionId) && 
+        !documentsByCollection[selectedCollectionId]) {
+      
+      console.log('📄 Fetching documents for selected collection:', selectedCollectionId);
+      setIsLoadingDocuments(true);
+      
+      dispatch(fetchDocumentsByCollection(selectedCollectionId))
+        .unwrap()
+        .then((payload) => {
+          console.log('📄 Fetched documents for selected collection', selectedCollectionId, ':', payload.documents.length);
+          setDocumentsByCollection(prev => ({
+            ...prev,
+            [selectedCollectionId]: payload.documents.map(doc => ({
+              id: doc.id,
+              title: doc.title
+            }))
+          }));
+          setIsLoadingDocuments(false);
+        })
+        .catch((error) => {
+          console.error('❌ Failed to fetch documents for selected collection', selectedCollectionId, ':', error);
+          setIsLoadingDocuments(false);
+        });
+    }
+  }, [selectedCollectionId, collectionId, documentsByCollection, dispatch]);
 
   // Cross-document element loader with proper typing
   const loadCrossDocumentElements = useCallback(async () => {
@@ -368,222 +396,219 @@ export const DocumentContentView: React.FC = () => {
   }, [pendingScrollTarget, viewedDocuments]);
 
   // Add this helper function before the navigation functions:
-
-const getElementBasedDocumentTitle = useCallback((documentId: number): string | null => {
-  // Try to find the document in Redux store first
-  const document = documents.find(doc => doc.id === documentId);
-  if (document && document.title && !document.title.includes('Document ')) {
-    return document.title;
-  }
-  
-  // Try to find in documentsByCollection cache
-  for (const collectionId in documentsByCollection) {
-    const doc = documentsByCollection[collectionId].find(d => d.id === documentId);
-    if (doc && doc.title && !doc.title.includes('Document ')) {
-      return doc.title;
+  const getElementBasedDocumentTitle = useCallback((documentId: number): string | null => {
+    // Try to find the document in Redux store first
+    const document = documents.find(doc => doc.id === documentId);
+    if (document && document.title && !document.title.includes('Document ')) {
+      return document.title;
     }
-  }
-  
-  // Try to find in viewedDocuments
-  const viewedDoc = viewedDocuments.find(doc => doc.id === documentId);
-  if (viewedDoc && viewedDoc.title && !viewedDoc.title.includes('Document ')) {
-    return viewedDoc.title;
-  }
-  
-  return null; // Let the API response provide the title
-}, [documents, documentsByCollection, viewedDocuments]);
-
-// Add this function (you're missing this one):
-
-const replaceSecondaryDocument = useCallback(async (
-  linkedDocumentId: number,
-  linkedCollectionId: number,
-  targetInfo: {
-    sourceURI: string;
-    start: number;
-    end: number;
-  },
-  allTargets?: Array<{
-    sourceURI: string;
-    start: number;
-    end: number;
-    text: string;
-  }>
-) => {
-  if (isUpdatingDocuments.current) {
-    console.log('🔄 Document update already in progress, skipping');
-    return;
-  }
-  
-  isUpdatingDocuments.current = true;
-  console.log('🔄 === REPLACING SECONDARY DOCUMENT ===');
-  console.log('🔄 Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
-  
-  try {
-    // Get the document title
-    let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
     
-    // If we don't have the document in our cache, fetch the collection
-    if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
-      console.log('🔄 Fetching collection for document metadata:', linkedCollectionId);
-      setIsLoadingDocuments(true);
+    // Try to find in documentsByCollection cache
+    for (const collectionId in documentsByCollection) {
+      const doc = documentsByCollection[collectionId].find(d => d.id === documentId);
+      if (doc && doc.title && !doc.title.includes('Document ')) {
+        return doc.title;
+      }
+    }
+    
+    // Try to find in viewedDocuments
+    const viewedDoc = viewedDocuments.find(doc => doc.id === documentId);
+    if (viewedDoc && viewedDoc.title && !viewedDoc.title.includes('Document ')) {
+      return viewedDoc.title;
+    }
+    
+    return null; // Let the API response provide the title
+  }, [documents, documentsByCollection, viewedDocuments]);
+
+  // Add this function (you're missing this one):
+  const replaceSecondaryDocument = useCallback(async (
+    linkedDocumentId: number,
+    linkedCollectionId: number,
+    targetInfo: {
+      sourceURI: string;
+      start: number;
+      end: number;
+    },
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>
+  ) => {
+    if (isUpdatingDocuments.current) {
+      console.log('🔄 Document update already in progress, skipping');
+      return;
+    }
+    
+    isUpdatingDocuments.current = true;
+    console.log('🔄 === REPLACING SECONDARY DOCUMENT ===');
+    console.log('🔄 Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
+    
+    try {
+      // Get the document title
+      let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
       
-      try {
-        const payload = await dispatch(fetchDocumentsByCollection(linkedCollectionId)).unwrap();
-        setDocumentsByCollection(prev => ({
-          ...prev,
-          [linkedCollectionId]: payload.documents.map(doc => ({
-            id: doc.id,
-            title: doc.title
-          }))
-        }));
+      // If we don't have the document in our cache, fetch the collection
+      if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
+        console.log('🔄 Fetching collection for document metadata:', linkedCollectionId);
+        setIsLoadingDocuments(true);
         
-        // Use element-based mapping to get correct title
+        try {
+          const payload = await dispatch(fetchDocumentsByCollection(linkedCollectionId)).unwrap();
+          setDocumentsByCollection(prev => ({
+            ...prev,
+            [linkedCollectionId]: payload.documents.map(doc => ({
+              id: doc.id,
+              title: doc.title
+            }))
+          }));
+          
+          // Use element-based mapping to get correct title
+          const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
+          linkedDocTitle = elementBasedTitle || getDocumentTitle(linkedDocumentId, linkedCollectionId);
+        } catch (error) {
+          console.error('🔄 Failed to fetch collection for linked document:', error);
+          linkedDocTitle = `Document ${linkedDocumentId}`; // Fallback title
+        } finally {
+          setIsLoadingDocuments(false);
+        }
+      } else {
+        // Even if we have cache, use element-based mapping for accurate titles
         const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
-        linkedDocTitle = elementBasedTitle || getDocumentTitle(linkedDocumentId, linkedCollectionId);
-      } catch (error) {
-        console.error('🔄 Failed to fetch collection for linked document:', error);
-        linkedDocTitle = `Document ${linkedDocumentId}`; // Fallback title
-      } finally {
-        setIsLoadingDocuments(false);
+        if (elementBasedTitle) {
+          linkedDocTitle = elementBasedTitle;
+          console.log('🔄 Using element-based title:', linkedDocTitle);
+        }
       }
-    } else {
-      // Even if we have cache, use element-based mapping for accurate titles
-      const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
-      if (elementBasedTitle) {
-        linkedDocTitle = elementBasedTitle;
-        console.log('🔄 Using element-based title:', linkedDocTitle);
-      }
-    }
-    
-    // Keep primary, replace secondary
-    const primaryDocument = viewedDocuments[0];
-    
-    setViewedDocuments([
-      primaryDocument, // Keep primary
-      {
-        id: linkedDocumentId,
-        collectionId: linkedCollectionId,
-        title: linkedDocTitle
-      } // New secondary
-    ]);
-    
-    // Clear any pending scroll target for the old secondary document
-    if (pendingScrollTarget && viewedDocuments.length > 1) {
-      const oldSecondaryId = viewedDocuments[1].id;
-      if (pendingScrollTarget.documentId === oldSecondaryId) {
-        setPendingScrollTarget(null);
-      }
-    }
-    
-    // Set up pending scroll target for the new document
-    console.log('🔄 Setting pending scroll target for replacement document');
-    setPendingScrollTarget({
-      documentId: linkedDocumentId,
-      targetInfo,
-      allTargets
-    });
-    
-  } finally {
-    isUpdatingDocuments.current = false;
-  }
-}, [dispatch, documentsByCollection, getDocumentTitle, getElementBasedDocumentTitle, viewedDocuments, pendingScrollTarget]);
-
-// Fix the replacePrimaryDocument function dependencies:
-
-const replacePrimaryDocument = useCallback(async (
-  linkedDocumentId: number,
-  linkedCollectionId: number,
-  targetInfo: {
-    sourceURI: string;
-    start: number;
-    end: number;
-  },
-  allTargets?: Array<{
-    sourceURI: string;
-    start: number;
-    end: number;
-    text: string;
-  }>
-) => {
-  if (isUpdatingDocuments.current) {
-    console.log('🔄 Document update already in progress, skipping');
-    return;
-  }
-  
-  isUpdatingDocuments.current = true;
-  console.log('🔄 === REPLACING PRIMARY DOCUMENT ===');
-  console.log('🔄 Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
-  
-  try {
-    // Get the document title
-    let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
-    
-    // If we don't have the document in our cache, fetch the collection
-    if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
-      console.log('🔄 Fetching collection for document metadata:', linkedCollectionId);
-      setIsLoadingDocuments(true);
       
-      try {
-        const payload = await dispatch(fetchDocumentsByCollection(linkedCollectionId)).unwrap();
-        setDocumentsByCollection(prev => ({
-          ...prev,
-          [linkedCollectionId]: payload.documents.map(doc => ({
-            id: doc.id,
-            title: doc.title
-          }))
-        }));
+      // Keep primary, replace secondary
+      const primaryDocument = viewedDocuments[0];
+      
+      setViewedDocuments([
+        primaryDocument, // Keep primary
+        {
+          id: linkedDocumentId,
+          collectionId: linkedCollectionId,
+          title: linkedDocTitle
+        } // New secondary
+      ]);
+      
+      // Clear any pending scroll target for the old secondary document
+      if (pendingScrollTarget && viewedDocuments.length > 1) {
+        const oldSecondaryId = viewedDocuments[1].id;
+        if (pendingScrollTarget.documentId === oldSecondaryId) {
+          setPendingScrollTarget(null);
+        }
+      }
+      
+      // Set up pending scroll target for the new document
+      console.log('🔄 Setting pending scroll target for replacement document');
+      setPendingScrollTarget({
+        documentId: linkedDocumentId,
+        targetInfo,
+        allTargets
+      });
+      
+    } finally {
+      isUpdatingDocuments.current = false;
+    }
+  }, [dispatch, documentsByCollection, getDocumentTitle, getElementBasedDocumentTitle, viewedDocuments, pendingScrollTarget]);
+
+  // Fix the replacePrimaryDocument function dependencies:
+  const replacePrimaryDocument = useCallback(async (
+    linkedDocumentId: number,
+    linkedCollectionId: number,
+    targetInfo: {
+      sourceURI: string;
+      start: number;
+      end: number;
+    },
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>
+  ) => {
+    if (isUpdatingDocuments.current) {
+      console.log('🔄 Document update already in progress, skipping');
+      return;
+    }
+    
+    isUpdatingDocuments.current = true;
+    console.log('🔄 === REPLACING PRIMARY DOCUMENT ===');
+    console.log('🔄 Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
+    
+    try {
+      // Get the document title
+      let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
+      
+      // If we don't have the document in our cache, fetch the collection
+      if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
+        console.log('🔄 Fetching collection for document metadata:', linkedCollectionId);
+        setIsLoadingDocuments(true);
         
-        // Use element-based mapping to get correct title
+        try {
+          const payload = await dispatch(fetchDocumentsByCollection(linkedCollectionId)).unwrap();
+          setDocumentsByCollection(prev => ({
+            ...prev,
+            [linkedCollectionId]: payload.documents.map(doc => ({
+              id: doc.id,
+              title: doc.title
+            }))
+          }));
+          
+          // Use element-based mapping to get correct title
+          const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
+          linkedDocTitle = elementBasedTitle || getDocumentTitle(linkedDocumentId, linkedCollectionId);
+        } catch (error) {
+          console.error('🔄 Failed to fetch collection for linked document:', error);
+          linkedDocTitle = `Document ${linkedDocumentId}`; // Fallback title
+        } finally {
+          setIsLoadingDocuments(false);
+        }
+      } else {
+        // Even if we have cache, use element-based mapping for accurate titles
         const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
-        linkedDocTitle = elementBasedTitle || getDocumentTitle(linkedDocumentId, linkedCollectionId);
-      } catch (error) {
-        console.error('🔄 Failed to fetch collection for linked document:', error);
-        linkedDocTitle = `Document ${linkedDocumentId}`; // Fallback title
-      } finally {
-        setIsLoadingDocuments(false);
+        if (elementBasedTitle) {
+          linkedDocTitle = elementBasedTitle;
+          console.log('🔄 Using element-based title:', linkedDocTitle);
+        }
       }
-    } else {
-      // Even if we have cache, use element-based mapping for accurate titles
-      const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
-      if (elementBasedTitle) {
-        linkedDocTitle = elementBasedTitle;
-        console.log('🔄 Using element-based title:', linkedDocTitle);
+      
+      // Keep secondary, replace primary
+      const secondaryDocument = viewedDocuments[1];
+      
+      setViewedDocuments([
+        {
+          id: linkedDocumentId,
+          collectionId: linkedCollectionId,
+          title: linkedDocTitle
+        }, // New primary
+        secondaryDocument // Keep secondary
+      ]);
+      
+      // Clear any pending scroll target for the old primary document
+      if (pendingScrollTarget && viewedDocuments.length > 0) {
+        const oldPrimaryId = viewedDocuments[0].id;
+        if (pendingScrollTarget.documentId === oldPrimaryId) {
+          setPendingScrollTarget(null);
+        }
       }
+      
+      // Set up pending scroll target for the new primary document
+      console.log('🔄 Setting pending scroll target for replacement primary document');
+      setPendingScrollTarget({
+        documentId: linkedDocumentId,
+        targetInfo,
+        allTargets
+      });
+      
+    } finally {
+      isUpdatingDocuments.current = false;
     }
-    
-    // Keep secondary, replace primary
-    const secondaryDocument = viewedDocuments[1];
-    
-    setViewedDocuments([
-      {
-        id: linkedDocumentId,
-        collectionId: linkedCollectionId,
-        title: linkedDocTitle
-      }, // New primary
-      secondaryDocument // Keep secondary
-    ]);
-    
-    // Clear any pending scroll target for the old primary document
-    if (pendingScrollTarget && viewedDocuments.length > 0) {
-      const oldPrimaryId = viewedDocuments[0].id;
-      if (pendingScrollTarget.documentId === oldPrimaryId) {
-        setPendingScrollTarget(null);
-      }
-    }
-    
-    // Set up pending scroll target for the new primary document
-    console.log('🔄 Setting pending scroll target for replacement primary document');
-    setPendingScrollTarget({
-      documentId: linkedDocumentId,
-      targetInfo,
-      allTargets
-    });
-    
-  } finally {
-    isUpdatingDocuments.current = false;
-  }
-}, [dispatch, documentsByCollection, getDocumentTitle, getElementBasedDocumentTitle, viewedDocuments, pendingScrollTarget]);
+  }, [dispatch, documentsByCollection, getDocumentTitle, getElementBasedDocumentTitle, viewedDocuments, pendingScrollTarget]);
 
   // Atomic document addition with element loading
   const addLinkedDocumentAsSecondary = useCallback(async (
@@ -990,27 +1015,27 @@ const replacePrimaryDocument = useCallback(async (
     scrollToAndHighlightText
   ]);
 
-  // Handle comparison document changes
+  // FIXED: Handle comparison document changes (using selectedCollectionId)
   const handleComparisonDocumentChange = useCallback(async (newComparisonDocumentId: number | null) => {
     if (newComparisonDocumentId === null) {
       setViewedDocuments(prev => prev.slice(0, 1));
       setComparisonDocumentId(null);
     } else {
       const primaryDocument = viewedDocuments[0];
-      const comparisonDocTitle = getDocumentTitle(newComparisonDocumentId, localSelectedCollectionId);
+      const comparisonDocTitle = getDocumentTitle(newComparisonDocumentId, selectedCollectionId);
       
       setViewedDocuments([
         primaryDocument,
         {
           id: newComparisonDocumentId,
-          collectionId: localSelectedCollectionId,
+          collectionId: selectedCollectionId,
           title: comparisonDocTitle
         }
       ]);
       
       setComparisonDocumentId(newComparisonDocumentId);
     }
-  }, [viewedDocuments, localSelectedCollectionId, getDocumentTitle]);
+  }, [viewedDocuments, selectedCollectionId, getDocumentTitle]);
   
   // Handle adding a document for comparison
   const handleAddComparisonDocument = useCallback((docId: number) => {
@@ -1039,10 +1064,10 @@ const replacePrimaryDocument = useCallback(async (
     navigate(`/collections/${collectionId}`);
   }, [navigate, collectionId]);
   
-  // Handle collection selection change
+  // FIXED: Handle collection selection change (using setSelectedCollectionId)
   const handleCollectionChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCollectionId = Number(e.target.value);
-    setLocalSelectedCollectionId(newCollectionId);
+    setSelectedCollectionId(newCollectionId);
   }, []);
   
   // Toggle management panel collapsed state
@@ -1055,8 +1080,8 @@ const replacePrimaryDocument = useCallback(async (
     setViewMode(mode);
   }, []);
   
-  // Get available documents in the selected collection
-  const availableInSelectedCollection = (documentsByCollection[localSelectedCollectionId] || [])
+  // FIXED: Get available documents in the selected collection (using selectedCollectionId)
+  const availableInSelectedCollection = (documentsByCollection[selectedCollectionId] || [])
     .filter(doc => !viewedDocuments.some(viewedDoc => viewedDoc.id === doc.id));
   
   return (
@@ -1194,7 +1219,7 @@ const replacePrimaryDocument = useCallback(async (
                     <label htmlFor="collection-select">Collection:</label>
                     <select 
                       id="collection-select"
-                      value={localSelectedCollectionId}
+                      value={selectedCollectionId}
                       onChange={handleCollectionChange}
                       className="collection-select"
                     >
