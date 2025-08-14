@@ -648,159 +648,159 @@ const replacePrimaryDocument = useCallback(async (
     }
   }, [dispatch, getDocumentTitle]);
 
-// REPLACE the existing handleOpenLinkedDocument function with this:
-
-const handleOpenLinkedDocument = useCallback(async (
-  linkedDocumentId: number, 
-  linkedCollectionId: number, 
-  targetInfo: {
-    sourceURI: string;
-    start: number;
-    end: number;
-  },
-  allTargets?: Array<{
-    sourceURI: string;
-    start: number;
-    end: number;
-    text: string;
-  }>
-) => {
-  console.log('🔗 === DOCUMENT VIEWER: handleOpenLinkedDocument called ===');
-  console.log('🔗 Requested Document ID:', linkedDocumentId);
-  console.log('🔗 Requested Collection ID:', linkedCollectionId);
-  console.log('🔗 Current viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
-  console.log('🔗 Target Info:', targetInfo);
-  console.log('🔗 All Targets Count:', allTargets?.length || 0);
-  console.log('🔗 Update in progress:', isUpdatingDocuments.current);
-  alert(`DEBUG:
-    linkedDocumentId: ${linkedDocumentId}
-    primaryDocId: ${viewedDocuments[0]?.id}
-    secondaryDocId: ${viewedDocuments[1]?.id}
-    Match primary? ${linkedDocumentId === viewedDocuments[0]?.id}
-    Match secondary? ${linkedDocumentId === viewedDocuments[1]?.id}`);
-  
-  // Prevent multiple calls while updating
-  if (isUpdatingDocuments.current) {
-    console.log('🔗 ⚠️ Update already in progress, skipping call');
-    return;
-  }
-  
-  // Check if the document is already being viewed
-  const isAlreadyViewed = viewedDocuments.some(doc => doc.id === linkedDocumentId);
-  console.log('🔗 Document already viewed:', isAlreadyViewed);
-  
-  if (isAlreadyViewed) {
-    // Document already viewed - find best content to navigate to
-    console.log('🔗 === CONTENT-FOCUSED NAVIGATION FOR VIEWED DOCUMENT ===');
+  const handleOpenLinkedDocument = useCallback(async (
+    linkedDocumentId: number, 
+    linkedCollectionId: number, 
+    targetInfo: {
+      sourceURI: string;
+      start: number;
+      end: number;
+    },
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>
+  ) => {
+    console.log('🔗 === DOCUMENT VIEWER: handleOpenLinkedDocument called ===');
+    console.log('🔗 Requested Document ID:', linkedDocumentId);
+    console.log('🔗 Requested Collection ID:', linkedCollectionId);
+    console.log('🔗 Current viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
+    console.log('🔗 Target Info:', targetInfo);
+    console.log('🔗 All Targets Count:', allTargets?.length || 0);
+    console.log('🔗 Update in progress:', isUpdatingDocuments.current);
     
-    if (!allTargets || allTargets.length <= 1) {
-      // Only one target - just scroll to it
-      console.log('🔗 Single target - scrolling to existing document content');
-      try {
-        scrollToAndHighlightText(targetInfo, allTargets);
-      } catch (error) {
-        console.error('🔗 Error scrolling to target:', error);
+    // Helper function to highlight source text in a document
+    const highlightSourceTextInDocument = (docId: number, docName: string) => {
+      const sourceTargets = allTargets?.filter(target => {
+        const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+        if (elementIdMatch) {
+          const elementId = parseInt(elementIdMatch[1]);
+          const element = allElements.find(el => el.id === elementId);
+          return element && element.document_id === docId;
+        }
+        return false;
+      });
+  
+      if (sourceTargets && sourceTargets.length > 0) {
+        console.log(`🔗 Highlighting source text in ${docName} document (ID: ${docId})`);
+        try {
+          scrollToAndHighlightText({
+            sourceURI: sourceTargets[0].sourceURI,
+            start: sourceTargets[0].start,
+            end: sourceTargets[0].end
+          }, sourceTargets);
+        } catch (error) {
+          console.error(`🔗 Error highlighting source text in ${docName}:`, error);
+        }
       }
+    };
+    
+    // Prevent multiple calls while updating
+    if (isUpdatingDocuments.current) {
+      console.log('🔗 ⚠️ Update already in progress, skipping call');
       return;
     }
     
-    // Multiple targets available - select best content target
-    console.log('🔗 Multiple targets available - selecting best content target');
+    // Check if the document is already being viewed
+    const isAlreadyViewed = viewedDocuments.some(doc => doc.id === linkedDocumentId);
+    console.log('🔗 Document already viewed:', isAlreadyViewed);
     
-    // Map targets to their document IDs
-    const targetsByDocId = new Map<number, Array<typeof allTargets[0]>>();
-    for (const target of allTargets) {
-      const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
-      if (!elementIdMatch) continue;
+    if (isAlreadyViewed) {
+      // Document already viewed - find best content to navigate to
+      console.log('🔗 === CONTENT-FOCUSED NAVIGATION FOR VIEWED DOCUMENT ===');
       
-      const elementId = parseInt(elementIdMatch[1]);
-      const element = allElements.find(el => el.id === elementId);
-      
-      if (element) {
-        if (!targetsByDocId.has(element.document_id)) {
-          targetsByDocId.set(element.document_id, []);
-        }
-        targetsByDocId.get(element.document_id)!.push(target);
-        console.log('🔗 Mapped target', target.sourceURI, 'to document', element.document_id);
-      }
-    }
-    
-    console.log('🔗 Targets mapped to documents:', 
-      Array.from(targetsByDocId.entries()).map(([docId, targets]) => ({ docId, count: targets.length }))
-    );
-    
-    // Find best navigation target
-    const currentDocumentIds = viewedDocuments.map(doc => doc.id);
-    const clickSourceDoc = linkedDocumentId; // The document where the click occurred
-    
-    let bestTarget = null;
-    let bestDocumentId = null;
-    
-    // Priority 1: Content in a different currently-viewed document
-    for (const [docId, targets] of targetsByDocId.entries()) {
-      if (docId !== clickSourceDoc && currentDocumentIds.includes(docId)) {
-        bestTarget = targets[0];
-        bestDocumentId = docId;
-        console.log('🔗 Selected cross-document target in viewed document:', docId);
-        break;
-      }
-    }
-    
-    // Priority 2: Content in a non-viewed document (open it)
-    if (!bestTarget) {
-      for (const [docId, targets] of targetsByDocId.entries()) {
-        if (!currentDocumentIds.includes(docId)) {
-          bestTarget = targets[0];
-          bestDocumentId = docId;
-          console.log('🔗 Selected target in non-viewed document:', docId);
-          break;
-        }
-      }
-    }
-    
-    // Priority 3: Different content in the same document
-    if (!bestTarget) {
-      const sameDocTargets = targetsByDocId.get(clickSourceDoc) || [];
-      const differentTargets = sameDocTargets.filter(target => 
-        target.sourceURI !== targetInfo.sourceURI || 
-        target.start !== targetInfo.start || 
-        target.end !== targetInfo.end
-      );
-      
-      if (differentTargets.length > 0) {
-        bestTarget = differentTargets[0];
-        bestDocumentId = clickSourceDoc;
-        console.log('🔗 Selected different content in same document');
-      }
-    }
-    
-    // Execute the navigation
-    if (bestTarget && bestDocumentId) {
-      console.log('🔗 === NAVIGATING TO SELECTED CONTENT ===');
-      console.log('🔗 Target document:', bestDocumentId);
-      console.log('🔗 Target URI:', bestTarget.sourceURI);
-      
-      if (bestDocumentId === linkedDocumentId) {
-        // Same document - just scroll
-        console.log('🔗 Scrolling to different content in same document');
+      if (!allTargets || allTargets.length <= 1) {
+        // Only one target - just scroll to it
+        console.log('🔗 Single target - scrolling to existing document content');
         try {
-          scrollToAndHighlightText({
-            sourceURI: bestTarget.sourceURI,
-            start: bestTarget.start,
-            end: bestTarget.end
-          }, allTargets);
+          scrollToAndHighlightText(targetInfo, allTargets);
         } catch (error) {
           console.error('🔗 Error scrolling to target:', error);
         }
-      } else {
-        // Different document - navigate there
-        console.log('🔗 Navigating to different document:', bestDocumentId);
+        return;
+      }
+      
+      // Multiple targets available - select best content target
+      console.log('🔗 Multiple targets available - selecting best content target');
+      
+      // Map targets to their document IDs
+      const targetsByDocId = new Map<number, Array<typeof allTargets[0]>>();
+      for (const target of allTargets) {
+        const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+        if (!elementIdMatch) continue;
         
-        const destinationTargets = targetsByDocId.get(bestDocumentId) || [bestTarget];
+        const elementId = parseInt(elementIdMatch[1]);
+        const element = allElements.find(el => el.id === elementId);
         
-        if (currentDocumentIds.includes(bestDocumentId)) {
-          // Target document is already open - just scroll to it
-          console.log('🔗 Target document already open - scrolling to content');
+        if (element) {
+          if (!targetsByDocId.has(element.document_id)) {
+            targetsByDocId.set(element.document_id, []);
+          }
+          targetsByDocId.get(element.document_id)!.push(target);
+          console.log('🔗 Mapped target', target.sourceURI, 'to document', element.document_id);
+        }
+      }
+      
+      console.log('🔗 Targets mapped to documents:', 
+        Array.from(targetsByDocId.entries()).map(([docId, targets]) => ({ docId, count: targets.length }))
+      );
+      
+      // Find best navigation target
+      const currentDocumentIds = viewedDocuments.map(doc => doc.id);
+      const clickSourceDoc = linkedDocumentId; // The document where the click occurred
+      
+      let bestTarget = null;
+      let bestDocumentId = null;
+      
+      // Priority 1: Content in a different currently-viewed document
+      for (const [docId, targets] of targetsByDocId.entries()) {
+        if (docId !== clickSourceDoc && currentDocumentIds.includes(docId)) {
+          bestTarget = targets[0];
+          bestDocumentId = docId;
+          console.log('🔗 Selected cross-document target in viewed document:', docId);
+          break;
+        }
+      }
+      
+      // Priority 2: Content in a non-viewed document (open it)
+      if (!bestTarget) {
+        for (const [docId, targets] of targetsByDocId.entries()) {
+          if (!currentDocumentIds.includes(docId)) {
+            bestTarget = targets[0];
+            bestDocumentId = docId;
+            console.log('🔗 Selected target in non-viewed document:', docId);
+            break;
+          }
+        }
+      }
+      
+      // Priority 3: Different content in the same document
+      if (!bestTarget) {
+        const sameDocTargets = targetsByDocId.get(clickSourceDoc) || [];
+        const differentTargets = sameDocTargets.filter(target => 
+          target.sourceURI !== targetInfo.sourceURI || 
+          target.start !== targetInfo.start || 
+          target.end !== targetInfo.end
+        );
+        
+        if (differentTargets.length > 0) {
+          bestTarget = differentTargets[0];
+          bestDocumentId = clickSourceDoc;
+          console.log('🔗 Selected different content in same document');
+        }
+      }
+      
+      // Execute the navigation
+      if (bestTarget && bestDocumentId) {
+        console.log('🔗 === NAVIGATING TO SELECTED CONTENT ===');
+        console.log('🔗 Target document:', bestDocumentId);
+        console.log('🔗 Target URI:', bestTarget.sourceURI);
+        
+        if (bestDocumentId === linkedDocumentId) {
+          // Same document - just scroll
+          console.log('🔗 Scrolling to different content in same document');
           try {
             scrollToAndHighlightText({
               sourceURI: bestTarget.sourceURI,
@@ -808,157 +808,187 @@ const handleOpenLinkedDocument = useCallback(async (
               end: bestTarget.end
             }, allTargets);
           } catch (error) {
-            console.error('🔗 Error scrolling to target document:', error);
+            console.error('🔗 Error scrolling to target:', error);
           }
         } else {
-          // Target document not open - determine which panel to replace
-          console.log('🔗 Opening target document:', bestDocumentId);
+          // Different document - navigate there
+          console.log('🔗 Navigating to different document:', bestDocumentId);
           
-          if (viewedDocuments.length === 1) {
-            // Single document - add as secondary
-            await addLinkedDocumentAsSecondary(
-              bestDocumentId, 
-              linkedCollectionId, 
-              {
+          const destinationTargets = targetsByDocId.get(bestDocumentId) || [bestTarget];
+          
+          if (currentDocumentIds.includes(bestDocumentId)) {
+            // Target document is already open - just scroll to it
+            console.log('🔗 Target document already open - scrolling to content');
+            try {
+              scrollToAndHighlightText({
                 sourceURI: bestTarget.sourceURI,
                 start: bestTarget.start,
                 end: bestTarget.end
-              }, 
-              destinationTargets
-            );
-          } else if (viewedDocuments.length === 2) {
-            // Multi-document - determine which panel to replace based on source
-            const primaryDocId = viewedDocuments[0].id;
-            const secondaryDocId = viewedDocuments[1].id;
-            
-            if (linkedDocumentId === primaryDocId) {
-              // Clicked from primary - replace secondary
-              console.log('🔗 Clicked from primary - replacing secondary');
-              await replaceSecondaryDocument(
-                bestDocumentId, 
-                linkedCollectionId, 
-                {
-                  sourceURI: bestTarget.sourceURI,
-                  start: bestTarget.start,
-                  end: bestTarget.end
-                }, 
-                destinationTargets
-              );
-            } else if (linkedDocumentId === secondaryDocId) {
-              // Clicked from secondary - replace primary
-              console.log('🔗 Clicked from secondary - replacing primary');
-              await replacePrimaryDocument(
-                bestDocumentId, 
-                linkedCollectionId, 
-                {
-                  sourceURI: bestTarget.sourceURI,
-                  start: bestTarget.start,
-                  end: bestTarget.end
-                }, 
-                destinationTargets
-              );
-            } else {
-              // Context menu click - default to replacing secondary
-              console.log('🔗 Context menu click - replacing secondary by default');
-              await replaceSecondaryDocument(
-                bestDocumentId, 
-                linkedCollectionId, 
-                {
-                  sourceURI: bestTarget.sourceURI,
-                  start: bestTarget.start,
-                  end: bestTarget.end
-                }, 
-                destinationTargets
-              );
+              }, allTargets);
+            } catch (error) {
+              console.error('🔗 Error scrolling to target document:', error);
             }
-          }
-        }
-      }
-      return;
-    }
-    
-    // Fallback: just scroll to the requested content
-    console.log('🔗 === FALLBACK: Scrolling to requested content ===');
-    try {
-      scrollToAndHighlightText(targetInfo, allTargets);
-    } catch (error) {
-      console.error('🔗 Error in fallback scroll:', error);
-    }
-    
-  } else {
-    // Document not viewed - open new document
-    console.log('🔗 === OPENING NEW DOCUMENT ===');
-    console.log('🔗 Current document count:', viewedDocuments.length);
-    
-    try {
-      if (viewedDocuments.length === 1) {
-        // Single document - add as secondary
-        console.log('🔗 === ADDING AS SECONDARY DOCUMENT ===');
-        await addLinkedDocumentAsSecondary(linkedDocumentId, linkedCollectionId, targetInfo, allTargets);
-      } else if (viewedDocuments.length === 2) {
-        // Multi-document - determine which panel to replace based on source
-        const primaryDocId = viewedDocuments[0].id;
-        const secondaryDocId = viewedDocuments[1].id;
-        
-        // Since we're opening a NEW document, we need to decide which panel to replace
-        // The linkedDocumentId here represents where the user clicked FROM
-        // But we're opening a different document - so we use the target detection logic
-        
-        // Find the actual target document from allTargets
-        let targetDocumentId = linkedDocumentId; // fallback
-        
-        if (allTargets && allTargets.length > 0) {
-          for (const target of allTargets) {
-            const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
-            if (elementIdMatch) {
-              const elementId = parseInt(elementIdMatch[1]);
-              const element = allElements.find(el => el.id === elementId);
+          } else {
+            // Target document not open - determine which panel to replace
+            console.log('🔗 Opening target document:', bestDocumentId);
+            
+            if (viewedDocuments.length === 1) {
+              // Single document - add as secondary
+              await addLinkedDocumentAsSecondary(
+                bestDocumentId, 
+                linkedCollectionId, 
+                {
+                  sourceURI: bestTarget.sourceURI,
+                  start: bestTarget.start,
+                  end: bestTarget.end
+                }, 
+                destinationTargets
+              );
+            } else if (viewedDocuments.length === 2) {
+              // Multi-document - determine which panel to replace based on source
+              const primaryDocId = viewedDocuments[0].id;
+              const secondaryDocId = viewedDocuments[1].id;
               
-              if (element && element.document_id !== linkedDocumentId) {
-                // Found a target in a different document
-                targetDocumentId = element.document_id;
-                targetInfo = {
-                  sourceURI: target.sourceURI,
-                  start: target.start,
-                  end: target.end
-                };
-                break;
+              if (linkedDocumentId === primaryDocId) {
+                // Clicked from primary - replace secondary
+                console.log('🔗 Clicked from primary - replacing secondary');
+                
+                // Highlight source text in primary document first
+                highlightSourceTextInDocument(primaryDocId, "primary");
+                
+                await replaceSecondaryDocument(
+                  bestDocumentId, 
+                  linkedCollectionId, 
+                  {
+                    sourceURI: bestTarget.sourceURI,
+                    start: bestTarget.start,
+                    end: bestTarget.end
+                  }, 
+                  destinationTargets
+                );
+              } else if (linkedDocumentId === secondaryDocId) {
+                // Clicked from secondary - replace primary
+                console.log('🔗 Clicked from secondary - replacing primary');
+                
+                // Highlight source text in secondary document first
+                highlightSourceTextInDocument(secondaryDocId, "secondary");
+                
+                await replacePrimaryDocument(
+                  bestDocumentId, 
+                  linkedCollectionId, 
+                  {
+                    sourceURI: bestTarget.sourceURI,
+                    start: bestTarget.start,
+                    end: bestTarget.end
+                  }, 
+                  destinationTargets
+                );
+              } else {
+                // Context menu click - default to replacing secondary
+                console.log('🔗 Context menu click - replacing secondary by default');
+                await replaceSecondaryDocument(
+                  bestDocumentId, 
+                  linkedCollectionId, 
+                  {
+                    sourceURI: bestTarget.sourceURI,
+                    start: bestTarget.start,
+                    end: bestTarget.end
+                  }, 
+                  destinationTargets
+                );
               }
             }
           }
         }
-        
-        // Now determine replacement based on where the click came from
-        if (linkedDocumentId === primaryDocId) {
-          // Clicked from primary - replace secondary
-          console.log('🔗 === REPLACING SECONDARY DOCUMENT (clicked from primary) ===');
-          await replaceSecondaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
-        } else if (linkedDocumentId === secondaryDocId) {
-          // Clicked from secondary - replace primary
-          console.log('🔗 === REPLACING PRIMARY DOCUMENT (clicked from secondary) ===');
-          await replacePrimaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
-        } else {
-          // Context menu click from non-viewed document - default to replacing secondary
-          console.log('🔗 === REPLACING SECONDARY DOCUMENT (context menu) ===');
-          await replaceSecondaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
-        }
-      } else {
-        console.warn('🔗 ⚠️ Unexpected document count:', viewedDocuments.length);
+        return;
       }
-    } catch (error) {
-      console.error('🔗 Error opening linked document:', error);
+      
+      // Fallback: just scroll to the requested content
+      console.log('🔗 === FALLBACK: Scrolling to requested content ===');
+      try {
+        scrollToAndHighlightText(targetInfo, allTargets);
+      } catch (error) {
+        console.error('🔗 Error in fallback scroll:', error);
+      }
+      
+    } else {
+      // Document not viewed - open new document
+      console.log('🔗 === OPENING NEW DOCUMENT ===');
+      console.log('🔗 Current document count:', viewedDocuments.length);
+      
+      try {
+        if (viewedDocuments.length === 1) {
+          // Single document - add as secondary
+          console.log('🔗 === ADDING AS SECONDARY DOCUMENT ===');
+          await addLinkedDocumentAsSecondary(linkedDocumentId, linkedCollectionId, targetInfo, allTargets);
+        } else if (viewedDocuments.length === 2) {
+          // Multi-document - determine which panel to replace based on source
+          const primaryDocId = viewedDocuments[0].id;
+          const secondaryDocId = viewedDocuments[1].id;
+          
+          // Find the actual target document from allTargets
+          let targetDocumentId = linkedDocumentId; // fallback
+          
+          if (allTargets && allTargets.length > 0) {
+            for (const target of allTargets) {
+              const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+              if (elementIdMatch) {
+                const elementId = parseInt(elementIdMatch[1]);
+                const element = allElements.find(el => el.id === elementId);
+                
+                if (element && element.document_id !== linkedDocumentId) {
+                  // Found a target in a different document
+                  targetDocumentId = element.document_id;
+                  targetInfo = {
+                    sourceURI: target.sourceURI,
+                    start: target.start,
+                    end: target.end
+                  };
+                  break;
+                }
+              }
+            }
+          }
+          
+          // Now determine replacement based on where the click came from
+          if (linkedDocumentId === primaryDocId) {
+            // Clicked from primary - replace secondary
+            console.log('🔗 === REPLACING SECONDARY DOCUMENT (clicked from primary) ===');
+            
+            // Highlight source text in primary document first
+            highlightSourceTextInDocument(primaryDocId, "primary");
+            
+            await replaceSecondaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
+          } else if (linkedDocumentId === secondaryDocId) {
+            // Clicked from secondary - replace primary
+            console.log('🔗 === REPLACING PRIMARY DOCUMENT (clicked from secondary) ===');
+            
+            // Highlight source text in secondary document first
+            highlightSourceTextInDocument(secondaryDocId, "secondary");
+            
+            await replacePrimaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
+          } else {
+            // Context menu click from non-viewed document - default to replacing secondary
+            console.log('🔗 === REPLACING SECONDARY DOCUMENT (context menu) ===');
+            await replaceSecondaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
+          }
+        } else {
+          console.warn('🔗 ⚠️ Unexpected document count:', viewedDocuments.length);
+        }
+      } catch (error) {
+        console.error('🔗 Error opening linked document:', error);
+      }
     }
-  }
-  
-  console.log('🔗 === DOCUMENT VIEWER: handleOpenLinkedDocument completed ===');
-}, [
-  viewedDocuments, 
-  addLinkedDocumentAsSecondary, 
-  replaceSecondaryDocument, 
-  replacePrimaryDocument, 
-  allElements, 
-  scrollToAndHighlightText
-]);
+    
+    console.log('🔗 === DOCUMENT VIEWER: handleOpenLinkedDocument completed ===');
+  }, [
+    viewedDocuments, 
+    addLinkedDocumentAsSecondary, 
+    replaceSecondaryDocument, 
+    replacePrimaryDocument, 
+    allElements, 
+    scrollToAndHighlightText
+  ]);
 
   // Handle comparison document changes
   const handleComparisonDocumentChange = useCallback(async (newComparisonDocumentId: number | null) => {
