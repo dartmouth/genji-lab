@@ -228,20 +228,50 @@ export const getLinkedDocumentsSimple = (
   const result: HierarchicalLinkedDocuments = {};
   
   console.log('🔗 === getLinkedDocumentsSimple START ===');
-  console.log('🔗 Selection:', selection.sourceURI, 'from document', selection.documentId);
+  console.log('🔗 Selection sourceURI:', selection.sourceURI, 'from document', selection.documentId);
   console.log('🔗 Available documents in Redux:', allDocuments.length);
   console.log('🔗 Available elements in Redux:', allElements.length);
   console.log('🔗 Total linking annotations:', allLinkingAnnotations.length);
+  console.log('🔗 Viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
   
   // Find all annotations that reference our selected element
   const relevantAnnotations = getAnnotationsForElement(allLinkingAnnotations, selection.sourceURI);
   console.log('🔗 Found', relevantAnnotations.length, 'relevant annotations for', selection.sourceURI);
   
+  if (relevantAnnotations.length === 0) {
+    console.log('🔗 ⚠️ No linking annotations found for sourceURI:', selection.sourceURI);
+    // 🎯 DEBUG: Try alternative sourceURI formats
+    const alternativeURIs = [
+      selection.sourceURI,
+      `/${selection.sourceURI}`,
+      selection.sourceURI.replace(/^\//, ''),
+      `/DocumentElements/${selection.documentElementId}`,
+      `DocumentElements/${selection.documentElementId}`
+    ];
+    
+    console.log('🔗 Trying alternative URI formats:', alternativeURIs);
+    
+    alternativeURIs.forEach(uri => {
+      const altAnnotations = getAnnotationsForElement(allLinkingAnnotations, uri);
+      if (altAnnotations.length > 0) {
+        console.log('🔗 ✅ Found', altAnnotations.length, 'annotations with alternative URI:', uri);
+        relevantAnnotations.push(...altAnnotations);
+      }
+    });
+    
+    if (relevantAnnotations.length === 0) {
+      console.log('🔗 ❌ Still no annotations found after trying alternatives');
+      return result;
+    }
+  }
+  
   // Process each annotation to find linked documents
   relevantAnnotations.forEach((annotation, annotationIndex) => {
     console.log(`🔗 [${annotationIndex + 1}/${relevantAnnotations.length}] Processing annotation:`, {
       id: annotation.id,
-      targetCount: annotation.target?.length || 0
+      documentId: annotation.document_id,
+      targetCount: annotation.target?.length || 0,
+      targets: annotation.target?.map(t => t.source) || []
     });
     
     // Find targets that are NOT our current selection
@@ -249,14 +279,14 @@ export const getLinkedDocumentsSimple = (
       target.source !== selection.sourceURI
     ) || [];
     
-    console.log('🔗 Non-current targets:', targetsNotCurrentSelection.map(t => t.source));
+    console.log('🔗 Targets not in current selection:', targetsNotCurrentSelection.map(t => t.source));
     
     if (targetsNotCurrentSelection.length === 0) {
-      console.log('🔗 ⚠️ No linked elements found for annotation:', annotation.id);
+      console.log('🔗 ⚠️ No cross-document targets found for annotation:', annotation.id);
       return;
     }
     
-    // Group targets by what we can determine from the annotation itself
+    // Group targets by document
     const targetsByDocument: { [docId: number]: { targets: AnnotationTarget[]; elementIds: number[] } } = {};
     
     targetsNotCurrentSelection.forEach(target => {
@@ -267,17 +297,18 @@ export const getLinkedDocumentsSimple = (
       }
       
       const elementId = parseInt(elementIdMatch[1]);
+      console.log('🔗 Processing target element:', elementId, 'from source:', target.source);
       
       // Try to get document info
       const docInfo = getDocumentInfoFromElementId(elementId, allDocuments, allElements, viewedDocuments);
       
       if (docInfo) {
-        console.log('🔗 Target element', elementId, '→ Document', docInfo.documentId, '(' + docInfo.title + ')');
+        console.log('🔗 ✅ Target element', elementId, '→ Document', docInfo.documentId, '(' + docInfo.title + ')');
         
-        // Skip same-document links
+        // 🎯 CRITICAL: Don't skip same-document links in debug mode
         if (docInfo.documentId === selection.documentId) {
-          console.log('🔗 ⚠️ Skipping same-document link for document', docInfo.documentId);
-          return;
+          console.log('🔗 ⚠️ Found same-document link for document', docInfo.documentId, '- including for debugging');
+          // Don't return early - include it for debugging
         }
         
         if (!targetsByDocument[docInfo.documentId]) {
@@ -286,7 +317,6 @@ export const getLinkedDocumentsSimple = (
         targetsByDocument[docInfo.documentId].targets.push(target);
         targetsByDocument[docInfo.documentId].elementIds.push(elementId);
       } else {
-        // 🎯 ENHANCED FALLBACK: Try to use the annotation's document_id directly
         console.log('🔗 ⚠️ Could not determine document for element', elementId);
         
         // Use the annotation's document_id as a fallback if it's different from current selection
@@ -298,24 +328,14 @@ export const getLinkedDocumentsSimple = (
           }
           targetsByDocument[annotation.document_id].targets.push(target);
           targetsByDocument[annotation.document_id].elementIds.push(elementId);
-        } else {
-          // Last resort: try to infer from element ID patterns
-          const fallbackDocumentId = elementId > 500 ? 21 : (elementId > 30 ? 2 : 1);
-          
-          if (fallbackDocumentId !== selection.documentId) {
-            console.log('🔗 📝 Using pattern-based fallback document', fallbackDocumentId, 'for element', elementId);
-            
-            if (!targetsByDocument[fallbackDocumentId]) {
-              targetsByDocument[fallbackDocumentId] = { targets: [], elementIds: [] };
-            }
-            targetsByDocument[fallbackDocumentId].targets.push(target);
-            targetsByDocument[fallbackDocumentId].elementIds.push(elementId);
-          }
         }
       }
     });
     
-    console.log('🔗 Cross-document targets found:', Object.keys(targetsByDocument).length);
+    console.log('🔗 Cross-document targets found:', Object.keys(targetsByDocument).map(docId => ({
+      docId: parseInt(docId),
+      elementCount: targetsByDocument[parseInt(docId)].elementIds.length
+    })));
     
     // Create linked text options for each target document
     Object.keys(targetsByDocument).forEach(docIdStr => {
@@ -344,7 +364,7 @@ export const getLinkedDocumentsSimple = (
       if (!result[linkedDocumentId]) {
         result[linkedDocumentId] = {
           documentId: linkedDocumentId,
-          documentTitle: documentTitle, // 🎯 Now properly resolved!
+          documentTitle: documentTitle,
           collectionId: collectionId,
           isCurrentlyOpen: isCurrentlyViewed,
           linkedTextOptions: []
@@ -388,7 +408,8 @@ export const getLinkedDocumentsSimple = (
           annotation: annotation.id,
           document: documentTitle,
           textPreview: linkedText.substring(0, 40) + '...',
-          allTargetsCount: allTargets.length
+          allTargetsCount: allTargets.length,
+          targetInfo: newOption.targetInfo
         });
       } else {
         console.log('🔗 ⚠️ Skipping duplicate annotation option:', annotation.id);
@@ -398,14 +419,16 @@ export const getLinkedDocumentsSimple = (
   
   // Final summary
   console.log('🔗 === FINAL RESULT SUMMARY ===');
+  console.log('🔗 Source document:', selection.documentId);
+  console.log('🔗 Source element:', selection.sourceURI);
   Object.keys(result).forEach(docIdStr => {
     const docId = parseInt(docIdStr);
     const doc = result[docId];
-    console.log(`📋 ${doc.documentTitle} (ID: ${docId}):`, {
+    console.log(`📋 Target: ${doc.documentTitle} (ID: ${docId}):`, {
       collection: doc.collectionId,
       isOpen: doc.isCurrentlyOpen,
       linkedTextSections: doc.linkedTextOptions.length,
-      annotationIds: doc.linkedTextOptions.map(opt => opt.linkingAnnotationId)
+      firstTargetURI: doc.linkedTextOptions[0]?.targetInfo?.sourceURI
     });
   });
   console.log('🔗 === getLinkedDocumentsSimple END ===');
@@ -425,7 +448,8 @@ export const createSelectionFromDOMSelection = (
   selection: Selection,
   documents: Array<{ id: number; title: string; collectionId: number }>
 ): LinkedTextSelection | null => {
-  console.log('🔧 createSelectionFromDOMSelection called');
+  console.log('🔧 === createSelectionFromDOMSelection called ===');
+  console.log('🔧 Available documents:', documents.map(d => ({ id: d.id, title: d.title })));
 
   if (!selection || selection.rangeCount === 0) {
     console.log('🔧 ❌ No selection or ranges');
@@ -440,6 +464,8 @@ export const createSelectionFromDOMSelection = (
     return null;
   }
   
+  console.log('🔧 Selected text:', selectedText.substring(0, 50) + '...');
+  
   // Find the document element
   let element = range.commonAncestorContainer as Node;
   
@@ -448,18 +474,30 @@ export const createSelectionFromDOMSelection = (
   }
   
   let elementWithId = element as HTMLElement;
+  console.log('🔧 Starting element search from:', {
+    tagName: elementWithId?.tagName,
+    id: elementWithId?.id,
+    className: elementWithId?.className
+  });
   
   // Find DocumentElements ID
   let attempts = 0;
   while (elementWithId && !elementWithId.id?.includes('DocumentElements') && attempts < 10) {
+    console.log(`🔧 Attempt ${attempts + 1}: Checking element:`, {
+      tagName: elementWithId.tagName,
+      id: elementWithId.id,
+      className: elementWithId.className
+    });
     elementWithId = elementWithId.parentElement!;
     attempts++;
   }
   
   if (!elementWithId?.id || !elementWithId.id.includes('DocumentElements')) {
-    console.log('🔧 ❌ No element with DocumentElements ID found');
+    console.log('🔧 ❌ No element with DocumentElements ID found after', attempts, 'attempts');
     return null;
   }
+  
+  console.log('🔧 ✅ Found DocumentElements element:', elementWithId.id);
   
   const elementId = extractNumericId(elementWithId.id);
   if (!elementId) {
@@ -467,20 +505,43 @@ export const createSelectionFromDOMSelection = (
     return null;
   }
   
-  // Find document panel
+  console.log('🔧 Extracted element ID:', elementId);
+  
+  // 🎯 CRITICAL: Find document panel with enhanced debugging
   const finalPanel = elementWithId.closest('[data-document-id]') as HTMLElement;
   if (!finalPanel) {
     console.log('🔧 ❌ No document panel found');
+    console.log('🔧 Searched from element:', elementWithId);
+    // Try to find any data-document-id in the DOM for debugging
+    const allPanels = document.querySelectorAll('[data-document-id]');
+    console.log('🔧 Available document panels in DOM:', 
+      Array.from(allPanels).map(panel => ({
+        id: panel.getAttribute('data-document-id'),
+        element: panel
+      }))
+    );
     return null;
   }
   
-  const documentId = parseInt(finalPanel.getAttribute('data-document-id') || '0');
+  const documentIdAttr = finalPanel.getAttribute('data-document-id');
+  const documentId = parseInt(documentIdAttr || '0');
+  
+  console.log('🔧 Found document panel:', {
+    documentId,
+    elementId,
+    panelElement: finalPanel
+  });
+  
   const foundDocument = documents.find(d => d.id === documentId);
   
   if (!foundDocument) {
     console.log('🔧 ❌ Document not found in documents array');
+    console.log('🔧 Looking for document ID:', documentId);
+    console.log('🔧 Available documents:', documents.map(d => ({ id: d.id, title: d.title })));
     return null;
   }
+  
+  console.log('🔧 ✅ Found matching document:', foundDocument);
   
   // Calculate text positions
   const elementText = elementWithId.textContent || '';

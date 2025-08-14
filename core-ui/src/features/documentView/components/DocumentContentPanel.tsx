@@ -1,5 +1,5 @@
 // src/features/documentView/components/DocumentContentPanel.tsx
-// CRITICAL FIXES - Enhanced callback chain and debugging
+// CRITICAL FIXES - Enhanced callback chain, debugging, and element loading
 
 import React, { useEffect, useCallback, useMemo } from 'react';
 import { 
@@ -67,24 +67,57 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     useMemo(() => (state: RootState) => selectDocumentErrorById(state, documentId), [documentId])
   );
   
-  // Fetch document elements
+  // 🎯 CRITICAL FIX: Enhanced element loading for cross-document navigation
   useEffect(() => {
     if (documentId) {
-      console.log('🏗️ DocumentContentPanel: Fetching elements for document', documentId);
+      console.log('🏗️ DocumentContentPanel: Checking elements for document', documentId);
       console.log('🏗️ Current documentStatus:', documentStatus);
       console.log('🏗️ Current documentError:', documentError);
       console.log('🏗️ Current elements count:', documentElements.length);
       
+      // Always fetch elements when document changes, even if some exist
+      // This ensures we have all elements for cross-document linking
+      console.log('🏗️ === FETCHING ELEMENTS FOR CROSS-DOCUMENT SUPPORT ===');
       dispatch(fetchDocumentElements(documentId))
         .unwrap()
         .then((result) => {
           console.log('🏗️ ✅ Successfully fetched elements for document', documentId, ':', result.elements.length, 'elements');
+          console.log('🏗️ Element IDs:', result.elements.map(el => el.id));
+          
+          // Log specific elements that are mentioned in the database
+          const criticalElements = result.elements.filter(el => [33, 34, 523, 524].includes(el.id));
+          if (criticalElements.length > 0) {
+            console.log('🏗️ 🎯 Found critical cross-document elements:', criticalElements.map(el => el.id));
+          } else {
+            console.log('🏗️ ⚠️ No critical cross-document elements found (33, 34, 523, 524)');
+          }
         })
         .catch((error) => {
           console.error('🏗️ ❌ Failed to fetch elements for document', documentId, ':', error);
         });
     }
-  }, [dispatch, documentId]);
+  }, [dispatch, documentId]); // Removed documentStatus and other dependencies to ensure it always runs
+
+  // 🎯 NEW: Force element loading for all viewed documents when viewedDocuments changes
+  useEffect(() => {
+    console.log('🔄 === ENSURING ALL VIEWED DOCUMENTS HAVE ELEMENTS LOADED ===');
+    console.log('🔄 Viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
+    
+    viewedDocuments.forEach((doc, index) => {
+      console.log(`🔄 Checking elements for viewed document ${index + 1}:`, doc.id, '(' + doc.title + ')');
+      
+      // Always fetch elements for each viewed document to ensure cross-document linking works
+      dispatch(fetchDocumentElements(doc.id))
+        .unwrap()
+        .then((result) => {
+          console.log(`🔄 ✅ Loaded ${result.elements.length} elements for viewed document ${doc.id} (${doc.title})`);
+          console.log(`🔄 Element IDs for ${doc.title}:`, result.elements.map(el => el.id));
+        })
+        .catch((error) => {
+          console.error(`🔄 ❌ Failed to load elements for viewed document ${doc.id}:`, error);
+        });
+    });
+  }, [viewedDocuments, dispatch]);
 
   // 🎯 CRITICAL FIX: Enhanced callback wrapper with detailed logging
   const handleOpenLinkedDocumentWrapper = useCallback((
@@ -110,6 +143,20 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     console.log('📄 All targets count:', allTargets?.length || 0);
     console.log('📄 Parent callback exists:', !!onOpenLinkedDocument);
     console.log('📄 Document elements loaded:', documentElements.length);
+    
+    // 🎯 ENHANCED: Debug all targets to understand cross-document relationships
+    if (allTargets) {
+      console.log('📄 === ALL TARGETS ANALYSIS ===');
+      allTargets.forEach((target, index) => {
+        const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+        const elementId = elementIdMatch ? parseInt(elementIdMatch[1]) : null;
+        console.log(`📄 Target ${index + 1}:`, {
+          sourceURI: target.sourceURI,
+          elementId: elementId,
+          text: target.text.substring(0, 50) + '...'
+        });
+      });
+    }
     
     // 🎯 REMOVED: Don't block same document calls - let the parent handle the logic
     // The parent DocumentViewerContainer has sophisticated logic to handle:
@@ -140,8 +187,15 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
       elementsCount: documentElements.length,
       status: documentStatus,
       error: documentError,
-      elementIds: documentElements.map(el => el.id).slice(0, 5) // First 5 IDs
+      elementIds: documentElements.map(el => el.id).slice(0, 10), // First 10 IDs
+      allElementIds: documentElements.map(el => el.id) // All IDs for debugging
     });
+    
+    // 🎯 CRITICAL: Check for specific cross-document elements
+    const crossDocElements = documentElements.filter(el => [33, 34, 523, 524].includes(el.id));
+    if (crossDocElements.length > 0) {
+      console.log('📊 🎯 FOUND CROSS-DOCUMENT ELEMENTS:', crossDocElements.map(el => ({ id: el.id, documentId })));
+    }
   }, [documentElements, documentStatus, documentError, documentId]);
   
   // Loading/Error states
@@ -241,7 +295,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
           onOpenLinkedDocument={handleOpenLinkedDocumentWrapper}
         />
         
-        {/* 🎯 NEW: Debug information panel (only in development) */}
+        {/* 🎯 ENHANCED: Debug information panel (only in development) */}
         {process.env.NODE_ENV === 'development' && (
           <div style={{
             position: 'fixed',
@@ -257,10 +311,15 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
             maxWidth: '300px'
           }}>
             <div>Doc {documentId}: {documentElements.length} elements</div>
+            <div>Element IDs: {documentElements.map(el => el.id).join(', ')}</div>
             <div>Callback: {onOpenLinkedDocument ? '✓' : '✗'}</div>
             <div>Viewed docs: {viewedDocuments.length}</div>
             <div>Linking mode: {isLinkingModeActive ? 'ON' : 'OFF'}</div>
             <div>Show highlights: {showLinkedTextHighlights ? 'ON' : 'OFF'}</div>
+            {/* 🎯 NEW: Show critical cross-document elements */}
+            <div style={{ color: '#ffa500' }}>
+              Cross-doc els: {documentElements.filter(el => [33, 34, 523, 524].includes(el.id)).map(el => el.id).join(', ') || 'none'}
+            </div>
           </div>
         )}
       </div>
