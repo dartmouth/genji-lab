@@ -6,9 +6,10 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchUsers, selectAllUsers, selectUsersStatus, selectUsersError, updateUserRoles } from '../../../store/slice/usersSlice';
+import { fetchUsers, selectFilteredUsers, selectUsersStatus, selectUsersError, updateUserRoles } from '../../../store/slice/usersSlice';
 import { fetchRoles, selectAllRoles, selectRolesStatus, selectRolesError } from '../../../store/slice/rolesSlice';
 import { useAuth } from '../../../hooks/useAuthContext';
+import UserSearchBar from './UserSearchBar';
 
 // Utility function to format role names for display
 const formatRoleName = (roleName: string): string => {
@@ -102,7 +103,7 @@ const ManageUsers: React.FC = () => {
   const { user: currentUser } = useAuth();
   
   // User selectors
-  const users = useAppSelector(selectAllUsers);
+  const users = useAppSelector(selectFilteredUsers);
   const usersLoading = useAppSelector(selectUsersStatus) === 'loading';
   const usersError = useAppSelector(selectUsersError);
   
@@ -280,6 +281,9 @@ const ManageUsers: React.FC = () => {
                 {usersError}
               </Alert>
             )}
+            
+            {/* User Search Bar */}
+            <UserSearchBar placeholder="Search users by name..." />
             
             {/* Users Table */}
             {usersLoading ? (

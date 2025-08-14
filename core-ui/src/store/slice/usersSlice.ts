@@ -27,6 +27,7 @@ interface UserState {
   users: User[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  filteredUsers: User[];
 }
 
 interface UserCreate {
@@ -49,18 +50,39 @@ export type { UserCreate, UserUpdate };
 const initialState: UserState = {
   users: [],
   status: 'idle',
-  error: null
+  error: null,
+  filteredUsers: []
 };
 
 // Thunks
 export const fetchUsers = createAsyncThunk(
   'users/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (nameSearch: string | undefined = undefined, { rejectWithValue }) => {
     try {
-      const response = await api.get('/users/');
+      const params = nameSearch ? { name_search: nameSearch } : {};
+      const response = await api.get('/users/', { params });
       
       if (!(response.status === 200)) {
         return rejectWithValue(`Failed to fetch users: ${response.statusText}`);
+      }
+      
+      const users: User[] = response.data;
+      return users;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+);
+
+export const searchUsers = createAsyncThunk(
+  'users/search',
+  async (nameSearch: string, { rejectWithValue }) => {
+    try {
+      const params = nameSearch ? { name_search: nameSearch } : {};
+      const response = await api.get('/users/', { params });
+      
+      if (!(response.status === 200)) {
+        return rejectWithValue(`Failed to search users: ${response.statusText}`);
       }
       
       const users: User[] = response.data;
@@ -150,6 +172,7 @@ const usersSlice = createSlice({
     // Regular reducers go here
     clearUsers: (state) => {
       state.users = [];
+      state.filteredUsers = [];
       state.status = 'idle';
     },
     clearError: (state) => {
@@ -166,9 +189,25 @@ const usersSlice = createSlice({
       .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
         state.status = 'succeeded';
         // Sort users alphabetically by last name
-        state.users = action.payload.sort((a, b) => a.last_name.localeCompare(b.last_name));
+        const sortedUsers = action.payload.sort((a, b) => a.last_name.localeCompare(b.last_name));
+        state.users = sortedUsers;
+        state.filteredUsers = sortedUsers;
       })
       .addCase(fetchUsers.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+      // Search users
+      .addCase(searchUsers.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(searchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
+        state.status = 'succeeded';
+        const sortedUsers = action.payload.sort((a, b) => a.last_name.localeCompare(b.last_name));
+        state.filteredUsers = sortedUsers;
+      })
+      .addCase(searchUsers.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       })
@@ -224,6 +263,7 @@ export const { clearUsers, clearError } = usersSlice.actions;
 
 // Export selectors
 export const selectAllUsers = (state: RootState) => state.users.users;
+export const selectFilteredUsers = (state: RootState) => state.users.filteredUsers;
 export const selectUsersStatus = (state: RootState) => state.users.status;
 export const selectUsersError = (state: RootState) => state.users.error;
 export const selectUserById = (state: RootState, userId: number) => 
