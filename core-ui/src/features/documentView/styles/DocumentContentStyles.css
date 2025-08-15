@@ -392,3 +392,215 @@
     font-size: 10px;
   }
 }
+
+/* Navigation flash animation for existing linked text highlights */
+.linked-text-highlight.navigation-flash {
+  /* Transform the red highlight to a bright navigation color */
+  background-color: #ffeb3b !important; /* Bright yellow for navigation */
+  animation: navigationFlash 3s ease-in-out;
+  box-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
+  transform: scale(1.02); /* Subtle size increase for emphasis */
+  border-radius: 2px;
+  z-index: 5; /* Higher than regular highlights */
+}
+
+/* Navigation flash animation */
+@keyframes navigationFlash {
+  0% {
+    background-color: rgba(220, 53, 69, 0.4); /* Start with original red */
+    box-shadow: 0 0 4px rgba(220, 53, 69, 0.6);
+    transform: scale(1);
+  }
+  15% {
+    background-color: #ffeb3b; /* Flash to bright yellow */
+    box-shadow: 0 0 16px rgba(255, 235, 59, 0.9);
+    transform: scale(1.02);
+  }
+  30% {
+    background-color: #fff176; /* Lighter yellow */
+    box-shadow: 0 0 12px rgba(255, 241, 118, 0.8);
+    transform: scale(1.01);
+  }
+  45% {
+    background-color: #ffeb3b; /* Back to bright yellow */
+    box-shadow: 0 0 10px rgba(255, 235, 59, 0.7);
+    transform: scale(1.02);
+  }
+  60% {
+    background-color: #ffcdd2; /* Transition to light red */
+    box-shadow: 0 0 8px rgba(255, 205, 210, 0.6);
+    transform: scale(1.01);
+  }
+  75% {
+    background-color: #f8bbd9; /* Pink transition */
+    box-shadow: 0 0 6px rgba(248, 187, 217, 0.5);
+    transform: scale(1);
+  }
+  100% {
+    background-color: rgba(220, 53, 69, 0.4); /* Return to original red */
+    box-shadow: 0 0 4px rgba(220, 53, 69, 0.6);
+    transform: scale(1);
+  }
+}
+
+/* Paragraph-level navigation flash */
+.annotatable-paragraph.paragraph-navigation-flash {
+  animation: paragraphNavigationFlash 3s ease-in-out;
+  border-left-width: 3px !important;
+}
+
+@keyframes paragraphNavigationFlash {
+  0% {
+    background-color: rgba(220, 53, 69, 0.05);
+    border-left-color: rgba(220, 53, 69, 0.7);
+  }
+  20% {
+    background-color: rgba(255, 235, 59, 0.1);
+    border-left-color: #ffeb3b;
+  }
+  40% {
+    background-color: rgba(255, 241, 118, 0.08);
+    border-left-color: #fff176;
+  }
+  60% {
+    background-color: rgba(255, 235, 59, 0.1);
+    border-left-color: #ffeb3b;
+  }
+  80% {
+    background-color: rgba(220, 53, 69, 0.08);
+    border-left-color: rgba(220, 53, 69, 0.8);
+  }
+  100% {
+    background-color: rgba(220, 53, 69, 0.05);
+    border-left-color: rgba(220, 53, 69, 0.7);
+  }
+}
+
+/* Fallback navigation flash for elements without existing red highlights */
+.navigation-flash-fallback {
+  animation: fallbackNavigationFlash 3s ease-in-out;
+  position: relative;
+}
+
+.navigation-flash-fallback::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 235, 59, 0.2);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 1;
+  animation: fallbackHighlightFade 3s ease-in-out;
+}
+
+@keyframes fallbackNavigationFlash {
+  0%, 100% {
+    box-shadow: none;
+  }
+  25% {
+    box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
+  }
+  75% {
+    box-shadow: 0 0 6px rgba(255, 235, 59, 0.4);
+  }
+}
+
+@keyframes fallbackHighlightFade {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Enhanced icon flash during navigation */
+.paragraph-navigation-flash .linked-text-icon {
+  animation: iconNavigationFlash 3s ease-in-out;
+}
+
+@keyframes iconNavigationFlash {
+  0%, 100% {
+    color: #dc3545;
+    transform: scale(1);
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.9);
+  }
+  25% {
+    color: #ffeb3b;
+    transform: scale(1.2);
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    color: #fff176;
+    transform: scale(1.1);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+  }
+  75% {
+    color: #ffeb3b;
+    transform: scale(1.15);
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Ensure navigation highlights are always visible above other content */
+.linked-text-highlight.navigation-flash {
+  z-index: 10 !important;
+}
+
+/* Smooth transitions for when navigation flash ends */
+.linked-text-highlight {
+  transition: all 0.3s ease-out;
+}
+
+.annotatable-paragraph {
+  transition: all 0.3s ease-out;
+}
+
+/* Responsive adjustments for navigation highlighting */
+@media (max-width: 768px) {
+  .linked-text-highlight.navigation-flash {
+    transform: scale(1.01); /* Smaller scale on mobile */
+  }
+  
+  .paragraph-navigation-flash {
+    border-left-width: 2px !important;
+  }
+  
+  .paragraph-navigation-flash .linked-text-icon {
+    animation-duration: 2.5s; /* Slightly faster on mobile */
+  }
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .linked-text-highlight.navigation-flash,
+  .annotatable-paragraph.paragraph-navigation-flash,
+  .navigation-flash-fallback,
+  .paragraph-navigation-flash .linked-text-icon {
+    animation: none;
+    transition: none;
+  }
+  
+  /* Simple flash without animation for accessibility */
+  .linked-text-highlight.navigation-flash {
+    background-color: #ffeb3b !important;
+    box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
+  }
+  
+  .annotatable-paragraph.paragraph-navigation-flash {
+    background-color: rgba(255, 235, 59, 0.1);
+    border-left-color: #ffeb3b;
+  }
+}

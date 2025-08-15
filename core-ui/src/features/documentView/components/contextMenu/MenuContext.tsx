@@ -95,8 +95,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
 
   // 🚀 ENHANCED: Aggressive cross-document element preloading
   const preloadCriticalElements = useCallback(async () => {
-    console.log('🚀 === AGGRESSIVE CROSS-DOCUMENT ELEMENT PRELOADING ===');
-    
     // Critical documents based on database analysis
     const criticalDocuments = [1, 2, 21]; // Expanded to include primary document
     
@@ -113,12 +111,10 @@ const MenuContext: React.FC<MenuContextProps> = ({
     
     // Combine critical and annotated documents
     const documentsToLoad = [...new Set([...criticalDocuments, ...Array.from(annotatedDocuments)])];
-    console.log('🚀 Documents to preload:', documentsToLoad);
     
     // Load elements in parallel with proper error handling
     const loadPromises = documentsToLoad.map(async (docId) => {
       if (elementsLoadingStatus.loaded.has(docId) || elementsLoadingStatus.loading.has(docId)) {
-        console.log('🚀 Skipping document', docId, '(already loaded/loading)');
         return;
       }
       
@@ -128,7 +124,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
           loading: new Set([...prev.loading, docId])
         }));
         
-        console.log('🚀 Loading elements for document', docId);
         await dispatch(fetchDocumentElements(docId)).unwrap();
         
         setElementsLoadingStatus(prev => ({
@@ -136,8 +131,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
           loading: new Set([...prev.loading].filter(id => id !== docId)),
           failed: prev.failed
         }));
-        
-        console.log('🚀 ✅ Successfully loaded elements for document', docId);
       } catch (error) {
         console.error('🚀 ❌ Failed to load elements for document', docId, ':', error);
         
@@ -150,14 +143,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
     });
     
     await Promise.allSettled(loadPromises);
-    console.log('🚀 ✅ Cross-document element preloading complete');
-    
-    // Debug final state
-    console.log('🚀 Final loading status:', {
-      loaded: Array.from(elementsLoadingStatus.loaded),
-      loading: Array.from(elementsLoadingStatus.loading),
-      failed: Array.from(elementsLoadingStatus.failed)
-    });
   }, [dispatch, elementsLoadingStatus]);
 
   // Preload on mount and when viewed documents change
@@ -170,13 +155,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
     const elements: DocumentElement[] = [];
     const elementIds = new Set<number>();
     
-    // Only log once per component mount, not on every render
-    const shouldLog = elements.length === 0;
-    
-    if (shouldLog) {
-      console.log('🔄 === COLLECTING ALL ELEMENTS (MENUCONTEXT) ===');
-    }
-    
     // Get elements for viewed documents first
     for (const doc of viewedDocuments) {
       const docElements = selectElementsByDocumentId(state, doc.id);
@@ -187,9 +165,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
             elementIds.add(element.id);
           }
         });
-        if (shouldLog) {
-          console.log('🔄 Added', docElements.length, 'elements from viewed document', doc.id);
-        }
       }
     }
     
@@ -220,30 +195,9 @@ const MenuContext: React.FC<MenuContextProps> = ({
           });
         }
       });
-      
-      if (shouldLog) {
-        console.log('🔄 Total elements collected from', referencedDocumentIds.size, 'documents:', elements.length);
-      }
-      
+
     } catch (error) {
       console.warn('🔄 Error accessing document elements state:', error);
-    }
-    
-    if (shouldLog) {
-      console.log('🔄 Total unique elements collected:', elements.length);
-      
-      // Validate critical elements
-      const criticalElements = elements.filter(el => [33, 34, 523, 524, 525, 526].includes(el.id));
-      console.log('🔄 Critical elements available:', criticalElements.map(el => ({ 
-        id: el.id, 
-        docId: el.document_id 
-      })));
-      
-      if (criticalElements.length === 0) {
-        console.warn('🔄 ⚠️ NO CRITICAL ELEMENTS FOUND - Cross-document navigation may fail!');
-      } else {
-        console.log('🔄 ✅ Critical elements available for cross-document navigation');
-      }
     }
     
     return elements;
@@ -266,14 +220,12 @@ const MenuContext: React.FC<MenuContextProps> = ({
 
   // 🎯 ENHANCED: Smart selection creation with better element detection
   const createSelectionFromClickContext = useCallback((clickedElement: HTMLElement): LinkedTextSelection | null => {
-    console.log('🔧 === CREATING SELECTION FROM CLICK CONTEXT ===');
     
     // Try existing text selection first
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0 && selection.toString().trim().length > 0) {
       const selectionData = createSelectionFromDOMSelection(selection, viewedDocuments);
       if (selectionData) {
-        console.log('🔧 ✅ Created from text selection:', selectionData);
         return selectionData;
       }
     }
@@ -281,7 +233,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
     // Find document context
     const documentPanel = clickedElement.closest('[data-document-id]') as HTMLElement;
     if (!documentPanel) {
-      console.log('🔧 ❌ No document panel found');
       return null;
     }
     
@@ -289,7 +240,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
     const foundDocument = viewedDocuments.find(d => d.id === documentId);
     
     if (!foundDocument) {
-      console.log('🔧 ❌ Document not found in viewed documents:', documentId);
       return null;
     }
     
@@ -339,14 +289,12 @@ const MenuContext: React.FC<MenuContextProps> = ({
     }
     
     if (!elementId) {
-      console.log('🔧 ❌ Could not determine element ID from clicked context');
       return null;
     }
     
     // Verify element exists
     const element = allElements.find(el => el.id === elementId && el.document_id === documentId);
     if (!element) {
-      console.log('🔧 ❌ Element not found in loaded elements:', elementId);
       return null;
     }
     
@@ -359,39 +307,11 @@ const MenuContext: React.FC<MenuContextProps> = ({
       sourceURI: `/DocumentElements/${elementId}`
     };
     
-    console.log('🔧 ✅ Created synthetic selection:', syntheticSelection);
     return syntheticSelection;
   }, [viewedDocuments, allElements]);
 
   // 🎯 ENHANCED: Robust linked document discovery
-  const findLinkedDocuments = useCallback((selection: LinkedTextSelection): HierarchicalLinkedDocuments => {
-    console.log('🔍 === ENHANCED LINKED DOCUMENT DISCOVERY ===');
-    console.log('🔍 Selection context:', {
-      documentId: selection.documentId,
-      elementId: selection.documentElementId,
-      sourceURI: selection.sourceURI,
-      text: selection.text.substring(0, 50) + '...'
-    });
-    
-    console.log('🔍 Available resources:');
-    console.log('🔍   Elements:', allElements.length);
-    console.log('🔍   Documents:', allDocuments.length);
-    console.log('🔍   Annotations:', allLinkingAnnotations.length);
-    console.log('🔍   Viewed documents:', viewedDocuments.length);
-    
-    // Enhanced validation
-    const criticalElements = allElements.filter(el => [33, 34, 523, 524, 525, 526].includes(el.id));
-    if (criticalElements.length === 0) {
-      console.warn('🔍 ⚠️ CRITICAL: No cross-document elements found!');
-      console.warn('🔍 This will prevent cross-document navigation.');
-      console.warn('🔍 Expected elements: 33, 34 (doc 2), 523, 524, 525, 526 (doc 21)');
-    } else {
-      console.log('🔍 ✅ Critical elements available:', criticalElements.map(el => ({ 
-        id: el.id, 
-        docId: el.document_id 
-      })));
-    }
-    
+  const findLinkedDocuments = useCallback((selection: LinkedTextSelection): HierarchicalLinkedDocuments => {    
     try {
       const result = getLinkedDocumentsSimple(
         selection,
@@ -400,17 +320,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
         viewedDocuments,
         allElements
       );
-      
-      console.log('🔍 Discovery result:', Object.keys(result).length, 'linked documents found');
-      
-      Object.entries(result).forEach(([docIdStr, doc]) => {
-        console.log(`🔍 Document ${docIdStr} (${doc.documentTitle}):`, {
-          isCurrentlyOpen: doc.isCurrentlyOpen,
-          linkedTextOptions: doc.linkedTextOptions.length,
-          firstOptionText: doc.linkedTextOptions[0]?.linkedText.substring(0, 40) + '...',
-          firstOptionURI: doc.linkedTextOptions[0]?.targetInfo.sourceURI
-        });
-      });
       
       return result;
     } catch (error) {
@@ -422,15 +331,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
   // 🎯 ENHANCED: Context menu event handler with comprehensive click detection
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
-      console.log('🖱️ === RIGHT-CLICK EVENT DETECTED ===');
-      console.log('🖱️ Event details:', {
-        clientX: e.clientX,
-        clientY: e.clientY,
-        target: e.target,
-        targetTagName: (e.target as HTMLElement)?.tagName,
-        targetId: (e.target as HTMLElement)?.id,
-        targetClassName: (e.target as HTMLElement)?.className
-      });
       
       const clickedElement = e.target as HTMLElement;
       
@@ -443,36 +343,22 @@ const MenuContext: React.FC<MenuContextProps> = ({
       }
       
       if (!documentPanel) {
-        console.log('🖱️ ❌ No document panel found for clicked element');
-        console.log('🖱️ Element hierarchy:', {
-          element: clickedElement,
-          parent: clickedElement.parentElement,
-          grandparent: clickedElement.parentElement?.parentElement
-        });
         return;
       }
       
       const documentId = parseInt(documentPanel.getAttribute('data-document-id') || '0');
-      console.log('🖱️ ✅ Found document panel for document:', documentId);
       
       const isValidDocument = viewedDocuments.some(d => d.id === documentId);
       
       if (!isValidDocument) {
-        console.log('🖱️ ❌ Invalid document context:', documentId);
-        console.log('🖱️ Available viewed documents:', viewedDocuments.map(d => d.id));
         return;
       }
-      
-      console.log('🖱️ ✅ Valid document context confirmed:', documentId);
       
       // Create selection from click context
       const selection = createSelectionFromClickContext(clickedElement);
       if (!selection) {
-        console.log('🖱️ ❌ Could not create selection from click context');
         return;
       }
-      
-      console.log('🖱️ ✅ Selection created:', selection);
       
       // Prevent default and calculate position
       e.preventDefault();
@@ -483,12 +369,8 @@ const MenuContext: React.FC<MenuContextProps> = ({
         y: Math.min(e.clientY, window.innerHeight - 200)
       };
       
-      console.log('🖱️ Menu position calculated:', position);
-      
       // Find linked documents
-      console.log('🖱️ Finding linked documents...');
       const hierarchicalDocuments = findLinkedDocuments(selection);
-      console.log('🖱️ Found linked documents:', Object.keys(hierarchicalDocuments).length);
       
       // Update menu state
       setMenuState({
@@ -498,8 +380,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
         hierarchicalDocuments,
         showHierarchicalMenu: false
       });
-      
-      console.log('🖱️ ✅ Context menu activated with', Object.keys(hierarchicalDocuments).length, 'linked documents');
     };
 
     const handleClick = (e: MouseEvent) => {
@@ -529,9 +409,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
       }
     };
 
-    console.log('🖱️ === SETTING UP CONTEXT MENU EVENT LISTENERS ===');
-    console.log('🖱️ Adding contextmenu listener to document');
-
     // Add event listeners with more aggressive capture
     document.addEventListener("contextmenu", handleContextMenu, { 
       capture: true, 
@@ -539,11 +416,8 @@ const MenuContext: React.FC<MenuContextProps> = ({
     });
     document.addEventListener("click", handleClick, { capture: true });
     document.addEventListener("keydown", handleEscape);
-    
-    console.log('🖱️ ✅ Context menu event listeners added');
 
     return () => {
-      console.log('🖱️ Removing context menu event listeners');
       document.removeEventListener("contextmenu", handleContextMenu, { capture: true });
       document.removeEventListener("click", handleClick, { capture: true });
       document.removeEventListener("keydown", handleEscape);
@@ -569,27 +443,24 @@ const MenuContext: React.FC<MenuContextProps> = ({
     isCurrentlyOpen: boolean
   ) => {
     // CRITICAL DEBUG: Log to both console AND browser alert to bypass console crash
-    const debugInfo = {
-      documentId: documentId,
-      collectionId: collectionId,
-      isCurrentlyOpen: isCurrentlyOpen,
-      targetURI: option.targetInfo.sourceURI,
-      allTargetsCount: option.allTargets?.length || 0,
-      allTargetsURIs: option.allTargets?.map(t => t.sourceURI) || []
-    };
-    
-    console.log('🎯 === MENUCONTEXT: LINKED TEXT SELECTION HANDLER ===');
-    console.log('🎯 CRITICAL DEBUG INFO:', debugInfo);
-    
+    // const debugInfo = {
+    //   documentId: documentId,
+    //   collectionId: collectionId,
+    //   isCurrentlyOpen: isCurrentlyOpen,
+    //   targetURI: option.targetInfo.sourceURI,
+    //   allTargetsCount: option.allTargets?.length || 0,
+    //   allTargetsURIs: option.allTargets?.map(t => t.sourceURI) || []
+    // };
+
     // Also show an alert so we can see the data even if console crashes
-    if (process.env.NODE_ENV === 'development') {
-      alert(`Navigation Debug:
-Source Doc: ${documentId}
-Collection: ${collectionId}
-Target URI: ${option.targetInfo.sourceURI}
-All Targets: ${option.allTargets?.length || 0}
-Target URIs: ${option.allTargets?.map(t => t.sourceURI).join(', ')}`);
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   alert(`Navigation Debug:
+    //     Source Doc: ${documentId}
+    //     Collection: ${collectionId}
+    //     Target URI: ${option.targetInfo.sourceURI}
+    //     All Targets: ${option.allTargets?.length || 0}
+    //     Target URIs: ${option.allTargets?.map(t => t.sourceURI).join(', ')}`);
+    // }
     
     // Close menus immediately
     setMenuState(prev => ({
@@ -602,9 +473,6 @@ Target URIs: ${option.allTargets?.map(t => t.sourceURI).join(', ')}`);
       console.error('🎯 ❌ onOpenLinkedDocument callback not provided');
       return;
     }
-    
-    console.log('🎯 🚀 CALLING onOpenLinkedDocument...');
-    
     try {
       // Use setTimeout to ensure clean state transition
       setTimeout(() => {
@@ -614,7 +482,6 @@ Target URIs: ${option.allTargets?.map(t => t.sourceURI).join(', ')}`);
           option.targetInfo,    // Target element info
           option.allTargets     // All related targets for cross-document navigation
         );
-        console.log('🎯 ✅ Navigation callback executed successfully from MenuContext');
       }, 50);
     } catch (error) {
       console.error('🎯 ❌ Error executing navigation callback:', error);
@@ -626,28 +493,23 @@ Target URIs: ${option.allTargets?.map(t => t.sourceURI).join(', ')}`);
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('🔗 === VIEW LINKED TEXT BUTTON CLICKED ===');
-    
     const linkedDocumentIds = Object.keys(menuState.hierarchicalDocuments).map(Number);
-    console.log('🔗 Available linked documents:', linkedDocumentIds);
     
     // Direct selection for single document with single option
     if (linkedDocumentIds.length === 1) {
       const singleDoc = menuState.hierarchicalDocuments[linkedDocumentIds[0]];
       if (singleDoc.linkedTextOptions.length === 1) {
-        console.log('🔗 Direct selection (single document, single option)');
         handleLinkedTextSelection(
           singleDoc.documentId,
           singleDoc.collectionId,
           singleDoc.linkedTextOptions[0],
-          singleDoc.isCurrentlyOpen
+          // singleDoc.isCurrentlyOpen
         );
         return;
       }
     }
     
     // Show hierarchical menu for multiple options
-    console.log('🔗 Showing hierarchical menu for multiple options');
     setMenuState(prev => ({
       ...prev,
       showHierarchicalMenu: true

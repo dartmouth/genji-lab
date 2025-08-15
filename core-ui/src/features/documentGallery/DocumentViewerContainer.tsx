@@ -1,5 +1,5 @@
 // src/features/documentGallery/DocumentViewerContainer.tsx
-// COMPLETE REWRITE - Cross-document navigation with proper element loading and type safety
+// CLEAN VERSION - Only critical debug logs for highlighting investigation
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -20,7 +20,7 @@ import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGaller
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
 import { DocumentComparisonContainer } from "@documentView";
 import DocumentLinkingOverlay from '@/features/documentView/components/annotationCard/DocumentLinkingOverlay';
-import { scrollToAndHighlightText } from '@/features/documentView/utils/scrollToTextUtils';
+import { scrollToAndHighlightText, highlightSourceTextImmediately } from '@/features/documentView/utils/scrollToTextUtils';
 import RouterSwitchBoard from "@/RouterSwitchBoard";
 import "./styles/DocumentViewerStyles.css";
 
@@ -137,18 +137,8 @@ export const DocumentContentView: React.FC = () => {
         }
       });
       
-      console.log('🔄 Total elements collected from', referencedDocumentIds.size, 'documents:', elements.length);
-      
-      // Debug critical elements
-      const criticalElements = elements.filter(el => [33, 34, 523, 524].includes(el.id));
-      if (criticalElements.length > 0) {
-        console.log('🔄 🎯 Found critical cross-document elements:', criticalElements.map(el => ({ id: el.id, docId: el.document_id })));
-      } else {
-        console.log('🔄 ⚠️ Critical cross-document elements (33, 34, 523, 524) not found in Redux');
-      }
-      
     } catch (error) {
-      console.warn('Error getting elements from annotations:', error);
+      // Silent - no logging
     }
     
     return elements;
@@ -187,7 +177,7 @@ export const DocumentContentView: React.FC = () => {
   // Track loading state
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   
-  // FIXED: State for document selection dropdown (changed back to selectedCollectionId)
+  // State for document selection dropdown
   const [selectedCollectionId, setSelectedCollectionId] = useState<number>(Number(collectionId));
   
   // State for management panel collapse
@@ -202,18 +192,16 @@ export const DocumentContentView: React.FC = () => {
   // State to track if we're in comparison mode
   const [comparisonDocumentId, setComparisonDocumentId] = useState<number | null>(null);
 
-  // FIXED: Add this useEffect from the working version for collection loading
+  // Collection loading effect
   useEffect(() => {
     if (selectedCollectionId && selectedCollectionId !== Number(collectionId) && 
         !documentsByCollection[selectedCollectionId]) {
       
-      console.log('📄 Fetching documents for selected collection:', selectedCollectionId);
       setIsLoadingDocuments(true);
       
       dispatch(fetchDocumentsByCollection(selectedCollectionId))
         .unwrap()
         .then((payload) => {
-          console.log('📄 Fetched documents for selected collection', selectedCollectionId, ':', payload.documents.length);
           setDocumentsByCollection(prev => ({
             ...prev,
             [selectedCollectionId]: payload.documents.map(doc => ({
@@ -224,51 +212,39 @@ export const DocumentContentView: React.FC = () => {
           setIsLoadingDocuments(false);
         })
         .catch((error) => {
-          console.error('❌ Failed to fetch documents for selected collection', selectedCollectionId, ':', error);
           setIsLoadingDocuments(false);
         });
     }
   }, [selectedCollectionId, collectionId, documentsByCollection, dispatch]);
 
-  // Cross-document element loader with proper typing
+  // Cross-document element loader
   const loadCrossDocumentElements = useCallback(async () => {
-    console.log('🌐 === LOADING CROSS-DOCUMENT ELEMENTS ===');
-    
     try {
-      // Based on database analysis, preload critical documents that contain cross-document elements
-      const criticalDocuments = [2, 21]; // Documents containing elements 33, 34, 523, 524
-      
-      console.log('🌐 Loading critical documents:', criticalDocuments);
+      const criticalDocuments = [2, 21];
       
       const loadPromises = criticalDocuments.map(async (docId) => {
         try {
-          console.log('🌐 Loading elements for document', docId);
           await dispatch(fetchDocumentElements(docId)).unwrap();
-          console.log('🌐 ✅ Loaded elements for document', docId);
         } catch (error) {
-          console.error('🌐 ❌ Failed to load elements for document', docId, ':', error);
+          // Silent
         }
       });
       
       await Promise.all(loadPromises);
-      console.log('🌐 ✅ Cross-document element loading complete');
-      
     } catch (error) {
-      console.error('🌐 ❌ Error in cross-document element loading:', error);
+      // Silent
     }
   }, [dispatch]);
 
   // Load all documents and cross-document elements
   useEffect(() => {
-    console.log('🎯 Loading all documents and cross-document elements...');
     dispatch(fetchAllDocuments())
       .unwrap()
       .then((allDocuments) => {
-        console.log('🎯 ✅ Successfully loaded', allDocuments.length, 'documents');
         return loadCrossDocumentElements();
       })
       .catch((error) => {
-        console.warn('🎯 ⚠️ Failed to load all documents:', error);
+        // Silent
       });
   }, [dispatch, loadCrossDocumentElements]);
   
@@ -285,7 +261,6 @@ export const DocumentContentView: React.FC = () => {
       dispatch(fetchDocumentsByCollection(Number(collectionId)))
         .unwrap()
         .then((payload) => {
-          console.log('📄 Fetched documents for collection', collectionId, ':', payload.documents.length);
           setDocumentsByCollection(prev => ({
             ...prev,
             [Number(collectionId)]: payload.documents.map(doc => ({
@@ -296,7 +271,6 @@ export const DocumentContentView: React.FC = () => {
           setIsLoadingDocuments(false);
         })
         .catch((error) => {
-          console.error('❌ Failed to fetch documents for collection', collectionId, ':', error);
           setIsLoadingDocuments(false);
         });
     }
@@ -325,8 +299,6 @@ export const DocumentContentView: React.FC = () => {
     if (documentId && collectionId) {
       const docId = Number(documentId);
       const colId = Number(collectionId);
-      
-      console.log('📄 Setting up initial document view:', { docId, colId });
       
       let initialTitle = `Document ${docId}`;
       
@@ -357,10 +329,8 @@ export const DocumentContentView: React.FC = () => {
   useEffect(() => {
     if (viewedDocuments.length === 2) {
       const comparisonDoc = viewedDocuments[1];
-      console.log('📄 Setting comparison document ID to:', comparisonDoc.id);
       setComparisonDocumentId(comparisonDoc.id);
     } else if (viewedDocuments.length === 1) {
-      console.log('📄 Clearing comparison document ID');
       setComparisonDocumentId(null);
     }
   }, [viewedDocuments]);
@@ -368,25 +338,19 @@ export const DocumentContentView: React.FC = () => {
   // Handle scrolling with better timing and error handling
   useEffect(() => {
     if (pendingScrollTarget && viewedDocuments.some(doc => doc.id === pendingScrollTarget.documentId)) {
-      console.log('🔄 Document loaded, executing pending scroll with allTargets:', pendingScrollTarget.allTargets?.length || 0);
-      
       const scrollTimeout = setTimeout(() => {
         try {
           const documentPanel = document.querySelector(`[data-document-id="${pendingScrollTarget.documentId}"]`);
           if (documentPanel) {
-            console.log('🔄 Document panel found, executing scroll');
             scrollToAndHighlightText(pendingScrollTarget.targetInfo, pendingScrollTarget.allTargets);
             setPendingScrollTarget(null);
           } else {
-            console.warn('🔄 Document panel not found yet, will retry');
             setTimeout(() => {
-              console.log('🔄 Retrying scroll to target');
               scrollToAndHighlightText(pendingScrollTarget.targetInfo, pendingScrollTarget.allTargets);
               setPendingScrollTarget(null);
             }, 2000);
           }
         } catch (error) {
-          console.error('🔄 Error executing scroll:', error);
           setPendingScrollTarget(null);
         }
       }, 1500);
@@ -395,15 +359,13 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [pendingScrollTarget, viewedDocuments]);
 
-  // Add this helper function before the navigation functions:
+  // Helper function for element-based document titles
   const getElementBasedDocumentTitle = useCallback((documentId: number): string | null => {
-    // Try to find the document in Redux store first
     const document = documents.find(doc => doc.id === documentId);
     if (document && document.title && !document.title.includes('Document ')) {
       return document.title;
     }
     
-    // Try to find in documentsByCollection cache
     for (const collectionId in documentsByCollection) {
       const doc = documentsByCollection[collectionId].find(d => d.id === documentId);
       if (doc && doc.title && !doc.title.includes('Document ')) {
@@ -411,16 +373,15 @@ export const DocumentContentView: React.FC = () => {
       }
     }
     
-    // Try to find in viewedDocuments
     const viewedDoc = viewedDocuments.find(doc => doc.id === documentId);
     if (viewedDoc && viewedDoc.title && !viewedDoc.title.includes('Document ')) {
       return viewedDoc.title;
     }
     
-    return null; // Let the API response provide the title
+    return null;
   }, [documents, documentsByCollection, viewedDocuments]);
 
-  // Add this function (you're missing this one):
+  // Replace secondary document function
   const replaceSecondaryDocument = useCallback(async (
     linkedDocumentId: number,
     linkedCollectionId: number,
@@ -437,21 +398,15 @@ export const DocumentContentView: React.FC = () => {
     }>
   ) => {
     if (isUpdatingDocuments.current) {
-      console.log('🔄 Document update already in progress, skipping');
       return;
     }
     
     isUpdatingDocuments.current = true;
-    console.log('🔄 === REPLACING SECONDARY DOCUMENT ===');
-    console.log('🔄 Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
     
     try {
-      // Get the document title
       let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
       
-      // If we don't have the document in our cache, fetch the collection
       if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
-        console.log('🔄 Fetching collection for document metadata:', linkedCollectionId);
         setIsLoadingDocuments(true);
         
         try {
@@ -464,37 +419,31 @@ export const DocumentContentView: React.FC = () => {
             }))
           }));
           
-          // Use element-based mapping to get correct title
           const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
           linkedDocTitle = elementBasedTitle || getDocumentTitle(linkedDocumentId, linkedCollectionId);
         } catch (error) {
-          console.error('🔄 Failed to fetch collection for linked document:', error);
-          linkedDocTitle = `Document ${linkedDocumentId}`; // Fallback title
+          linkedDocTitle = `Document ${linkedDocumentId}`;
         } finally {
           setIsLoadingDocuments(false);
         }
       } else {
-        // Even if we have cache, use element-based mapping for accurate titles
         const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
         if (elementBasedTitle) {
           linkedDocTitle = elementBasedTitle;
-          console.log('🔄 Using element-based title:', linkedDocTitle);
         }
       }
       
-      // Keep primary, replace secondary
       const primaryDocument = viewedDocuments[0];
       
       setViewedDocuments([
-        primaryDocument, // Keep primary
+        primaryDocument,
         {
           id: linkedDocumentId,
           collectionId: linkedCollectionId,
           title: linkedDocTitle
-        } // New secondary
+        }
       ]);
       
-      // Clear any pending scroll target for the old secondary document
       if (pendingScrollTarget && viewedDocuments.length > 1) {
         const oldSecondaryId = viewedDocuments[1].id;
         if (pendingScrollTarget.documentId === oldSecondaryId) {
@@ -502,8 +451,6 @@ export const DocumentContentView: React.FC = () => {
         }
       }
       
-      // Set up pending scroll target for the new document
-      console.log('🔄 Setting pending scroll target for replacement document');
       setPendingScrollTarget({
         documentId: linkedDocumentId,
         targetInfo,
@@ -515,7 +462,7 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [dispatch, documentsByCollection, getDocumentTitle, getElementBasedDocumentTitle, viewedDocuments, pendingScrollTarget]);
 
-  // Fix the replacePrimaryDocument function dependencies:
+  // Replace primary document function
   const replacePrimaryDocument = useCallback(async (
     linkedDocumentId: number,
     linkedCollectionId: number,
@@ -532,21 +479,15 @@ export const DocumentContentView: React.FC = () => {
     }>
   ) => {
     if (isUpdatingDocuments.current) {
-      console.log('🔄 Document update already in progress, skipping');
       return;
     }
     
     isUpdatingDocuments.current = true;
-    console.log('🔄 === REPLACING PRIMARY DOCUMENT ===');
-    console.log('🔄 Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
     
     try {
-      // Get the document title
       let linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
       
-      // If we don't have the document in our cache, fetch the collection
       if (linkedDocTitle.includes('Document ') && !documentsByCollection[linkedCollectionId]) {
-        console.log('🔄 Fetching collection for document metadata:', linkedCollectionId);
         setIsLoadingDocuments(true);
         
         try {
@@ -559,25 +500,20 @@ export const DocumentContentView: React.FC = () => {
             }))
           }));
           
-          // Use element-based mapping to get correct title
           const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
           linkedDocTitle = elementBasedTitle || getDocumentTitle(linkedDocumentId, linkedCollectionId);
         } catch (error) {
-          console.error('🔄 Failed to fetch collection for linked document:', error);
-          linkedDocTitle = `Document ${linkedDocumentId}`; // Fallback title
+          linkedDocTitle = `Document ${linkedDocumentId}`;
         } finally {
           setIsLoadingDocuments(false);
         }
       } else {
-        // Even if we have cache, use element-based mapping for accurate titles
         const elementBasedTitle = getElementBasedDocumentTitle(linkedDocumentId);
         if (elementBasedTitle) {
           linkedDocTitle = elementBasedTitle;
-          console.log('🔄 Using element-based title:', linkedDocTitle);
         }
       }
       
-      // Keep secondary, replace primary
       const secondaryDocument = viewedDocuments[1];
       
       setViewedDocuments([
@@ -585,11 +521,10 @@ export const DocumentContentView: React.FC = () => {
           id: linkedDocumentId,
           collectionId: linkedCollectionId,
           title: linkedDocTitle
-        }, // New primary
-        secondaryDocument // Keep secondary
+        },
+        secondaryDocument
       ]);
       
-      // Clear any pending scroll target for the old primary document
       if (pendingScrollTarget && viewedDocuments.length > 0) {
         const oldPrimaryId = viewedDocuments[0].id;
         if (pendingScrollTarget.documentId === oldPrimaryId) {
@@ -597,8 +532,6 @@ export const DocumentContentView: React.FC = () => {
         }
       }
       
-      // Set up pending scroll target for the new primary document
-      console.log('🔄 Setting pending scroll target for replacement primary document');
       setPendingScrollTarget({
         documentId: linkedDocumentId,
         targetInfo,
@@ -610,7 +543,7 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [dispatch, documentsByCollection, getDocumentTitle, getElementBasedDocumentTitle, viewedDocuments, pendingScrollTarget]);
 
-  // Atomic document addition with element loading
+  // Add linked document as secondary
   const addLinkedDocumentAsSecondary = useCallback(async (
     linkedDocumentId: number,
     linkedCollectionId: number,
@@ -627,27 +560,19 @@ export const DocumentContentView: React.FC = () => {
     }>
   ) => {
     if (isUpdatingDocuments.current) {
-      console.log('➕ Document update already in progress, skipping');
       return;
     }
     
     isUpdatingDocuments.current = true;
-    console.log('➕ === ADDING LINKED DOCUMENT AS SECONDARY ===');
-    console.log('➕ Document ID:', linkedDocumentId, 'Collection ID:', linkedCollectionId);
     
     try {
-      // Ensure document elements are loaded
       try {
-        console.log('➕ Ensuring elements are loaded for document', linkedDocumentId);
         await dispatch(fetchDocumentElements(linkedDocumentId)).unwrap();
-        console.log('➕ ✅ Elements loaded for document', linkedDocumentId);
       } catch (error) {
-        console.warn('➕ ⚠️ Failed to load elements for document', linkedDocumentId, ':', error);
+        // Silent
       }
       
-      // Get the document title
       const linkedDocTitle = getDocumentTitle(linkedDocumentId, linkedCollectionId);
-      console.log('➕ Initial document title:', linkedDocTitle);
       
       setViewedDocuments(prev => {
         const newDoc = {
@@ -655,13 +580,9 @@ export const DocumentContentView: React.FC = () => {
           collectionId: linkedCollectionId,
           title: linkedDocTitle
         };
-        const newList = [...prev, newDoc];
-        console.log('➕ New viewed documents:', newList.map(d => d.title));
-        return newList;
+        return [...prev, newDoc];
       });
       
-      // Set up pending scroll target immediately after state update
-      console.log('➕ === SETTING PENDING SCROLL TARGET ===');
       setPendingScrollTarget({
         documentId: linkedDocumentId,
         targetInfo,
@@ -673,349 +594,221 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [dispatch, getDocumentTitle]);
 
-  const handleOpenLinkedDocument = useCallback(async (
-    linkedDocumentId: number, 
-    linkedCollectionId: number, 
-    targetInfo: {
-      sourceURI: string;
-      start: number;
-      end: number;
-    },
-    allTargets?: Array<{
-      sourceURI: string;
-      start: number;
-      end: number;
-      text: string;
-    }>
-  ) => {
-    console.log('🔗 === DOCUMENT VIEWER: handleOpenLinkedDocument called ===');
-    console.log('🔗 Requested Document ID:', linkedDocumentId);
-    console.log('🔗 Requested Collection ID:', linkedCollectionId);
-    console.log('🔗 Current viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
-    console.log('🔗 Target Info:', targetInfo);
-    console.log('🔗 All Targets Count:', allTargets?.length || 0);
-    console.log('🔗 Update in progress:', isUpdatingDocuments.current);
-    
-    // Helper function to highlight source text in a document
-    const highlightSourceTextInDocument = (docId: number, docName: string) => {
-      const sourceTargets = allTargets?.filter(target => {
-        const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
-        if (elementIdMatch) {
-          const elementId = parseInt(elementIdMatch[1]);
-          const element = allElements.find(el => el.id === elementId);
-          return element && element.document_id === docId;
-        }
-        return false;
-      });
+// 🔧 FIXED: Enhanced handleOpenLinkedDocument with proper target document detection
+const handleOpenLinkedDocument = useCallback(async (
+  linkedDocumentId: number, 
+  linkedCollectionId: number, 
+  targetInfo: {
+    sourceURI: string;
+    start: number;
+    end: number;
+  },
+  allTargets?: Array<{
+    sourceURI: string;
+    start: number;
+    end: number;
+    text: string;
+  }>
+) => {
+  console.log('🔗🔗🔗 === NAVIGATION STARTED ===');
+  console.log('🔗 Source document (clicked from):', linkedDocumentId);
+  console.log('🔗 All targets count:', allTargets?.length || 0);
+  console.log('🔗 Current viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
   
-      if (sourceTargets && sourceTargets.length > 0) {
-        console.log(`🔗 Highlighting source text in ${docName} document (ID: ${docId})`);
-        try {
-          scrollToAndHighlightText({
-            sourceURI: sourceTargets[0].sourceURI,
-            start: sourceTargets[0].start,
-            end: sourceTargets[0].end
-          }, sourceTargets);
-        } catch (error) {
-          console.error(`🔗 Error highlighting source text in ${docName}:`, error);
-        }
-      }
-    };
-    
-    // Prevent multiple calls while updating
-    if (isUpdatingDocuments.current) {
-      console.log('🔗 ⚠️ Update already in progress, skipping call');
-      return;
-    }
-    
-    // Check if the document is already being viewed
-    const isAlreadyViewed = viewedDocuments.some(doc => doc.id === linkedDocumentId);
-    console.log('🔗 Document already viewed:', isAlreadyViewed);
-    
-    if (isAlreadyViewed) {
-      // Document already viewed - find best content to navigate to
-      console.log('🔗 === CONTENT-FOCUSED NAVIGATION FOR VIEWED DOCUMENT ===');
-      
-      if (!allTargets || allTargets.length <= 1) {
-        // Only one target - just scroll to it
-        console.log('🔗 Single target - scrolling to existing document content');
-        try {
-          scrollToAndHighlightText(targetInfo, allTargets);
-        } catch (error) {
-          console.error('🔗 Error scrolling to target:', error);
-        }
-        return;
-      }
-      
-      // Multiple targets available - select best content target
-      console.log('🔗 Multiple targets available - selecting best content target');
-      
-      // Map targets to their document IDs
-      const targetsByDocId = new Map<number, Array<typeof allTargets[0]>>();
-      for (const target of allTargets) {
-        const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
-        if (!elementIdMatch) continue;
-        
+  // 🎯 CRITICAL FIX: Determine the actual target document to open
+  let actualTargetDocumentId = linkedDocumentId;
+  let actualTargetInfo = targetInfo;
+  
+  // If we have multiple targets, find the target document (different from source)
+  if (allTargets && allTargets.length > 1) {
+    for (const target of allTargets) {
+      const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+      if (elementIdMatch) {
         const elementId = parseInt(elementIdMatch[1]);
         const element = allElements.find(el => el.id === elementId);
         
-        if (element) {
-          if (!targetsByDocId.has(element.document_id)) {
-            targetsByDocId.set(element.document_id, []);
-          }
-          targetsByDocId.get(element.document_id)!.push(target);
-          console.log('🔗 Mapped target', target.sourceURI, 'to document', element.document_id);
-        }
-      }
-      
-      console.log('🔗 Targets mapped to documents:', 
-        Array.from(targetsByDocId.entries()).map(([docId, targets]) => ({ docId, count: targets.length }))
-      );
-      
-      // Find best navigation target
-      const currentDocumentIds = viewedDocuments.map(doc => doc.id);
-      const clickSourceDoc = linkedDocumentId; // The document where the click occurred
-      
-      let bestTarget = null;
-      let bestDocumentId = null;
-      
-      // Priority 1: Content in a different currently-viewed document
-      for (const [docId, targets] of targetsByDocId.entries()) {
-        if (docId !== clickSourceDoc && currentDocumentIds.includes(docId)) {
-          bestTarget = targets[0];
-          bestDocumentId = docId;
-          console.log('🔗 Selected cross-document target in viewed document:', docId);
+        if (element && element.document_id !== linkedDocumentId) {
+          actualTargetDocumentId = element.document_id;
+          actualTargetInfo = {
+            sourceURI: target.sourceURI,
+            start: target.start,
+            end: target.end
+          };
+          console.log('🎯 Found target document:', actualTargetDocumentId, 'from element:', elementId);
           break;
         }
       }
-      
-      // Priority 2: Content in a non-viewed document (open it)
-      if (!bestTarget) {
-        for (const [docId, targets] of targetsByDocId.entries()) {
-          if (!currentDocumentIds.includes(docId)) {
-            bestTarget = targets[0];
-            bestDocumentId = docId;
-            console.log('🔗 Selected target in non-viewed document:', docId);
-            break;
-          }
-        }
+    }
+  }
+  
+  console.log('🔗 Actual target document to open:', actualTargetDocumentId);
+  
+  // 🎯 HELPER: Find source target for immediate highlighting
+  const getSourceTarget = (sourceDocId: number) => {
+    return allTargets?.find(target => {
+      const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+      if (elementIdMatch) {
+        const elementId = parseInt(elementIdMatch[1]);
+        const element = allElements.find(el => el.id === elementId);
+        return element && element.document_id === sourceDocId;
       }
-      
-      // Priority 3: Different content in the same document
-      if (!bestTarget) {
-        const sameDocTargets = targetsByDocId.get(clickSourceDoc) || [];
-        const differentTargets = sameDocTargets.filter(target => 
-          target.sourceURI !== targetInfo.sourceURI || 
-          target.start !== targetInfo.start || 
-          target.end !== targetInfo.end
-        );
-        
-        if (differentTargets.length > 0) {
-          bestTarget = differentTargets[0];
-          bestDocumentId = clickSourceDoc;
-          console.log('🔗 Selected different content in same document');
-        }
+      return false;
+    });
+  };
+  
+  // 🎯 HELPER: Get targets for specific document
+  const getTargetsForDocument = (docId: number) => {
+    return allTargets?.filter(target => {
+      const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+      if (elementIdMatch) {
+        const elementId = parseInt(elementIdMatch[1]);
+        const element = allElements.find(el => el.id === elementId);
+        return element && element.document_id === docId;
       }
-      
-      // Execute the navigation
-      if (bestTarget && bestDocumentId) {
-        console.log('🔗 === NAVIGATING TO SELECTED CONTENT ===');
-        console.log('🔗 Target document:', bestDocumentId);
-        console.log('🔗 Target URI:', bestTarget.sourceURI);
-        
-        if (bestDocumentId === linkedDocumentId) {
-          // Same document - just scroll
-          console.log('🔗 Scrolling to different content in same document');
-          try {
-            scrollToAndHighlightText({
-              sourceURI: bestTarget.sourceURI,
-              start: bestTarget.start,
-              end: bestTarget.end
-            }, allTargets);
-          } catch (error) {
-            console.error('🔗 Error scrolling to target:', error);
-          }
-        } else {
-          // Different document - navigate there
-          console.log('🔗 Navigating to different document:', bestDocumentId);
-          
-          const destinationTargets = targetsByDocId.get(bestDocumentId) || [bestTarget];
-          
-          if (currentDocumentIds.includes(bestDocumentId)) {
-            // Target document is already open - just scroll to it
-            console.log('🔗 Target document already open - scrolling to content');
-            try {
-              scrollToAndHighlightText({
-                sourceURI: bestTarget.sourceURI,
-                start: bestTarget.start,
-                end: bestTarget.end
-              }, allTargets);
-            } catch (error) {
-              console.error('🔗 Error scrolling to target document:', error);
-            }
-          } else {
-            // Target document not open - determine which panel to replace
-            console.log('🔗 Opening target document:', bestDocumentId);
-            
-            if (viewedDocuments.length === 1) {
-              // Single document - add as secondary
-              await addLinkedDocumentAsSecondary(
-                bestDocumentId, 
-                linkedCollectionId, 
-                {
-                  sourceURI: bestTarget.sourceURI,
-                  start: bestTarget.start,
-                  end: bestTarget.end
-                }, 
-                destinationTargets
-              );
-            } else if (viewedDocuments.length === 2) {
-              // Multi-document - determine which panel to replace based on source
-              const primaryDocId = viewedDocuments[0].id;
-              const secondaryDocId = viewedDocuments[1].id;
-              
-              if (linkedDocumentId === primaryDocId) {
-                // Clicked from primary - replace secondary
-                console.log('🔗 Clicked from primary - replacing secondary');
-                
-                // Highlight source text in primary document first
-                highlightSourceTextInDocument(primaryDocId, "primary");
-                
-                await replaceSecondaryDocument(
-                  bestDocumentId, 
-                  linkedCollectionId, 
-                  {
-                    sourceURI: bestTarget.sourceURI,
-                    start: bestTarget.start,
-                    end: bestTarget.end
-                  }, 
-                  destinationTargets
-                );
-              } else if (linkedDocumentId === secondaryDocId) {
-                // Clicked from secondary - replace primary
-                console.log('🔗 Clicked from secondary - replacing primary');
-                
-                // Highlight source text in secondary document first
-                highlightSourceTextInDocument(secondaryDocId, "secondary");
-                
-                await replacePrimaryDocument(
-                  bestDocumentId, 
-                  linkedCollectionId, 
-                  {
-                    sourceURI: bestTarget.sourceURI,
-                    start: bestTarget.start,
-                    end: bestTarget.end
-                  }, 
-                  destinationTargets
-                );
-              } else {
-                // Context menu click - default to replacing secondary
-                console.log('🔗 Context menu click - replacing secondary by default');
-                await replaceSecondaryDocument(
-                  bestDocumentId, 
-                  linkedCollectionId, 
-                  {
-                    sourceURI: bestTarget.sourceURI,
-                    start: bestTarget.start,
-                    end: bestTarget.end
-                  }, 
-                  destinationTargets
-                );
-              }
-            }
-          }
-        }
-        return;
-      }
-      
-      // Fallback: just scroll to the requested content
-      console.log('🔗 === FALLBACK: Scrolling to requested content ===');
+      return false;
+    }) || [];
+  };
+  
+  // 🎯 HELPER: Trigger highlighting with proper timing
+  const triggerTargetHighlighting = (
+    targetDocId: number,
+    targetInfoParam: { sourceURI: string; start: number; end: number },
+    targets: typeof allTargets,
+    delay: number = 2500,
+    skipSourceHighlighting: boolean = false
+  ) => {
+    setTimeout(() => {
       try {
-        scrollToAndHighlightText(targetInfo, allTargets);
-      } catch (error) {
-        console.error('🔗 Error in fallback scroll:', error);
-      }
-      
-    } else {
-      // Document not viewed - open new document
-      console.log('🔗 === OPENING NEW DOCUMENT ===');
-      console.log('🔗 Current document count:', viewedDocuments.length);
-      
-      try {
-        if (viewedDocuments.length === 1) {
-          // Single document - add as secondary
-          console.log('🔗 === ADDING AS SECONDARY DOCUMENT ===');
-          await addLinkedDocumentAsSecondary(linkedDocumentId, linkedCollectionId, targetInfo, allTargets);
-        } else if (viewedDocuments.length === 2) {
-          // Multi-document - determine which panel to replace based on source
-          const primaryDocId = viewedDocuments[0].id;
-          const secondaryDocId = viewedDocuments[1].id;
-          
-          // Find the actual target document from allTargets
-          let targetDocumentId = linkedDocumentId; // fallback
-          
-          if (allTargets && allTargets.length > 0) {
-            for (const target of allTargets) {
-              const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
-              if (elementIdMatch) {
-                const elementId = parseInt(elementIdMatch[1]);
-                const element = allElements.find(el => el.id === elementId);
-                
-                if (element && element.document_id !== linkedDocumentId) {
-                  // Found a target in a different document
-                  targetDocumentId = element.document_id;
-                  targetInfo = {
-                    sourceURI: target.sourceURI,
-                    start: target.start,
-                    end: target.end
-                  };
-                  break;
-                }
-              }
+        console.log(`🎯 Executing target highlighting for document ${targetDocId}`);
+        console.log(`🎯 Skip source: ${skipSourceHighlighting}, Targets: ${targets?.length || 0}`);
+        
+        if (skipSourceHighlighting && targets) {
+          const nonSourceTargets = targets.filter(target => {
+            const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+            if (elementIdMatch) {
+              const elementId = parseInt(elementIdMatch[1]);
+              const element = allElements.find(el => el.id === elementId);
+              return element && element.document_id === targetDocId;
             }
-          }
+            return false;
+          });
           
-          // Now determine replacement based on where the click came from
-          if (linkedDocumentId === primaryDocId) {
-            // Clicked from primary - replace secondary
-            console.log('🔗 === REPLACING SECONDARY DOCUMENT (clicked from primary) ===');
-            
-            // Highlight source text in primary document first
-            highlightSourceTextInDocument(primaryDocId, "primary");
-            
-            await replaceSecondaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
-          } else if (linkedDocumentId === secondaryDocId) {
-            // Clicked from secondary - replace primary
-            console.log('🔗 === REPLACING PRIMARY DOCUMENT (clicked from secondary) ===');
-            
-            // Highlight source text in secondary document first
-            highlightSourceTextInDocument(secondaryDocId, "secondary");
-            
-            await replacePrimaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
-          } else {
-            // Context menu click from non-viewed document - default to replacing secondary
-            console.log('🔗 === REPLACING SECONDARY DOCUMENT (context menu) ===');
-            await replaceSecondaryDocument(targetDocumentId, linkedCollectionId, targetInfo, allTargets);
-          }
+          console.log(`🎯 Filtered to ${nonSourceTargets.length} target-only elements`);
+          scrollToAndHighlightText(targetInfoParam, nonSourceTargets);
         } else {
-          console.warn('🔗 ⚠️ Unexpected document count:', viewedDocuments.length);
+          scrollToAndHighlightText(targetInfoParam, targets);
         }
       } catch (error) {
-        console.error('🔗 Error opening linked document:', error);
+        console.log('🎯 Error in target highlighting:', error);
+      }
+    }, delay);
+  };
+  
+  if (isUpdatingDocuments.current) {
+    console.log('🔗 ⚠️ Update in progress, skipping');
+    return;
+  }
+  
+  // 🔧 FIXED: Check if the TARGET document is already viewed, not the source
+  const isTargetAlreadyViewed = viewedDocuments.some(doc => doc.id === actualTargetDocumentId);
+  console.log('🔗 Target document already viewed:', isTargetAlreadyViewed);
+  
+  if (isTargetAlreadyViewed && actualTargetDocumentId === linkedDocumentId) {
+    // Same document navigation - just highlight
+    console.log('🔗 === SAME DOCUMENT - SIMPLE HIGHLIGHT ===');
+    
+    try {
+      scrollToAndHighlightText(targetInfo, allTargets);
+    } catch (error) {
+      console.log('🔗 Error scrolling:', error);
+    }
+    return;
+  }
+  
+  if (isTargetAlreadyViewed && actualTargetDocumentId !== linkedDocumentId) {
+    // Cross-document navigation between already viewed documents
+    console.log('🔗 === CROSS-DOCUMENT HIGHLIGHT (BOTH OPEN) ===');
+    
+    try {
+      scrollToAndHighlightText(actualTargetInfo, allTargets);
+    } catch (error) {
+      console.log('🔗 Error in cross-document highlight:', error);
+    }
+    return;
+  }
+  
+  // 🔗 TARGET DOCUMENT NEEDS TO BE OPENED
+  console.log('🔗 === OPENING TARGET DOCUMENT ===');
+  console.log('🔗 Current document count:', viewedDocuments.length);
+  
+  try {
+    if (viewedDocuments.length === 1) {
+      console.log('🔗 *** SINGLE TO DUAL MODE - UNIFIED HIGHLIGHTING ***');
+      
+      await addLinkedDocumentAsSecondary(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
+      triggerTargetHighlighting(actualTargetDocumentId, actualTargetInfo, allTargets, 2500, false);
+      
+    } else if (viewedDocuments.length === 2) {
+      console.log('🔗 *** DUAL MODE REPLACEMENT - IMMEDIATE SOURCE + DELAYED TARGET ***');
+      
+      const primaryDocId = viewedDocuments[0].id;
+      const secondaryDocId = viewedDocuments[1].id;
+      
+      if (linkedDocumentId === primaryDocId) {
+        console.log('🔗 *** CLICKED FROM PRIMARY - REPLACE SECONDARY ***');
+        
+        // Immediate source highlighting
+        const sourceTarget = getSourceTarget(primaryDocId);
+        if (sourceTarget) {
+          console.log('🎯 Highlighting primary source immediately:', sourceTarget.sourceURI);
+          highlightSourceTextImmediately(sourceTarget.sourceURI, sourceTarget.start, sourceTarget.end);
+        }
+        
+        // Replace secondary document
+        await replaceSecondaryDocument(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
+        
+        // Delayed target highlighting
+        const targetTargets = getTargetsForDocument(actualTargetDocumentId);
+        triggerTargetHighlighting(actualTargetDocumentId, actualTargetInfo, targetTargets, 2500, true);
+        
+      } else if (linkedDocumentId === secondaryDocId) {
+        console.log('🔗 *** CLICKED FROM SECONDARY - REPLACE PRIMARY ***');
+        
+        // 🎯 IMMEDIATE: Highlight source before document replacement
+        const sourceTarget = getSourceTarget(secondaryDocId);
+        if (sourceTarget) {
+          console.log('🎯 Highlighting secondary source immediately:', sourceTarget.sourceURI);
+          highlightSourceTextImmediately(sourceTarget.sourceURI, sourceTarget.start, sourceTarget.end);
+        }
+        
+        // Replace primary document
+        await replacePrimaryDocument(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
+        
+        // 🎯 DELAYED: Highlight target elements only (source already done)
+        const targetTargets = getTargetsForDocument(actualTargetDocumentId);
+        triggerTargetHighlighting(actualTargetDocumentId, actualTargetInfo, targetTargets, 2500, true);
+        
+      } else {
+        console.log('🔗 Context menu or other - replacing secondary');
+        await replaceSecondaryDocument(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
       }
     }
-    
-    console.log('🔗 === DOCUMENT VIEWER: handleOpenLinkedDocument completed ===');
-  }, [
-    viewedDocuments, 
-    addLinkedDocumentAsSecondary, 
-    replaceSecondaryDocument, 
-    replacePrimaryDocument, 
-    allElements, 
-    scrollToAndHighlightText
-  ]);
+  } catch (error) {
+    console.log('🔗 Error opening linked document:', error);
+  }
+  
+  console.log('🔗🔗🔗 === NAVIGATION COMPLETED ===');
+}, [
+  viewedDocuments, 
+  addLinkedDocumentAsSecondary, 
+  replaceSecondaryDocument, 
+  replacePrimaryDocument, 
+  allElements, 
+  scrollToAndHighlightText,
+  highlightSourceTextImmediately
+]);
 
-  // FIXED: Handle comparison document changes (using selectedCollectionId)
+  // Handle comparison document changes
   const handleComparisonDocumentChange = useCallback(async (newComparisonDocumentId: number | null) => {
     if (newComparisonDocumentId === null) {
       setViewedDocuments(prev => prev.slice(0, 1));
@@ -1064,7 +857,7 @@ export const DocumentContentView: React.FC = () => {
     navigate(`/collections/${collectionId}`);
   }, [navigate, collectionId]);
   
-  // FIXED: Handle collection selection change (using setSelectedCollectionId)
+  // Handle collection selection change
   const handleCollectionChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCollectionId = Number(e.target.value);
     setSelectedCollectionId(newCollectionId);
@@ -1080,7 +873,7 @@ export const DocumentContentView: React.FC = () => {
     setViewMode(mode);
   }, []);
   
-  // FIXED: Get available documents in the selected collection (using selectedCollectionId)
+  // Get available documents in the selected collection
   const availableInSelectedCollection = (documentsByCollection[selectedCollectionId] || [])
     .filter(doc => !viewedDocuments.some(viewedDoc => viewedDoc.id === doc.id));
   
