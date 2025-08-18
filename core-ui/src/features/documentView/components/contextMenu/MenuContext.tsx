@@ -1,6 +1,4 @@
 // src/features/documentView/components/contextMenu/MenuContext.tsx
-// COMPLETE REWRITE - Enhanced cross-document navigation with robust element loading
-
 import React, { useState, useEffect, useCallback } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
@@ -52,7 +50,7 @@ interface MenuContextProps {
 interface DocumentElement {
   id: number;
   document_id: number;
-  content?: any;
+  content?: unknown;
 }
 
 interface ContextMenuState {
@@ -72,6 +70,21 @@ const MenuContext: React.FC<MenuContextProps> = ({
   const text = useAppSelector(selectSegments);
   const annotationCreate = useAppSelector(selectAnnotationCreate);
   const allDocuments = useAppSelector(selectAllDocuments);
+
+  // Get linking annotations with error handling (moved to component level)
+  const allLinkingAnnotations = useAppSelector((state: RootState) => {
+    try {
+      const annotations = linkingAnnotations.selectors.selectAllAnnotations(state);
+      // Only log once when annotations are first loaded
+      if (annotations.length > 0) {
+        console.log('🔗 Available linking annotations:', annotations.length);
+      }
+      return annotations;
+    } catch (error) {
+      console.warn('🔗 Error accessing linking annotations:', error);
+      return [];
+    }
+  });
 
   // Centralized menu state
   const [menuState, setMenuState] = useState<ContextMenuState>({
@@ -98,16 +111,11 @@ const MenuContext: React.FC<MenuContextProps> = ({
     // Critical documents based on database analysis
     const criticalDocuments = [1, 2, 21]; // Expanded to include primary document
     
-    // Get all document IDs that have annotations
+    // Get all document IDs that have annotations (now using component-level selector)
     const annotatedDocuments = new Set<number>();
-    try {
-      const annotations = linkingAnnotations.selectors.selectAllAnnotations({ annotations: { linking: linkingAnnotations.reducer({}, { type: 'dummy' }) } } as RootState);
-      annotations.forEach(ann => {
-        if (ann.document_id) annotatedDocuments.add(ann.document_id);
-      });
-    } catch (error) {
-      console.warn('🚀 Could not access annotations for preloading:', error);
-    }
+    allLinkingAnnotations.forEach(ann => {
+      if (ann.document_id) annotatedDocuments.add(ann.document_id);
+    });
     
     // Combine critical and annotated documents
     const documentsToLoad = [...new Set([...criticalDocuments, ...Array.from(annotatedDocuments)])];
@@ -143,7 +151,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     });
     
     await Promise.allSettled(loadPromises);
-  }, [dispatch, elementsLoadingStatus]);
+  }, [dispatch, elementsLoadingStatus, allLinkingAnnotations]);
 
   // Preload on mount and when viewed documents change
   useEffect(() => {
@@ -170,11 +178,10 @@ const MenuContext: React.FC<MenuContextProps> = ({
     
     // 🎯 CRITICAL: Get elements from ALL loaded documents (same as DocumentViewerContainer)
     try {
-      const linkingAnns = linkingAnnotations.selectors.selectAllAnnotations(state);
       const referencedDocumentIds = new Set<number>();
       
       // Extract all document IDs from annotations
-      linkingAnns.forEach(annotation => {
+      allLinkingAnnotations.forEach(annotation => {
         if (annotation.document_id) {
           referencedDocumentIds.add(annotation.document_id);
         }
@@ -201,21 +208,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
     }
     
     return elements;
-  });
-
-  // Get linking annotations with error handling (reduced logging)
-  const allLinkingAnnotations = useAppSelector((state: RootState) => {
-    try {
-      const annotations = linkingAnnotations.selectors.selectAllAnnotations(state);
-      // Only log once when annotations are first loaded
-      if (annotations.length > 0) {
-        console.log('🔗 Available linking annotations:', annotations.length);
-      }
-      return annotations;
-    } catch (error) {
-      console.warn('🔗 Error accessing linking annotations:', error);
-      return [];
-    }
   });
 
   // 🎯 ENHANCED: Smart selection creation with better element detection
@@ -439,8 +431,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
   const handleLinkedTextSelection = useCallback((
     documentId: number,
     collectionId: number,
-    option: LinkedTextOption,
-    isCurrentlyOpen: boolean
+    option: LinkedTextOption
   ) => {
     // CRITICAL DEBUG: Log to both console AND browser alert to bypass console crash
     // const debugInfo = {
@@ -486,7 +477,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     } catch (error) {
       console.error('🎯 ❌ Error executing navigation callback:', error);
     }
-  }, [onOpenLinkedDocument]);
+  }, [onOpenLinkedDocument, menuState.selection?.documentId]);
 
   // Handle view linked text button
   const handleViewLinkedText = useCallback((e: React.MouseEvent) => {
@@ -502,8 +493,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
         handleLinkedTextSelection(
           singleDoc.documentId,
           singleDoc.collectionId,
-          singleDoc.linkedTextOptions[0],
-          // singleDoc.isCurrentlyOpen
+          singleDoc.linkedTextOptions[0]
         );
         return;
       }

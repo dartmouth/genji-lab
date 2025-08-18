@@ -1,6 +1,4 @@
 // src/features/documentView/utils/linkedTextUtils.ts
-// FIXED: Proper dynamic document title resolution
-
 import { RootState } from '@store';
 import { linkingAnnotations } from '@store';
 
@@ -124,17 +122,14 @@ interface AnnotationTarget {
 const getDocumentInfoFromElementId = (
   elementId: number,
   allDocuments: Array<{ id: number; title: string; document_collection_id: number }>,
-  allElements: Array<{ id: number; document_id: number; content?: any }>,
+  allElements: Array<{ id: number; document_id: number; content?: unknown }>,
   viewedDocuments: Array<{ id: number; title: string; collectionId: number }>
 ): { documentId: number; collectionId: number; title: string } | null => {
-  console.log('📋 Getting document info for element', elementId);
-  
   // Method 1: Find the element in the Redux store
   const element = allElements.find(el => el.id === elementId);
   if (element) {
     const document = allDocuments.find(doc => doc.id === element.document_id);
     if (document) {
-      console.log('📋 ✅ Element', elementId, '→ Document', element.document_id, '(' + document.title + ')');
       return {
         documentId: element.document_id,
         collectionId: document.document_collection_id,
@@ -144,14 +139,12 @@ const getDocumentInfoFromElementId = (
       // Element found but document not in allDocuments - try viewedDocuments
       const viewedDoc = viewedDocuments.find(d => d.id === element.document_id);
       if (viewedDoc) {
-        console.log('📋 ✅ Element', elementId, '→ Document', element.document_id, '(' + viewedDoc.title + ') [from viewed]');
         return {
           documentId: element.document_id,
           collectionId: viewedDoc.collectionId,
           title: viewedDoc.title
         };
       } else {
-        console.log('📋 ⚠️ Element', elementId, 'found but document', element.document_id, 'not in Redux documents');
         return {
           documentId: element.document_id,
           collectionId: 1, // Default collection
@@ -160,8 +153,6 @@ const getDocumentInfoFromElementId = (
       }
     }
   }
-  
-  console.log('📋 ❌ Element', elementId, 'not found in Redux store');
   return null;
 };
 
@@ -171,14 +162,9 @@ const resolveDocumentTitleAndCollection = (
   allDocuments: Array<{ id: number; title: string; document_collection_id: number }>,
   viewedDocuments: Array<{ id: number; title: string; collectionId: number }>
 ): { title: string; collectionId: number } => {
-  console.log('🔍 Resolving title for document ID:', documentId);
-  console.log('🔍 Available allDocuments:', allDocuments.map(d => ({ id: d.id, title: d.title })));
-  console.log('🔍 Available viewedDocuments:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
-  
   // First try: Look in allDocuments (from Redux store)
   const reduxDocument = allDocuments.find(doc => doc.id === documentId);
   if (reduxDocument) {
-    console.log('🔍 ✅ Found in allDocuments:', reduxDocument.title);
     return {
       title: reduxDocument.title,
       collectionId: reduxDocument.document_collection_id
@@ -188,7 +174,6 @@ const resolveDocumentTitleAndCollection = (
   // Second try: Look in viewedDocuments (currently open documents)
   const viewedDocument = viewedDocuments.find(doc => doc.id === documentId);
   if (viewedDocument) {
-    console.log('🔍 ✅ Found in viewedDocuments:', viewedDocument.title);
     return {
       title: viewedDocument.title,
       collectionId: viewedDocument.collectionId
@@ -196,7 +181,6 @@ const resolveDocumentTitleAndCollection = (
   }
   
   // Fallback: Generate a descriptive title
-  console.log('🔍 ❌ Document not found, using fallback title');
   return {
     title: `Document ${documentId}`,
     collectionId: 1 // Default collection
@@ -223,24 +207,14 @@ export const getLinkedDocumentsSimple = (
   allLinkingAnnotations: Annotation[],
   allDocuments: Array<{ id: number; title: string; document_collection_id: number }>,
   viewedDocuments: Array<{ id: number; title: string; collectionId: number }>,
-  allElements: Array<{ id: number; document_id: number; content?: any }> = []
+  allElements: Array<{ id: number; document_id: number; content?: unknown }> = []
 ): HierarchicalLinkedDocuments => {
   const result: HierarchicalLinkedDocuments = {};
   
-  console.log('🔗 === getLinkedDocumentsSimple START ===');
-  console.log('🔗 Selection sourceURI:', selection.sourceURI, 'from document', selection.documentId);
-  console.log('🔗 Available documents in Redux:', allDocuments.length);
-  console.log('🔗 Available elements in Redux:', allElements.length);
-  console.log('🔗 Total linking annotations:', allLinkingAnnotations.length);
-  console.log('🔗 Viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
-  
   // Find all annotations that reference our selected element
   const relevantAnnotations = getAnnotationsForElement(allLinkingAnnotations, selection.sourceURI);
-  console.log('🔗 Found', relevantAnnotations.length, 'relevant annotations for', selection.sourceURI);
   
   if (relevantAnnotations.length === 0) {
-    console.log('🔗 ⚠️ No linking annotations found for sourceURI:', selection.sourceURI);
-    // 🎯 DEBUG: Try alternative sourceURI formats
     const alternativeURIs = [
       selection.sourceURI,
       `/${selection.sourceURI}`,
@@ -249,18 +223,14 @@ export const getLinkedDocumentsSimple = (
       `DocumentElements/${selection.documentElementId}`
     ];
     
-    console.log('🔗 Trying alternative URI formats:', alternativeURIs);
-    
     alternativeURIs.forEach(uri => {
       const altAnnotations = getAnnotationsForElement(allLinkingAnnotations, uri);
       if (altAnnotations.length > 0) {
-        console.log('🔗 ✅ Found', altAnnotations.length, 'annotations with alternative URI:', uri);
         relevantAnnotations.push(...altAnnotations);
       }
     });
     
     if (relevantAnnotations.length === 0) {
-      console.log('🔗 ❌ Still no annotations found after trying alternatives');
       return result;
     }
   }

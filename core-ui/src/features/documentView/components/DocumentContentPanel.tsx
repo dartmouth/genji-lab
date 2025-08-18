@@ -294,34 +294,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
           viewedDocuments={viewedDocuments}
           onOpenLinkedDocument={handleOpenLinkedDocumentWrapper}
         />
-        
-        {/* 🎯 ENHANCED: Debug information panel (only in development) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div style={{
-            position: 'fixed',
-            bottom: '10px',
-            right: '10px',
-            background: 'rgba(0,0,0,0.8)',
-            color: 'white',
-            padding: '8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontFamily: 'monospace',
-            zIndex: 9999,
-            maxWidth: '300px'
-          }}>
-            <div>Doc {documentId}: {documentElements.length} elements</div>
-            <div>Element IDs: {documentElements.map(el => el.id).join(', ')}</div>
-            <div>Callback: {onOpenLinkedDocument ? '✓' : '✗'}</div>
-            <div>Viewed docs: {viewedDocuments.length}</div>
-            <div>Linking mode: {isLinkingModeActive ? 'ON' : 'OFF'}</div>
-            <div>Show highlights: {showLinkedTextHighlights ? 'ON' : 'OFF'}</div>
-            {/* 🎯 NEW: Show critical cross-document elements */}
-            <div style={{ color: '#ffa500' }}>
-              Cross-doc els: {documentElements.filter(el => [33, 34, 523, 524].includes(el.id)).map(el => el.id).join(', ') || 'none'}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

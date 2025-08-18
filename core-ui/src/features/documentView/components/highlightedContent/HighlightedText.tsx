@@ -140,7 +140,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const linkingAnnotations = paragraphLinkingAnnotations;
   const hasLinkedText = linkingAnnotations.length > 0;
   
-  // 🎯 REDUX: Debug logging for Redux navigation highlighting
+  // Debug logging for Redux navigation highlighting
   useEffect(() => {
     if (isNavigationHighlighted) {
       console.log(`🎯 Redux highlight ACTIVE for element: ${paragraphId} (type: ${highlightType})`);
