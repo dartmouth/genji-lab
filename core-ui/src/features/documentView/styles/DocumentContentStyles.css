@@ -1,3 +1,5 @@
+/* REPLACE YOUR ENTIRE CSS FILE WITH THIS CLEAN VERSION */
+
 /* Document View Container */
 .document-view-container {
   display: flex;
@@ -58,14 +60,11 @@
   transition: background-color 0.2s ease;
   margin-bottom: 1rem;
   line-height: 1.5;
-  
-  /* Standard scroll margin for paragraphs */
   scroll-margin-top: 100px;
 }
 
-/* Special handling for the first paragraph */
 .document-content:first-child {
-  scroll-margin-top: 150px; /* Extra large margin for first paragraph */
+  scroll-margin-top: 150px;
 }
 
 /* Styling for active paragraph */
@@ -162,27 +161,25 @@
 
 /* Style highlight colors based on annotation type */
 .highlight.commenting {
-  background-color: rgba(79, 170, 232, 0.2); /* Light blue */
+  background-color: rgba(79, 170, 232, 0.2);
   border-bottom: 2px solid #4faae8;
 }
 
 .highlight.scholarly {
-  background-color: rgba(247, 209, 84, 0.2); /* Light gold */
+  background-color: rgba(247, 209, 84, 0.2);
   border-bottom: 2px solid #f7d154;
 }
 
-/* Hover states */
 .highlight.commenting:hover {
-  background-color: rgba(79, 170, 232, 0.4); /* Darker blue on hover */
+  background-color: rgba(79, 170, 232, 0.4);
 }
 
 .highlight.scholarly:hover {
-  background-color: rgba(247, 209, 84, 0.4); /* Darker gold on hover */
+  background-color: rgba(247, 209, 84, 0.4);
 }
 
-/* Add a star for scholarly annotations */
 .highlight.scholarly::after {
-  content: "★"; /* Star character */
+  content: "★";
   font-size: 8px;
   position: relative;
   top: -8px;
@@ -190,9 +187,9 @@
   margin-left: 2px;
 }
 
-/* 🎯 CRITICAL FIX: Enhanced linked text highlighting with opacity cap */
+/* ========== LINKED TEXT HIGHLIGHTING (FIXED) ========== */
 
-/* Container for linked text highlights - prevents stacking opacity */
+/* Container for linked text highlights */
 .linked-text-highlights-container {
   position: absolute;
   top: 0;
@@ -201,21 +198,17 @@
   height: 100%;
   pointer-events: none;
   z-index: 2;
-  /* 🎯 CRITICAL: Cap the maximum opacity regardless of overlapping highlights */
   opacity: 0.6 !important;
-  /* 🎯 CRITICAL: Use blend mode to prevent excessive darkening */
   mix-blend-mode: multiply;
 }
 
 /* Individual linked text highlight */
 .linked-text-highlight {
   position: absolute;
-  /* 🎯 CRITICAL: Use solid color instead of rgba to work with container opacity */
   background-color: rgba(220, 53, 69, 0.4) !important;
   border-radius: 1px;
   pointer-events: none;
   transition: all 0.2s ease;
-  /* 🎯 CRITICAL: Prevent individual highlights from adding opacity */
   mix-blend-mode: normal;
 }
 
@@ -233,28 +226,10 @@
   transition: opacity 0.2s ease;
 }
 
-/* Enhanced linked text paragraph styling - UPDATED */
 .annotatable-paragraph.has-linked-text {
-  transition: all 0.2s ease-in-out;
-  /* 🎯 VERY SUBTLE: Background that doesn't interfere with readability */
-  background-color: rgba(220, 53, 69, 0.03) !important;
-  border-left: 2px solid rgba(220, 53, 69, 0.4);
-  padding-left: 8px;
+  position: relative;
 }
 
-.annotatable-paragraph.has-linked-text:hover {
-  background-color: rgba(220, 53, 69, 0.06) !important;
-  border-left-color: rgba(220, 53, 69, 0.6);
-}
-
-/* Show linked text mode - UPDATED */
-.show-linked-text .annotatable-paragraph.has-linked-text {
-  background-color: rgba(220, 53, 69, 0.05) !important;
-  border-left-color: rgba(220, 53, 69, 0.7);
-  animation: linkedTextPulse 3s ease-in-out infinite;
-}
-
-/* Show icon more prominently when showing linked text */
 .show-linked-text .linked-text-icon {
   opacity: 1;
   font-size: 12px;
@@ -272,36 +247,55 @@
   }
 }
 
-/* 🎯 ENHANCED: Better pulse animation that doesn't interfere with readability */
-@keyframes linkedTextPulse {
-  0% {
-    background-color: rgba(220, 53, 69, 0.05);
-    border-left-color: rgba(220, 53, 69, 0.7);
+@keyframes linkIndicatorPulse {
+  0%, 100% { 
+    opacity: 0.8; 
+    transform: scaleY(1);
   }
-  50% {
-    background-color: rgba(220, 53, 69, 0.08);
-    border-left-color: rgba(220, 53, 69, 0.9);
+  50% { 
+    opacity: 1; 
+    transform: scaleY(1.2);
   }
-  100% {
-    background-color: rgba(220, 53, 69, 0.05);
-    border-left-color: rgba(220, 53, 69, 0.7);
+}
+
+/* LIGHT navigation animation - text stays readable */
+@keyframes redux-precise-navigation-flash {
+  0% { 
+    background-color: rgba(255, 255, 0, 0.2); /* Pure yellow, lighter */
+    box-shadow: 0 0 2px rgba(255, 255, 0, 0.3);
+    color: #000000 !important; /* Force black text */
   }
+  25% { 
+    background-color: rgba(255, 255, 0, 0.3); /* Peak but still readable */
+    box-shadow: 0 0 3px rgba(255, 255, 0, 0.4);
+    color: #000000 !important; /* Force black text */
+  }
+  50% { 
+    background-color: rgba(255, 255, 0, 0.15); /* Very light */
+    box-shadow: 0 0 1px rgba(255, 255, 0, 0.2);
+    color: #000000 !important; /* Force black text */
+  }
+  75% { 
+    background-color: rgba(255, 255, 0, 0.25); /* Small bounce */
+    box-shadow: 0 0 2px rgba(255, 255, 0, 0.3);
+    color: #000000 !important; /* Force black text */
+  }
+  100% { 
+    background-color: rgba(255, 255, 0, 0); /* Fade out */
+    box-shadow: 0 0 0 rgba(255, 255, 0, 0);
+    color: inherit; /* Return to normal */
+  }
+}
+
+/* Hide any old overlays */
+.redux-navigation-highlight {
+  display: none !important;
 }
 
 /* Ensure linked text indicators don't interfere with regular highlights */
 .annotatable-paragraph.has-linked-text .highlight-container-commenting,
 .annotatable-paragraph.has-linked-text .highlight-container-scholarly {
-  z-index: 4 !important; /* Keep regular annotations above linked text highlighting */
-}
-
-/* Ensure linked text indicators are visible */
-.has-linked-text .link-icon {
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.has-linked-text:hover .link-icon {
-  opacity: 1;
+  z-index: 4 !important;
 }
 
 /* Enhanced tooltip styling for linked text */
@@ -334,7 +328,20 @@
   pointer-events: none;
 }
 
-/* Responsive Styles */
+/* ========== FORCE REMOVE ANY DEBUG STYLES ========== */
+
+/* Remove ALL borders and outlines from navigation elements */
+[data-navigation-type="source"],
+[data-navigation-type="target"],
+[data-navigation-highlighted="true"],
+.navigation-flash-active,
+.annotatable-paragraph {
+  border: none !important;
+  outline: none !important;
+}
+
+/* ========== RESPONSIVE STYLES ========== */
+
 @media (max-width: 768px) {
   .document-columns-container {
     flex-direction: column;
@@ -376,10 +383,10 @@
     scroll-margin-top: 120px;
   }
 
-  /* Responsive adjustments for linked text */
-  .annotatable-paragraph.has-linked-text {
-    border-left-width: 2px;
-    padding-left: 6px;
+  /* Mobile adjustments for indicators */
+  .annotatable-paragraph.has-linked-text::before {
+    width: 2px;
+    height: 6px;
   }
   
   .linked-text-icon {
@@ -387,220 +394,77 @@
     top: -1px;
     right: 1px;
   }
-  
+}
+
+/* ========== ACCESSIBILITY ========== */
+
+/* @media (prefers-reduced-motion: reduce) {
+  .redux-navigation-highlight-precise {
+    animation: none;
+    background-color: rgba(255, 235, 59, 0.3) !important;
+  }
+
+  .show-linked-text .annotatable-paragraph.has-linked-text::before,
   .show-linked-text .linked-text-icon {
-    font-size: 10px;
+    animation: none;
   }
-}
+} */
 
-/* Navigation flash animation for existing linked text highlights */
-.linked-text-highlight.navigation-flash {
-  /* Transform the red highlight to a bright navigation color */
-  background-color: #ffeb3b !important; /* Bright yellow for navigation */
-  animation: navigationFlash 3s ease-in-out;
-  box-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
-  transform: scale(1.02); /* Subtle size increase for emphasis */
-  border-radius: 2px;
-  z-index: 5; /* Higher than regular highlights */
-}
-
-/* Navigation flash animation */
-@keyframes navigationFlash {
-  0% {
-    background-color: rgba(220, 53, 69, 0.4); /* Start with original red */
-    box-shadow: 0 0 4px rgba(220, 53, 69, 0.6);
-    transform: scale(1);
-  }
-  15% {
-    background-color: #ffeb3b; /* Flash to bright yellow */
-    box-shadow: 0 0 16px rgba(255, 235, 59, 0.9);
-    transform: scale(1.02);
-  }
-  30% {
-    background-color: #fff176; /* Lighter yellow */
-    box-shadow: 0 0 12px rgba(255, 241, 118, 0.8);
-    transform: scale(1.01);
-  }
-  45% {
-    background-color: #ffeb3b; /* Back to bright yellow */
-    box-shadow: 0 0 10px rgba(255, 235, 59, 0.7);
-    transform: scale(1.02);
-  }
-  60% {
-    background-color: #ffcdd2; /* Transition to light red */
-    box-shadow: 0 0 8px rgba(255, 205, 210, 0.6);
-    transform: scale(1.01);
-  }
-  75% {
-    background-color: #f8bbd9; /* Pink transition */
-    box-shadow: 0 0 6px rgba(248, 187, 217, 0.5);
-    transform: scale(1);
-  }
-  100% {
-    background-color: rgba(220, 53, 69, 0.4); /* Return to original red */
-    box-shadow: 0 0 4px rgba(220, 53, 69, 0.6);
-    transform: scale(1);
-  }
-}
-
-/* Paragraph-level navigation flash */
-.annotatable-paragraph.paragraph-navigation-flash {
-  animation: paragraphNavigationFlash 3s ease-in-out;
-  border-left-width: 3px !important;
-}
-
-@keyframes paragraphNavigationFlash {
-  0% {
-    background-color: rgba(220, 53, 69, 0.05);
-    border-left-color: rgba(220, 53, 69, 0.7);
-  }
-  20% {
-    background-color: rgba(255, 235, 59, 0.1);
-    border-left-color: #ffeb3b;
-  }
-  40% {
-    background-color: rgba(255, 241, 118, 0.08);
-    border-left-color: #fff176;
-  }
-  60% {
-    background-color: rgba(255, 235, 59, 0.1);
-    border-left-color: #ffeb3b;
-  }
-  80% {
-    background-color: rgba(220, 53, 69, 0.08);
-    border-left-color: rgba(220, 53, 69, 0.8);
-  }
-  100% {
-    background-color: rgba(220, 53, 69, 0.05);
-    border-left-color: rgba(220, 53, 69, 0.7);
-  }
-}
-
-/* Fallback navigation flash for elements without existing red highlights */
-.navigation-flash-fallback {
-  animation: fallbackNavigationFlash 3s ease-in-out;
+.navigation-flash-active {
   position: relative;
 }
 
-.navigation-flash-fallback::before {
-  content: '';
+/* Container for precise Redux navigation highlights */
+.redux-navigation-highlights-container {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 235, 59, 0.2);
-  border-radius: 4px;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  z-index: 1;
-  animation: fallbackHighlightFade 3s ease-in-out;
+  z-index: 12;
+  /* SAME APPROACH AS RED HIGHLIGHTS: */
+  opacity: 0.8 !important;
+  mix-blend-mode: multiply;
 }
 
-@keyframes fallbackNavigationFlash {
-  0%, 100% {
-    box-shadow: none;
-  }
-  25% {
-    box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
-  }
-  50% {
-    box-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
-  }
-  75% {
-    box-shadow: 0 0 6px rgba(255, 235, 59, 0.4);
-  }
+/* Precise Redux navigation highlights - EXACTLY LIKE RED HIGHLIGHTS */
+.redux-navigation-highlight-precise {
+  position: absolute;
+  /* SAME STYLE AS .linked-text-highlight BUT YELLOW: */
+  background-color: rgba(255, 235, 59, 0.6) !important;
+  border-radius: 1px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  mix-blend-mode: normal;
+  /* FLASH ANIMATION: */
+  animation: redux-yellow-flash 3s ease-in-out;
 }
 
-@keyframes fallbackHighlightFade {
+/* FLASH ANIMATION - like the red highlights but yellow */
+@keyframes redux-yellow-flash {
   0% {
-    opacity: 0;
+    background-color: rgba(255, 235, 59, 0.6); /* Start yellow */
+    box-shadow: 0 0 4px rgba(255, 235, 59, 0.6);
   }
   15% {
-    opacity: 1;
+    background-color: rgba(255, 255, 0, 0.8); /* Bright flash */
+    box-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
   }
-  85% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-/* Enhanced icon flash during navigation */
-.paragraph-navigation-flash .linked-text-icon {
-  animation: iconNavigationFlash 3s ease-in-out;
-}
-
-@keyframes iconNavigationFlash {
-  0%, 100% {
-    color: #dc3545;
-    transform: scale(1);
-    text-shadow: 0 0 2px rgba(255, 255, 255, 0.9);
-  }
-  25% {
-    color: #ffeb3b;
-    transform: scale(1.2);
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  30% {
+    background-color: rgba(255, 235, 59, 0.7); /* Back to yellow */
+    box-shadow: 0 0 6px rgba(255, 235, 59, 0.6);
   }
   50% {
-    color: #fff176;
-    transform: scale(1.1);
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+    background-color: rgba(255, 235, 59, 0.6); /* Stable yellow */
+    box-shadow: 0 0 4px rgba(255, 235, 59, 0.5);
   }
   75% {
-    color: #ffeb3b;
-    transform: scale(1.15);
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+    background-color: rgba(255, 235, 59, 0.5); /* Fade */
+    box-shadow: 0 0 2px rgba(255, 235, 59, 0.4);
   }
-}
-
-/* Ensure navigation highlights are always visible above other content */
-.linked-text-highlight.navigation-flash {
-  z-index: 10 !important;
-}
-
-/* Smooth transitions for when navigation flash ends */
-.linked-text-highlight {
-  transition: all 0.3s ease-out;
-}
-
-.annotatable-paragraph {
-  transition: all 0.3s ease-out;
-}
-
-/* Responsive adjustments for navigation highlighting */
-@media (max-width: 768px) {
-  .linked-text-highlight.navigation-flash {
-    transform: scale(1.01); /* Smaller scale on mobile */
-  }
-  
-  .paragraph-navigation-flash {
-    border-left-width: 2px !important;
-  }
-  
-  .paragraph-navigation-flash .linked-text-icon {
-    animation-duration: 2.5s; /* Slightly faster on mobile */
-  }
-}
-
-/* Accessibility: Respect prefers-reduced-motion */
-@media (prefers-reduced-motion: reduce) {
-  .linked-text-highlight.navigation-flash,
-  .annotatable-paragraph.paragraph-navigation-flash,
-  .navigation-flash-fallback,
-  .paragraph-navigation-flash .linked-text-icon {
-    animation: none;
-    transition: none;
-  }
-  
-  /* Simple flash without animation for accessibility */
-  .linked-text-highlight.navigation-flash {
-    background-color: #ffeb3b !important;
-    box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
-  }
-  
-  .annotatable-paragraph.paragraph-navigation-flash {
-    background-color: rgba(255, 235, 59, 0.1);
-    border-left-color: #ffeb3b;
+  100% {
+    background-color: rgba(255, 235, 59, 0.6); /* Return to normal yellow */
+    box-shadow: 0 0 4px rgba(255, 235, 59, 0.6);
   }
 }

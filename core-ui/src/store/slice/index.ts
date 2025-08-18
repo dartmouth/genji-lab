@@ -1,3 +1,5 @@
+// store/slice/index.ts
+
 export {      
     commentingAnnotations,      
     replyingAnnotations,      
@@ -36,19 +38,19 @@ export type {
 export {     
     createDocument,     
     clearDocuments,
-    clearAllDocuments, // 🎯 NEW
+    clearAllDocuments,
     setSelectedCollectionId,     
     fetchDocumentsByCollection,
-    fetchAllDocuments, // 🎯 NEW
-    fetchAllDocumentsByCollections, // 🎯 NEW
-    addToAllDocuments, // 🎯 NEW
+    fetchAllDocuments,
+    fetchAllDocumentsByCollections,
+    addToAllDocuments,
     selectAllDocuments,
-    selectCollectionDocuments, // 🎯 NEW     
+    selectCollectionDocuments,     
     selectDocumentsStatus,
-    selectAllDocumentsStatus, // 🎯 NEW     
+    selectAllDocumentsStatus,     
     selectDocumentsError,     
     selectSelectedCollectionId,
-    selectDocumentById // 🎯 NEW
+    selectDocumentById
 } from './documentSlice'  
 
 export {     
@@ -64,9 +66,20 @@ export {
     selectElementsByDocumentId,     
     selectDocumentStatusById,     
     selectDocumentErrorById,     
-    selectCurrentDocumentId,     
-    // Legacy selectors for backward compatibility     
-    // selectAllDocumentElements,     
-    // selectDocumentElementsStatus,     
-    // selectDocumentElementsError 
+    selectCurrentDocumentId
 } from './documentElementsSlice'
+
+// Navigation highlight exports
+export {
+    startNavigationSession,
+    addNavigationHighlight,
+    removeNavigationHighlight,
+    clearNavigationSession,
+    clearAllNavigationHighlights,
+    selectIsElementHighlighted,
+    selectHighlightType,
+    selectNavigationHighlights,
+    selectCurrentNavigationSession
+} from './navigationHighlightSlice';
+
+export { default as navigationHighlightReducer } from './navigationHighlightSlice';

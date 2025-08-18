@@ -1,9 +1,10 @@
-// index.ts
+// store/index.ts - FIXED
 import { configureStore, combineReducers, Reducer, Action } from '@reduxjs/toolkit';
 import highlightRegistryReducer from './slice/highlightRegistrySlice';
 import createAnnotationSliceReducer from './slice/annotationCreate'
 import documentNavigationReducer from './slice/documentNavigationSlice';
 import documentElementsReducer from './slice/documentElementsSlice';
+import navigationHighlightReducer from './slice/navigationHighlightSlice';
 
 import { 
   commentingAnnotations, 
@@ -47,13 +48,15 @@ const rootReducer = {
   documentElements: documentElementsReducer,
   documentCollections: documentCollectionsReducer,
   documents: documentsReducer,
-  documentNavigation: documentNavigationReducer
+  documentNavigation: documentNavigationReducer,
+  // 🎯 FIXED: Add navigationHighlight to the rootReducer object (not as separate config)
+  navigationHighlight: navigationHighlightReducer
 };
-
 
 // Create the store
 export const store = configureStore({
   reducer: rootReducer,
+  // 🎯 FIXED: Removed the incorrectly placed navigationHighlight line
   devTools: true
 });
 
@@ -61,14 +64,7 @@ export const store = configureStore({
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-// Re-export actions and selectors from annotation buckets
-// export { 
-//   commentingAnnotations,
-//   replyingAnnotations,
-//   scholarlyAnnotations,
-//   taggingAnnotations
-// };
-
+// Re-export actions and selectors
 export * from './slice'
 export * from './hooks'
 export { fetchAnnotationByMotivation} from './thunk'

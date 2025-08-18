@@ -286,8 +286,8 @@ export const getLinkedDocumentsSimple = (
       return;
     }
     
-    // Group targets by document
-    const targetsByDocument: { [docId: number]: { targets: AnnotationTarget[]; elementIds: number[] } } = {};
+    // 🎯 FIXED: Group targets by document ID (not title) to prevent duplicates
+    const targetsByDocumentId: { [docId: number]: { targets: AnnotationTarget[]; elementIds: number[] } } = {};
     
     targetsNotCurrentSelection.forEach(target => {
       const elementIdMatch = target.source.match(/\/DocumentElements\/(\d+)/);
@@ -305,17 +305,18 @@ export const getLinkedDocumentsSimple = (
       if (docInfo) {
         console.log('🔗 ✅ Target element', elementId, '→ Document', docInfo.documentId, '(' + docInfo.title + ')');
         
-        // 🎯 CRITICAL: Don't skip same-document links in debug mode
+        // Skip same-document links (unless in debug mode)
         if (docInfo.documentId === selection.documentId) {
-          console.log('🔗 ⚠️ Found same-document link for document', docInfo.documentId, '- including for debugging');
-          // Don't return early - include it for debugging
+          console.log('🔗 ⚠️ Skipping same-document link for document', docInfo.documentId);
+          return;
         }
         
-        if (!targetsByDocument[docInfo.documentId]) {
-          targetsByDocument[docInfo.documentId] = { targets: [], elementIds: [] };
+        // 🎯 CRITICAL: Group by document ID only
+        if (!targetsByDocumentId[docInfo.documentId]) {
+          targetsByDocumentId[docInfo.documentId] = { targets: [], elementIds: [] };
         }
-        targetsByDocument[docInfo.documentId].targets.push(target);
-        targetsByDocument[docInfo.documentId].elementIds.push(elementId);
+        targetsByDocumentId[docInfo.documentId].targets.push(target);
+        targetsByDocumentId[docInfo.documentId].elementIds.push(elementId);
       } else {
         console.log('🔗 ⚠️ Could not determine document for element', elementId);
         
@@ -323,45 +324,48 @@ export const getLinkedDocumentsSimple = (
         if (annotation.document_id && annotation.document_id !== selection.documentId) {
           console.log('🔗 📝 Using annotation document_id as fallback:', annotation.document_id);
           
-          if (!targetsByDocument[annotation.document_id]) {
-            targetsByDocument[annotation.document_id] = { targets: [], elementIds: [] };
+          if (!targetsByDocumentId[annotation.document_id]) {
+            targetsByDocumentId[annotation.document_id] = { targets: [], elementIds: [] };
           }
-          targetsByDocument[annotation.document_id].targets.push(target);
-          targetsByDocument[annotation.document_id].elementIds.push(elementId);
+          targetsByDocumentId[annotation.document_id].targets.push(target);
+          targetsByDocumentId[annotation.document_id].elementIds.push(elementId);
         }
       }
     });
     
-    console.log('🔗 Cross-document targets found:', Object.keys(targetsByDocument).map(docId => ({
+    console.log('🔗 Cross-document targets found:', Object.keys(targetsByDocumentId).map(docId => ({
       docId: parseInt(docId),
-      elementCount: targetsByDocument[parseInt(docId)].elementIds.length
+      elementCount: targetsByDocumentId[parseInt(docId)].elementIds.length
     })));
     
-    // Create linked text options for each target document
-    Object.keys(targetsByDocument).forEach(docIdStr => {
+    // 🎯 FIXED: Process each document ID only once, with consistent title resolution
+    Object.keys(targetsByDocumentId).forEach(docIdStr => {
       const linkedDocumentId = parseInt(docIdStr);
-      const { targets: docTargets, elementIds } = targetsByDocument[linkedDocumentId];
+      const { targets: docTargets, elementIds } = targetsByDocumentId[linkedDocumentId];
       
       console.log('🔗 Creating option for document', linkedDocumentId, 'with elements:', elementIds);
       
-      // 🎯 FIXED: Use the enhanced title resolver
-      const { title: documentTitle, collectionId } = resolveDocumentTitleAndCollection(
-        linkedDocumentId,
-        allDocuments,
-        viewedDocuments
-      );
-      
-      console.log('🔗 ✅ Resolved document info:', {
-        id: linkedDocumentId,
-        title: documentTitle,
-        collectionId: collectionId
-      });
-      
-      // Check if currently viewed
-      const isCurrentlyViewed = viewedDocuments.some(d => d.id === linkedDocumentId);
-      
-      // Initialize document entry if not exists
+      // 🎯 CRITICAL: Initialize document entry ONCE per document ID
       if (!result[linkedDocumentId]) {
+        // Resolve title consistently using the first found document info
+        const firstElementId = elementIds[0];
+        const docInfo = getDocumentInfoFromElementId(firstElementId, allDocuments, allElements, viewedDocuments);
+        
+        let documentTitle = `Document ${linkedDocumentId}`;
+        let collectionId = 1;
+        
+        if (docInfo) {
+          documentTitle = docInfo.title;
+          collectionId = docInfo.collectionId;
+        } else {
+          // Fallback to resolveDocumentTitleAndCollection
+          const resolved = resolveDocumentTitleAndCollection(linkedDocumentId, allDocuments, viewedDocuments);
+          documentTitle = resolved.title;
+          collectionId = resolved.collectionId;
+        }
+        
+        const isCurrentlyViewed = viewedDocuments.some(d => d.id === linkedDocumentId);
+        
         result[linkedDocumentId] = {
           documentId: linkedDocumentId,
           documentTitle: documentTitle,
@@ -369,13 +373,18 @@ export const getLinkedDocumentsSimple = (
           isCurrentlyOpen: isCurrentlyViewed,
           linkedTextOptions: []
         };
-        console.log('🔗 ✅ Initialized document entry:', documentTitle);
+        
+        console.log('🔗 ✅ Initialized document entry ONCE:', {
+          id: linkedDocumentId,
+          title: documentTitle,
+          collection: collectionId
+        });
       }
       
       // Get the primary target and all targets for this annotation
       const primaryTarget = docTargets[0];
       
-      // Get ALL targets from the ENTIRE annotation
+      // Get ALL targets from the ENTIRE annotation (including source)
       const allTargets = annotation.target?.map((target: AnnotationTarget) => ({
         sourceURI: target.source,
         start: target.selector?.refined_by?.start || 0,
@@ -386,7 +395,7 @@ export const getLinkedDocumentsSimple = (
       // Use primary target's text for display
       const linkedText = primaryTarget.selector?.value || annotation.body.value || 'Linked text';
       
-      // Prevent duplicate annotations
+      // 🎯 FIXED: Check for duplicate annotations more carefully
       const existingOptionIndex = result[linkedDocumentId].linkedTextOptions.findIndex(
         option => option.linkingAnnotationId === annotation.id
       );
@@ -404,15 +413,15 @@ export const getLinkedDocumentsSimple = (
         };
         
         result[linkedDocumentId].linkedTextOptions.push(newOption);
-        console.log('🔗 ✅ Added option:', {
+        console.log('🔗 ✅ Added option to existing document:', {
           annotation: annotation.id,
-          document: documentTitle,
+          document: result[linkedDocumentId].documentTitle,
           textPreview: linkedText.substring(0, 40) + '...',
           allTargetsCount: allTargets.length,
-          targetInfo: newOption.targetInfo
+          totalOptionsForDoc: result[linkedDocumentId].linkedTextOptions.length
         });
       } else {
-        console.log('🔗 ⚠️ Skipping duplicate annotation option:', annotation.id);
+        console.log('🔗 ⚠️ Skipping duplicate annotation option:', annotation.id, 'for document', linkedDocumentId);
       }
     });
   });

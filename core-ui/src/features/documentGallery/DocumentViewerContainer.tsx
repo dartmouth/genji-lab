@@ -15,12 +15,20 @@ import {
   selectElementsByDocumentId,
   fetchDocumentElements
 } from "@store";
+
+import { 
+  startNavigationSession,
+  addNavigationHighlight,
+  clearNavigationSession,
+  clearAllNavigationHighlights
+} from "@store/slice/navigationHighlightSlice";
+
 import { RootState } from '@store';
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
 import { DocumentComparisonContainer } from "@documentView";
 import DocumentLinkingOverlay from '@/features/documentView/components/annotationCard/DocumentLinkingOverlay';
-import { scrollToAndHighlightText, highlightSourceTextImmediately } from '@/features/documentView/utils/scrollToTextUtils';
+import { scrollToAndHighlightText } from '@/features/documentView/utils/scrollToTextUtils';
 import RouterSwitchBoard from "@/RouterSwitchBoard";
 import "./styles/DocumentViewerStyles.css";
 
@@ -594,7 +602,6 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [dispatch, getDocumentTitle]);
 
-// 🔧 FIXED: Enhanced handleOpenLinkedDocument with proper target document detection
 const handleOpenLinkedDocument = useCallback(async (
   linkedDocumentId: number, 
   linkedCollectionId: number, 
@@ -610,12 +617,19 @@ const handleOpenLinkedDocument = useCallback(async (
     text: string;
   }>
 ) => {
-  console.log('🔗🔗🔗 === NAVIGATION STARTED ===');
+  // Create unique session ID for this navigation
+  const sessionId = `nav-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
+  console.log('🔗🔗🔗 === REDUX NAVIGATION STARTED ===');
+  console.log('🔗 Session ID:', sessionId);
   console.log('🔗 Source document (clicked from):', linkedDocumentId);
   console.log('🔗 All targets count:', allTargets?.length || 0);
   console.log('🔗 Current viewed documents:', viewedDocuments.map(d => ({ id: d.id, title: d.title })));
   
-  // 🎯 CRITICAL FIX: Determine the actual target document to open
+  // Start navigation session in Redux
+  dispatch(startNavigationSession({ sessionId }));
+  
+  // 🎯 CRITICAL: Determine the actual target document to open
   let actualTargetDocumentId = linkedDocumentId;
   let actualTargetInfo = targetInfo;
   
@@ -643,169 +657,250 @@ const handleOpenLinkedDocument = useCallback(async (
   
   console.log('🔗 Actual target document to open:', actualTargetDocumentId);
   
-  // 🎯 HELPER: Find source target for immediate highlighting
-  const getSourceTarget = (sourceDocId: number) => {
-    return allTargets?.find(target => {
-      const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
-      if (elementIdMatch) {
-        const elementId = parseInt(elementIdMatch[1]);
-        const element = allElements.find(el => el.id === elementId);
-        return element && element.document_id === sourceDocId;
-      }
-      return false;
-    });
-  };
-  
-  // 🎯 HELPER: Get targets for specific document
-  const getTargetsForDocument = (docId: number) => {
-    return allTargets?.filter(target => {
-      const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
-      if (elementIdMatch) {
-        const elementId = parseInt(elementIdMatch[1]);
-        const element = allElements.find(el => el.id === elementId);
-        return element && element.document_id === docId;
-      }
-      return false;
-    }) || [];
-  };
-  
-  // 🎯 HELPER: Trigger highlighting with proper timing
-  const triggerTargetHighlighting = (
-    targetDocId: number,
-    targetInfoParam: { sourceURI: string; start: number; end: number },
-    targets: typeof allTargets,
-    delay: number = 2500,
-    skipSourceHighlighting: boolean = false
-  ) => {
+  const triggerReduxSynchronizedHighlighting = (delay: number = 2500) => {
+    console.log(`🎯 === SCHEDULING REDUX SYNCHRONIZED HIGHLIGHTING (${delay}ms delay) ===`);
+    
     setTimeout(() => {
+      console.log('🎯 === EXECUTING REDUX SYNCHRONIZED HIGHLIGHTING ===');
+      
       try {
-        console.log(`🎯 Executing target highlighting for document ${targetDocId}`);
-        console.log(`🎯 Skip source: ${skipSourceHighlighting}, Targets: ${targets?.length || 0}`);
-        
-        if (skipSourceHighlighting && targets) {
-          const nonSourceTargets = targets.filter(target => {
-            const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
-            if (elementIdMatch) {
-              const elementId = parseInt(elementIdMatch[1]);
-              const element = allElements.find(el => el.id === elementId);
-              return element && element.document_id === targetDocId;
-            }
-            return false;
-          });
-          
-          console.log(`🎯 Filtered to ${nonSourceTargets.length} target-only elements`);
-          scrollToAndHighlightText(targetInfoParam, nonSourceTargets);
-        } else {
-          scrollToAndHighlightText(targetInfoParam, targets);
+        if (!allTargets || allTargets.length === 0) {
+          console.log('🎯 No targets to highlight');
+          dispatch(clearNavigationSession({ sessionId }));
+          return;
         }
+        
+        // Find the target element to scroll to
+        const targetElement = allTargets.find(target => {
+          const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+          if (elementIdMatch) {
+            const elementId = parseInt(elementIdMatch[1]);
+            const element = allElements.find(el => el.id === elementId);
+            return element && element.document_id !== linkedDocumentId; // Not the source document
+          }
+          return false;
+        });
+        
+        if (targetElement) {
+          console.log('🎯 📜 Scrolling to target element:', targetElement.sourceURI);
+          const domElement = document.getElementById(targetElement.sourceURI.replace('/', ''));
+          if (domElement) {
+            domElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+              inline: 'nearest'
+            });
+          }
+        }
+        
+        let highlightCount = 0;
+        
+        // Add all targets to Redux store simultaneously for perfect sync
+        allTargets.forEach((target, index) => {
+          const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+          if (elementIdMatch) {
+            const elementId = parseInt(elementIdMatch[1]);
+            const element = allElements.find(el => el.id === elementId);
+            
+            if (element) {
+              const isSource = element.document_id === linkedDocumentId;
+              const elementType = isSource ? 'source' : 'target';
+              
+              // Add slight stagger for visual effect (50ms between elements)
+              setTimeout(() => {
+                dispatch(addNavigationHighlight({
+                  elementURI: target.sourceURI,
+                  type: elementType,
+                  sessionId
+                }));
+                
+                console.log(`🎯 [${index + 1}/${allTargets.length}] Added Redux highlight: ${target.sourceURI} (${elementType}) in document ${element.document_id}`);
+              }, index * 50);
+              
+              highlightCount++;
+            } else {
+              console.warn(`🎯 ⚠️ Element not found for target: ${target.sourceURI}`);
+            }
+          }
+        });
+        
+        console.log(`🎯 ✅ Scheduled ${highlightCount} Redux highlights`);
+        
+        // Auto-cleanup after animation completes
+        const cleanupDelay = 3500 + (allTargets.length * 50); // Base animation time + stagger time
+        setTimeout(() => {
+          dispatch(clearNavigationSession({ sessionId }));
+          console.log('🎯 🧹 Navigation session cleaned up:', sessionId);
+        }, cleanupDelay);
+        
       } catch (error) {
-        console.log('🎯 Error in target highlighting:', error);
+        console.error('🎯 ❌ Redux highlighting error:', error);
+        dispatch(clearNavigationSession({ sessionId }));
+      }
+    }, delay);
+  };
+
+  // 🎯 HELPER: Redux synchronized highlighting with tight timing for replacement scenarios
+  const triggerTightlySynchronizedHighlighting = async (
+    sourceDocId: number,
+    replacementFunction: () => Promise<void>,
+    delay: number = 200
+  ) => {
+    console.log('🎯 === TIGHTLY SYNCHRONIZED REPLACEMENT HIGHLIGHTING ===');
+    
+    // Step 1: Execute the document replacement first
+    await replacementFunction();
+    
+    // Step 2: Wait for DOM to settle, then highlight BOTH source and target together
+    setTimeout(() => {
+      console.log('🎯 === EXECUTING SYNCHRONIZED REDUX HIGHLIGHTING ===');
+      
+      try {
+        if (!allTargets || allTargets.length === 0) {
+          dispatch(clearNavigationSession({ sessionId }));
+          return;
+        }
+        
+        let highlightCount = 0;
+        
+        // Add ALL targets to Redux store with minimal stagger for tight synchronization
+        allTargets.forEach((target, index) => {
+          const elementIdMatch = target.sourceURI.match(/\/DocumentElements\/(\d+)/);
+          if (elementIdMatch) {
+            const elementId = parseInt(elementIdMatch[1]);
+            const element = allElements.find(el => el.id === elementId);
+            
+            if (element) {
+              const isSource = element.document_id === sourceDocId;
+              const elementType = isSource ? 'source' : 'target';
+              
+              // Use minimal stagger (25ms) for tight synchronization
+              setTimeout(() => {
+                dispatch(addNavigationHighlight({
+                  elementURI: target.sourceURI,
+                  type: elementType,
+                  sessionId
+                }));
+                
+                console.log(`🎯 [SYNC ${index + 1}/${allTargets.length}] Added Redux highlight: ${target.sourceURI} (${elementType}) in document ${element.document_id}`);
+              }, index * 25);
+              
+              highlightCount++;
+            } else {
+              console.warn(`🎯 ⚠️ Element not found for target: ${target.sourceURI}`);
+            }
+          }
+        });
+        
+        console.log(`🎯 ✅ Scheduled ${highlightCount} tightly synchronized Redux highlights`);
+        
+        // Auto-cleanup after animation completes
+        const cleanupDelay = 3500 + (allTargets.length * 25);
+        setTimeout(() => {
+          dispatch(clearNavigationSession({ sessionId }));
+          console.log('🎯 🧹 Navigation session cleaned up:', sessionId);
+        }, cleanupDelay);
+        
+      } catch (error) {
+        console.error('🎯 ❌ Synchronized highlighting error:', error);
+        dispatch(clearNavigationSession({ sessionId }));
       }
     }, delay);
   };
   
   if (isUpdatingDocuments.current) {
-    console.log('🔗 ⚠️ Update in progress, skipping');
+    console.log('🔗 ⚠️ Update in progress, skipping navigation');
+    dispatch(clearNavigationSession({ sessionId }));
     return;
   }
   
-  // 🔧 FIXED: Check if the TARGET document is already viewed, not the source
+  // 🔧 Check if the TARGET document is already viewed (not the source)
   const isTargetAlreadyViewed = viewedDocuments.some(doc => doc.id === actualTargetDocumentId);
-  console.log('🔗 Target document already viewed:', isTargetAlreadyViewed);
+  const isSourceSameAsTarget = actualTargetDocumentId === linkedDocumentId;
   
-  if (isTargetAlreadyViewed && actualTargetDocumentId === linkedDocumentId) {
+  console.log('🔗 Target document already viewed:', isTargetAlreadyViewed);
+  console.log('🔗 Source same as target:', isSourceSameAsTarget);
+  
+  if (isTargetAlreadyViewed && isSourceSameAsTarget) {
     // Same document navigation - just highlight
-    console.log('🔗 === SAME DOCUMENT - SIMPLE HIGHLIGHT ===');
-    
-    try {
-      scrollToAndHighlightText(targetInfo, allTargets);
-    } catch (error) {
-      console.log('🔗 Error scrolling:', error);
-    }
+    console.log('🔗 === SAME DOCUMENT - REDUX HIGHLIGHT ===');
+    triggerReduxSynchronizedHighlighting(500); // Shorter delay for same document
     return;
   }
   
-  if (isTargetAlreadyViewed && actualTargetDocumentId !== linkedDocumentId) {
+  if (isTargetAlreadyViewed && !isSourceSameAsTarget) {
     // Cross-document navigation between already viewed documents
-    console.log('🔗 === CROSS-DOCUMENT HIGHLIGHT (BOTH OPEN) ===');
-    
-    try {
-      scrollToAndHighlightText(actualTargetInfo, allTargets);
-    } catch (error) {
-      console.log('🔗 Error in cross-document highlight:', error);
-    }
+    console.log('🔗 === CROSS-DOCUMENT HIGHLIGHT (BOTH OPEN) - REDUX SYNC ===');
+    triggerReduxSynchronizedHighlighting(500); // Shorter delay since both documents are ready
     return;
   }
   
   // 🔗 TARGET DOCUMENT NEEDS TO BE OPENED
-  console.log('🔗 === OPENING TARGET DOCUMENT ===');
+  console.log('🔗 === OPENING TARGET DOCUMENT WITH REDUX SYNC ===');
   console.log('🔗 Current document count:', viewedDocuments.length);
   
   try {
     if (viewedDocuments.length === 1) {
-      console.log('🔗 *** SINGLE TO DUAL MODE - UNIFIED HIGHLIGHTING ***');
+      console.log('🔗 *** SINGLE TO DUAL MODE - REDUX SYNCHRONIZED ***');
       
+      // Add secondary document
       await addLinkedDocumentAsSecondary(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
-      triggerTargetHighlighting(actualTargetDocumentId, actualTargetInfo, allTargets, 2500, false);
+      
+      // Standard synchronization via Redux
+      triggerReduxSynchronizedHighlighting(2500);
       
     } else if (viewedDocuments.length === 2) {
-      console.log('🔗 *** DUAL MODE REPLACEMENT - IMMEDIATE SOURCE + DELAYED TARGET ***');
+      console.log('🔗 *** DUAL MODE REPLACEMENT - REDUX SYNCHRONIZED ***');
       
       const primaryDocId = viewedDocuments[0].id;
       const secondaryDocId = viewedDocuments[1].id;
       
       if (linkedDocumentId === primaryDocId) {
-        console.log('🔗 *** CLICKED FROM PRIMARY - REPLACE SECONDARY ***');
-        
-        // Immediate source highlighting
-        const sourceTarget = getSourceTarget(primaryDocId);
-        if (sourceTarget) {
-          console.log('🎯 Highlighting primary source immediately:', sourceTarget.sourceURI);
-          highlightSourceTextImmediately(sourceTarget.sourceURI, sourceTarget.start, sourceTarget.end);
-        }
+        console.log('🔗 *** CLICKED FROM PRIMARY - REPLACE SECONDARY (REDUX) ***');
         
         // Replace secondary document
         await replaceSecondaryDocument(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
         
-        // Delayed target highlighting
-        const targetTargets = getTargetsForDocument(actualTargetDocumentId);
-        triggerTargetHighlighting(actualTargetDocumentId, actualTargetInfo, targetTargets, 2500, true);
+        // Standard synchronization via Redux
+        triggerReduxSynchronizedHighlighting(2500);
         
       } else if (linkedDocumentId === secondaryDocId) {
-        console.log('🔗 *** CLICKED FROM SECONDARY - REPLACE PRIMARY ***');
+        console.log('🔗 *** CLICKED FROM SECONDARY - REPLACE PRIMARY (REDUX) ***');
         
-        // 🎯 IMMEDIATE: Highlight source before document replacement
-        const sourceTarget = getSourceTarget(secondaryDocId);
-        if (sourceTarget) {
-          console.log('🎯 Highlighting secondary source immediately:', sourceTarget.sourceURI);
-          highlightSourceTextImmediately(sourceTarget.sourceURI, sourceTarget.start, sourceTarget.end);
-        }
-        
-        // Replace primary document
-        await replacePrimaryDocument(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
-        
-        // 🎯 DELAYED: Highlight target elements only (source already done)
-        const targetTargets = getTargetsForDocument(actualTargetDocumentId);
-        triggerTargetHighlighting(actualTargetDocumentId, actualTargetInfo, targetTargets, 2500, true);
+        // 🎯 FIXED: Use tightly synchronized highlighting for perfect timing
+        await triggerTightlySynchronizedHighlighting(
+          linkedDocumentId, // Source document ID (secondary)
+          async () => {
+            await replacePrimaryDocument(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
+          },
+          200 // Short delay for tight synchronization
+        );
         
       } else {
-        console.log('🔗 Context menu or other - replacing secondary');
+        console.log('🔗 Context menu or edge case - replacing secondary');
+        
         await replaceSecondaryDocument(actualTargetDocumentId, linkedCollectionId, actualTargetInfo, allTargets);
+        triggerReduxSynchronizedHighlighting(2500);
       }
+      
+    } else {
+      console.log('🔗 ⚠️ Unexpected document count:', viewedDocuments.length);
+      dispatch(clearNavigationSession({ sessionId }));
     }
+    
   } catch (error) {
-    console.log('🔗 Error opening linked document:', error);
+    console.error('🔗 ❌ Error in document navigation:', error);
+    dispatch(clearNavigationSession({ sessionId }));
   }
   
-  console.log('🔗🔗🔗 === NAVIGATION COMPLETED ===');
+  console.log('🔗🔗🔗 === REDUX NAVIGATION COMPLETED ===');
 }, [
-  viewedDocuments, 
-  addLinkedDocumentAsSecondary, 
-  replaceSecondaryDocument, 
-  replacePrimaryDocument, 
-  allElements, 
-  scrollToAndHighlightText,
-  highlightSourceTextImmediately
+  viewedDocuments,
+  addLinkedDocumentAsSecondary,
+  replaceSecondaryDocument,
+  replacePrimaryDocument,
+  allElements,
+  dispatch
 ]);
 
   // Handle comparison document changes

@@ -1,7 +1,7 @@
 // src/features/documentView/components/contextMenu/MenuContext.tsx
 // COMPLETE REWRITE - Enhanced cross-document navigation with robust element loading
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
 import { createPortal } from 'react-dom';

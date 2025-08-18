@@ -506,23 +506,38 @@ export const scrollToAndHighlightText = (targetInfo: {
     
     console.log(`🎯 ✅ Found ${validTargets.length} valid targets on attempt ${attempt}`);
     
-    // Find the first element to scroll to (prioritize non-source targets for new documents)
+    // Find the first element to scroll to (prioritize target over source for cross-document navigation)
     let primaryTarget = validTargets[0];
-    
-    // 🎯 NEW: If we highlighted source immediately, prioritize target elements for scrolling
-    if (highlightSourceImmediately && validTargets.length > 1) {
-      const nonSourceTargets = validTargets.filter(target => 
-        target.sourceURI !== targetInfo.sourceURI &&
-        !(target.start === targetInfo.start && target.end === targetInfo.end)
+
+    // 🎯 FIXED: Always prioritize target elements for scrolling in cross-document scenarios
+    if (validTargets.length > 1) {
+      // Find target elements (not the one matching targetInfo, which is usually the target to scroll to)
+      const targetElements = validTargets.filter(target => 
+        target.sourceURI === targetInfo.sourceURI &&
+        target.start === targetInfo.start && 
+        target.end === targetInfo.end
       );
       
-      if (nonSourceTargets.length > 0) {
-        primaryTarget = nonSourceTargets[0];
-        console.log('🎯 Using non-source target for scrolling:', primaryTarget.sourceURI);
+      if (targetElements.length > 0) {
+        primaryTarget = targetElements[0];
+        console.log('🎯 Using target element for scrolling:', primaryTarget.sourceURI);
+      } else {
+        // If no exact match, use the element that's different from the first one
+        if (validTargets.length > 1 && validTargets[1]) {
+          primaryTarget = validTargets[1];
+          console.log('🎯 Using second target for scrolling:', primaryTarget.sourceURI);
+        }
       }
     }
     
     const primaryElement = findElementByMultipleStrategies(primaryTarget.sourceURI);
+
+    console.log('🎯 🔍 PRIMARY ELEMENT DEBUG:', {
+      primaryTarget: primaryTarget.sourceURI,
+      elementFound: !!primaryElement,
+      elementId: primaryElement?.id,
+      documentPanel: primaryElement?.closest('[data-document-id]')?.getAttribute('data-document-id')
+    });
     
     if (!primaryElement) {
       console.error(`🎯 ❌ Primary target element lost: ${primaryTarget.sourceURI}`);
