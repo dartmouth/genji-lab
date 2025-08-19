@@ -18,6 +18,16 @@ export interface DocumentCollection {
   created: string;
   modified: string;
   document_count?: number;
+  created_by?: {
+    id: number;
+    first_name?: string;
+    last_name?: string;
+  };
+  modified_by?: {
+    id: number;
+    first_name?: string;
+    last_name?: string;
+  };
 }
 
 interface DocumentCollectionState {
@@ -69,9 +79,15 @@ const initialState: DocumentCollectionState = {
 // Thunks
 export const fetchDocumentCollections = createAsyncThunk(
   'documentCollections/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (params: { includeUsers?: boolean } = {}, { rejectWithValue }) => {
     try {
-      const response = await api.get('/collections/');
+      const queryParams = new URLSearchParams();
+      if (params.includeUsers) {
+        queryParams.append('include_users', 'true');
+      }
+      
+      const url = `/collections/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      const response = await api.get(url);
       
       if (!(response.status === 200)) {
         return rejectWithValue(`Failed to fetch document collections: ${response.statusText}`);

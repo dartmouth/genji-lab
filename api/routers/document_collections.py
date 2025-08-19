@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete, select, func, update
@@ -13,7 +13,8 @@ from schemas.document_collections import (
     DocumentCollectionCreate, 
     DocumentCollectionUpdate, 
     DocumentCollectionPartialUpdate,
-    DocumentCollectionWithStats
+    DocumentCollectionWithStats,
+    DocumentCollectionWithUsers
 )
 
 router = APIRouter(
@@ -48,7 +49,7 @@ def create_collection(collection: DocumentCollectionCreate, db: AsyncSession = D
     db.refresh(db_collection)
     return db_collection
 
-@router.get("/", response_model=List[DocumentCollection])
+@router.get("/", response_model=List[DocumentCollectionWithUsers])
 def read_collections(
     skip: int = 0,
     limit: int = 100,
@@ -56,12 +57,20 @@ def read_collections(
     visibility: Optional[str] = None,
     language: Optional[str] = None,
     created_by_id: Optional[int] = None,
+    include_users: bool = False,
     db: AsyncSession = Depends(get_db)
 ):
     """
     Retrieve document collections with optional filtering
     """
     query = select(DocumentCollectionModel)
+    
+    # Optionally include user relationships
+    if include_users:
+        query = query.options(
+            joinedload(DocumentCollectionModel.created_by),
+            joinedload(DocumentCollectionModel.modified_by)
+        )
     
     # Apply filters if provided
     if title:
