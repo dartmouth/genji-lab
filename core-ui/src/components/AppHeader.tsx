@@ -1,18 +1,31 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@hooks/useAuthContext";
+import { useAppDispatch, useAppSelector } from "@store/hooks";
+import { fetchSiteSettings } from "@store/slice/siteSettingsSlice";
 
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  
+  const dispatch = useAppDispatch();
+  const { settings } = useAppSelector((state) => state.siteSettings);
+
+  // Load site settings on component mount
+  useEffect(() => {
+    dispatch(fetchSiteSettings());
+  }, [dispatch]);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
+  // For now, use default title since DB connection isn't ready
+  const siteTitle = settings?.site_title || 'Site Title';
+
   return (
     <header className="app-header">
       <div className="header-left">
-        <h1 className="app-title">The Tale of Genji</h1>
+        <h1 className="app-title">{siteTitle}</h1>
       </div>
       <div className="header-right">
         {isAuthenticated && user ? (

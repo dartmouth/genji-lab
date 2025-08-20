@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import ManageCollections from './ManageCollections';
 import ManageDocuments from './ManageDocuments';
 import ManageUsers from './ManageUsers';
+import SiteSettings from './SiteSettings';
 import "../../documentGallery/styles/CollectionGalleryStyles.css";
 
 interface AdminPanelProps {}
@@ -103,6 +104,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
           <Tab label="Manage Document Collections" {...a11yProps(1)} />
           <Tab label="Manage Documents" {...a11yProps(2)} />
           <Tab label="Manage Users" {...a11yProps(3)} />
+          <Tab label="Site Settings" {...a11yProps(4)} />
         </Tabs>
         {/* Tab content area */}
         <TabPanel value={activeTab} index={0}>
@@ -124,6 +126,10 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
 
         <TabPanel value={activeTab} index={3}>
           <ManageUsers />
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={4}>
+          <SiteSettings />
         </TabPanel>
       </Box>
     </Box>

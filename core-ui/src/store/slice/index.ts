@@ -61,3 +61,10 @@ export {
     // selectDocumentElementsStatus,
     // selectDocumentElementsError
 } from './documentElementsSlice'
+
+export {
+    fetchSiteSettings,
+    updateSiteSettings,
+    clearError,
+    resetSiteSettings
+} from './siteSettingsSlice'
