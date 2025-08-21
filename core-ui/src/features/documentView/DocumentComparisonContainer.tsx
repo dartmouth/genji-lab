@@ -1,168 +1,201 @@
 // src/documentView/DocumentComparisonContainer.tsx
-import React, { useState, useEffect, useMemo } from 'react';
-import { DocumentContentPanel } from '.';
-import TabbedAnnotationsPanel from './components/TabbedAnnotationsPanel';
-import { useAppSelector } from '@store/hooks';
-import { 
-  commentingAnnotations, 
-  scholarlyAnnotations
-} from '@store';
-import './styles/DocumentComparisonStyles.css';
+import React, { useState, useEffect, useMemo } from "react";
+import { DocumentContentPanel } from ".";
+import TabbedAnnotationsPanel from "./components/TabbedAnnotationsPanel";
+import { useAppSelector } from "@store/hooks";
+import { commentingAnnotations, scholarlyAnnotations } from "@store";
+import "./styles/DocumentComparisonStyles.css";
 
 // Define annotation panel position type
-type AnnotationPanelPosition = 'bottom' | 'right' | 'left';
+type AnnotationPanelPosition = "bottom" | "right" | "left";
 
 // Document props interface with title
 interface DocumentProps {
   id: number;
   collectionId: number;
-  title: string; 
+  title: string;
 }
 
 interface DocumentComparisonContainerProps {
   documents: Array<DocumentProps>;
-  viewMode?: 'reading' | 'annotations';
-  handleViewModeChange?: (mode: 'reading' | 'annotations') => void;
+  viewMode?: "reading" | "annotations";
+  handleViewModeChange?: (mode: "reading" | "annotations") => void;
   isLinkingModeActive?: boolean;
-  showLinkedTextHighlights?: boolean; // New prop for showing linked text highlights
-  onOpenLinkedDocument?: (documentId: number, collectionId: number, targetInfo: {
-    sourceURI: string;
-    start: number;
-    end: number;
-  }, allTargets?: Array<{
-    sourceURI: string;
-    start: number;
-    end: number;
-    text: string;
-  }>) => void;
+  showLinkedTextHighlights?: boolean;
+  onOpenLinkedDocument?: (
+    documentId: number,
+    collectionId: number,
+    targetInfo: {
+      sourceURI: string;
+      start: number;
+      end: number;
+    },
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>
+  ) => void;
 }
 
-const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = ({
+const DocumentComparisonContainer: React.FC<
+  DocumentComparisonContainerProps
+> = ({
   documents,
-  viewMode = 'reading',
+  viewMode = "reading",
   isLinkingModeActive = false,
   showLinkedTextHighlights = false, // Default to false
-  onOpenLinkedDocument
+  onOpenLinkedDocument,
 }) => {
   // State for active document (for highlight tracking)
   const [activeDocumentId, setActiveDocumentId] = useState<number | undefined>(
     documents.length > 0 ? documents[0].id : undefined
   );
-  
+
   // State for annotation panel position (bottom, right, left)
-  const [annotationPanelPosition, setAnnotationPanelPosition] = 
-    useState<AnnotationPanelPosition>('bottom');
-    
+  const [annotationPanelPosition, setAnnotationPanelPosition] =
+    useState<AnnotationPanelPosition>("bottom");
+
   // State for panel visibility
   const [isPanelVisible, setIsPanelVisible] = useState(true);
-  
+
   // Determine layout based on number of documents
-  const layoutClass = documents.length > 1 ? 'multi-document-layout' : 'single-document-layout';
-  
+  const layoutClass =
+    documents.length > 1 ? "multi-document-layout" : "single-document-layout";
+
   // Assign colors to documents
   const documentColors = useMemo(() => {
     // Define a list of distinct colors for documents
     const colors = [
-      '#4285F4', // Blue
-      '#34A853', // Green
-      '#FBBC05', // Yellow
-      '#EA4335', // Red
-      '#8F44AD', // Purple
-      '#16A085', // Teal
-      '#F39C12', // Orange
-      '#2C3E50'  // Dark Blue
+      "#4285F4", // Blue
+      "#34A853", // Green
+      "#FBBC05", // Yellow
+      "#EA4335", // Red
+      "#8F44AD", // Purple
+      "#16A085", // Teal
+      "#F39C12", // Orange
+      "#2C3E50", // Dark Blue
     ];
-    
+
     return documents.reduce((acc, doc, index) => {
       acc[doc.id] = colors[index % colors.length];
       return acc;
     }, {} as Record<number, string>);
   }, [documents]);
-  
+
   // Create document list for annotations panel directly from props
-  const documentList = useMemo(() => documents.map(doc => ({
-    id: doc.id,
-    title: doc.title,
-    color: documentColors[doc.id]
-  })), [documents, documentColors]);
-  
+  const documentList = useMemo(
+    () =>
+      documents.map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        color: documentColors[doc.id],
+      })),
+    [documents, documentColors]
+  );
+
   // Get ALL highlight IDs for our documents
-  const allHighlightIds = useAppSelector(state => {
-    // Collect all highlight IDs across all documents
-    const ids: string[] = [];
-    documents.forEach(doc => {
-      const docHighlights = state.highlightRegistry.highlights[doc.id] || {};
-      Object.values(docHighlights).forEach(docIds => {
-        ids.push(...docIds);
+  const allHighlightIds = useAppSelector(
+    (state) => {
+      // Collect all highlight IDs across all documents
+      const ids: string[] = [];
+      documents.forEach((doc) => {
+        const docHighlights = state.highlightRegistry.highlights[doc.id] || {};
+        Object.values(docHighlights).forEach((docIds) => {
+          ids.push(...docIds);
+        });
       });
-    });
-    return ids;
-  }, (prev, curr) => {
-    // Check if arrays are the same length and have the same elements
-    if (prev.length !== curr.length) return false;
-    for (let i = 0; i < prev.length; i++) {
-      if (prev[i] !== curr[i]) return false;
+      return ids;
+    },
+    (prev, curr) => {
+      // Check if arrays are the same length and have the same elements
+      if (prev.length !== curr.length) return false;
+      for (let i = 0; i < prev.length; i++) {
+        if (prev[i] !== curr[i]) return false;
+      }
+      return true;
     }
-    return true;
-  });
-  
+  );
+
   // Get HOVERED highlight IDs from your highlightRegistry
-  const hoveredHighlightIds = useAppSelector(state => {
-    // Collect all hovered highlight IDs across all documents
-    const ids: string[] = [];
-    documents.forEach(doc => {
-      const docHoveredIds = state.highlightRegistry.hoveredHighlightIds[doc.id] || [];
-      ids.push(...docHoveredIds);
-    });
-    return ids;
-  }, (prev, curr) => {
-    // Check if arrays are the same length and have the same elements
-    if (prev.length !== curr.length) return false;
-    for (let i = 0; i < prev.length; i++) {
-      if (prev[i] !== curr[i]) return false;
+  const hoveredHighlightIds = useAppSelector(
+    (state) => {
+      // Collect all hovered highlight IDs across all documents
+      const ids: string[] = [];
+      documents.forEach((doc) => {
+        const docHoveredIds =
+          state.highlightRegistry.hoveredHighlightIds[doc.id] || [];
+        ids.push(...docHoveredIds);
+      });
+      return ids;
+    },
+    (prev, curr) => {
+      // Check if arrays are the same length and have the same elements
+      if (prev.length !== curr.length) return false;
+      for (let i = 0; i < prev.length; i++) {
+        if (prev[i] !== curr[i]) return false;
+      }
+      return true;
     }
-    return true;
-  });
-  
+  );
+
   // Get annotations for all highlights
-  const makeSelectCommenting = commentingAnnotations.selectors.makeSelectAnnotationsById();
-  const makeSelectScholarly = scholarlyAnnotations.selectors.makeSelectAnnotationsById();
-  
-  const allCommentingAnnotations = useAppSelector(state => 
+  const makeSelectCommenting =
+    commentingAnnotations.selectors.makeSelectAnnotationsById();
+  const makeSelectScholarly =
+    scholarlyAnnotations.selectors.makeSelectAnnotationsById();
+
+  const allCommentingAnnotations = useAppSelector((state) =>
     makeSelectCommenting(state, allHighlightIds)
   );
-  
-  const allScholarlyAnnotations = useAppSelector(state => 
+
+  const allScholarlyAnnotations = useAppSelector((state) =>
     makeSelectScholarly(state, allHighlightIds)
   );
-  
+
   // Get annotations for HOVERED highlights
-  const hoveredCommentingAnnotations = useAppSelector(state => 
+  const hoveredCommentingAnnotations = useAppSelector((state) =>
     makeSelectCommenting(state, hoveredHighlightIds)
   );
-  
-  const hoveredScholarlyAnnotations = useAppSelector(state => 
+
+  const hoveredScholarlyAnnotations = useAppSelector((state) =>
     makeSelectScholarly(state, hoveredHighlightIds)
   );
-  
+
   // Filter annotations to include only those for our documents
-  const documentIds = useMemo(() => documents.map(d => d.id), [documents]);
-  
+  const documentIds = useMemo(() => documents.map((d) => d.id), [documents]);
+
   // All annotations for these documents
-  const allAnnotations = useMemo(() => [
-    ...allCommentingAnnotations.filter(anno => documentIds.includes(anno.document_id)),
-    ...allScholarlyAnnotations.filter(anno => documentIds.includes(anno.document_id))
-  ], [allCommentingAnnotations, allScholarlyAnnotations, documentIds]);
-  
+  const allAnnotations = useMemo(
+    () => [
+      ...allCommentingAnnotations.filter((anno) =>
+        documentIds.includes(anno.document_id)
+      ),
+      ...allScholarlyAnnotations.filter((anno) =>
+        documentIds.includes(anno.document_id)
+      ),
+    ],
+    [allCommentingAnnotations, allScholarlyAnnotations, documentIds]
+  );
+
   // Hovered annotations for these documents
-  const hoveredAnnotations = useMemo(() => [
-    ...hoveredCommentingAnnotations.filter(anno => documentIds.includes(anno.document_id)),
-    ...hoveredScholarlyAnnotations.filter(anno => documentIds.includes(anno.document_id))
-  ], [hoveredCommentingAnnotations, hoveredScholarlyAnnotations, documentIds]);
-  
+  const hoveredAnnotations = useMemo(
+    () => [
+      ...hoveredCommentingAnnotations.filter((anno) =>
+        documentIds.includes(anno.document_id)
+      ),
+      ...hoveredScholarlyAnnotations.filter((anno) =>
+        documentIds.includes(anno.document_id)
+      ),
+    ],
+    [hoveredCommentingAnnotations, hoveredScholarlyAnnotations, documentIds]
+  );
+
   // State to track whether we're showing hovered annotations
-  const [showingHoveredAnnotations, setShowingHoveredAnnotations] = useState(false);
-  
+  const [showingHoveredAnnotations, setShowingHoveredAnnotations] =
+    useState(false);
+
   // Update the state based on whether there are hovered annotations
   // Using a simple check for length to avoid infinite render loops
   useEffect(() => {
@@ -171,122 +204,153 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
       setShowingHoveredAnnotations(hasHoveredAnnotations);
     }
   }, [hoveredAnnotations, showingHoveredAnnotations]);
-  
+
   // For sticky header shadow effect when scrolling
   useEffect(() => {
     const handleScroll = () => {
-      const titleHeaders = document.querySelectorAll('.document-title-header');
-      titleHeaders.forEach(header => {
+      const titleHeaders = document.querySelectorAll(".document-title-header");
+      titleHeaders.forEach((header) => {
         if (header.getBoundingClientRect().top <= 0) {
-          header.classList.add('scrolled');
+          header.classList.add("scrolled");
         } else {
-          header.classList.remove('scrolled');
+          header.classList.remove("scrolled");
         }
       });
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-  
+
   // Handle document focus/hover
   const handleDocumentFocus = (docId: number) => {
     setActiveDocumentId(docId);
   };
-  
+
   return (
-    <div className={`
+    <div
+      className={`
       document-comparison-container 
       ${layoutClass} 
       ${viewMode}-mode 
       panel-position-${annotationPanelPosition}
-      ${isLinkingModeActive ? 'linking-mode-active' : ''}
-      ${showLinkedTextHighlights ? 'show-linked-text' : ''}
-    `} style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      ${isLinkingModeActive ? "linking-mode-active" : ""}
+      ${showLinkedTextHighlights ? "show-linked-text" : ""}
+    `}
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
       {/* Document toolbar completely removed to prevent overlay with annotation tabs */}
-      
-      <div className="content-and-annotations-container" 
-        style={{ 
+
+      <div
+        className="content-and-annotations-container"
+        style={{
           flex: 1,
-          position: 'relative',
-          height: '100%', // Full height since toolbar is gone
-          overflow: 'hidden'
-        }}>
+          position: "relative",
+          height: "100%", // Full height since toolbar is gone
+          overflow: "hidden",
+        }}
+      >
         {/* Document panels */}
-        <div 
+        <div
           className={`documents-container ${
-            viewMode === 'annotations' ? `with-annotations-panel position-${annotationPanelPosition}` : ''
+            viewMode === "annotations"
+              ? `with-annotations-panel position-${annotationPanelPosition}`
+              : ""
           }`}
-          style={{ 
+          style={{
             flex: 1,
-            overflow: 'auto',
-            paddingTop: '64px', // Add padding for the navbar
-            ...(viewMode === 'annotations' && isPanelVisible ? 
-              (annotationPanelPosition === 'bottom' ? {
-                paddingBottom: '40%', // Space for fixed bottom panel
-                maxHeight: 'calc(100vh - 64px)' // Adjust for navbar height
-              } : annotationPanelPosition === 'right' ? {
-                paddingRight: '30%', // Space for fixed right panel
-                width: '100%'
-              } : {
-                paddingLeft: '30%', // Space for fixed left panel
-                width: '100%'
-              }) 
-              : {}
-            )
+            overflow: "auto",
+            paddingTop: "64px", // Add padding for the navbar
+            ...(viewMode === "annotations" && isPanelVisible
+              ? annotationPanelPosition === "bottom"
+                ? {
+                    paddingBottom: "40%", // Space for fixed bottom panel
+                    maxHeight: "calc(100vh - 64px)", // Adjust for navbar height
+                  }
+                : annotationPanelPosition === "right"
+                ? {
+                    paddingRight: "30%", // Space for fixed right panel
+                    width: "100%",
+                  }
+                : {
+                    paddingLeft: "30%", // Space for fixed left panel
+                    width: "100%",
+                  }
+              : {}),
           }}
         >
           {documents.map((doc, index) => (
-            <div 
-              key={doc.id} 
-              className={`document-panel-wrapper panel-${index} ${doc.id === activeDocumentId ? 'active' : ''} ${isLinkingModeActive ? 'linking-mode' : ''}`}
+            <div
+              key={doc.id}
+              className={`document-panel-wrapper panel-${index} ${
+                doc.id === activeDocumentId ? "active" : ""
+              } ${isLinkingModeActive ? "linking-mode" : ""}`}
               onMouseEnter={() => handleDocumentFocus(doc.id)}
               data-document-id={doc.id}
               style={{
-                ...(isLinkingModeActive ? {
-                  cursor: 'crosshair',
-                  border: '2px dashed #1976d2',
-                  borderRadius: '8px',
-                  margin: '4px',
-                  transition: 'all 0.2s ease'
-                } : {})
+                ...(isLinkingModeActive
+                  ? {
+                      cursor: "crosshair",
+                      border: "2px dashed #1976d2",
+                      borderRadius: "8px",
+                      margin: "4px",
+                      transition: "all 0.2s ease",
+                    }
+                  : {}),
               }}
             >
               {/* Document title header */}
-              <div className="document-title-header" style={{
-                ...(isLinkingModeActive ? {
-                  backgroundColor: 'rgba(25, 118, 210, 0.1)',
-                  borderBottom: '1px solid #1976d2'
-                } : {})
-              }}>
+              <div
+                className="document-title-header"
+                style={{
+                  ...(isLinkingModeActive
+                    ? {
+                        backgroundColor: "rgba(25, 118, 210, 0.1)",
+                        borderBottom: "1px solid #1976d2",
+                      }
+                    : {}),
+                }}
+              >
                 <h2>
-                  <span className="color-indicator" style={{ backgroundColor: documentColors[doc.id] }} />
+                  <span
+                    className="color-indicator"
+                    style={{ backgroundColor: documentColors[doc.id] }}
+                  />
                   {doc.title}
                   {isLinkingModeActive && (
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: '#1976d2', 
-                      fontWeight: 'normal',
-                      marginLeft: '8px'
-                    }}>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#1976d2",
+                        fontWeight: "normal",
+                        marginLeft: "8px",
+                      }}
+                    >
                       (Select text to link)
                     </span>
                   )}
                   {showLinkedTextHighlights && (
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: '#16A085', 
-                      fontWeight: 'normal',
-                      marginLeft: '8px'
-                    }}>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#16A085",
+                        fontWeight: "normal",
+                        marginLeft: "8px",
+                      }}
+                    >
                       (🔗 Linked text highlighted)
                     </span>
                   )}
                 </h2>
               </div>
-              
+
               {/* Document content panel */}
               <div className="document-content-panel">
                 <DocumentContentPanel
@@ -301,101 +365,127 @@ const DocumentComparisonContainer: React.FC<DocumentComparisonContainerProps> = 
             </div>
           ))}
         </div>
-        
+
         {/* Tabbed annotations panel - only shown in annotations mode and when visible */}
-        {viewMode === 'annotations' && documents.length > 0 && isPanelVisible && (
-          <div 
-            className={`annotations-panel-container position-${annotationPanelPosition}`}
-            style={{ 
-              ...(annotationPanelPosition === 'bottom' ? {
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                width: '100%',
-                height: '40%',
-                maxHeight: '400px'
-              } : annotationPanelPosition === 'right' ? {
-                position: 'fixed',
-                top: '64px', // Start after navbar
-                right: 0,
-                bottom: 0,
-                width: '30%',
-                maxWidth: '400px',
-                height: 'calc(100vh - 64px)', // Adjust height to account for navbar
-                overflowY: 'auto'
-              } : {
-                position: 'fixed',
-                top: '64px', // Start after navbar
-                left: 0,
-                bottom: 0,
-                width: '30%',
-                maxWidth: '400px',
-                height: 'calc(100vh - 64px)', // Adjust height to account for navbar
-                overflowY: 'auto'
-              }),
-              zIndex: 100,
-              boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-              backgroundColor: '#f9f9f9',
-              borderTop: annotationPanelPosition === 'bottom' ? '1px solid #ddd' : 'none',
-              borderLeft: annotationPanelPosition === 'right' ? '1px solid #ddd' : 'none',
-              borderRight: annotationPanelPosition === 'left' ? '1px solid #ddd' : 'none',
-              opacity: 1, // Ensure full opacity
-              backdropFilter: 'none', // Remove any backdrop filters
-              WebkitBackdropFilter: 'none' // For Safari
-            }}
-          >
-            <TabbedAnnotationsPanel
-              documents={documentList}
-              annotations={showingHoveredAnnotations ? hoveredAnnotations : allAnnotations}
-              activeDocumentId={activeDocumentId}
-              isHovering={showingHoveredAnnotations}
-              position={annotationPanelPosition}
-              onChangePosition={setAnnotationPanelPosition}
-              onToggleVisibility={() => setIsPanelVisible(!isPanelVisible)}
-            />
-          </div>
-        )}
-        
-        {/* Sticky reopen button - only shown when panel is closed */}
-        {viewMode === 'annotations' && documents.length > 0 && !isPanelVisible && (
-          <div 
-            style={{
-              position: 'fixed',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              display: 'flex',
-              justifyContent: 'center',
-              padding: '8px',
-              backgroundColor: '#f0f2f5',
-              borderTop: '1px solid #ddd',
-              boxShadow: '0 -2px 5px rgba(0,0,0,0.05)',
-              zIndex: 100
-            }}
-          >
-            <button
-              onClick={() => setIsPanelVisible(true)}
+        {viewMode === "annotations" &&
+          documents.length > 0 &&
+          isPanelVisible && (
+            <div
+              className={`annotations-panel-container position-${annotationPanelPosition}`}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: '#e9ecef',
-                color: '#212529',
-                padding: '8px 16px',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                ...(annotationPanelPosition === "bottom"
+                  ? {
+                      position: "fixed",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      width: "100%",
+                      height: "40%",
+                      maxHeight: "400px",
+                    }
+                  : annotationPanelPosition === "right"
+                  ? {
+                      position: "fixed",
+                      top: "64px", // Start after navbar
+                      right: 0,
+                      bottom: 0,
+                      width: "30%",
+                      maxWidth: "400px",
+                      height: "calc(100vh - 64px)", // Adjust height to account for navbar
+                      overflowY: "auto",
+                    }
+                  : {
+                      position: "fixed",
+                      top: "64px", // Start after navbar
+                      left: 0,
+                      bottom: 0,
+                      width: "30%",
+                      maxWidth: "400px",
+                      height: "calc(100vh - 64px)", // Adjust height to account for navbar
+                      overflowY: "auto",
+                    }),
+                zIndex: 100,
+                boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+                backgroundColor: "#f9f9f9",
+                borderTop:
+                  annotationPanelPosition === "bottom"
+                    ? "1px solid #ddd"
+                    : "none",
+                borderLeft:
+                  annotationPanelPosition === "right"
+                    ? "1px solid #ddd"
+                    : "none",
+                borderRight:
+                  annotationPanelPosition === "left"
+                    ? "1px solid #ddd"
+                    : "none",
+                opacity: 1,
+                backdropFilter: "none",
+                WebkitBackdropFilter: "none", // For Safari
               }}
             >
-              <span style={{ fontSize: '16px' }}>⊕</span>
-              <span>Show Annotations {allAnnotations.length > 0 ? `(${allAnnotations.length})` : ''}</span>
-            </button>
-          </div>
-        )}
+              <TabbedAnnotationsPanel
+                documents={documentList}
+                annotations={
+                  showingHoveredAnnotations
+                    ? hoveredAnnotations
+                    : allAnnotations
+                }
+                activeDocumentId={activeDocumentId}
+                isHovering={showingHoveredAnnotations}
+                position={annotationPanelPosition}
+                onChangePosition={setAnnotationPanelPosition}
+                onToggleVisibility={() => setIsPanelVisible(!isPanelVisible)}
+              />
+            </div>
+          )}
+
+        {/* Sticky reopen button - only shown when panel is closed */}
+        {viewMode === "annotations" &&
+          documents.length > 0 &&
+          !isPanelVisible && (
+            <div
+              style={{
+                position: "fixed",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                display: "flex",
+                justifyContent: "center",
+                padding: "8px",
+                backgroundColor: "#f0f2f5",
+                borderTop: "1px solid #ddd",
+                boxShadow: "0 -2px 5px rgba(0,0,0,0.05)",
+                zIndex: 100,
+              }}
+            >
+              <button
+                onClick={() => setIsPanelVisible(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  border: "none",
+                  borderRadius: "4px",
+                  backgroundColor: "#e9ecef",
+                  color: "#212529",
+                  padding: "8px 16px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
+                }}
+              >
+                <span style={{ fontSize: "16px" }}>⊕</span>
+                <span>
+                  Show Annotations{" "}
+                  {allAnnotations.length > 0
+                    ? `(${allAnnotations.length})`
+                    : ""}
+                </span>
+              </button>
+            </div>
+          )}
       </div>
     </div>
   );

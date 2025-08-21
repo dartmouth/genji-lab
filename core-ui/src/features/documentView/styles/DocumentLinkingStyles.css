@@ -1,0 +1,320 @@
+/* Hierarchical Linked Text Menu Styles */
+
+.hierarchical-linked-text-menu {
+    position: fixed;
+    z-index: 10002;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    max-width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: inherit;
+  }
+  
+  .hierarchical-linked-text-menu__header {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    background-color: #f8f9fa;
+  }
+  
+  .hierarchical-linked-text-menu__document-item {
+    position: relative;
+  }
+  
+  .hierarchical-linked-text-menu__document-item:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .hierarchical-linked-text-menu__document-button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    border: none;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .hierarchical-linked-text-menu__document-button:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .hierarchical-linked-text-menu__document-content {
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    background-color: white;
+  }
+  
+  .hierarchical-linked-text-menu__document-content--active {
+    background-color: #f5f5f5;
+  }
+  
+  .hierarchical-linked-text-menu__document-layout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .hierarchical-linked-text-menu__document-icon {
+    font-size: 16px;
+  }
+  
+  .hierarchical-linked-text-menu__document-details {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .hierarchical-linked-text-menu__document-title {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* Highlighted Text Component Styles */
+  
+  .annotatable-paragraph {
+    position: relative;
+    writing-mode: horizontal-tb;
+    white-space: pre-wrap;
+  }
+  
+  .annotatable-paragraph.linking-mode {
+    cursor: crosshair;
+    user-select: text;
+  }
+  
+  .annotatable-paragraph.navigation-flash-active {
+    /* Base state for navigation highlighting - actual highlight color comes from precise overlays */
+  }
+  
+  .annotatable-paragraph.has-linked-text {
+    /* Styling for paragraphs that contain linked text */
+  }
+  
+  /* Redux Navigation Highlights */
+  
+  .redux-navigation-highlights-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 15;
+  }
+  
+  .redux-navigation-highlight-precise {
+    position: absolute;
+    background-color: rgba(255, 235, 59, 0.35);
+    border: none;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  
+  .redux-navigation-highlight-precise.highlight-search {
+    background-color: rgba(255, 193, 7, 0.4);
+  }
+  
+  .redux-navigation-highlight-precise.highlight-annotation {
+    background-color: rgba(76, 175, 80, 0.35);
+  }
+  
+  .redux-navigation-highlight-precise.highlight-link {
+    background-color: rgba(33, 150, 243, 0.35);
+  }
+  
+  /* Highlight Containers */
+  
+  .highlight-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* Linked Text Highlights */
+  
+  .linked-text-icon {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 12px;
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 5;
+  }
+  
+  .linked-text-highlights-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  .linked-text-highlight {
+    position: absolute;
+    background-color: rgba(25, 118, 210, 0.15);
+    border: 1px solid rgba(25, 118, 210, 0.3);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  
+  .hierarchical-linked-text-menu__open-indicator {
+    font-size: 11px;
+    color: #1976d2;
+    font-weight: normal;
+    margin-left: 6px;
+  }
+  
+  .hierarchical-linked-text-menu__linked-text-preview {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .hierarchical-linked-text-menu__options-count {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .hierarchical-linked-text-menu__arrow {
+    font-size: 14px;
+    color: #999;
+    margin-left: 4px;
+  }
+  
+  /* Submenu Styles */
+  
+  .linked-text-options-submenu {
+    position: fixed;
+    z-index: 10003;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+    max-width: 350px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: inherit;
+  }
+  
+  .linked-text-options-submenu__header {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    font-weight: bold;
+    color: #666;
+    background-color: #f8f9fa;
+  }
+  
+  .linked-text-options-submenu__option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    border: none;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .linked-text-options-submenu__option:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .linked-text-options-submenu__option:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .linked-text-options-submenu__option-text {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+  }
+  
+  .linked-text-options-submenu__additional-sections {
+    font-size: 11px;
+    color: #1976d2;
+    margin-top: 4px;
+    font-style: italic;
+  }
+  
+  /* Linked Text Dropdown Styles */
+  
+  .linked-text-dropdown {
+    position: fixed;
+    z-index: 10000;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    max-width: 300px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .linked-text-dropdown__header {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    font-weight: bold;
+    color: #666;
+    background-color: #f8f9fa;
+  }
+  
+  .linked-text-dropdown__item {
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .linked-text-dropdown__item:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .linked-text-dropdown__item:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .linked-text-dropdown__document-title {
+    font-weight: 500;
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  
+  .linked-text-dropdown__linked-text {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
