@@ -7,8 +7,7 @@ import {
   Paper,
   Alert,
   CircularProgress,
-  Chip,
-  Divider
+  Chip
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { fetchSiteSettings, updateSiteSettings, clearError } from '@store/slice/siteSettingsSlice';
@@ -178,41 +177,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
           />
         </Box>
 
-        <Divider sx={{ my: 2 }} />
-
-        <Typography variant="h6" gutterBottom>
-          Preview
-        </Typography>
-        
-        <Box 
-          sx={{ 
-            p: 2, 
-            backgroundColor: '#f8f9fa',
-            border: '1px solid #e0e0e0',
-            borderRadius: 1,
-            mb: 2
-          }}
-        >
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            Header Preview:
-          </Typography>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              p: 1,
-              backgroundColor: 'white',
-              border: '1px solid #ddd',
-              borderRadius: 1
-            }}
-          >
-            <Typography variant="h6" component="span">
-              {siteTitle || 'Site Title'}
-            </Typography>
-          </Box>
-        </Box>
-
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
           <Button
             variant="outlined"
             onClick={handleReset}
@@ -230,14 +195,6 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
           </Button>
         </Box>
       </Paper>
-
-      {settings && (
-        <Paper sx={{ p: 2, backgroundColor: '#f5f5f5' }}>
-          <Typography variant="body2" color="text.secondary">
-            Last updated: {new Date(settings.updated_at).toLocaleString()}
-          </Typography>
-        </Paper>
-      )}
     </Box>
   );
 };
