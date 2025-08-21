@@ -21,7 +21,7 @@ import {
   addNavigationHighlight,
   clearNavigationSession,
 } from "@store/slice/navigationHighlightSlice";
-
+import HighlightingHelpIcon from "@/features/documentView/components/highlightedContent/HighlightingHelpIcon";
 import { RootState } from "@store";
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
@@ -1090,6 +1090,11 @@ export const DocumentContentView: React.FC = () => {
             Loading document...
           </div>
         )}
+
+        {/* Add the help icon on the far right */}
+        <div className="header-right-controls">
+          <HighlightingHelpIcon />
+        </div>
 
         <div
           className={`document-management-panel ${
