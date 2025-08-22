@@ -1,13 +1,28 @@
 import React from "react";
 import { useAuth } from "@hooks/useAuthContext";
 import { SimpleSearchBar } from "@/features/search";
+import LoginForm from "./LoginForm";
+import "../features/documentView/styles/AuthStyles.css";
 
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [showLoginForm, setShowLoginForm] = React.useState(false);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleCasLogin = () => {
+    login(); // Call without parameters for CAS authentication
+  };
+
+  const handleBasicAuthClick = () => {
+    setShowLoginForm(true);
+  };
+
+  const handleLoginFormCancel = () => {
+    setShowLoginForm(false);
   };
 
   return (
@@ -47,27 +62,30 @@ const AppHeader: React.FC = () => {
             )}
           </div>
         ) : (
-          // Anonymous user - show login button
+          // Anonymous user - show login buttons
           <div className="auth-controls">
             <button 
-              onClick={login}
-              className="login-button"
+              onClick={handleCasLogin}
+              className="login-button cas-login"
               disabled={isLoading}
             >
               {isLoading ? 'Authenticating...' : 'Login with Dartmouth SSO'}
             </button>
             <button 
-              onClick={login}
-              className="login-button"
+              onClick={handleBasicAuthClick}
+              className="login-button basic-login"
               disabled={isLoading}
             >
-              {isLoading ? 'Authenticating...' : 'Login'}
+              Login
             </button>
             {error && <div className="auth-error">{error}</div>}
           </div>
           
         )}
       </div>
+      {showLoginForm && (
+        <LoginForm onCancel={handleLoginFormCancel} />
+      )}
     </header>
   );
 };

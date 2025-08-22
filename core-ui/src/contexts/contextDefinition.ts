@@ -8,7 +8,8 @@ export interface AuthContextType {
     id: number;
     first_name: string;
     last_name: string;
-    netid: string;
+    netid?: string;
+    username?: string;
     email?: string;
     user_metadata?: Record<string, string|number>;
     roles?: Array<string>,
@@ -22,8 +23,8 @@ export interface AuthContextType {
   error: string | null;
   
   // Authentication actions
-  login: () => void;
-  logout: () => void;
+  login: (username?: string, password?: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 // Create the context with a default value
