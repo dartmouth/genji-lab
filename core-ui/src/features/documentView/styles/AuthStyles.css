@@ -49,6 +49,14 @@
   .login-button.basic-login:hover:not(:disabled) {
     background-color: #0056b3 !important;
   }
+
+  .login-button.register-button {
+    background-color: #28a745 !important; /* Green for register */
+  }
+
+  .login-button.register-button:hover:not(:disabled) {
+    background-color: #1e7e34 !important;
+  }
   
   .auth-error {
     font-size: 12px;

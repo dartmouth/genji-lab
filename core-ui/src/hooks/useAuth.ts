@@ -22,8 +22,17 @@ interface AuthState {
 interface UseAuthReturn extends AuthState {
   login: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
   isLoading: boolean;
   error: string | null;
+}
+
+interface RegisterData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  username: string;
+  password: string;
 }
 
 interface AuthConfig {
@@ -203,6 +212,51 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
     }
   }, [basicAuthLogin, casAuthLogin]);
 
+  // Register function
+  const register = useCallback(async (userData: RegisterData) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/v1/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Registration failed');
+      }
+
+      const userResponse = await response.json();
+      
+      // Convert username-based response to match expected user format
+      const user: AuthUser = {
+        ...userResponse,
+        netid: userResponse.username, // Map username to netid for compatibility
+      };
+
+      // Set auth state with expiration
+      const expiresAt = Date.now() + (sessionExpirationHours * 60 * 60 * 1000);
+      setAuthState({
+        isAuthenticated: true,
+        user,
+        expiresAt,
+      });
+    } catch (e) {
+      console.error('Registration error:', e);
+      setError(e instanceof Error ? e.message : 'Registration failed');
+      setAuthState({ isAuthenticated: false, user: null });
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sessionExpirationHours]);
+
   // Logout function
   const logout = useCallback(async () => {
     setIsLoading(true);
@@ -270,6 +324,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
     ...authState,
     login,
     logout,
+    register,
     isLoading,
     error,
   };

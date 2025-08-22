@@ -1,4 +1,4 @@
-.login-form-overlay {
+.register-form-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,23 +11,34 @@
   z-index: 1000;
 }
 
-.login-form-container {
+.register-form-container {
   background: white;
   border-radius: 8px;
   padding: 2rem;
   width: 90%;
-  max-width: 400px;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.login-form h3 {
+.register-form h3 {
   margin: 0 0 1.5rem 0;
   text-align: center;
   color: #333;
 }
 
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
 .form-field {
   margin-bottom: 1rem;
+}
+
+.form-field.half-width {
+  flex: 1;
 }
 
 .form-field label {
@@ -57,7 +68,22 @@
   cursor: not-allowed;
 }
 
-.login-error {
+.form-field input.error {
+  border-color: #dc3545;
+}
+
+.form-field input.error:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+}
+
+.field-error {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.register-error {
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;
   color: #721c24;

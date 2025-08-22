@@ -25,6 +25,16 @@ export interface AuthContextType {
   // Authentication actions
   login: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
+}
+
+// Registration data interface
+export interface RegisterData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  username: string;
+  password: string;
 }
 
 // Create the context with a default value

@@ -4,9 +4,10 @@ import "./LoginForm.css";
 
 interface LoginFormProps {
   onCancel: () => void;
+  onSwitchToRegister: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onCancel }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onCancel, onSwitchToRegister }) => {
   const { login, isLoading, error, isAuthenticated } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -88,6 +89,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onCancel }) => {
             >
               {isLoading ? "Logging in..." : "Login"}
             </button>
+          </div>
+
+          <div className="form-footer">
+            <p>
+              Don't have an account?{" "}
+              <button
+                type="button"
+                onClick={onSwitchToRegister}
+                className="link-button"
+                disabled={isLoading}
+              >
+                Create one
+              </button>
+            </p>
           </div>
         </form>
       </div>
