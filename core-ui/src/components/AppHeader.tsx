@@ -56,8 +56,16 @@ const AppHeader: React.FC = () => {
             >
               {isLoading ? 'Authenticating...' : 'Login with Dartmouth SSO'}
             </button>
+            <button 
+              onClick={login}
+              className="login-button"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Authenticating...' : 'Login'}
+            </button>
             {error && <div className="auth-error">{error}</div>}
           </div>
+          
         )}
       </div>
     </header>
