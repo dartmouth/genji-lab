@@ -61,13 +61,6 @@ const HighlightingHelpIcon: React.FC<HighlightingHelpIconProps> = ({
         <div className="highlighting-help-tooltip">
           <div className="tooltip-header">
             <h4>Text Highlighting Guide</h4>
-            <button
-              className="tooltip-close"
-              onClick={() => setIsTooltipVisible(false)}
-              aria-label="Close help"
-            >
-              ×
-            </button>
           </div>
 
           <div className="tooltip-content">
@@ -80,7 +73,7 @@ const HighlightingHelpIcon: React.FC<HighlightingHelpIconProps> = ({
                     border: `1px solid ${highlight.borderColor}`,
                   }}
                 >
-                  Sample text
+                  Lorem Ipsum
                 </div>
                 <div className="highlight-info">
                   <div className="highlight-type">{highlight.type}</div>

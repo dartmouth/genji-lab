@@ -22,6 +22,8 @@ interface DocumentComparisonContainerProps {
   handleViewModeChange?: (mode: "reading" | "annotations") => void;
   isLinkingModeActive?: boolean;
   showLinkedTextHighlights?: boolean;
+  isAnnotationsPanelCollapsed?: boolean;
+  onToggleAnnotationsPanel?: () => void;
   onOpenLinkedDocument?: (
     documentId: number,
     collectionId: number,
@@ -43,9 +45,11 @@ const DocumentComparisonContainer: React.FC<
   DocumentComparisonContainerProps
 > = ({
   documents,
-  viewMode = "reading",
+  viewMode = "annotations", // Changed default to annotations
   isLinkingModeActive = false,
-  showLinkedTextHighlights = false, // Default to false
+  showLinkedTextHighlights = false,
+  isAnnotationsPanelCollapsed = true, // Default to collapsed
+  onToggleAnnotationsPanel,
   onOpenLinkedDocument,
 }) => {
   // State for active document (for highlight tracking)
@@ -57,8 +61,8 @@ const DocumentComparisonContainer: React.FC<
   const [annotationPanelPosition, setAnnotationPanelPosition] =
     useState<AnnotationPanelPosition>("bottom");
 
-  // State for panel visibility
-  const [isPanelVisible, setIsPanelVisible] = useState(true);
+  // Use the collapsed state from props instead of internal state
+  const isPanelVisible = !isAnnotationsPanelCollapsed;
 
   // Determine layout based on number of documents
   const layoutClass =
@@ -253,7 +257,7 @@ const DocumentComparisonContainer: React.FC<
         style={{
           flex: 1,
           position: "relative",
-          height: "100%", // Full height since toolbar is gone
+          height: "100%",
           overflow: "hidden",
         }}
       >
@@ -267,20 +271,20 @@ const DocumentComparisonContainer: React.FC<
           style={{
             flex: 1,
             overflow: "auto",
-            paddingTop: "64px", // Add padding for the navbar
+            paddingTop: "64px",
             ...(viewMode === "annotations" && isPanelVisible
               ? annotationPanelPosition === "bottom"
                 ? {
-                    paddingBottom: "40%", // Space for fixed bottom panel
-                    maxHeight: "calc(100vh - 64px)", // Adjust for navbar height
+                    paddingBottom: "40%",
+                    maxHeight: "calc(100vh - 64px)",
                   }
                 : annotationPanelPosition === "right"
                 ? {
-                    paddingRight: "30%", // Space for fixed right panel
+                    paddingRight: "30%",
                     width: "100%",
                   }
                 : {
-                    paddingLeft: "30%", // Space for fixed left panel
+                    paddingLeft: "30%",
                     width: "100%",
                   }
               : {}),
@@ -386,22 +390,22 @@ const DocumentComparisonContainer: React.FC<
                   : annotationPanelPosition === "right"
                   ? {
                       position: "fixed",
-                      top: "64px", // Start after navbar
+                      top: "64px",
                       right: 0,
                       bottom: 0,
                       width: "30%",
                       maxWidth: "400px",
-                      height: "calc(100vh - 64px)", // Adjust height to account for navbar
+                      height: "calc(100vh - 64px)",
                       overflowY: "auto",
                     }
                   : {
                       position: "fixed",
-                      top: "64px", // Start after navbar
+                      top: "64px",
                       left: 0,
                       bottom: 0,
                       width: "30%",
                       maxWidth: "400px",
-                      height: "calc(100vh - 64px)", // Adjust height to account for navbar
+                      height: "calc(100vh - 64px)",
                       overflowY: "auto",
                     }),
                 zIndex: 100,
@@ -421,7 +425,7 @@ const DocumentComparisonContainer: React.FC<
                     : "none",
                 opacity: 1,
                 backdropFilter: "none",
-                WebkitBackdropFilter: "none", // For Safari
+                WebkitBackdropFilter: "none",
               }}
             >
               <TabbedAnnotationsPanel
@@ -435,7 +439,7 @@ const DocumentComparisonContainer: React.FC<
                 isHovering={showingHoveredAnnotations}
                 position={annotationPanelPosition}
                 onChangePosition={setAnnotationPanelPosition}
-                onToggleVisibility={() => setIsPanelVisible(!isPanelVisible)}
+                onToggleVisibility={onToggleAnnotationsPanel}
               />
             </div>
           )}
@@ -460,7 +464,7 @@ const DocumentComparisonContainer: React.FC<
               }}
             >
               <button
-                onClick={() => setIsPanelVisible(true)}
+                onClick={onToggleAnnotationsPanel}
                 style={{
                   display: "flex",
                   alignItems: "center",

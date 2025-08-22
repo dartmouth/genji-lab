@@ -1,6 +1,4 @@
 // src/features/documentGallery/DocumentViewerContainer.tsx
-// CLEAN VERSION - Only critical debug logs for highlighting investigation
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
@@ -204,8 +202,14 @@ export const DocumentContentView: React.FC = () => {
 
   // State for view mode (reading vs annotations)
   const [viewMode, setViewMode] = useState<"reading" | "annotations">(
-    "reading"
+    "annotations"
   );
+  const [isAnnotationsPanelCollapsed, setIsAnnotationsPanelCollapsed] =
+    useState(true);
+
+  const handleToggleAnnotationsPanel = useCallback(() => {
+    setIsAnnotationsPanelCollapsed(!isAnnotationsPanelCollapsed);
+  }, [isAnnotationsPanelCollapsed]);
 
   // State for showing linked text highlights
   const [showLinkedTextHighlights, setShowLinkedTextHighlights] =
@@ -754,7 +758,6 @@ export const DocumentContentView: React.FC = () => {
         setTimeout(() => {
           try {
             if (!allTargets || allTargets.length === 0) {
-              console.log("🎯 No targets to highlight");
               dispatch(clearNavigationSession({ sessionId }));
               return;
             }
@@ -1091,7 +1094,42 @@ export const DocumentContentView: React.FC = () => {
           </div>
         )}
 
-        {/* Add the help icon on the far right */}
+        {/* View mode toggles - positioned between dropdown and help icon */}
+        <div className="header-view-controls">
+          <div className="view-mode-toggle">
+            <button
+              className={`mode-button ${
+                viewMode === "reading" ? "active" : ""
+              }`}
+              onClick={() => handleViewModeChange("reading")}
+              title="Reading mode"
+            >
+              <span className="icon">📖</span> Reading
+            </button>
+            <button
+              className={`mode-button ${
+                viewMode === "annotations" ? "active" : ""
+              }`}
+              onClick={() => handleViewModeChange("annotations")}
+              title="Annotations mode"
+            >
+              <span className="icon">💬</span> Annotations
+            </button>
+            <button
+              className={`mode-button ${
+                showLinkedTextHighlights ? "active" : ""
+              }`}
+              onClick={() =>
+                setShowLinkedTextHighlights(!showLinkedTextHighlights)
+              }
+              title="Highlight all text that has links in both documents"
+            >
+              <span className="icon">🔗</span> Show Links
+            </button>
+          </div>
+        </div>
+
+        {/* Help icon on the far right */}
         <div className="header-right-controls">
           <HighlightingHelpIcon />
         </div>
@@ -1110,35 +1148,7 @@ export const DocumentContentView: React.FC = () => {
 
           {!isManagementPanelCollapsed && (
             <div className="panel-content">
-              <div className="view-mode-toggle">
-                <button
-                  className={`mode-button ${
-                    viewMode === "reading" ? "active" : ""
-                  }`}
-                  onClick={() => handleViewModeChange("reading")}
-                >
-                  <span className="icon">📖</span> Reading
-                </button>
-                <button
-                  className={`mode-button ${
-                    viewMode === "annotations" ? "active" : ""
-                  }`}
-                  onClick={() => handleViewModeChange("annotations")}
-                >
-                  <span className="icon">💬</span> Annotations
-                </button>
-                <button
-                  className={`mode-button ${
-                    showLinkedTextHighlights ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    setShowLinkedTextHighlights(!showLinkedTextHighlights)
-                  }
-                  title="Highlight all text that has links in both documents"
-                >
-                  <span className="icon">🔗</span> Show Links
-                </button>
-              </div>
+              {/* View mode toggle removed from here - now in header */}
 
               {viewedDocuments.length === 2 && (
                 <div className="document-linking-controls">
@@ -1275,36 +1285,6 @@ export const DocumentContentView: React.FC = () => {
                   </div>
                 </div>
               )}
-
-              {process.env.NODE_ENV === "development" && (
-                <div
-                  style={{
-                    marginTop: "16px",
-                    padding: "8px",
-                    backgroundColor: "#f0f0f0",
-                    borderRadius: "4px",
-                    fontSize: "12px",
-                    fontFamily: "monospace",
-                  }}
-                >
-                  <div>
-                    <strong>Debug Info:</strong>
-                  </div>
-                  <div>Total elements loaded: {allElements.length}</div>
-                  <div>
-                    Critical elements:{" "}
-                    {allElements
-                      .filter((el) => [33, 34, 523, 524].includes(el.id))
-                      .map((el) => el.id)
-                      .join(", ") || "none"}
-                  </div>
-                  <div>Viewed documents: {viewedDocuments.length}</div>
-                  <div>
-                    Collections loaded:{" "}
-                    {Object.keys(documentsByCollection).length}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -1318,6 +1298,8 @@ export const DocumentContentView: React.FC = () => {
           isLinkingModeActive={isLinkingModeActive}
           onOpenLinkedDocument={handleOpenLinkedDocument}
           showLinkedTextHighlights={showLinkedTextHighlights}
+          isAnnotationsPanelCollapsed={isAnnotationsPanelCollapsed}
+          onToggleAnnotationsPanel={handleToggleAnnotationsPanel}
         />
       ) : (
         <div className="no-documents-message">

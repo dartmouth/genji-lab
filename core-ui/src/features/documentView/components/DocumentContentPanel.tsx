@@ -87,7 +87,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
           );
         });
     }
-  }, [dispatch, documentId]); // Removed documentStatus and other dependencies to ensure it always runs
+  }, [dispatch, documentId]);
 
   // Force element loading for all viewed documents when viewedDocuments changes
   useEffect(() => {
@@ -121,20 +121,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         text: string;
       }>
     ) => {
-      // Debug all targets to understand cross-document relationships
-      if (allTargets) {
-        allTargets.forEach((target, index) => {
-          const elementIdMatch = target.sourceURI.match(
-            /\/DocumentElements\/(\d+)/
-          );
-          const elementId = elementIdMatch ? parseInt(elementIdMatch[1]) : null;
-          console.log(`📄 Target ${index + 1}:`, {
-            sourceURI: target.sourceURI,
-            elementId: elementId,
-            text: target.text.substring(0, 50) + "...",
-          });
-        });
-      }
       if (onOpenLinkedDocument) {
         try {
           onOpenLinkedDocument(
@@ -153,7 +139,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     [onOpenLinkedDocument]
   );
 
-  // Loading/Error states - cleaned up without debug info
+  // Loading/Error states
   if (documentStatus === "loading" && documentElements.length === 0) {
     return (
       <div className="loading-indicator">Loading document elements...</div>

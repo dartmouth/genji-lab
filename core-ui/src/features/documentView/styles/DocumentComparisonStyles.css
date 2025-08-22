@@ -316,3 +316,123 @@
   pointer-events: none;
   z-index: 1;
 }
+
+/* Updated Document View Header Layout - Move toggles closer to dropdown */
+
+.document-view-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.header-view-controls {
+  position: absolute;
+  top: 16px;
+  right: 400px; /* Move much further left - closer to dropdown */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+}
+
+.header-right-controls {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+}
+
+.back-button {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #e0e0e0;
+}
+
+.document-management-panel {
+  flex: 1;
+  margin-right: 450px; /* Increase margin to accommodate closer toggles */
+}
+
+/* View Mode Toggle Styles (moved to header) */
+
+.view-mode-toggle {
+  display: flex;
+  gap: 4px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.mode-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: none;
+  background-color: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mode-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #333;
+}
+
+.mode-button.active {
+  background-color: #1976d2;
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.mode-button .icon {
+  font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .header-view-controls {
+    right: 300px; /* Adjust for smaller screens */
+  }
+  
+  .document-management-panel {
+    margin-right: 350px;
+  }
+}
+
+@media (max-width: 900px) {
+  .header-view-controls {
+    right: 200px; /* Further adjustment for mobile */
+  }
+  
+  .document-management-panel {
+    margin-right: 250px;
+  }
+  
+  .mode-button {
+    padding: 6px 8px; /* Smaller padding on mobile */
+    font-size: 11px;
+  }
+}
