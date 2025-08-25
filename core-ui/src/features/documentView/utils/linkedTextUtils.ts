@@ -73,7 +73,7 @@ interface AnnotationTarget {
   };
 }
 
-// 🎯 FIXED: Enhanced document info resolver with better title lookup
+// Enhanced document info resolver with better title lookup
 const getDocumentInfoFromElementId = (
   elementId: number,
   allDocuments: Array<{
@@ -167,7 +167,7 @@ const getAnnotationsForElement = (
 };
 
 /**
- * 🎯 FIXED: Enhanced document title resolution
+ * Enhanced document title resolution
  */
 export const getLinkedDocumentsSimple = (
   selection: LinkedTextSelection,
@@ -217,20 +217,8 @@ export const getLinkedDocumentsSimple = (
   }
 
   // Process each annotation to find linked documents
-  relevantAnnotations.forEach((annotation, annotationIndex) => {
-    console.log(
-      `🔗 [${annotationIndex + 1}/${
-        relevantAnnotations.length
-      }] Processing annotation:`,
-      {
-        id: annotation.id,
-        documentId: annotation.document_id,
-        targetCount: annotation.target?.length || 0,
-        targets: annotation.target?.map((t) => t.source) || [],
-      }
-    );
-
-    // Find targets that are NOT our current selection
+  relevantAnnotations.forEach((annotation) => {
+    // Find targets that are not our current selection
     const targetsNotCurrentSelection =
       annotation.target?.filter(
         (target: AnnotationTarget) => target.source !== selection.sourceURI
@@ -359,7 +347,7 @@ export const getLinkedDocumentsSimple = (
       const linkedText =
         primaryTarget.selector?.value || annotation.body.value || "Linked text";
 
-      // 🎯 FIXED: Check for duplicate annotations more carefully
+      // Check for duplicate annotations more carefully
       const existingOptionIndex = result[
         linkedDocumentId
       ].linkedTextOptions.findIndex(

@@ -1,6 +1,4 @@
 // src/features/documentView/utils/scrollToTextUtils.ts
-// ENHANCED: Navigation highlighting that modifies existing red link indicators
-
 /**
  * Type guard to check if an element is a valid HTMLElement
  */
@@ -108,8 +106,6 @@ const findElementByMultipleStrategies = (
     if (isValidHTMLElement(element)) {
       const documentPanel = element.closest("[data-document-id]");
       if (documentPanel) {
-        const docId = documentPanel.getAttribute("data-document-id");
-        console.log("🔍 ✅ Element is in document panel:", docId);
         return element;
       }
     }
@@ -486,7 +482,7 @@ export const scrollToAndHighlightText = (
       // Scroll to element
       const scrollSuccess = scrollToElementSafely(primaryElement);
       if (!scrollSuccess) {
-        console.warn("Failed to scroll to element");
+        console.error("Failed to scroll to element");
       }
 
       // Enhance all valid targets with staggered timing
@@ -611,8 +607,6 @@ export const highlightMultiElementText = async (
  */
 const highlightWholeElement = (element: HTMLElement): HighlightResult => {
   try {
-    console.log("🌟 Applying whole element highlight");
-
     const originalBackgroundColor =
       window.getComputedStyle(element).backgroundColor;
     const originalTransition = element.style.transition;

@@ -1,6 +1,4 @@
 // src/features/documentView/components/highlightedContent/HighlightedText.tsx
-// ENHANCED: Precise Redux-controlled navigation highlighting
-
 import React, { useRef, useEffect, useState } from "react";
 import Highlight from "./Highlight";
 import AnnotationCreationDialog from "../annotationCard/AnnotationCreationDialog";
@@ -240,12 +238,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         const textLength = textNode.textContent?.length || 0;
 
         if (start < 0 || start > textLength) {
-          console.warn(
-            "🎯 Invalid start position for Redux highlight:",
-            start,
-            "for text length:",
-            textLength
-          );
           return;
         }
 

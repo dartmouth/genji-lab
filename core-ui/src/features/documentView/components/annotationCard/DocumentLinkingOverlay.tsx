@@ -62,17 +62,13 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       const match = elementId.match(/\/DocumentElements\/(\d+)$/);
       numericId = match ? match[1] : "";
     } else {
-      console.warn("Unexpected element ID format:", elementId);
       return null;
     }
 
     // Validate that we got a valid numeric ID
     if (!numericId || isNaN(parseInt(numericId))) {
-      console.warn("Invalid numeric ID extracted:", { elementId, numericId });
       return null;
     }
-
-    console.log("Successfully extracted numeric ID:", { elementId, numericId });
     return numericId;
   };
 
@@ -80,22 +76,8 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   const analyzeMultiElementSelection = (
     range: Range
   ): MultiElementSelection | null => {
-    console.log("Analyzing multi-element selection"); // DEBUG
-    console.log("Range details:", {
-      startContainer: range.startContainer,
-      endContainer: range.endContainer,
-      startOffset: range.startOffset,
-      endOffset: range.endOffset,
-      commonAncestor: range.commonAncestorContainer,
-    });
-
     const selectedText = range.toString().trim();
     if (selectedText.length === 0) return null;
-
-    console.log(
-      "Selected text:",
-      selectedText.substring(0, 100) + (selectedText.length > 100 ? "..." : "")
-    );
 
     // Find all document elements that intersect with the selection
     const elementSelections: ElementSelection[] = [];
@@ -109,11 +91,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       range.endContainer.nodeType === Node.ELEMENT_NODE
         ? (range.endContainer as HTMLElement)
         : (range.endContainer.parentElement as HTMLElement);
-
-    console.log("Start and end elements:", {
-      startElement: startElement?.tagName + "#" + startElement?.id,
-      endElement: endElement?.tagName + "#" + endElement?.id,
-    });
 
     // Find all DocumentElement containers that might be involved
     const documentElements = new Set<HTMLElement>();
@@ -174,27 +151,16 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       });
     }
 
-    console.log(
-      "Found DocumentElements:",
-      Array.from(documentElements).map((el) => el.id)
-    );
-
     // If we still haven't found any elements, try a broader search
     if (documentElements.size === 0) {
-      console.log(
-        "No elements found with primary methods, trying broader search..."
-      );
-
       // Get all DocumentElements in the document and check intersection
       const allDocElements = document.querySelectorAll(
         '[id*="DocumentElements"]'
       );
-      console.log("Total DocumentElements in document:", allDocElements.length);
 
       allDocElements.forEach((element) => {
         try {
           if (range.intersectsNode(element)) {
-            console.log("Found intersecting element:", element.id);
             documentElements.add(element as HTMLElement);
           }
         } catch (error) {
@@ -208,14 +174,8 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     }
 
     if (documentElements.size === 0) {
-      console.warn("No DocumentElements found for selection");
       return null;
     }
-
-    console.log(
-      "Final DocumentElements to process:",
-      Array.from(documentElements).map((el) => el.id)
-    );
 
     // Process each DocumentElement to calculate precise text ranges
     documentElements.forEach((element) => {
@@ -228,13 +188,10 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         return;
       }
 
-      console.log("Processing element:", { elementId, numericId }); // DEBUG
-
       // Get the element's text content
       const elementText = element.textContent || "";
 
       if (elementText.length === 0) {
-        console.warn("Element has no text content:", elementId);
         return;
       }
 
@@ -250,7 +207,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
         // Check if there's actually an intersection
         if (!range.intersectsNode(element)) {
-          console.log("Range does not intersect element:", elementId);
           return;
         }
 
@@ -280,13 +236,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         }
 
         intersectionText = intersectionRange.toString().trim();
-
-        console.log(
-          "Intersection text for element",
-          elementId,
-          ":",
-          intersectionText.substring(0, 50) + "..."
-        );
 
         if (intersectionText.length > 0) {
           // Find the position of this text within the element
@@ -325,10 +274,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
                   elementStart,
                   elementEnd
                 );
-                console.log(
-                  "Found text using fallback search:",
-                  searchText.substring(0, 30) + "..."
-                );
                 break;
               }
             }
@@ -350,18 +295,17 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
                     elementStart,
                     elementEnd
                   );
-                  console.log("Found text using substring search:", substring);
                   break;
                 }
               }
             }
           }
         }
-      } catch (rangeError) {
-        console.warn(
-          "Range calculation failed for element:",
-          elementId,
-          rangeError
+      } catch (error) {
+        console.error(
+          error,
+          "Error calculating intersection for element:",
+          elementId
         );
 
         // Ultimate fallback: try simple text search
@@ -378,10 +322,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
             elementStart = elementText.indexOf(searchText);
             elementEnd = elementStart + searchText.length;
             intersectionText = searchText;
-            console.log(
-              "Found text using ultimate fallback:",
-              searchText.substring(0, 30) + "..."
-            );
             break;
           }
         }
@@ -393,19 +333,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         elementEnd > elementStart &&
         elementEnd <= elementText.length
       ) {
-        console.log(`Element ${numericId} selection:`, {
-          text:
-            intersectionText.substring(0, 50) +
-            (intersectionText.length > 50 ? "..." : ""),
-          start: elementStart,
-          end: elementEnd,
-          elementTextLength: elementText.length,
-          isValidRange:
-            elementStart >= 0 &&
-            elementEnd <= elementText.length &&
-            elementStart < elementEnd,
-        }); // DEBUG
-
         elementSelections.push({
           documentElementId: parseInt(numericId),
           sourceURI: `/DocumentElements/${numericId}`, // Consistent format with leading slash
@@ -414,30 +341,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           end: elementEnd,
         });
       } else {
-        console.warn(
-          `Failed to calculate valid range for element ${numericId}:`,
-          {
-            intersectionTextLength: intersectionText.length,
-            elementStart,
-            elementEnd,
-            elementTextLength: elementText.length,
-            elementId,
-            isValidRange:
-              elementStart >= 0 &&
-              elementEnd <= elementText.length &&
-              elementStart < elementEnd,
-            issue:
-              elementStart < 0
-                ? "negative start"
-                : elementEnd > elementText.length
-                ? "end beyond text"
-                : elementStart >= elementEnd
-                ? "start >= end"
-                : "unknown",
-          }
-        );
-
-        // Skip this element rather than creating invalid data
         return;
       }
     });
@@ -454,7 +357,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       ".document-panel-wrapper"
     ) as HTMLElement;
     if (!documentPanel) {
-      console.warn("No document panel found for element");
       return null;
     }
 
@@ -468,15 +370,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       return null;
     }
 
-    console.log("Multi-element selection created:", {
-      documentId: foundDocument.id,
-      documentTitle: foundDocument.title,
-      elements: elementSelections.length,
-      fullText:
-        selectedText.substring(0, 100) +
-        (selectedText.length > 100 ? "..." : ""),
-    }); // DEBUG
-
     return {
       documentId: foundDocument.id,
       elements: elementSelections,
@@ -487,13 +380,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   // Listen for text selections
   useEffect(() => {
     const handleSelection = (e: MouseEvent) => {
-      console.log("DocumentLinkingOverlay: Selection event captured"); // DEBUG
-      console.log("DocumentLinkingOverlay: Current step:", currentStep); // DEBUG
-      console.log(
-        "DocumentLinkingOverlay: First selection:",
-        firstSelection?.documentId
-      ); // DEBUG
-
       // Prevent event from being handled by other components
       e.preventDefault();
       e.stopPropagation();
@@ -605,7 +491,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     setSecondSelection(null);
     setCurrentStep("first");
     setDescription("");
-    lastProcessedText.current = ""; // Reset duplicate prevention
+    lastProcessedText.current = "";
   };
 
   const getDocumentTitle = (docId: number) => {
@@ -636,67 +522,18 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   return (
     <>
       {/* Document highlighting overlay - shows which areas can be selected */}
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: "none",
-          zIndex: 5,
-          background: "rgba(25, 118, 210, 0.05)",
-        }}
-      />
+      <div className="document-linking-overlay" />
 
       {/* Floating control panel */}
-      <div
-        style={{
-          position: "fixed",
-          top: "50%",
-          right: "20px",
-          transform: "translateY(-50%)",
-          backgroundColor: "white",
-          borderRadius: "8px",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-          padding: "20px",
-          width: "320px",
-          zIndex: 1000,
-          border: "2px solid #1976d2",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "16px",
-          }}
-        >
-          <h3
-            style={{
-              margin: 0,
-              fontSize: "16px",
-              fontWeight: 600,
-              color: "#1976d2",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
+      <div className="document-linking-panel">
+        <div className="document-linking-panel__header">
+          <h3 className="document-linking-panel__title">
             <LinkIcon />
             Linking Mode
           </h3>
           <button
             onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: "18px",
-              cursor: "pointer",
-              color: "#666",
-              padding: "4px",
-            }}
+            className="document-linking-panel__close"
             title="Exit linking mode"
           >
             <CloseIcon />
@@ -704,17 +541,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         </div>
 
         {/* Instructions */}
-        <div
-          style={{
-            backgroundColor: "#f0f7ff",
-            border: "1px solid #b8daff",
-            borderRadius: "6px",
-            padding: "12px",
-            marginBottom: "16px",
-            fontSize: "14px",
-            color: "#004085",
-          }}
-        >
+        <div className="document-linking-panel__instructions">
           <strong>
             Step{" "}
             {currentStep === "first"
@@ -728,82 +555,51 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         </div>
 
         {/* Progress indicators */}
-        <div
-          style={{
-            display: "flex",
-            gap: "4px",
-            marginBottom: "16px",
-          }}
-        >
+        <div className="document-linking-panel__progress">
           <div
-            style={{
-              flex: 1,
-              height: "3px",
-              backgroundColor: currentStep !== "first" ? "#4caf50" : "#e0e0e0",
-              borderRadius: "2px",
-            }}
+            className={`document-linking-panel__progress-bar ${
+              currentStep !== "first"
+                ? "document-linking-panel__progress-bar--active"
+                : "document-linking-panel__progress-bar--inactive"
+            }`}
           />
           <div
-            style={{
-              flex: 1,
-              height: "3px",
-              backgroundColor:
-                currentStep === "confirm" ? "#4caf50" : "#e0e0e0",
-              borderRadius: "2px",
-            }}
+            className={`document-linking-panel__progress-bar ${
+              currentStep === "confirm"
+                ? "document-linking-panel__progress-bar--active"
+                : "document-linking-panel__progress-bar--inactive"
+            }`}
           />
         </div>
 
         {/* Selections display */}
         {firstSelection && (
-          <div
-            style={{
-              backgroundColor: "#e8f5e8",
-              border: "1px solid #4caf50",
-              borderRadius: "4px",
-              padding: "8px",
-              marginBottom: "8px",
-              fontSize: "12px",
-            }}
-          >
-            <div style={{ fontWeight: 500, marginBottom: "4px" }}>
+          <div className="document-linking-panel__selection">
+            <div className="document-linking-panel__selection-header">
               ✓ First: {getDocumentTitle(firstSelection.documentId)}
               {firstSelection.elements.length > 1 && (
-                <span
-                  style={{ color: "#666", fontSize: "11px", marginLeft: "4px" }}
-                >
+                <span className="document-linking-panel__element-count">
                   ({firstSelection.elements.length} elements)
                 </span>
               )}
             </div>
-            <div style={{ color: "#666", fontStyle: "italic" }}>
+            <div className="document-linking-panel__selection-preview">
               "{getSelectionPreview(firstSelection)}"
             </div>
           </div>
         )}
 
         {secondSelection && (
-          <div
-            style={{
-              backgroundColor: "#e8f5e8",
-              border: "1px solid #4caf50",
-              borderRadius: "4px",
-              padding: "8px",
-              marginBottom: "8px",
-              fontSize: "12px",
-            }}
-          >
-            <div style={{ fontWeight: 500, marginBottom: "4px" }}>
+          <div className="document-linking-panel__selection">
+            <div className="document-linking-panel__selection-header">
               ✓ Second: {getDocumentTitle(secondSelection.documentId)}
               {secondSelection.elements.length > 1 && (
-                <span
-                  style={{ color: "#666", fontSize: "11px", marginLeft: "4px" }}
-                >
+                <span className="document-linking-panel__element-count">
                   ({secondSelection.elements.length} elements)
                 </span>
               )}
             </div>
-            <div style={{ color: "#666", fontStyle: "italic" }}>
+            <div className="document-linking-panel__selection-preview">
               "{getSelectionPreview(secondSelection)}"
             </div>
           </div>
@@ -811,78 +607,32 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
         {/* Same document warning */}
         {currentStep === "second" && (
-          <div
-            style={{
-              backgroundColor: "#fff3cd",
-              border: "1px solid #ffeaa7",
-              borderRadius: "4px",
-              padding: "8px",
-              marginBottom: "12px",
-              fontSize: "12px",
-              color: "#856404",
-            }}
-          >
+          <div className="document-linking-panel__warning">
             Select text from the other document to create a link
           </div>
         )}
 
         {/* Description input for confirmation step */}
         {currentStep === "confirm" && (
-          <div style={{ marginBottom: "16px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontSize: "12px",
-                fontWeight: 500,
-              }}
-            >
+          <div className="document-linking-panel__description">
+            <label className="document-linking-panel__description-label">
               Description (optional):
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe this relationship..."
-              style={{
-                width: "100%",
-                minHeight: "60px",
-                padding: "6px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                fontSize: "12px",
-                fontFamily: "inherit",
-                resize: "vertical",
-                boxSizing: "border-box",
-              }}
+              className="document-linking-panel__description-textarea"
             />
           </div>
         )}
 
         {/* Action buttons */}
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            flexDirection: "column",
-          }}
-        >
+        <div className="document-linking-panel__actions">
           {currentStep === "confirm" && isAuthenticated && (
             <button
               onClick={handleSaveLink}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-                padding: "10px",
-                backgroundColor: "#4caf50",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: 500,
-              }}
+              className="document-linking-panel__save-button"
             >
               <CheckIcon sx={{ fontSize: "16px" }} />
               Save Link
@@ -892,31 +642,14 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           {(firstSelection || secondSelection) && (
             <button
               onClick={handleReset}
-              style={{
-                padding: "8px",
-                backgroundColor: "#f8f9fa",
-                border: "1px solid #dee2e6",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "12px",
-              }}
+              className="document-linking-panel__reset-button"
             >
               Reset Selections
             </button>
           )}
 
           {!isAuthenticated && (
-            <div
-              style={{
-                padding: "8px",
-                backgroundColor: "#fff3cd",
-                border: "1px solid #ffeaa7",
-                borderRadius: "4px",
-                fontSize: "11px",
-                color: "#856404",
-                textAlign: "center",
-              }}
-            >
+            <div className="document-linking-panel__login-notice">
               Login required to save links
             </div>
           )}

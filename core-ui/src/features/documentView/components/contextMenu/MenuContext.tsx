@@ -210,7 +210,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
         }
       });
     } catch (error) {
-      console.warn("🔄 Error accessing document elements state:", error);
+      console.error("🔄 Error accessing document elements state:", error);
     }
 
     return elements;
@@ -488,7 +488,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
           );
         }, 50);
       } catch (error) {
-        console.error("🎯 ❌ Error executing navigation callback:", error);
+        console.error("Error executing navigation callback:", error);
       }
     },
     [onOpenLinkedDocument, menuState.selection?.documentId]

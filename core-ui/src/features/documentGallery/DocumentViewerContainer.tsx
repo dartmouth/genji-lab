@@ -844,7 +844,7 @@ export const DocumentContentView: React.FC = () => {
               return;
             }
 
-            // Add ALL targets to Redux store with minimal stagger for tight synchronization
+            // Add all targets to Redux store with minimal stagger for tight synchronization
             allTargets.forEach((target, index) => {
               const elementIdMatch = target.sourceURI.match(
                 /\/DocumentElements\/(\d+)/
@@ -888,7 +888,7 @@ export const DocumentContentView: React.FC = () => {
         return;
       }
 
-      // Check if the TARGET document is already viewed (not the source)
+      // Check if the target document is already viewed
       const isTargetAlreadyViewed = viewedDocuments.some(
         (doc) => doc.id === actualTargetDocumentId
       );
