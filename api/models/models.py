@@ -215,7 +215,7 @@ class SiteSettings(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     site_title = Column(String(50), nullable=False, default="Site Title")
-    site_logo_url = Column(String(255), nullable=True, default="/favicon.png")
+    site_logo_enabled = Column(Boolean, nullable=False, default=False)
     updated_by_id = Column(Integer, ForeignKey(f"{'app'}.users.id"), nullable=False)
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     

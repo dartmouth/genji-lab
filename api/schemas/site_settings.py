@@ -4,7 +4,7 @@ from typing import Optional
 
 class SiteSettingsBase(BaseModel):
     site_title: str = Field(..., min_length=1, max_length=50, description="The site title")
-    site_logo_url: Optional[str] = Field(None, max_length=255, description="URL to the site logo")
+    site_logo_enabled: bool = Field(False, description="Whether the site logo is enabled")
 
 class SiteSettingsCreate(SiteSettingsBase):
     pass

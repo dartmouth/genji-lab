@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useAuth } from "@hooks/useAuthContext";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
-import { fetchSiteSettings } from "@store/slice/siteSettingsSlice";
+import { fetchSiteSettings, getCacheBuster } from "@store/slice/siteSettingsSlice";
 
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
@@ -15,11 +15,47 @@ const AppHeader: React.FC = () => {
     dispatch(fetchSiteSettings());
   }, [dispatch]);
 
+  // Update CSS when settings change
+  useEffect(() => {
+    const logoEnabled = settings?.site_logo_enabled || false;
+    const headerElement = document.querySelector('.app-header') as HTMLElement;
+    
+    if (headerElement) {
+      if (logoEnabled) {
+        // Get cache buster and update logo URL
+        dispatch(getCacheBuster()).then((result) => {
+          if (getCacheBuster.fulfilled.match(result)) {
+            const timestamp = result.payload;
+            headerElement.classList.add('has-logo');
+            // Update the CSS to use cache buster
+            const style = document.createElement('style');
+            style.textContent = `
+              .app-header.has-logo::before {
+                background: url("/api/v1/site-settings/logo?t=${timestamp}") no-repeat center !important;
+                background-size: 100% 100% !important;
+              }
+            `;
+            // Remove old cache buster styles
+            const oldStyles = document.querySelectorAll('style[data-logo-cache]');
+            oldStyles.forEach(s => s.remove());
+            style.setAttribute('data-logo-cache', 'true');
+            document.head.appendChild(style);
+          }
+        });
+      } else {
+        headerElement.classList.remove('has-logo');
+        // Remove cache buster styles
+        const oldStyles = document.querySelectorAll('style[data-logo-cache]');
+        oldStyles.forEach(s => s.remove());
+      }
+    }
+  }, [settings?.site_logo_enabled, dispatch]);
+
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
-  // For now, use default title since DB connection isn't ready
+  // Site title
   const siteTitle = settings?.site_title || 'Site Title';
 
   return (

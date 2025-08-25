@@ -65,6 +65,9 @@ export {
 export {
     fetchSiteSettings,
     updateSiteSettings,
+    uploadSiteLogo,
+    removeSiteLogo,
+    getCacheBuster,
     clearError,
     resetSiteSettings
 } from './siteSettingsSlice'

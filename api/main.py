@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings
 from routers.cas_auth import router as cas_router  # Import the new CAS router
@@ -23,6 +25,11 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
+
+# Create uploads directory and mount static files
+uploads_dir = Path("/app/uploads")
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # Include routers
 app.include_router(users.router)
