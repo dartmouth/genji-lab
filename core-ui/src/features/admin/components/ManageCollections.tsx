@@ -1069,14 +1069,14 @@ To confirm, please type the collection name exactly as shown:
                 </Select>
               </FormControl>
 
-<!--               <button
+             {/* <button
                 type="button"
                 className="delete-button"
                 disabled={!selectedCollection || isDeleting}
                 onClick={initiateDeleteCollection}
               >
-<!--                 {isDeleting ? "Deleting..." : "Delete"} -->
-<!--               </button> -->
+               {isDeleting ? "Deleting..." : "Delete"} 
+            </button>  */}
 
             </StyledForm>
 

@@ -21,19 +21,10 @@ export {
 
 export * from './annotationCreate'  
 
-export {
-    createDocumentCollection,
-    updateDocumentCollection,
-    fetchDocumentCollections,
-    selectAllDocumentCollections,
-    selectDocumentCollectionsStatus,
-    selectDocumentCollectionsError
-} from './documentCollectionSlice'
-
-
 export {     
     createDocumentCollection,     
     clearCollections,     
+    updateDocumentCollection,
     fetchDocumentCollections,     
     selectAllDocumentCollections,     
     selectDocumentCollectionsStatus,     
@@ -85,24 +76,6 @@ export {
 
 export type {DocumentCreate, DocumentUpdate} from './documentSlice'
 
-
-
-// Navigation highlight exports
-export {
-    fetchDocumentElements,
-    clearElements,
-    setCurrentDocumentId,
-    selectElementsByDocumentId,
-    selectDocumentStatusById,
-    selectDocumentErrorById,
-    selectCurrentDocumentId,
-    // Legacy selectors for backward compatibility
-    // selectAllDocumentElements,
-    // selectDocumentElementsStatus,
-    // selectDocumentElementsError
-} from './documentElementsSlice'
-
-
 export {
     fetchSiteSettings,
     updateSiteSettings,
@@ -115,6 +88,7 @@ export {
 
 export * from './searchResultsSlice'
 
+export {
     startNavigationSession,
     addNavigationHighlight,
     removeNavigationHighlight,
