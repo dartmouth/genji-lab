@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
+
 import { Tabs, Tab, Box, Typography, styled, FormControl, 
   InputLabel, Select, MenuItem, Snackbar, Alert, 
   Dialog, DialogActions, DialogContent, DialogContentText, 
-  DialogTitle, Button } from '@mui/material';
-import { createDocumentCollection, useAppDispatch } from '@store';
+  DialogTitle, Button, LinearProgress, TextField } from '@mui/material';
+import { createDocumentCollection, updateDocumentCollection, useAppDispatch } from '@store';
+
 import { useAuth } from "@hooks/useAuthContext.ts";
 import { useAppSelector } from "@store/hooks";
-import { 
-  selectAllDocumentCollections,
-  fetchDocumentCollections,
-} from "@store";
+import { selectAllDocumentCollections, fetchDocumentCollections } from "@store";
 
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
@@ -29,11 +28,7 @@ function SubTabPanel(props: SubTabPanelProps) {
       aria-labelledby={`manage-subtab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
     </div>
   );
 }
@@ -41,48 +36,48 @@ function SubTabPanel(props: SubTabPanelProps) {
 function a11yPropsSubTab(index: number) {
   return {
     id: `manage-subtab-${index}`,
-    'aria-controls': `manage-subtabpanel-${index}`,
+    "aria-controls": `manage-subtabpanel-${index}`,
   };
 }
 
 // Styled components
-const StyledForm = styled('form')(({ theme }) => ({
-  '& .form-group': {
+const StyledForm = styled("form")(({ theme }) => ({
+  "& .form-group": {
     marginBottom: theme.spacing(2),
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
   },
-  '& label': {
+  "& label": {
     marginBottom: theme.spacing(0.5),
   },
-  '& input, & select': {
+  "& input, & select": {
     padding: theme.spacing(1),
     borderRadius: theme.shape.borderRadius,
     border: `1px solid ${theme.palette.divider}`,
   },
-  '& .MuiFormControl-root': {
+  "& .MuiFormControl-root": {
     marginBottom: theme.spacing(2),
   },
-  '& button': {
+  "& button": {
     marginTop: theme.spacing(2),
     padding: theme.spacing(1, 2),
     backgroundColor: theme.palette.primary.main,
     color: theme.palette.primary.contrastText,
-    border: 'none',
+    border: "none",
     borderRadius: theme.shape.borderRadius,
-    cursor: 'pointer',
-    '&:hover': {
+    cursor: "pointer",
+    "&:hover": {
       backgroundColor: theme.palette.primary.dark,
     },
-    '&:disabled': {
+    "&:disabled": {
       opacity: 0.5,
-      cursor: 'not-allowed',
+      cursor: "not-allowed",
       backgroundColor: theme.palette.action.disabled,
     },
   },
-  '& .delete-button': {
+  "& .delete-button": {
     backgroundColor: theme.palette.error.main,
-    '&:hover': {
+    "&:hover": {
       backgroundColor: theme.palette.error.dark,
     },
   },
@@ -95,17 +90,20 @@ const ManageCollections: React.FC = () => {
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
-    severity: 'success' | 'error' | 'info' | 'warning';
-  }>({ open: false, message: '', severity: 'info' });
-  
+    severity: "success" | "error" | "info" | "warning";
+  }>({ open: false, message: "", severity: "info" });
+
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
     message: string;
     onConfirm: () => void;
-  }>({ open: false, title: '', message: '', onConfirm: () => {} });
+    requiresNameConfirmation?: boolean;
+    expectedName?: string;
+  }>({ open: false, title: '', message: '', onConfirm: () => {}, requiresNameConfirmation: false, expectedName: '' });
  
   const showNotification = (message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
+
     setNotification({ open: true, message, severity });
   };
 
@@ -115,10 +113,21 @@ const ManageCollections: React.FC = () => {
 
   const handleCloseConfirmDialog = () => {
     setConfirmDialog({ ...confirmDialog, open: false });
+    setConfirmationText('');
   };
 
+  const handleConfirmationTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmationText(event.target.value);
+  };
 
-  const documentCollections = useAppSelector(selectAllDocumentCollections) as Array<{
+  const isConfirmationValid = () => {
+    if (!confirmDialog.requiresNameConfirmation) return true;
+    return confirmationText === confirmDialog.expectedName;
+  };
+
+  const documentCollections = useAppSelector(
+    selectAllDocumentCollections
+  ) as Array<{
     id: number;
     title: string;
     description?: string;
@@ -129,76 +138,180 @@ const ManageCollections: React.FC = () => {
     dispatch(fetchDocumentCollections());
   }, [dispatch]);
 
-  const [selectedCollection, setSelectedCollection] = useState<string>('');
+  const [selectedCollection, setSelectedCollection] = useState<string>("");
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(false);
+  
+  // Rename-specific state
+  const [renameNewName, setRenameNewName] = useState<string>('');
+  const [isRenaming, setIsRenaming] = useState<boolean>(false);
+  const [renameSelectedCollection, setRenameSelectedCollection] = useState<string>('');
+  
+  const [collectionStats, setCollectionStats] = useState<{
+    document_count: number;
+    element_count: number;
+    scholarly_annotation_count: number;
+    comment_count: number;
+    title: string;
+    description?: string;
+    visibility: string;
+    created: string;
+    modified: string;
+  } | null>(null);
+  const [confirmationText, setConfirmationText] = useState<string>('');
+  const [deleteProgress, setDeleteProgress] = useState<number>(0);
+  const [showProgress, setShowProgress] = useState<boolean>(false);
 
-  const handleCollectionSelect = (event: any) => {
-    setSelectedCollection(event.target.value);
+  const handleCollectionSelect = async (event: any) => {
+    const collectionId = event.target.value;
+    setSelectedCollection(collectionId);
+    setCollectionStats(null);
+    setConfirmationText('');
+    
+    if (collectionId) {
+      setIsLoadingStats(true);
+      try {
+        const response = await fetch(`/api/v1/collections/${collectionId}`);
+        if (response.ok) {
+          const stats = await response.json();
+          setCollectionStats({
+            document_count: stats.document_count || 0,
+            element_count: stats.element_count || 0,
+            scholarly_annotation_count: stats.scholarly_annotation_count || 0,
+            comment_count: stats.comment_count || 0,
+            title: stats.title,
+            description: stats.description,
+            visibility: stats.visibility,
+            created: stats.created,
+            modified: stats.modified
+          });
+        } else {
+          showNotification('Failed to fetch collection statistics', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to fetch collection statistics:', error);
+        showNotification('Error fetching collection statistics', 'error');
+      } finally {
+        setIsLoadingStats(false);
+      }
+    }
   };
 
-  const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleSubTabChange = (
+    _event: React.SyntheticEvent,
+    newValue: number
+  ) => {
     setActiveSubTab(newValue);
+    
+    // Reset form states when changing tabs
+    if (newValue === 3) {
+      // Reset rename form when entering rename tab
+      setRenameSelectedCollection('');
+      setRenameNewName('');
+    }
   };
 
   const initiateDeleteCollection = () => {
-    if (!selectedCollection) return;
+
+    if (!selectedCollection || !collectionStats) {
+      showNotification('Please select a collection first', 'error');
+      return;
+    }
     
+    const message = `Are you sure you want to delete the collection "${collectionStats.title}"?
+
+This will permanently delete:
+• ${collectionStats.document_count} documents
+• ${collectionStats.element_count} paragraphs
+• ${collectionStats.scholarly_annotation_count} scholarly annotations
+• ${collectionStats.comment_count} comments
+
+This action cannot be undone.
+
+To confirm, please type the collection name exactly as shown:
+"${collectionStats.title}"`;
+
     setConfirmDialog({
       open: true,
-      title: 'Confirm Deletion',
-      message: 'Are you sure you want to delete this collection? This action cannot be undone.',
-      onConfirm: handleDeleteCollection
+      title: 'Confirm Collection Deletion',
+      message,
+      onConfirm: handleDeleteCollection,
+      requiresNameConfirmation: true,
+      expectedName: collectionStats.title
     });
   };
 
   const handleDeleteCollection = async () => {
-    if (!selectedCollection) return;
+
+    if (!selectedCollection || !collectionStats) return;
     
     setConfirmDialog({ ...confirmDialog, open: false });
     setIsDeleting(true);
+    setShowProgress(true);
+    setDeleteProgress(0);
     
     try {
-      const response = await fetch(`/api/v1/collections/${selectedCollection}`, {
+      setDeleteProgress(20);
+      
+      const response = await fetch(`/api/v1/collections/${selectedCollection}?force=true`, {
         method: 'DELETE',
       });
       
+      setDeleteProgress(70);
+      
       if (response.ok) {
+        setDeleteProgress(90);
+        
         // Refresh the collections list after successful deletion
         dispatch(fetchDocumentCollections());
+
         setSelectedCollection('');
-        showNotification('Collection deleted successfully', 'success');
+        setCollectionStats(null);
+        setConfirmationText('');
+        
+        setDeleteProgress(100);
+        
+        showNotification(`Collection "${collectionStats.title}" deleted successfully`, 'success');
+
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to delete collection');
+        throw new Error(errorData.detail || "Failed to delete collection");
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      showNotification(`Failed to delete collection: ${errorMessage}`, 'error');
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      showNotification(`Failed to delete collection: ${errorMessage}`, "error");
     } finally {
       setIsDeleting(false);
+      setTimeout(() => {
+        setShowProgress(false);
+        setDeleteProgress(0);
+      }, 1000);
     }
   };
 
-interface FormData {
-  title: string;
-  visibility: string;
-  text_direction: string;
-  language: string;
-}
+  interface FormData {
+    title: string;
+    visibility: string;
+    text_direction: string;
+    language: string;
+  }
   const { user } = useAuth();
   const [formData, setFormData] = useState<FormData>({
-    title: '',
-    visibility: 'public',
-    text_direction: 'ltr',
-    language: 'en'
+    title: "",
+    visibility: "public",
+    text_direction: "ltr",
+    language: "en",
   });
   const [submitted, setSubmitted] = useState<boolean>(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -209,12 +322,95 @@ interface FormData {
       visibility: formData.visibility,
       text_direction: formData.text_direction,
       language: formData.language,
-      hierarchy: {chapter:1, paragraph:2},
+      hierarchy: { chapter: 1, paragraph: 2 },
       collection_metadata: {},
       created_by_id: user?.id || 1,
-    }
+    };
     dispatch(createDocumentCollection(payload));
     setSubmitted(true);
+  };
+
+  // Rename functionality handlers
+  const handleRenameCollectionSelect = (event: any) => {
+    const collectionId = event.target.value;
+    setRenameSelectedCollection(collectionId);
+    
+    // Pre-fill the new name field with current collection title
+    if (collectionId) {
+      const selectedCollection = documentCollections.find(c => c.id === parseInt(collectionId));
+      setRenameNewName(selectedCollection?.title || '');
+    } else {
+      setRenameNewName('');
+    }
+  };
+
+  const handleRenameNewNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRenameNewName(event.target.value);
+  };
+
+  const handleRenameCollection = async () => {
+    if (!renameSelectedCollection || !renameNewName.trim()) {
+      showNotification('Please select a collection and enter a new name', 'error');
+      return;
+    }
+
+    const selectedCollection = documentCollections.find(c => c.id === parseInt(renameSelectedCollection));
+    if (!selectedCollection) {
+      showNotification('Selected collection not found', 'error');
+      return;
+    }
+
+    if (renameNewName.trim() === selectedCollection.title) {
+      showNotification('New name must be different from current name', 'error');
+      return;
+    }
+
+    // Check if name already exists
+    const nameExists = documentCollections.some(c => 
+      c.title.toLowerCase() === renameNewName.trim().toLowerCase() && 
+      c.id !== parseInt(renameSelectedCollection)
+    );
+    
+    if (nameExists) {
+      showNotification('A collection with this name already exists', 'error');
+      return;
+    }
+
+    setIsRenaming(true);
+    
+    try {
+      await dispatch(updateDocumentCollection({
+        id: parseInt(renameSelectedCollection),
+        updates: {
+          title: renameNewName.trim(),
+          modified_by_id: user?.id || 1
+        }
+      })).unwrap();
+      
+      // Refresh collections to show updated data
+      dispatch(fetchDocumentCollections());
+      
+      showNotification(
+        `Collection renamed from "${selectedCollection.title}" to "${renameNewName.trim()}"`, 
+        'success'
+      );
+      
+      // Reset form
+      setRenameSelectedCollection('');
+      setRenameNewName('');
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showNotification(`Failed to rename collection: ${errorMessage}`, 'error');
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  const isRenameFormValid = () => {
+    return renameSelectedCollection && 
+           renameNewName.trim() && 
+           renameNewName.trim().length > 0;
   };
 
   return (
@@ -222,8 +418,8 @@ interface FormData {
       <Typography variant="h4" component="h1" gutterBottom>
         Manage Document Collections
       </Typography>
-      
-      <Box sx={{ display: 'flex', height: 'auto' }}>
+
+      <Box sx={{ display: "flex", height: "auto" }}>
         {/* Sub-tabs for Manage Collections */}
         <Tabs
           orientation="vertical"
@@ -231,15 +427,15 @@ interface FormData {
           value={activeSubTab}
           onChange={handleSubTabChange}
           aria-label="Manage collections sub-tabs"
-          sx={{ 
-            borderRight: 1, 
-            borderColor: 'divider',
-            minWidth: '180px',
-            '& .MuiTab-root': {
-              alignItems: 'flex-start',
-              textAlign: 'left',
-              paddingLeft: 2
-            }
+          sx={{
+            borderRight: 1,
+            borderColor: "divider",
+            minWidth: "180px",
+            "& .MuiTab-root": {
+              alignItems: "flex-start",
+              textAlign: "left",
+              paddingLeft: 2,
+            },
           }}
         >
           <Tab label="Overview" {...a11yPropsSubTab(0)} />
@@ -247,7 +443,7 @@ interface FormData {
           <Tab label="Delete" {...a11yPropsSubTab(2)} />
           <Tab label="Rename" {...a11yPropsSubTab(3)} />
         </Tabs>
-        
+
         {/* Sub-tab content */}
         <SubTabPanel value={activeSubTab} index={0}>
           <Typography variant="h5" gutterBottom>
@@ -259,81 +455,91 @@ interface FormData {
         </SubTabPanel>
 
         <SubTabPanel value={activeSubTab} index={1}>
-            <Typography variant="h5" gutterBottom>
+          <Typography variant="h5" gutterBottom>
             Add Document Collection
-            </Typography>
-            <div>
+          </Typography>
+          <div>
             <p>Complete this form to add your new Document Collection.</p>
-            </div>
-            <StyledForm onSubmit={handleSubmit}>
+          </div>
+          <StyledForm onSubmit={handleSubmit}>
             <div className="form-group">
-                <label htmlFor="title">Title: </label>
-                <input
+              <label htmlFor="title">Title: </label>
+              <input
                 type="text"
                 id="title"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
                 required
-                />
+              />
             </div>
 
             <div className="form-group">
-                <label htmlFor="visibility">Visibility: </label>
-                <select
+              <label htmlFor="visibility">Visibility: </label>
+              <select
                 id="visibility"
                 name="visibility"
                 value={formData.visibility}
                 onChange={handleChange}
-                >
+              >
                 <option value="public">Public</option>
                 <option value="private">Private</option>
                 <option value="restricted">Restricted</option>
-                </select>
+              </select>
             </div>
 
             <div className="form-group">
-                <label htmlFor="text_direction">Text Direction: </label>
-                <select
+              <label htmlFor="text_direction">Text Direction: </label>
+              <select
                 id="text_direction"
                 name="text_direction"
                 value={formData.text_direction}
                 onChange={handleChange}
-                >
+              >
                 <option value="ltr">Left to Right (LTR)</option>
                 <option value="rtl">Right to Left (RTL)</option>
-                </select>
+              </select>
             </div>
 
             <div className="form-group">
-                <label htmlFor="language">Language: </label>
-                <select
+              <label htmlFor="language">Language: </label>
+              <select
                 id="language"
                 name="language"
                 value={formData.language}
                 onChange={handleChange}
-                >
+              >
                 <option value="en">English</option>
                 <option value="ja">Japanese</option>
                 <option value="fr">French</option>
                 <option value="es">Spanish</option>
                 <option value="de">German</option>
-                </select>
+              </select>
             </div>
 
             <button type="submit">Add</button>
-            </StyledForm>
+          </StyledForm>
 
-            {submitted && (
+          {submitted && (
             <div className="submitted-data">
-                <h2>A new Document Collection has been added:</h2>
-                <p><strong>Title:</strong> {formData.title}</p>
-                <p><strong>Visibility:</strong> {formData.visibility}</p>
-                <p><strong>Text Direction:</strong> {formData.text_direction}</p>
-                <p><strong>Language:</strong> {formData.language}</p>
-                <p><strong>User:</strong> {user?.first_name} {user?.last_name}</p>
+              <h2>A new Document Collection has been added:</h2>
+              <p>
+                <strong>Title:</strong> {formData.title}
+              </p>
+              <p>
+                <strong>Visibility:</strong> {formData.visibility}
+              </p>
+              <p>
+                <strong>Text Direction:</strong> {formData.text_direction}
+              </p>
+              <p>
+                <strong>Language:</strong> {formData.language}
+              </p>
+              <p>
+                <strong>User:</strong> {user?.first_name} {user?.last_name}
+              </p>
             </div>
-            )}
+          )}
         </SubTabPanel>
 
         <SubTabPanel value={activeSubTab} index={2}>
@@ -341,9 +547,12 @@ interface FormData {
             Delete Document Collection
           </Typography>
           <div>
-            <p>Select a document collection to delete:</p>
+            <p>Select a document collection to delete. <strong>Warning:</strong> This will permanently delete all documents, content, and annotations in the collection.</p>
+            <p style={{ color: 'red', fontWeight: 'bold' }}>⚠️ This action cannot be undone!</p>
+            
             <StyledForm>
-              <FormControl fullWidth sx={{ maxWidth: '300px' }}>
+
+              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
                 <InputLabel id="delete-collection-label">Select a collection</InputLabel>
                 <Select
                   labelId="delete-collection-label"
@@ -351,29 +560,94 @@ interface FormData {
                   value={selectedCollection}
                   label="Select a collection"
                   onChange={handleCollectionSelect}
+                  disabled={isDeleting}
                 >
                   <MenuItem value="">
                     <em>-- Select a collection --</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                    <MenuItem
+                      key={collection.id}
+                      value={collection.id.toString()}
+                    >
                       {collection.title}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <button 
+
+<!--               <button
                 type="button"
                 className="delete-button"
                 disabled={!selectedCollection || isDeleting}
                 onClick={initiateDeleteCollection}
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
+<!--                 {isDeleting ? "Deleting..." : "Delete"} -->
+<!--               </button> -->
+
             </StyledForm>
+
+            {isLoadingStats && (
+              <Box sx={{ width: '100%', mt: 2 }}>
+                <LinearProgress />
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Loading collection statistics...
+                </Typography>
+              </Box>
+            )}
+
+            {collectionStats && (
+              <Box sx={{ mt: 2, p: 2, backgroundColor: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '4px' }}>
+                <Typography variant="h6" gutterBottom>
+                  Collection Details:
+                </Typography>
+                <Typography variant="body2"><strong>Name:</strong> {collectionStats.title}</Typography>
+                {collectionStats.description && (
+                  <Typography variant="body2"><strong>Description:</strong> {collectionStats.description}</Typography>
+                )}
+                <Typography variant="body2"><strong>Visibility:</strong> {collectionStats.visibility}</Typography>
+                <Typography variant="body2"><strong>Created:</strong> {new Date(collectionStats.created).toLocaleDateString()}</Typography>
+                <Typography variant="body2"><strong>Modified:</strong> {new Date(collectionStats.modified).toLocaleDateString()}</Typography>
+                
+                <Typography variant="h6" sx={{ mt: 2 }} gutterBottom>
+                  Content to be deleted:
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                  • {collectionStats.document_count} documents
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                  • {collectionStats.element_count} paragraphs
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                  • {collectionStats.scholarly_annotation_count} scholarly annotations
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                  • {collectionStats.comment_count} comments
+                </Typography>
+              </Box>
+            )}
+
+            {showProgress && (
+              <Box sx={{ width: '100%', mt: 2 }}>
+                <LinearProgress variant="determinate" value={deleteProgress} />
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Deleting collection... {deleteProgress}%
+                </Typography>
+              </Box>
+            )}
+
+            <Button
+              variant="contained"
+              color="error"
+              onClick={initiateDeleteCollection}
+              disabled={!selectedCollection || isDeleting || !collectionStats}
+              sx={{ marginTop: 2 }}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Collection'}
+            </Button>
           </div>
         </SubTabPanel>
-        
+
         <SubTabPanel value={activeSubTab} index={3}>
           <Typography variant="h5" gutterBottom>
             Rename Document Collection
@@ -381,54 +655,72 @@ interface FormData {
           <div>
             <p>Select a document collection to rename:</p>
             <StyledForm>
-              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
-                <InputLabel id="rename-collection-label">Select a collection</InputLabel>
+              <FormControl fullWidth sx={{ maxWidth: "400px" }}>
+                <InputLabel id="rename-collection-label">
+                  Select a collection
+                </InputLabel>
                 <Select
                   labelId="rename-collection-label"
                   id="rename-collection-select"
-                  value={selectedCollection}
+                  value={renameSelectedCollection}
                   label="Select a collection"
-                  onChange={handleCollectionSelect}
+                  onChange={handleRenameCollectionSelect}
+                  disabled={isRenaming}
                 >
                   <MenuItem value="">
                     <em>-- Select a collection --</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                    <MenuItem
+                      key={collection.id}
+                      value={collection.id.toString()}
+                    >
                       {collection.title}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              
+
               <div className="form-group">
                 <label htmlFor="new-name">New Name:</label>
-                <input 
-                  type="text" 
-                  id="new-name" 
+                <input
+                  type="text"
+                  id="new-name"
                   name="new-name"
                   placeholder="Enter new collection name"
+                  value={renameNewName}
+                  onChange={handleRenameNewNameChange}
+                  disabled={isRenaming}
+                  maxLength={200}
                 />
               </div>
+
               
-              <button type="button">
-                Rename
-              </button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleRenameCollection}
+                disabled={!isRenameFormValid() || isRenaming}
+                sx={{ marginTop: 2 }}
+              >
+                {isRenaming ? 'Renaming...' : 'Rename Collection'}
+              </Button>
+
             </StyledForm>
           </div>
         </SubTabPanel>
 
         {/* Notification Snackbar */}
-        <Snackbar 
-          open={notification.open} 
-          autoHideDuration={6000} 
+        <Snackbar
+          open={notification.open}
+          autoHideDuration={6000}
           onClose={handleCloseNotification}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
-          <Alert 
-            onClose={handleCloseNotification} 
-            severity={notification.severity} 
-            sx={{ width: '100%' }}
+          <Alert
+            onClose={handleCloseNotification}
+            severity={notification.severity}
+            sx={{ width: "100%" }}
           >
             {notification.message}
           </Alert>
@@ -440,17 +732,45 @@ interface FormData {
           onClose={handleCloseConfirmDialog}
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
+          maxWidth="md"
+          fullWidth
         >
-          <DialogTitle id="alert-dialog-title">{confirmDialog.title}</DialogTitle>
+
+          <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
+
+            {confirmDialog.title}
+          </DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description">
+            <DialogContentText id="alert-dialog-description" sx={{ marginBottom: 2, whiteSpace: 'pre-line' }}>
               {confirmDialog.message}
             </DialogContentText>
+            
+            {confirmDialog.requiresNameConfirmation && (
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Type collection name to confirm"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={confirmationText}
+                onChange={handleConfirmationTextChange}
+                error={confirmationText !== '' && !isConfirmationValid()}
+                helperText={confirmationText !== '' && !isConfirmationValid() ? 'Collection name must match exactly' : ''}
+                sx={{ mt: 2 }}
+              />
+            )}
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseConfirmDialog}>Cancel</Button>
-            <Button onClick={confirmDialog.onConfirm} color="error" autoFocus>
-              Delete
+            <Button 
+              onClick={confirmDialog.onConfirm} 
+              color="error" 
+              variant="contained" 
+              disabled={confirmDialog.requiresNameConfirmation && !isConfirmationValid()}
+              autoFocus={!confirmDialog.requiresNameConfirmation}
+            >
+              {confirmDialog.requiresNameConfirmation ? 'DELETE COLLECTION' : 'Delete'}
             </Button>
           </DialogActions>
         </Dialog>

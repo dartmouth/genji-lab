@@ -1,3 +1,5 @@
+/* REPLACE YOUR ENTIRE CSS FILE WITH THIS CLEAN VERSION */
+
 /* Document View Container */
 .document-view-container {
   display: flex;
@@ -58,14 +60,11 @@
   transition: background-color 0.2s ease;
   margin-bottom: 1rem;
   line-height: 1.5;
-  
-  /* Standard scroll margin for paragraphs */
   scroll-margin-top: 100px;
 }
 
-/* Special handling for the first paragraph */
 .document-content:first-child {
-  scroll-margin-top: 150px; /* Extra large margin for first paragraph */
+  scroll-margin-top: 150px;
 }
 
 /* Styling for active paragraph */
@@ -160,7 +159,189 @@
   top: 0;
 }
 
-/* Responsive Styles */
+/* Style highlight colors based on annotation type */
+.highlight.commenting {
+  background-color: rgba(79, 170, 232, 0.2);
+  border-bottom: 2px solid #4faae8;
+}
+
+.highlight.scholarly {
+  background-color: rgba(247, 209, 84, 0.2);
+  border-bottom: 2px solid #f7d154;
+}
+
+.highlight.commenting:hover {
+  background-color: rgba(79, 170, 232, 0.4);
+}
+
+.highlight.scholarly:hover {
+  background-color: rgba(247, 209, 84, 0.4);
+}
+
+.highlight.scholarly::after {
+  content: "★";
+  font-size: 8px;
+  position: relative;
+  top: -8px;
+  color: #cc8800;
+  margin-left: 2px;
+}
+
+/* ========== LINKED TEXT HIGHLIGHTING (FIXED) ========== */
+
+/* Container for linked text highlights */
+.linked-text-highlights-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.6 !important;
+  mix-blend-mode: multiply;
+}
+
+/* Individual linked text highlight */
+.linked-text-highlight {
+  position: absolute;
+  background-color: rgba(220, 53, 69, 0.4) !important;
+  border-radius: 1px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  mix-blend-mode: normal;
+}
+
+/* Link icon styling */
+.linked-text-icon {
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  font-size: 10px;
+  color: #dc3545;
+  pointer-events: none;
+  z-index: 3;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.9);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.annotatable-paragraph.has-linked-text {
+  position: relative;
+}
+
+.show-linked-text .linked-text-icon {
+  opacity: 1;
+  font-size: 12px;
+  animation: linkIconPulse 2s ease-in-out infinite;
+}
+
+@keyframes linkIconPulse {
+  0%, 100% { 
+    opacity: 0.8; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.1);
+  }
+}
+
+@keyframes linkIndicatorPulse {
+  0%, 100% { 
+    opacity: 0.8; 
+    transform: scaleY(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scaleY(1.2);
+  }
+}
+
+/* LIGHT navigation animation - text stays readable */
+@keyframes redux-precise-navigation-flash {
+  0% { 
+    background-color: rgba(255, 255, 0, 0.2); /* Pure yellow, lighter */
+    box-shadow: 0 0 2px rgba(255, 255, 0, 0.3);
+    color: #000000 !important; /* Force black text */
+  }
+  25% { 
+    background-color: rgba(255, 255, 0, 0.3); /* Peak but still readable */
+    box-shadow: 0 0 3px rgba(255, 255, 0, 0.4);
+    color: #000000 !important; /* Force black text */
+  }
+  50% { 
+    background-color: rgba(255, 255, 0, 0.15); /* Very light */
+    box-shadow: 0 0 1px rgba(255, 255, 0, 0.2);
+    color: #000000 !important; /* Force black text */
+  }
+  75% { 
+    background-color: rgba(255, 255, 0, 0.25); /* Small bounce */
+    box-shadow: 0 0 2px rgba(255, 255, 0, 0.3);
+    color: #000000 !important; /* Force black text */
+  }
+  100% { 
+    background-color: rgba(255, 255, 0, 0); /* Fade out */
+    box-shadow: 0 0 0 rgba(255, 255, 0, 0);
+    color: inherit; /* Return to normal */
+  }
+}
+
+/* Hide any old overlays */
+.redux-navigation-highlight {
+  display: none !important;
+}
+
+/* Ensure linked text indicators don't interfere with regular highlights */
+.annotatable-paragraph.has-linked-text .highlight-container-commenting,
+.annotatable-paragraph.has-linked-text .highlight-container-scholarly {
+  z-index: 4 !important;
+}
+
+/* Enhanced tooltip styling for linked text */
+.has-linked-text[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.has-linked-text[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(1px);
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* ========== FORCE REMOVE ANY DEBUG STYLES ========== */
+
+/* Remove ALL borders and outlines from navigation elements */
+[data-navigation-type="source"],
+[data-navigation-type="target"],
+[data-navigation-highlighted="true"],
+.navigation-flash-active,
+.annotatable-paragraph {
+  border: none !important;
+  outline: none !important;
+}
+
+/* ========== RESPONSIVE STYLES ========== */
+
 @media (max-width: 768px) {
   .document-columns-container {
     flex-direction: column;
@@ -201,34 +382,89 @@
   .document-content:first-child {
     scroll-margin-top: 120px;
   }
+
+  /* Mobile adjustments for indicators */
+  .annotatable-paragraph.has-linked-text::before {
+    width: 2px;
+    height: 6px;
+  }
+  
+  .linked-text-icon {
+    font-size: 9px;
+    top: -1px;
+    right: 1px;
+  }
 }
 
-/* Style highlight colors based on annotation type */
-.highlight.commenting {
-  background-color: rgba(79, 170, 232, 0.2); /* Light blue */
-  border-bottom: 2px solid #4faae8;
-}
+/* ========== ACCESSIBILITY ========== */
 
-.highlight.scholarly {
-  background-color: rgba(247, 209, 84, 0.2); /* Light gold */
-  border-bottom: 2px solid #f7d154;
-}
+/* @media (prefers-reduced-motion: reduce) {
+  .redux-navigation-highlight-precise {
+    animation: none;
+    background-color: rgba(255, 235, 59, 0.3) !important;
+  }
 
-/* Hover states */
-.highlight.commenting:hover {
-  background-color: rgba(79, 170, 232, 0.4); /* Darker blue on hover */
-}
+  .show-linked-text .annotatable-paragraph.has-linked-text::before,
+  .show-linked-text .linked-text-icon {
+    animation: none;
+  }
+} */
 
-.highlight.scholarly:hover {
-  background-color: rgba(247, 209, 84, 0.4); /* Darker gold on hover */
-}
-
-/* Add a star for scholarly annotations */
-.highlight.scholarly::after {
-  content: "★"; /* Star character */
-  font-size: 8px;
+.navigation-flash-active {
   position: relative;
-  top: -8px;
-  color: #cc8800;
-  margin-left: 2px;
+}
+
+/* Container for precise Redux navigation highlights */
+.redux-navigation-highlights-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 12;
+  /* SAME APPROACH AS RED HIGHLIGHTS: */
+  opacity: 0.8 !important;
+  mix-blend-mode: multiply;
+}
+
+/* Precise Redux navigation highlights - EXACTLY LIKE RED HIGHLIGHTS */
+.redux-navigation-highlight-precise {
+  position: absolute;
+  /* SAME STYLE AS .linked-text-highlight BUT YELLOW: */
+  background-color: rgba(255, 235, 59, 0.6) !important;
+  border-radius: 1px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  mix-blend-mode: normal;
+  /* FLASH ANIMATION: */
+  animation: redux-yellow-flash 3s ease-in-out;
+}
+
+/* FLASH ANIMATION - like the red highlights but yellow */
+@keyframes redux-yellow-flash {
+  0% {
+    background-color: rgba(255, 235, 59, 0.6); /* Start yellow */
+    box-shadow: 0 0 4px rgba(255, 235, 59, 0.6);
+  }
+  15% {
+    background-color: rgba(255, 255, 0, 0.8); /* Bright flash */
+    box-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
+  }
+  30% {
+    background-color: rgba(255, 235, 59, 0.7); /* Back to yellow */
+    box-shadow: 0 0 6px rgba(255, 235, 59, 0.6);
+  }
+  50% {
+    background-color: rgba(255, 235, 59, 0.6); /* Stable yellow */
+    box-shadow: 0 0 4px rgba(255, 235, 59, 0.5);
+  }
+  75% {
+    background-color: rgba(255, 235, 59, 0.5); /* Fade */
+    box-shadow: 0 0 2px rgba(255, 235, 59, 0.4);
+  }
+  100% {
+    background-color: rgba(255, 235, 59, 0.6); /* Return to normal yellow */
+    box-shadow: 0 0 4px rgba(255, 235, 59, 0.6);
+  }
 }
