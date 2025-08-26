@@ -278,28 +278,6 @@
     border-radius: 4px;
     font-size: 0.9rem;
   }
-  
-  /* Debug Info */
-  .debug-info {
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin-top: 0.5rem;
-  }
-  
-  .debug-info details {
-    cursor: pointer;
-  }
-  
-  .debug-info summary {
-    font-weight: 500;
-  }
-  
-  .debug-content {
-    margin-top: 0.3rem;
-    padding: 0.5rem;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-  }
 
 /* Sleeker Document Management Panel */
 .document-management-panel {
@@ -473,25 +451,5 @@
   font-size: 12px;
   border: 1px solid #ced4da;
   border-radius: 4px;
-  color: #495057;
-}
-
-/* Debug Info */
-.debug-info {
-  margin-top: 8px;
-  font-size: 11px;
-}
-
-.debug-info summary {
-  color: #6c757d;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.debug-content {
-  padding: 4px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  margin-top: 4px;
   color: #495057;
 }

@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
+
 import { Tabs, Tab, Box, Typography, styled, FormControl, 
   InputLabel, Select, MenuItem, Snackbar, Alert, 
   Dialog, DialogActions, DialogContent, DialogContentText, 
   DialogTitle, Button, LinearProgress, TextField } from '@mui/material';
 import { createDocumentCollection, updateDocumentCollection, useAppDispatch } from '@store';
+
 import { useAuth } from "@hooks/useAuthContext.ts";
 import { useAppSelector } from "@store/hooks";
-import { 
-  selectAllDocumentCollections,
-  fetchDocumentCollections,
-} from "@store";
+import { selectAllDocumentCollections, fetchDocumentCollections } from "@store";
 
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
@@ -29,11 +28,7 @@ function SubTabPanel(props: SubTabPanelProps) {
       aria-labelledby={`manage-subtab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
     </div>
   );
 }
@@ -41,48 +36,48 @@ function SubTabPanel(props: SubTabPanelProps) {
 function a11yPropsSubTab(index: number) {
   return {
     id: `manage-subtab-${index}`,
-    'aria-controls': `manage-subtabpanel-${index}`,
+    "aria-controls": `manage-subtabpanel-${index}`,
   };
 }
 
 // Styled components
-const StyledForm = styled('form')(({ theme }) => ({
-  '& .form-group': {
+const StyledForm = styled("form")(({ theme }) => ({
+  "& .form-group": {
     marginBottom: theme.spacing(2),
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
   },
-  '& label': {
+  "& label": {
     marginBottom: theme.spacing(0.5),
   },
-  '& input, & select': {
+  "& input, & select": {
     padding: theme.spacing(1),
     borderRadius: theme.shape.borderRadius,
     border: `1px solid ${theme.palette.divider}`,
   },
-  '& .MuiFormControl-root': {
+  "& .MuiFormControl-root": {
     marginBottom: theme.spacing(2),
   },
-  '& button': {
+  "& button": {
     marginTop: theme.spacing(2),
     padding: theme.spacing(1, 2),
     backgroundColor: theme.palette.primary.main,
     color: theme.palette.primary.contrastText,
-    border: 'none',
+    border: "none",
     borderRadius: theme.shape.borderRadius,
-    cursor: 'pointer',
-    '&:hover': {
+    cursor: "pointer",
+    "&:hover": {
       backgroundColor: theme.palette.primary.dark,
     },
-    '&:disabled': {
+    "&:disabled": {
       opacity: 0.5,
-      cursor: 'not-allowed',
+      cursor: "not-allowed",
       backgroundColor: theme.palette.action.disabled,
     },
   },
-  '& .delete-button': {
+  "& .delete-button": {
     backgroundColor: theme.palette.error.main,
-    '&:hover': {
+    "&:hover": {
       backgroundColor: theme.palette.error.dark,
     },
   },
@@ -95,9 +90,9 @@ const ManageCollections: React.FC = () => {
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
-    severity: 'success' | 'error' | 'info' | 'warning';
-  }>({ open: false, message: '', severity: 'info' });
-  
+    severity: "success" | "error" | "info" | "warning";
+  }>({ open: false, message: "", severity: "info" });
+
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -108,6 +103,7 @@ const ManageCollections: React.FC = () => {
   }>({ open: false, title: '', message: '', onConfirm: () => {}, requiresNameConfirmation: false, expectedName: '' });
  
   const showNotification = (message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
+
     setNotification({ open: true, message, severity });
   };
 
@@ -129,8 +125,9 @@ const ManageCollections: React.FC = () => {
     return confirmationText === confirmDialog.expectedName;
   };
 
-
-  const documentCollections = useAppSelector(selectAllDocumentCollections) as Array<{
+  const documentCollections = useAppSelector(
+    selectAllDocumentCollections
+  ) as Array<{
     id: number;
     title: string;
     description?: string;
@@ -141,7 +138,7 @@ const ManageCollections: React.FC = () => {
     dispatch(fetchDocumentCollections());
   }, [dispatch]);
 
-  const [selectedCollection, setSelectedCollection] = useState<string>('');
+  const [selectedCollection, setSelectedCollection] = useState<string>("");
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(false);
   
@@ -200,7 +197,10 @@ const ManageCollections: React.FC = () => {
     }
   };
 
-  const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  const handleSubTabChange = (
+    _event: React.SyntheticEvent,
+    newValue: number
+  ) => {
     setActiveSubTab(newValue);
     
     // Reset form states when changing tabs
@@ -212,6 +212,7 @@ const ManageCollections: React.FC = () => {
   };
 
   const initiateDeleteCollection = () => {
+
     if (!selectedCollection || !collectionStats) {
       showNotification('Please select a collection first', 'error');
       return;
@@ -241,6 +242,7 @@ To confirm, please type the collection name exactly as shown:
   };
 
   const handleDeleteCollection = async () => {
+
     if (!selectedCollection || !collectionStats) return;
     
     setConfirmDialog({ ...confirmDialog, open: false });
@@ -262,6 +264,7 @@ To confirm, please type the collection name exactly as shown:
         
         // Refresh the collections list after successful deletion
         dispatch(fetchDocumentCollections());
+
         setSelectedCollection('');
         setCollectionStats(null);
         setConfirmationText('');
@@ -269,13 +272,15 @@ To confirm, please type the collection name exactly as shown:
         setDeleteProgress(100);
         
         showNotification(`Collection "${collectionStats.title}" deleted successfully`, 'success');
+
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to delete collection');
+        throw new Error(errorData.detail || "Failed to delete collection");
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      showNotification(`Failed to delete collection: ${errorMessage}`, 'error');
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      showNotification(`Failed to delete collection: ${errorMessage}`, "error");
     } finally {
       setIsDeleting(false);
       setTimeout(() => {
@@ -285,26 +290,28 @@ To confirm, please type the collection name exactly as shown:
     }
   };
 
-interface FormData {
-  title: string;
-  visibility: string;
-  text_direction: string;
-  language: string;
-}
+  interface FormData {
+    title: string;
+    visibility: string;
+    text_direction: string;
+    language: string;
+  }
   const { user } = useAuth();
   const [formData, setFormData] = useState<FormData>({
-    title: '',
-    visibility: 'public',
-    text_direction: 'ltr',
-    language: 'en'
+    title: "",
+    visibility: "public",
+    text_direction: "ltr",
+    language: "en",
   });
   const [submitted, setSubmitted] = useState<boolean>(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -315,10 +322,10 @@ interface FormData {
       visibility: formData.visibility,
       text_direction: formData.text_direction,
       language: formData.language,
-      hierarchy: {chapter:1, paragraph:2},
+      hierarchy: { chapter: 1, paragraph: 2 },
       collection_metadata: {},
       created_by_id: user?.id || 1,
-    }
+    };
     dispatch(createDocumentCollection(payload));
     setSubmitted(true);
   };
@@ -411,8 +418,8 @@ interface FormData {
       <Typography variant="h4" component="h1" gutterBottom>
         Manage Document Collections
       </Typography>
-      
-      <Box sx={{ display: 'flex', height: 'auto' }}>
+
+      <Box sx={{ display: "flex", height: "auto" }}>
         {/* Sub-tabs for Manage Collections */}
         <Tabs
           orientation="vertical"
@@ -420,15 +427,15 @@ interface FormData {
           value={activeSubTab}
           onChange={handleSubTabChange}
           aria-label="Manage collections sub-tabs"
-          sx={{ 
-            borderRight: 1, 
-            borderColor: 'divider',
-            minWidth: '180px',
-            '& .MuiTab-root': {
-              alignItems: 'flex-start',
-              textAlign: 'left',
-              paddingLeft: 2
-            }
+          sx={{
+            borderRight: 1,
+            borderColor: "divider",
+            minWidth: "180px",
+            "& .MuiTab-root": {
+              alignItems: "flex-start",
+              textAlign: "left",
+              paddingLeft: 2,
+            },
           }}
         >
           <Tab label="Overview" {...a11yPropsSubTab(0)} />
@@ -436,7 +443,7 @@ interface FormData {
           <Tab label="Delete" {...a11yPropsSubTab(2)} />
           <Tab label="Rename" {...a11yPropsSubTab(3)} />
         </Tabs>
-        
+
         {/* Sub-tab content */}
         <SubTabPanel value={activeSubTab} index={0}>
           <Typography variant="h5" gutterBottom>
@@ -448,81 +455,91 @@ interface FormData {
         </SubTabPanel>
 
         <SubTabPanel value={activeSubTab} index={1}>
-            <Typography variant="h5" gutterBottom>
+          <Typography variant="h5" gutterBottom>
             Add Document Collection
-            </Typography>
-            <div>
+          </Typography>
+          <div>
             <p>Complete this form to add your new Document Collection.</p>
-            </div>
-            <StyledForm onSubmit={handleSubmit}>
+          </div>
+          <StyledForm onSubmit={handleSubmit}>
             <div className="form-group">
-                <label htmlFor="title">Title: </label>
-                <input
+              <label htmlFor="title">Title: </label>
+              <input
                 type="text"
                 id="title"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
                 required
-                />
+              />
             </div>
 
             <div className="form-group">
-                <label htmlFor="visibility">Visibility: </label>
-                <select
+              <label htmlFor="visibility">Visibility: </label>
+              <select
                 id="visibility"
                 name="visibility"
                 value={formData.visibility}
                 onChange={handleChange}
-                >
+              >
                 <option value="public">Public</option>
                 <option value="private">Private</option>
                 <option value="restricted">Restricted</option>
-                </select>
+              </select>
             </div>
 
             <div className="form-group">
-                <label htmlFor="text_direction">Text Direction: </label>
-                <select
+              <label htmlFor="text_direction">Text Direction: </label>
+              <select
                 id="text_direction"
                 name="text_direction"
                 value={formData.text_direction}
                 onChange={handleChange}
-                >
+              >
                 <option value="ltr">Left to Right (LTR)</option>
                 <option value="rtl">Right to Left (RTL)</option>
-                </select>
+              </select>
             </div>
 
             <div className="form-group">
-                <label htmlFor="language">Language: </label>
-                <select
+              <label htmlFor="language">Language: </label>
+              <select
                 id="language"
                 name="language"
                 value={formData.language}
                 onChange={handleChange}
-                >
+              >
                 <option value="en">English</option>
                 <option value="ja">Japanese</option>
                 <option value="fr">French</option>
                 <option value="es">Spanish</option>
                 <option value="de">German</option>
-                </select>
+              </select>
             </div>
 
             <button type="submit">Add</button>
-            </StyledForm>
+          </StyledForm>
 
-            {submitted && (
+          {submitted && (
             <div className="submitted-data">
-                <h2>A new Document Collection has been added:</h2>
-                <p><strong>Title:</strong> {formData.title}</p>
-                <p><strong>Visibility:</strong> {formData.visibility}</p>
-                <p><strong>Text Direction:</strong> {formData.text_direction}</p>
-                <p><strong>Language:</strong> {formData.language}</p>
-                <p><strong>User:</strong> {user?.first_name} {user?.last_name}</p>
+              <h2>A new Document Collection has been added:</h2>
+              <p>
+                <strong>Title:</strong> {formData.title}
+              </p>
+              <p>
+                <strong>Visibility:</strong> {formData.visibility}
+              </p>
+              <p>
+                <strong>Text Direction:</strong> {formData.text_direction}
+              </p>
+              <p>
+                <strong>Language:</strong> {formData.language}
+              </p>
+              <p>
+                <strong>User:</strong> {user?.first_name} {user?.last_name}
+              </p>
             </div>
-            )}
+          )}
         </SubTabPanel>
 
         <SubTabPanel value={activeSubTab} index={2}>
@@ -534,6 +551,7 @@ interface FormData {
             <p style={{ color: 'red', fontWeight: 'bold' }}>⚠️ This action cannot be undone!</p>
             
             <StyledForm>
+
               <FormControl fullWidth sx={{ maxWidth: '400px' }}>
                 <InputLabel id="delete-collection-label">Select a collection</InputLabel>
                 <Select
@@ -548,12 +566,25 @@ interface FormData {
                     <em>-- Select a collection --</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                    <MenuItem
+                      key={collection.id}
+                      value={collection.id.toString()}
+                    >
                       {collection.title}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
+
+<!--               <button
+                type="button"
+                className="delete-button"
+                disabled={!selectedCollection || isDeleting}
+                onClick={initiateDeleteCollection}
+              >
+<!--                 {isDeleting ? "Deleting..." : "Delete"} -->
+<!--               </button> -->
+
             </StyledForm>
 
             {isLoadingStats && (
@@ -616,7 +647,7 @@ interface FormData {
             </Button>
           </div>
         </SubTabPanel>
-        
+
         <SubTabPanel value={activeSubTab} index={3}>
           <Typography variant="h5" gutterBottom>
             Rename Document Collection
@@ -624,8 +655,10 @@ interface FormData {
           <div>
             <p>Select a document collection to rename:</p>
             <StyledForm>
-              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
-                <InputLabel id="rename-collection-label">Select a collection</InputLabel>
+              <FormControl fullWidth sx={{ maxWidth: "400px" }}>
+                <InputLabel id="rename-collection-label">
+                  Select a collection
+                </InputLabel>
                 <Select
                   labelId="rename-collection-label"
                   id="rename-collection-select"
@@ -638,18 +671,21 @@ interface FormData {
                     <em>-- Select a collection --</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                    <MenuItem
+                      key={collection.id}
+                      value={collection.id.toString()}
+                    >
                       {collection.title}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              
+
               <div className="form-group">
                 <label htmlFor="new-name">New Name:</label>
-                <input 
-                  type="text" 
-                  id="new-name" 
+                <input
+                  type="text"
+                  id="new-name"
                   name="new-name"
                   placeholder="Enter new collection name"
                   value={renameNewName}
@@ -658,6 +694,7 @@ interface FormData {
                   maxLength={200}
                 />
               </div>
+
               
               <Button
                 variant="contained"
@@ -668,21 +705,22 @@ interface FormData {
               >
                 {isRenaming ? 'Renaming...' : 'Rename Collection'}
               </Button>
+
             </StyledForm>
           </div>
         </SubTabPanel>
 
         {/* Notification Snackbar */}
-        <Snackbar 
-          open={notification.open} 
-          autoHideDuration={6000} 
+        <Snackbar
+          open={notification.open}
+          autoHideDuration={6000}
           onClose={handleCloseNotification}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
-          <Alert 
-            onClose={handleCloseNotification} 
-            severity={notification.severity} 
-            sx={{ width: '100%' }}
+          <Alert
+            onClose={handleCloseNotification}
+            severity={notification.severity}
+            sx={{ width: "100%" }}
           >
             {notification.message}
           </Alert>
@@ -697,7 +735,9 @@ interface FormData {
           maxWidth="md"
           fullWidth
         >
+
           <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
+
             {confirmDialog.title}
           </DialogTitle>
           <DialogContent>

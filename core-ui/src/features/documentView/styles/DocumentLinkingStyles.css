@@ -1,0 +1,749 @@
+/* Hierarchical Linked Text Menu Styles */
+
+.hierarchical-linked-text-menu {
+    position: fixed;
+    z-index: 10002;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    max-width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: inherit;
+  }
+  
+  .hierarchical-linked-text-menu__header {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    background-color: #f8f9fa;
+  }
+  
+  .hierarchical-linked-text-menu__document-item {
+    position: relative;
+  }
+  
+  .hierarchical-linked-text-menu__document-item:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .hierarchical-linked-text-menu__document-button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    border: none;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .hierarchical-linked-text-menu__document-button:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .hierarchical-linked-text-menu__document-content {
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    background-color: white;
+  }
+  
+  .hierarchical-linked-text-menu__document-content--active {
+    background-color: #f5f5f5;
+  }
+  
+  .hierarchical-linked-text-menu__document-layout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .hierarchical-linked-text-menu__document-icon {
+    font-size: 16px;
+  }
+  
+  .hierarchical-linked-text-menu__document-details {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .hierarchical-linked-text-menu__document-title {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* Highlighted Text Component Styles */
+  
+  .annotatable-paragraph {
+    position: relative;
+    writing-mode: horizontal-tb;
+    white-space: pre-wrap;
+  }
+  
+  .annotatable-paragraph.linking-mode {
+    cursor: crosshair;
+    user-select: text;
+  }
+  
+  .annotatable-paragraph.navigation-flash-active {
+    /* Base state for navigation highlighting - actual highlight color comes from precise overlays */
+  }
+  
+  .annotatable-paragraph.has-linked-text {
+    /* Styling for paragraphs that contain linked text */
+  }
+  
+  /* Redux Navigation Highlights */
+  
+  .redux-navigation-highlights-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 15;
+  }
+  
+  .redux-navigation-highlight-precise {
+    position: absolute;
+    background-color: rgba(255, 235, 59, 0.35);
+    border: none;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  
+  /* Highlighting Help Icon Styles */
+  
+  .highlighting-help-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .highlighting-help-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background-color: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s ease;
+  }
+  
+  .highlighting-help-icon:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    color: #333;
+  }
+  
+  .highlighting-help-icon:active {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+  
+  .highlighting-help-tooltip {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    width: 320px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    font-family: inherit;
+  }
+  
+  .tooltip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .tooltip-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .tooltip-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  
+  .tooltip-close:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    color: #333;
+  }
+  
+  .tooltip-content {
+    padding: 16px;
+  }
+  
+  .highlight-example {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .highlight-example:last-child {
+    margin-bottom: 0;
+  }
+  
+  .highlight-sample {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
+  }
+  
+  .highlight-info {
+    flex: 1;
+  }
+  
+  .highlight-type {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  
+  .highlight-description {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.3;
+  }
+  
+  .tooltip-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #eee;
+    background-color: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+  }
+  
+  .tooltip-footer small {
+    color: #666;
+    font-size: 11px;
+    font-style: italic;
+  }
+  
+  /* Document View Header Layout */
+  
+  .document-view-header {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .header-right-controls {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+  }
+  
+  .back-button {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: background-color 0.2s ease;
+  }
+  
+  .back-button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .document-management-panel {
+    flex: 1;
+    margin-right: 50px; /* Make room for the help icon */
+  }
+  
+  .redux-navigation-highlight-precise.highlight-search {
+    background-color: rgba(255, 193, 7, 0.4);
+  }
+  
+  .redux-navigation-highlight-precise.highlight-annotation {
+    background-color: rgba(76, 175, 80, 0.35);
+  }
+  
+  .redux-navigation-highlight-precise.highlight-link {
+    background-color: rgba(33, 150, 243, 0.35);
+  }
+  
+  /* Highlight Containers */
+  
+  .highlight-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  /* Linked Text Highlights */
+  
+  .linked-text-icon {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 12px;
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 5;
+  }
+  
+  .linked-text-highlights-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  .linked-text-highlight {
+    position: absolute;
+    background-color: rgba(244, 67, 54, 0.15); /* Red linked text highlight */
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  
+  .hierarchical-linked-text-menu__open-indicator {
+    font-size: 11px;
+    color: #1976d2;
+    font-weight: normal;
+    margin-left: 6px;
+  }
+  
+  .hierarchical-linked-text-menu__linked-text-preview {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .hierarchical-linked-text-menu__options-count {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .hierarchical-linked-text-menu__arrow {
+    font-size: 14px;
+    color: #999;
+    margin-left: 4px;
+  }
+  
+  /* Submenu Styles */
+  
+  .linked-text-options-submenu {
+    position: fixed;
+    z-index: 10003;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+    max-width: 350px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: inherit;
+  }
+  
+  .linked-text-options-submenu__header {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    font-weight: bold;
+    color: #666;
+    background-color: #f8f9fa;
+  }
+  
+  .linked-text-options-submenu__option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    border: none;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .linked-text-options-submenu__option:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .linked-text-options-submenu__option:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .linked-text-options-submenu__option-text {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+  }
+  
+  .linked-text-options-submenu__additional-sections {
+    font-size: 11px;
+    color: #1976d2;
+    margin-top: 4px;
+    font-style: italic;
+  }
+  
+  /* Linked Text Dropdown Styles */
+  
+  .linked-text-dropdown {
+    position: fixed;
+    z-index: 10000;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    max-width: 300px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .linked-text-dropdown__header {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    font-weight: bold;
+    color: #666;
+    background-color: #f8f9fa;
+  }
+  
+  .linked-text-dropdown__item {
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .linked-text-dropdown__item:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .linked-text-dropdown__item:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .linked-text-dropdown__document-title {
+    font-weight: 500;
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  
+  .linked-text-dropdown__linked-text {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Document Linking Overlay Styles */
+
+/* Document highlighting overlay - shows which areas can be selected */
+.document-linking-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: rgba(25, 118, 210, 0.05);
+}
+
+/* Floating control panel */
+.document-linking-panel {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  width: 320px;
+  z-index: 1000;
+  border: 2px solid #1976d2;
+}
+
+/* Panel header */
+.document-linking-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.document-linking-panel__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1976d2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.document-linking-panel__close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+}
+
+.document-linking-panel__close:hover {
+  color: #333;
+}
+
+/* Instructions */
+.document-linking-panel__instructions {
+  background-color: #f0f7ff;
+  border: 1px solid #b8daff;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #004085;
+}
+
+.document-linking-panel__instructions strong {
+  /* Inherits from parent */
+}
+
+/* Progress indicators */
+.document-linking-panel__progress {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.document-linking-panel__progress-bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  transition: background-color 0.3s ease;
+}
+
+.document-linking-panel__progress-bar--active {
+  background-color: #4caf50;
+}
+
+.document-linking-panel__progress-bar--inactive {
+  background-color: #e0e0e0;
+}
+
+/* Selections display */
+.document-linking-panel__selection {
+  background-color: #e8f5e8;
+  border: 1px solid #4caf50;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.document-linking-panel__selection-header {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.document-linking-panel__element-count {
+  color: #666;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.document-linking-panel__selection-preview {
+  color: #666;
+  font-style: italic;
+}
+
+/* Same document warning */
+.document-linking-panel__warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #856404;
+}
+
+/* Description input */
+.document-linking-panel__description {
+  margin-bottom: 16px;
+}
+
+.document-linking-panel__description-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.document-linking-panel__description-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.document-linking-panel__description-textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+/* Action buttons */
+.document-linking-panel__actions {
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+}
+
+.document-linking-panel__save-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.document-linking-panel__save-button:hover {
+  background-color: #45a049;
+}
+
+.document-linking-panel__save-button:active {
+  background-color: #3d8b40;
+}
+
+.document-linking-panel__reset-button {
+  padding: 8px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.document-linking-panel__reset-button:hover {
+  background-color: #e9ecef;
+}
+
+/* Login required notice */
+.document-linking-panel__login-notice {
+  padding: 8px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #856404;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .document-linking-panel {
+    position: fixed;
+    top: auto;
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    transform: none;
+    width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .document-linking-panel {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    padding: 16px;
+  }
+  
+  .document-linking-panel__title {
+    font-size: 15px;
+  }
+  
+  .document-linking-panel__instructions {
+    font-size: 13px;
+    padding: 10px;
+  }
+}
