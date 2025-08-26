@@ -44,7 +44,7 @@ export const CollectionsView: React.FC = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(fetchDocumentCollections());
+    dispatch(fetchDocumentCollections({includeUsers: false}));
   }, [dispatch]);
 
   const handleCollectionSelect = (collectionId: number) => {
@@ -312,7 +312,7 @@ export const DocumentContentView: React.FC = () => {
 
   // Fetch document collections when component mounts
   useEffect(() => {
-    dispatch(fetchDocumentCollections());
+    dispatch(fetchDocumentCollections({includeUsers: false}));
   }, [dispatch]);
 
   // Fetch documents for the current collection

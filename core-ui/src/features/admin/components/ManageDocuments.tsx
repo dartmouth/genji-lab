@@ -97,7 +97,7 @@ const ManageDocuments: React.FC = () => {
 
   //fetch collections
   useEffect(() => {
-    dispatch(fetchDocumentCollections());
+    dispatch(fetchDocumentCollections({includeUsers: false}));
   }, [dispatch]);
   
   const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {

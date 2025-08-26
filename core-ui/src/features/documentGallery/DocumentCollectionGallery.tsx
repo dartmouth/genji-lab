@@ -26,7 +26,7 @@ const DocumentCollectionGallery: React.FC<DocumentCollectionGalleryProps> = ({
   // Fetch collections when component mounts
   useEffect(() => {
     if (status === 'idle') {
-      dispatch(fetchDocumentCollections());
+      dispatch(fetchDocumentCollections({includeUsers: false}));
     }
   }, [status, dispatch]);
 
