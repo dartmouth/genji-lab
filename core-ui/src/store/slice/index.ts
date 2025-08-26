@@ -18,7 +18,18 @@ export {
     selectHoveredHighlightIds 
 } from './highlightRegistrySlice'   
 
+
 export * from './annotationCreate'  
+
+export {
+    createDocumentCollection,
+    updateDocumentCollection,
+    fetchDocumentCollections,
+    selectAllDocumentCollections,
+    selectDocumentCollectionsStatus,
+    selectDocumentCollectionsError
+} from './documentCollectionSlice'
+
 
 export {     
     createDocumentCollection,     
@@ -35,8 +46,10 @@ export type {
     CollectionMetadata
 } from './documentCollectionSlice'   
 
-export {     
-    createDocument,     
+
+export {
+    createDocument,
+    updateDocument,
     clearDocuments,
     clearAllDocuments,
     setSelectedCollectionId,     
@@ -53,6 +66,7 @@ export {
     selectDocumentById
 } from './documentSlice'  
 
+
 export {     
     setActiveParagraph,     
     clearActiveParagraph,     
@@ -68,6 +82,10 @@ export {
     selectDocumentErrorById,     
     selectCurrentDocumentId
 } from './documentElementsSlice'
+
+export type {DocumentCreate, DocumentUpdate} from './documentSlice'
+
+
 
 // Navigation highlight exports
 export {

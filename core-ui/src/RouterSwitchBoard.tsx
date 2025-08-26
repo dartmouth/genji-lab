@@ -10,11 +10,11 @@ import { useAuth } from "@/hooks/useAuthContext";
 const RouterSwitchBoard: React.FC = () => {
   
   const { user } = useAuth();
-
+  console.log("isadmin", user?.roles?.includes('admin'))
   return (
     <Routes>
       <Route path="/" element={<CollectionsView />} />
-      <Route path="/admin" element={user?.roles && user.roles.includes('admin') ? <AdminPanel /> : <Navigate to="/" replace />} />
+      {user?.roles?.includes('admin') ? (<Route path="/admin" element={<AdminPanel /> } />):(<Route path="/admin" element={<CollectionsView />}/>)}
       <Route path="/collections/:collectionId" element={<DocumentsView />} />
       <Route path="/collections/:collectionId/documents/:documentId" element={<DocumentContentView />} />
       <Route path="*" element={<Navigate to="/" replace />} />

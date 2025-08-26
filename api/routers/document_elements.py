@@ -424,3 +424,86 @@ def upload_word_doc(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing file: {str(e)}"
         )
+
+@router.get("/document/{document_id}/stats", response_model=Dict[str, Any])
+def get_document_elements_stats(
+    document_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get statistics about document elements for a specific document
+    """
+    # First check if document exists
+    document = db.execute(
+        select(Document).filter(Document.id == document_id)
+    ).scalar_one_or_none()
+    
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Get element count
+    element_count = db.execute(
+        select(func.count())
+        .select_from(DocumentElementModel)
+        .filter(DocumentElementModel.document_id == document_id)
+    ).scalar_one()
+    
+    # Get annotation count for all elements in this document
+    annotation_count = db.execute(
+        select(func.count())
+        .select_from(AnnotationModel)
+        .join(DocumentElementModel, AnnotationModel.document_element_id == DocumentElementModel.id)
+        .filter(DocumentElementModel.document_id == document_id)
+    ).scalar_one()
+    
+    return {
+        "document_id": document_id,
+        "element_count": element_count,
+        "annotation_count": annotation_count
+    }
+
+@router.delete("/document/{document_id}/all-elements", status_code=status.HTTP_204_NO_CONTENT)
+def delete_all_document_elements(
+    document_id: int,
+    force: bool = True,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Delete all elements for a specific document
+    
+    - force=True (default): Delete elements and all associated annotations
+    """
+    # First check if document exists
+    document = db.execute(
+        select(Document).filter(Document.id == document_id)
+    ).scalar_one_or_none()
+    
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Get all elements for this document
+    elements = db.execute(
+        select(DocumentElementModel.id)
+        .filter(DocumentElementModel.document_id == document_id)
+    ).scalars().all()
+    
+    if not elements:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    
+    # If force=True, delete all associated annotations first
+    if force:
+        db.execute(
+            delete(AnnotationModel).where(
+                AnnotationModel.document_element_id.in_(elements)
+            )
+        )
+    
+    # Delete all elements for this document
+    db.execute(
+        delete(DocumentElementModel).where(
+            DocumentElementModel.document_id == document_id
+        )
+    )
+    
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

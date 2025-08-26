@@ -33,7 +33,13 @@ interface DocumentCreate {
   document_collection_id: number,
 }
 
-export type {DocumentCreate}
+interface DocumentUpdate {
+  title?: string;
+  description?: string;
+  document_collection_id?: number;
+}
+
+export type {DocumentCreate, DocumentUpdate}
 
 // Initial state
 const initialState: DocumentState = {
@@ -114,7 +120,7 @@ export const fetchDocumentsByCollection = createAsyncThunk(
   }
 );
 
-// aje: new thunk for creating a document
+// New thunk for creating a document
 export const createDocument = createAsyncThunk(
   'documents/create',
   async (newDocument: DocumentCreate, { rejectWithValue }) => {
@@ -127,6 +133,25 @@ export const createDocument = createAsyncThunk(
 
       const createdDocument: Document = response.data;
       return createdDocument;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+);
+
+// New thunk for updating a document
+export const updateDocument = createAsyncThunk(
+  'documents/update',
+  async ({ id, updates }: { id: number; updates: DocumentUpdate }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/documents/${id}`, updates);
+      
+      if (!(response.status === 200)) {
+        return rejectWithValue(`Failed to update document: ${response.statusText}`);
+      }
+      
+      const updatedDocument: Document = response.data;
+      return updatedDocument;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
     }
@@ -236,6 +261,22 @@ const documentSlice = createSlice({
         }
       })
       .addCase(createDocument.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+      .addCase(updateDocument.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateDocument.fulfilled, (state, action: PayloadAction<Document>) => {
+        state.status = 'succeeded';
+        // Update the document in the array
+        const index = state.documents.findIndex(d => d.id === action.payload.id);
+        if (index !== -1) {
+          state.documents[index] = action.payload;
+        }
+      })
+      .addCase(updateDocument.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       });
