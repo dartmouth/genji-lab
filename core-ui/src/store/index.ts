@@ -4,7 +4,9 @@ import highlightRegistryReducer from './slice/highlightRegistrySlice';
 import createAnnotationSliceReducer from './slice/annotationCreate'
 import documentNavigationReducer from './slice/documentNavigationSlice';
 import documentElementsReducer from './slice/documentElementsSlice';
+import searchResultReducer from './slice/searchResultsSlice'
 import navigationHighlightReducer from './slice/navigationHighlightSlice';
+
 
 import { 
   commentingAnnotations, 
@@ -49,7 +51,7 @@ const rootReducer = {
   documentCollections: documentCollectionsReducer,
   documents: documentsReducer,
   documentNavigation: documentNavigationReducer,
-  // 🎯 FIXED: Add navigationHighlight to the rootReducer object (not as separate config)
+  searchResults: searchResultReducer,
   navigationHighlight: navigationHighlightReducer
 };
 

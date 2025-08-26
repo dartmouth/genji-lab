@@ -11,6 +11,7 @@ export const flaggingAnnotations = createAnnotationSlice('flagging')
 export const linkingAnnotations = createAnnotationSlice('linking');
 
 
+
 export const sliceMap: AnnotationSliceMap = {
     "commenting": commentingAnnotations,
     "replying": replyingAnnotations,

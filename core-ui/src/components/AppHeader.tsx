@@ -1,12 +1,48 @@
 import React from "react";
 import { useAuth } from "@hooks/useAuthContext";
+import { SimpleSearchBar } from "@/features/search";
+import LoginForm from "./LoginForm";
+import RegisterForm from "./RegisterForm";
+import "../features/documentView/styles/AuthStyles.css";
 
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [showLoginForm, setShowLoginForm] = React.useState(false);
+  const [showRegisterForm, setShowRegisterForm] = React.useState(false);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleCasLogin = () => {
+    login(); // Call without parameters for CAS authentication
+  };
+
+  const handleBasicAuthClick = () => {
+    setShowLoginForm(true);
+  };
+
+  const handleLoginFormCancel = () => {
+    setShowLoginForm(false);
+  };
+
+  const handleRegisterClick = () => {
+    setShowRegisterForm(true);
+  };
+
+  const handleRegisterFormCancel = () => {
+    setShowRegisterForm(false);
+  };
+
+  const handleSwitchToLogin = () => {
+    setShowRegisterForm(false);
+    setShowLoginForm(true);
+  };
+
+  const handleSwitchToRegister = () => {
+    setShowLoginForm(false);
+    setShowRegisterForm(true);
   };
 
   return (
@@ -14,6 +50,7 @@ const AppHeader: React.FC = () => {
       <div className="header-left">
         <h1 className="app-title">The Tale of Genji</h1>
       </div>
+      <SimpleSearchBar></SimpleSearchBar>
       <div className="header-right">
         {isAuthenticated && user ? (
           // Authenticated user - show avatar and dropdown
@@ -45,19 +82,46 @@ const AppHeader: React.FC = () => {
             )}
           </div>
         ) : (
-          // Anonymous user - show login button
+          // Anonymous user - show auth buttons
           <div className="auth-controls">
             <button 
-              onClick={login}
-              className="login-button"
+              onClick={handleCasLogin}
+              className="login-button cas-login"
               disabled={isLoading}
             >
               {isLoading ? 'Authenticating...' : 'Login with Dartmouth SSO'}
             </button>
+            <button 
+              onClick={handleBasicAuthClick}
+              className="login-button basic-login"
+              disabled={isLoading}
+            >
+              Login
+            </button>
+            <button 
+              onClick={handleRegisterClick}
+              className="login-button register-button"
+              disabled={isLoading}
+            >
+              Register
+            </button>
             {error && <div className="auth-error">{error}</div>}
           </div>
+          
         )}
       </div>
+      {showLoginForm && (
+        <LoginForm 
+          onCancel={handleLoginFormCancel} 
+          onSwitchToRegister={handleSwitchToRegister} 
+        />
+      )}
+      {showRegisterForm && (
+        <RegisterForm 
+          onCancel={handleRegisterFormCancel}
+          onSwitchToLogin={handleSwitchToLogin}
+        />
+      )}
     </header>
   );
 };

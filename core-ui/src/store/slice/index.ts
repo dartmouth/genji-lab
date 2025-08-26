@@ -89,6 +89,21 @@ export type {DocumentCreate, DocumentUpdate} from './documentSlice'
 
 // Navigation highlight exports
 export {
+    fetchDocumentElements,
+    clearElements,
+    setCurrentDocumentId,
+    selectElementsByDocumentId,
+    selectDocumentStatusById,
+    selectDocumentErrorById,
+    selectCurrentDocumentId,
+    // Legacy selectors for backward compatibility
+    // selectAllDocumentElements,
+    // selectDocumentElementsStatus,
+    // selectDocumentElementsError
+} from './documentElementsSlice'
+
+export * from './searchResultsSlice'
+
     startNavigationSession,
     addNavigationHighlight,
     removeNavigationHighlight,
@@ -101,3 +116,4 @@ export {
 } from './navigationHighlightSlice';
 
 export { default as navigationHighlightReducer } from './navigationHighlightSlice';
+

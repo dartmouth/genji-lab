@@ -7,4 +7,7 @@ alembic
 python-docx
 python-multipart
 httpx
-
+passlib[bcrypt]
+python-jose[cryptography]
+itsdangerous
+pydantic[email]

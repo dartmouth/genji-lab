@@ -9,6 +9,7 @@ import {
   fetchAllDocuments,
   selectAllDocuments,
   selectAllDocumentCollections,
+  setHoveredHighlights,
   linkingAnnotations,
   selectElementsByDocumentId,
   fetchDocumentElements,
@@ -29,8 +30,11 @@ import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollTo
 import RouterSwitchBoard from "@/RouterSwitchBoard";
 import "./styles/DocumentViewerStyles.css";
 
-// Main container component that routes to RouterSwitchBoard
-const DocumentViewerContainer: React.FC = () => {
+
+import { useLocation } from "react-router-dom";
+
+const DocumentViewerContainer: React.FC = () => {  
+
   return <RouterSwitchBoard />;
 };
 
@@ -55,6 +59,7 @@ export const CollectionsView: React.FC = () => {
 // Documents gallery view component
 export const DocumentsView: React.FC = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
+  
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -97,6 +102,32 @@ export const DocumentContentView: React.FC = () => {
   }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
+  const location = useLocation();
+
+
+
+  useEffect(() => {
+    const getAnnotationIdFromHash = (): string | null => {
+    const hash = location.hash; // e.g., "#annotation-21"
+    
+    if (hash.startsWith('#annotation-')) {
+      const annotationId = hash.replace('#annotation-', '');
+      // const id = parseInt(annotationId, 10);
+      return annotationId
+    }
+    
+    return null;
+  };
+  const hash = getAnnotationIdFromHash()
+  if (documentId && hash){
+    dispatch(setHoveredHighlights({documentId: documentId as unknown as number, highlightIds: [hash]}));
+  }
+  
+    console.log('Hash in DocumentContentView:', getAnnotationIdFromHash());
+  }, [location.hash, dispatch, documentId]);
+
+   
 
   // Use useRef for atomic state updates
   const isUpdatingDocuments = useRef(false);
@@ -155,6 +186,7 @@ export const DocumentContentView: React.FC = () => {
 
     return elements;
   });
+
 
   // Track documents by collection to handle the API response structure
   const [documentsByCollection, setDocumentsByCollection] = useState<{

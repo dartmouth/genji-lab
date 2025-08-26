@@ -52,6 +52,7 @@ class User(Base):
     last_name = Column(String(255))
     email = Column(String(255), unique=True, index=True)
     username = Column(String(255), unique=True, index=True)
+    is_active = Column(Boolean, default=True)
     user_metadata = Column(JSONB)
     
     # Relationships
@@ -65,8 +66,22 @@ class User(Base):
     owned_collections = relationship("DocumentCollection", foreign_keys="DocumentCollection.owner_id", back_populates="owner")
     created_groups = relationship("Group", foreign_keys="Group.created_by_id", back_populates="created_by")
     created_shares = relationship("ObjectSharing", foreign_keys="ObjectSharing.created_by_id", back_populates="created_by")
-    roles = relationship("Role", secondary=user_roles, back_populates="users")  # This line is MISSING
+    roles = relationship("Role", secondary=user_roles, back_populates="users")
     groups = relationship("Group", secondary=group_members, back_populates="members")
+    password_auth = relationship("UserPassword", back_populates="user", uselist=False)
+
+class UserPassword(Base):
+    __tablename__ = "user_passwords"
+    __table_args__ = {'schema': 'app'}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey(f"{'app'}.users.id"), unique=True)
+    hashed_password = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=func.current_timestamp())
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+    
+    # Relationships
+    user = relationship("User", back_populates="password_auth")
 
 class Role(Base):
     __tablename__ = "roles"
@@ -211,6 +226,7 @@ class Annotation(Base):
 
 # Indices
 # Foreign key indices
+Index('idx_user_passwords_user_id', UserPassword.user_id)
 Index('idx_document_collections_created_by', DocumentCollection.created_by_id)
 Index('idx_document_collections_modified_by', DocumentCollection.modified_by_id)
 Index('idx_document_collections_owner', DocumentCollection.owner_id)
