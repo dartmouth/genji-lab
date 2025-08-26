@@ -37,6 +37,13 @@ class DocumentCollection(DocumentCollectionBase):
     class Config:
         from_attributes = True
 
+class DocumentCollectionWithUsers(DocumentCollection):
+    created_by: Optional[User] = None
+    modified_by: Optional[User] = None
+    
+    class Config:
+        from_attributes = True
+
 class DocumentCollectionWithStats(DocumentCollection):
     document_count: int = 0
     element_count: int = 0

@@ -4,22 +4,20 @@ from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv, find_dotenv
 import os
 load_dotenv()
+
+# Get database URL
+DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL')
+if not DATABASE_URL:
+    raise ValueError("SQLALCHEMY_DATABASE_URL environment variable is not set")
+
 # Create SQLAlchemy engine
-engine = create_engine(os.getenv('SQLALCHEMY_DATABASE_URL'))
+engine = create_engine(DATABASE_URL)
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create Base class
 Base = declarative_base()
-
-# Function to create schema if it doesn't exist
-# def create_schema():
-#     schema_name = os.environ.get("DB_SCHEMA")
-#     sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name};")
-#     with engine.connect() as conn:
-#         conn.execute(sql)
-#         conn.commit()
 
 # Dependency to get DB session
 def get_db():

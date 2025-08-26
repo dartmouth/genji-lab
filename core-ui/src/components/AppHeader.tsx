@@ -1,19 +1,73 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@hooks/useAuthContext";
+
+import { useAppDispatch, useAppSelector } from "@store/hooks";
+import { fetchSiteSettings, getCacheBuster } from "@store/slice/siteSettingsSlice";
 import { SimpleSearchBar } from "@/features/search";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 import "../features/documentView/styles/AuthStyles.css";
 
+
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  
+  const dispatch = useAppDispatch();
+  const { settings } = useAppSelector((state) => state.siteSettings);
+
+  // Load site settings on component mount
+  useEffect(() => {
+    dispatch(fetchSiteSettings());
+  }, [dispatch]);
+
+  // Update CSS when settings change
+  useEffect(() => {
+    const logoEnabled = settings?.site_logo_enabled || false;
+    const headerElement = document.querySelector('.app-header') as HTMLElement;
+    
+    if (headerElement) {
+      if (logoEnabled) {
+        // Get cache buster and update logo URL
+        dispatch(getCacheBuster()).then((result) => {
+          if (getCacheBuster.fulfilled.match(result)) {
+            const timestamp = result.payload;
+            headerElement.classList.add('has-logo');
+            // Update the CSS to use cache buster
+            const style = document.createElement('style');
+            style.textContent = `
+              .app-header.has-logo::before {
+                background: url("/api/v1/site-settings/logo?t=${timestamp}") no-repeat center !important;
+                background-size: 100% 100% !important;
+              }
+            `;
+            // Remove old cache buster styles
+            const oldStyles = document.querySelectorAll('style[data-logo-cache]');
+            oldStyles.forEach(s => s.remove());
+            style.setAttribute('data-logo-cache', 'true');
+            document.head.appendChild(style);
+          }
+        });
+      } else {
+        headerElement.classList.remove('has-logo');
+        // Remove cache buster styles
+        const oldStyles = document.querySelectorAll('style[data-logo-cache]');
+        oldStyles.forEach(s => s.remove());
+      }
+    }
+  }, [settings?.site_logo_enabled, dispatch]);
+
   const [showLoginForm, setShowLoginForm] = React.useState(false);
   const [showRegisterForm, setShowRegisterForm] = React.useState(false);
+
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
+
+
+  // Site title
+  const siteTitle = settings?.site_title || 'Site Title';
 
   const handleCasLogin = () => {
     login(); // Call without parameters for CAS authentication
@@ -45,10 +99,11 @@ const AppHeader: React.FC = () => {
     setShowRegisterForm(true);
   };
 
+
   return (
     <header className="app-header">
       <div className="header-left">
-        <h1 className="app-title">The Tale of Genji</h1>
+        <h1 className="app-title">{siteTitle}</h1>
       </div>
       <SimpleSearchBar></SimpleSearchBar>
       <div className="header-right">

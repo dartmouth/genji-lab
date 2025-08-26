@@ -3,7 +3,12 @@ import React, { useState, useEffect } from "react";
 import { Tabs, Tab, Box, Typography, styled, FormControl, 
   InputLabel, Select, MenuItem, Snackbar, Alert, 
   Dialog, DialogActions, DialogContent, DialogContentText, 
-  DialogTitle, Button, LinearProgress, TextField } from '@mui/material';
+  DialogTitle, Button, LinearProgress, TextField,
+  Table, TableBody, TableCell, TableContainer, TableHead, 
+  TableRow, Paper, TablePagination, TableSortLabel,
+  Chip, Grid, Divider, Skeleton,
+  Modal, IconButton } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { createDocumentCollection, updateDocumentCollection, useAppDispatch } from '@store';
 
 import { useAuth } from "@hooks/useAuthContext.ts";
@@ -16,6 +21,14 @@ interface SubTabPanelProps {
   index: number;
   value: number;
 }
+
+// Helper function to display user name
+const getUserDisplayName = (user: any) => {
+  if (user.first_name || user.last_name) {
+    return `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  }
+  return 'Unknown User';
+};
 
 function SubTabPanel(props: SubTabPanelProps) {
   const { children, value, index, ...other } = props;
@@ -83,6 +96,22 @@ const StyledForm = styled("form")(({ theme }) => ({
   },
 }));
 
+// Modal style
+const modalStyle = {
+  position: 'absolute' as 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: { xs: '90%', sm: 800, md: 1000 },
+  maxHeight: '90vh',
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  borderRadius: 2,
+  boxShadow: 24,
+  p: 4,
+  overflow: 'auto'
+};
+
 const ManageCollections: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<number>(0);
   const dispatch = useAppDispatch();
@@ -131,11 +160,19 @@ const ManageCollections: React.FC = () => {
     id: number;
     title: string;
     description?: string;
+    created_by?: {
+      id: number;
+      username: string;
+    };
+    modified_by?: {
+      id: number;
+      username: string;
+    };
   }>;
 
-  //fetch collections
+  //fetch collections with user info
   useEffect(() => {
-    dispatch(fetchDocumentCollections());
+    dispatch(fetchDocumentCollections({ includeUsers: true }));
   }, [dispatch]);
 
   const [selectedCollection, setSelectedCollection] = useState<string>("");
@@ -146,6 +183,17 @@ const ManageCollections: React.FC = () => {
   const [renameNewName, setRenameNewName] = useState<string>('');
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
   const [renameSelectedCollection, setRenameSelectedCollection] = useState<string>('');
+  
+  // Update visibility-specific state
+  const [updateVisibilitySelectedCollection, setUpdateVisibilitySelectedCollection] = useState<string>('');
+  const [updateVisibilityNewVisibility, setUpdateVisibilityNewVisibility] = useState<string>('');
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState<boolean>(false);
+  const [isLoadingVisibilityCollection, setIsLoadingVisibilityCollection] = useState<boolean>(false);
+  const [updateVisibilityCollectionDetails, setUpdateVisibilityCollectionDetails] = useState<{
+    title: string;
+    visibility: string;
+    description?: string;
+  } | null>(null);
   
   const [collectionStats, setCollectionStats] = useState<{
     document_count: number;
@@ -161,6 +209,31 @@ const ManageCollections: React.FC = () => {
   const [confirmationText, setConfirmationText] = useState<string>('');
   const [deleteProgress, setDeleteProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState<boolean>(false);
+
+  // Overview tab state
+  const [overviewPage, setOverviewPage] = useState<number>(0);
+  const [overviewRowsPerPage, setOverviewRowsPerPage] = useState<number>(10);
+  const [overviewSortOrder, setOverviewSortOrder] = useState<'modified' | 'title'>('modified');
+  const [overviewSortDirection, setOverviewSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedOverviewCollection, setSelectedOverviewCollection] = useState<number | null>(null);
+  const [overviewCollectionDetails, setOverviewCollectionDetails] = useState<{
+    id: number;
+    title: string;
+    description?: string;
+    visibility: string;
+    language: string;
+    text_direction: string;
+    created: string;
+    modified: string;
+    created_by?: { id: number; username: string };
+    modified_by?: { id: number; username: string };
+    document_count: number;
+    element_count: number;
+    scholarly_annotation_count: number;
+    comment_count: number;
+  } | null>(null);
+  const [isLoadingOverviewDetails, setIsLoadingOverviewDetails] = useState<boolean>(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState<boolean>(false);
 
   const handleCollectionSelect = async (event: any) => {
     const collectionId = event.target.value;
@@ -263,7 +336,9 @@ To confirm, please type the collection name exactly as shown:
         setDeleteProgress(90);
         
         // Refresh the collections list after successful deletion
-        dispatch(fetchDocumentCollections());
+
+        dispatch(fetchDocumentCollections({ includeUsers: true }));
+        refreshOverviewData();
 
         setSelectedCollection('');
         setCollectionStats(null);
@@ -328,6 +403,11 @@ To confirm, please type the collection name exactly as shown:
     };
     dispatch(createDocumentCollection(payload));
     setSubmitted(true);
+    
+    // Refresh overview data after creation
+    setTimeout(() => {
+      refreshOverviewData();
+    }, 1000);
   };
 
   // Rename functionality handlers
@@ -388,7 +468,8 @@ To confirm, please type the collection name exactly as shown:
       })).unwrap();
       
       // Refresh collections to show updated data
-      dispatch(fetchDocumentCollections());
+      dispatch(fetchDocumentCollections({ includeUsers: true }));
+      refreshOverviewData();
       
       showNotification(
         `Collection renamed from "${selectedCollection.title}" to "${renameNewName.trim()}"`, 
@@ -412,6 +493,179 @@ To confirm, please type the collection name exactly as shown:
            renameNewName.trim() && 
            renameNewName.trim().length > 0;
   };
+
+  // Update visibility functionality handlers
+  const handleUpdateVisibilityCollectionSelect = async (event: any) => {
+    const collectionId = event.target.value;
+    setUpdateVisibilitySelectedCollection(collectionId);
+    setUpdateVisibilityNewVisibility('');
+    setUpdateVisibilityCollectionDetails(null);
+    
+    if (collectionId) {
+      setIsLoadingVisibilityCollection(true);
+      try {
+        const response = await fetch(`/api/v1/collections/${collectionId}`);
+        if (response.ok) {
+          const collectionData = await response.json();
+          setUpdateVisibilityCollectionDetails({
+            title: collectionData.title,
+            visibility: collectionData.visibility,
+            description: collectionData.description
+          });
+          setUpdateVisibilityNewVisibility(collectionData.visibility);
+        } else {
+          showNotification('Failed to fetch collection details', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to fetch collection details:', error);
+        showNotification('Error fetching collection details', 'error');
+      } finally {
+        setIsLoadingVisibilityCollection(false);
+      }
+    }
+  };
+
+  const handleUpdateVisibilityNewVisibilityChange = (event: any) => {
+    setUpdateVisibilityNewVisibility(event.target.value);
+  };
+
+  const handleUpdateCollectionVisibility = async () => {
+    if (!updateVisibilitySelectedCollection || !updateVisibilityNewVisibility) {
+      showNotification('Please select a collection and visibility option', 'error');
+      return;
+    }
+
+    if (!updateVisibilityCollectionDetails) {
+      showNotification('Collection details not loaded', 'error');
+      return;
+    }
+
+    if (updateVisibilityNewVisibility === updateVisibilityCollectionDetails.visibility) {
+      showNotification('New visibility must be different from current visibility', 'error');
+      return;
+    }
+
+    setIsUpdatingVisibility(true);
+    
+    try {
+      await dispatch(updateDocumentCollection({
+        id: parseInt(updateVisibilitySelectedCollection),
+        updates: {
+          visibility: updateVisibilityNewVisibility,
+          modified_by_id: user?.id || 1
+        }
+      })).unwrap();
+      
+      // Refresh collections to show updated data
+      dispatch(fetchDocumentCollections({ includeUsers: true }));
+      refreshOverviewData();
+      
+      // Update the local collection details to reflect the change
+      setUpdateVisibilityCollectionDetails({
+        ...updateVisibilityCollectionDetails,
+        visibility: updateVisibilityNewVisibility
+      });
+      
+      showNotification(
+        `Collection visibility updated from "${updateVisibilityCollectionDetails.visibility}" to "${updateVisibilityNewVisibility}" for collection "${updateVisibilityCollectionDetails.title}"`, 
+        'success'
+      );
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showNotification(`Failed to update collection visibility: ${errorMessage}`, 'error');
+    } finally {
+      setIsUpdatingVisibility(false);
+    }
+  };
+
+  const isUpdateVisibilityFormValid = () => {
+    return updateVisibilitySelectedCollection && 
+           updateVisibilityNewVisibility && 
+           updateVisibilityCollectionDetails &&
+           updateVisibilityNewVisibility !== updateVisibilityCollectionDetails.visibility;
+  };
+
+  // Overview tab handlers
+  const handleOverviewCollectionSelect = async (collectionId: number) => {
+    setSelectedOverviewCollection(collectionId);
+    setOverviewCollectionDetails(null);
+    setDetailsModalOpen(true);
+    setIsLoadingOverviewDetails(true);
+    
+    try {
+      const response = await fetch(`/api/v1/collections/${collectionId}`);
+      if (response.ok) {
+        const details = await response.json();
+        console.log('Collection details response:', details); // Debug logging
+        setOverviewCollectionDetails(details);
+      } else {
+        showNotification('Failed to fetch collection details', 'error');
+        setDetailsModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Failed to fetch collection details:', error);
+      showNotification('Failed to fetch collection details', 'error');
+      setDetailsModalOpen(false);
+    } finally {
+      setIsLoadingOverviewDetails(false);
+    }
+  };
+
+  const handleCloseDetailsModal = () => {
+    setDetailsModalOpen(false);
+    setSelectedOverviewCollection(null);
+    setOverviewCollectionDetails(null);
+  };
+
+  const handleOverviewSortChange = (newSortOrder: 'modified' | 'title') => {
+    if (overviewSortOrder === newSortOrder) {
+      // Toggle direction if same column
+      setOverviewSortDirection(overviewSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, set appropriate default direction
+      setOverviewSortOrder(newSortOrder);
+      setOverviewSortDirection(newSortOrder === 'modified' ? 'desc' : 'asc');
+    }
+  };
+
+  const handleOverviewPageChange = (_event: unknown, newPage: number) => {
+    setOverviewPage(newPage);
+  };
+
+  const handleOverviewRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setOverviewRowsPerPage(parseInt(event.target.value, 10));
+    setOverviewPage(0);
+  };
+
+  // Refresh overview data when other tabs make changes
+  const refreshOverviewData = () => {
+    dispatch(fetchDocumentCollections({ includeUsers: true }));
+    if (selectedOverviewCollection && detailsModalOpen) {
+      handleOverviewCollectionSelect(selectedOverviewCollection);
+    }
+  };
+
+  // Sort and paginate collections for overview
+  const sortedCollections = React.useMemo(() => {
+    const sorted = [...documentCollections].sort((a, b) => {
+      if (overviewSortOrder === 'title') {
+        const result = a.title.localeCompare(b.title);
+        return overviewSortDirection === 'asc' ? result : -result;
+      } else {
+        // Sort by modified date - we'll use ID as proxy since we don't have modified date in basic list
+        // In a real implementation, you might want to fetch this data or sort by ID
+        const result = a.id - b.id; // Newer IDs are likely more recent
+        return overviewSortDirection === 'asc' ? result : -result;
+      }
+    });
+    return sorted;
+  }, [documentCollections, overviewSortOrder, overviewSortDirection]);
+
+  const paginatedCollections = React.useMemo(() => {
+    const startIndex = overviewPage * overviewRowsPerPage;
+    return sortedCollections.slice(startIndex, startIndex + overviewRowsPerPage);
+  }, [sortedCollections, overviewPage, overviewRowsPerPage]);
 
   return (
     <Box>
@@ -442,6 +696,7 @@ To confirm, please type the collection name exactly as shown:
           <Tab label="Add" {...a11yPropsSubTab(1)} />
           <Tab label="Delete" {...a11yPropsSubTab(2)} />
           <Tab label="Rename" {...a11yPropsSubTab(3)} />
+          <Tab label="Update Visibility" {...a11yPropsSubTab(4)} />
         </Tabs>
 
         {/* Sub-tab content */}
@@ -449,9 +704,247 @@ To confirm, please type the collection name exactly as shown:
           <Typography variant="h5" gutterBottom>
             Document Collection Overview
           </Typography>
-          <div>
-            <p>Features for managing document collections.</p>
-          </div>
+          
+          {/* Collections Table */}
+          <TableContainer component={Paper} sx={{ mb: 3 }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>
+                    <TableSortLabel
+                      active={overviewSortOrder === 'title'}
+                      direction={overviewSortOrder === 'title' ? overviewSortDirection : 'asc'}
+                      onClick={() => handleOverviewSortChange('title')}
+                    >
+                      Title
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell>Created By</TableCell>
+                  <TableCell>Visibility</TableCell>
+                  <TableCell align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedCollections.map((collection) => (
+                  <TableRow
+                    key={collection.id}
+                    hover
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <TableCell>{collection.title}</TableCell>
+                    <TableCell>
+                      {collection.created_by ? (
+                        <Typography variant="body2">
+                          {getUserDisplayName(collection.created_by)}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          Unknown
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={(collection as any).visibility || 'Unknown'}
+                        size="small"
+                        color={(collection as any).visibility === 'public' ? 'success' : (collection as any).visibility === 'private' ? 'error' : 'default'}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button 
+                        size="small" 
+                        variant="outlined"
+                        onClick={() => handleOverviewCollectionSelect(collection.id)}
+                      >
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {paginatedCollections.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
+                      <Typography variant="body2" color="text.secondary">
+                        No collections found
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Pagination */}
+          <TablePagination
+            component="div"
+            count={sortedCollections.length}
+            page={overviewPage}
+            onPageChange={handleOverviewPageChange}
+            rowsPerPage={overviewRowsPerPage}
+            onRowsPerPageChange={handleOverviewRowsPerPageChange}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+          />
+
+          {/* Instructions */}
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Click "View Details" on any collection to see comprehensive information including statistics and metadata
+            </Typography>
+          </Box>
+
+          {/* Collection Details Modal */}
+          <Modal
+            open={detailsModalOpen}
+            onClose={handleCloseDetailsModal}
+            aria-labelledby="collection-details-modal"
+            aria-describedby="collection-details-description"
+          >
+            <Box sx={modalStyle}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" component="h2">
+                  Collection Details
+                </Typography>
+                <IconButton onClick={handleCloseDetailsModal} size="small">
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+              
+              {isLoadingOverviewDetails ? (
+                <Box>
+                  <Skeleton variant="text" width="60%" height={32} />
+                  <Skeleton variant="text" width="40%" height={24} />
+                  <Skeleton variant="rectangular" width="100%" height={200} sx={{ mt: 2 }} />
+                </Box>
+              ) : overviewCollectionDetails ? (
+                <Grid container spacing={3}>
+                  {/* Basic Information */}
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      Basic Information
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary">Title</Typography>
+                      <Typography variant="body1" fontWeight="medium">{overviewCollectionDetails.title}</Typography>
+                    </Box>
+                    {overviewCollectionDetails.description && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary">Description</Typography>
+                        <Typography variant="body1">{overviewCollectionDetails.description}</Typography>
+                      </Box>
+                    )}
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary">Visibility</Typography>
+                      <Chip 
+                        label={overviewCollectionDetails.visibility} 
+                        size="small"
+                        color={overviewCollectionDetails.visibility === 'public' ? 'success' : 'default'}
+                        sx={{ mt: 0.5 }}
+                      />
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary">Language</Typography>
+                      <Typography variant="body1">{overviewCollectionDetails.language}</Typography>
+                    </Box>
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary">Text Direction</Typography>
+                      <Typography variant="body1">{overviewCollectionDetails.text_direction}</Typography>
+                    </Box>
+                  </Grid>
+
+                  {/* Statistics */}
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      Statistics
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Box sx={{ p: 2, bgcolor: 'primary.50', borderRadius: 1, textAlign: 'center' }}>
+                          <Typography variant="h4" color="primary.main" fontWeight="bold">
+                            {overviewCollectionDetails.document_count}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">Documents</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ p: 2, bgcolor: 'secondary.50', borderRadius: 1, textAlign: 'center' }}>
+                          <Typography variant="h4" color="secondary.main" fontWeight="bold">
+                            {overviewCollectionDetails.element_count}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">Paragraphs</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ p: 2, bgcolor: 'success.50', borderRadius: 1, textAlign: 'center' }}>
+                          <Typography variant="h4" color="success.main" fontWeight="bold">
+                            {overviewCollectionDetails.scholarly_annotation_count}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">Scholarly Annotations</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ p: 2, bgcolor: 'warning.50', borderRadius: 1, textAlign: 'center' }}>
+                          <Typography variant="h4" color="warning.main" fontWeight="bold">
+                            {overviewCollectionDetails.comment_count}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">Comments</Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+
+                  {/* Metadata */}
+                  <Grid item xs={12}>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      Metadata
+                    </Typography>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} sm={6}>
+                        <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>Created</Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {new Date(overviewCollectionDetails.created).toLocaleDateString()} at{' '}
+                            {new Date(overviewCollectionDetails.created).toLocaleTimeString()}
+                          </Typography>
+                          {overviewCollectionDetails.created_by ? (
+                            <Typography variant="body2" color="text.secondary">
+                              by {getUserDisplayName(overviewCollectionDetails.created_by)}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              by Unknown User
+                            </Typography>
+                          )}
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>Last Modified</Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {new Date(overviewCollectionDetails.modified).toLocaleDateString()} at{' '}
+                            {new Date(overviewCollectionDetails.modified).toLocaleTimeString()}
+                          </Typography>
+                          {overviewCollectionDetails.modified_by ? (
+                            <Typography variant="body2" color="text.secondary">
+                              by {getUserDisplayName(overviewCollectionDetails.modified_by)}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              by Unknown User
+                            </Typography>
+                          )}
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Failed to load collection details
+                </Typography>
+              )}
+            </Box>
+          </Modal>
         </SubTabPanel>
 
         <SubTabPanel value={activeSubTab} index={1}>
@@ -706,6 +1199,89 @@ To confirm, please type the collection name exactly as shown:
                 {isRenaming ? 'Renaming...' : 'Rename Collection'}
               </Button>
 
+            </StyledForm>
+          </div>
+        </SubTabPanel>
+
+        <SubTabPanel value={activeSubTab} index={4}>
+          <Typography variant="h5" gutterBottom>
+            Update Collection Visibility
+          </Typography>
+          <div>
+            <p>Select a collection to update its visibility setting:</p>
+            <StyledForm>
+              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+                <InputLabel id="update-visibility-collection-label">Select a collection</InputLabel>
+                <Select
+                  labelId="update-visibility-collection-label"
+                  id="update-visibility-collection-select"
+                  value={updateVisibilitySelectedCollection}
+                  label="Select a collection"
+                  onChange={handleUpdateVisibilityCollectionSelect}
+                  disabled={isUpdatingVisibility}
+                >
+                  <MenuItem value="">
+                    <em>-- Select a collection --</em>
+                  </MenuItem>
+                  {documentCollections.map((collection) => (
+                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                      {collection.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {isLoadingVisibilityCollection && (
+                <Box sx={{ width: '100%', mt: 2 }}>
+                  <LinearProgress />
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Loading collection details...
+                  </Typography>
+                </Box>
+              )}
+
+              {updateVisibilityCollectionDetails && (
+                <Box sx={{ mt: 2, p: 2, backgroundColor: '#e3f2fd', border: '1px solid #bbdefb', borderRadius: '4px' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Collection Details:
+                  </Typography>
+                  <Typography variant="body2"><strong>Name:</strong> {updateVisibilityCollectionDetails.title}</Typography>
+                  {updateVisibilityCollectionDetails.description && (
+                    <Typography variant="body2"><strong>Description:</strong> {updateVisibilityCollectionDetails.description}</Typography>
+                  )}
+                  <Typography variant="body2"><strong>Current Visibility:</strong> {updateVisibilityCollectionDetails.visibility}</Typography>
+                </Box>
+              )}
+              
+              {updateVisibilityCollectionDetails && (
+                <div className="form-group" style={{ marginTop: '16px' }}>
+                  <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+                    <InputLabel id="update-visibility-new-visibility-label">New Visibility</InputLabel>
+                    <Select
+                      labelId="update-visibility-new-visibility-label"
+                      id="update-visibility-new-visibility-select"
+                      value={updateVisibilityNewVisibility}
+                      label="New Visibility"
+                      onChange={handleUpdateVisibilityNewVisibilityChange}
+                      disabled={isUpdatingVisibility}
+                    >
+                      <MenuItem value="public">Public</MenuItem>
+                      <MenuItem value="private">Private</MenuItem>
+                      <MenuItem value="restricted">Restricted</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              )}
+              
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleUpdateCollectionVisibility}
+                disabled={!isUpdateVisibilityFormValid() || isUpdatingVisibility}
+                sx={{ marginTop: 2 }}
+              >
+                {isUpdatingVisibility ? 'Updating...' : 'Update Visibility'}
+              </Button>
             </StyledForm>
           </div>
         </SubTabPanel>

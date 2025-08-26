@@ -1,11 +1,11 @@
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from sqlalchemy import select, update, delete
 from sqlalchemy.orm import joinedload  # Add this import
 
 from database import get_db
-from models.models import User as UserModel
+from models.models import User as UserModel, Role as RoleModel
 from schemas.users import User, UserCreate, UserUpdate
 
 router = APIRouter(
@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     Create a new user
     """
@@ -31,7 +31,8 @@ def read_users(
     limit: int = 100, 
     first_name: Optional[str] = None,
     last_name: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    name_search: Optional[str] = None,
+    db: Session = Depends(get_db)
 ):
     """
     Retrieve users with optional filtering (includes roles via joinedload)
@@ -44,6 +45,15 @@ def read_users(
     if last_name:
         query = query.filter(UserModel.last_name.ilike(f"%{last_name}%"))
     
+    # Apply name search filter (searches both first and last name)
+    if name_search:
+        search_terms = name_search.strip().split()
+        for term in search_terms:
+            term_filter = f"%{term}%"
+            query = query.filter(
+                (UserModel.first_name.ilike(term_filter)) | 
+                (UserModel.last_name.ilike(term_filter))
+            )
     # Apply pagination
     query = query.offset(skip).limit(limit)
     
@@ -52,7 +62,7 @@ def read_users(
     return users
 
 @router.get("/{user_id}", response_model=User)
-def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
+def read_user(user_id: int, db: Session = Depends(get_db)):
     """
     Get a specific user by ID (includes roles via joinedload)
     """
@@ -64,7 +74,7 @@ def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
     return user
 
 @router.put("/{user_id}", response_model=User)
-def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends(get_db)):
+def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     """
     Update a user (includes roles in response)
     """
@@ -88,7 +98,7 @@ def update_user(user_id: int, user: UserUpdate, db: AsyncSession = Depends(get_d
 def partial_update_user(
     user_id: int, 
     user_data: Dict[str, Any], 
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """
     Partially update a user (includes roles in response)
@@ -100,7 +110,19 @@ def partial_update_user(
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Update only provided fields
+    # Handle roles separately if provided
+    if 'roles' in user_data:
+        role_ids = user_data.pop('roles')  # Remove from user_data to handle separately
+        
+        # Fetch the actual Role objects
+        roles_query = select(RoleModel).filter(RoleModel.id.in_(role_ids))
+        roles_result = db.execute(roles_query)
+        roles = roles_result.scalars().all()
+        
+        # Update the user's roles
+        db_user.roles = roles
+    
+    # Update other provided fields
     for key, value in user_data.items():
         if hasattr(db_user, key):
             setattr(db_user, key, value)
@@ -110,11 +132,12 @@ def partial_update_user(
     return db_user
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+def delete_user(user_id: int, db: Session = Depends(get_db)):
     """
     Delete a user
     """
-    db_user = db.execute(select(UserModel).filter(UserModel.id == user_id)).scalar_one_or_none()
+    result = db.execute(select(UserModel).filter(UserModel.id == user_id))
+    db_user = result.scalar_one_or_none()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     

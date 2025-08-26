@@ -102,6 +102,17 @@ export {
     // selectDocumentElementsError
 } from './documentElementsSlice'
 
+
+export {
+    fetchSiteSettings,
+    updateSiteSettings,
+    uploadSiteLogo,
+    removeSiteLogo,
+    getCacheBuster,
+    clearError,
+    resetSiteSettings
+} from './siteSettingsSlice'
+
 export * from './searchResultsSlice'
 
     startNavigationSession,
@@ -116,4 +127,5 @@ export * from './searchResultsSlice'
 } from './navigationHighlightSlice';
 
 export { default as navigationHighlightReducer } from './navigationHighlightSlice';
+
 

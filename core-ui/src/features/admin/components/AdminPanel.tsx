@@ -3,6 +3,8 @@ import { Tabs, Tab, Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ManageCollections from './ManageCollections';
 import ManageDocuments from './ManageDocuments';
+import ManageUsers from './ManageUsers';
+import SiteSettings from './SiteSettings';
 import "../../documentGallery/styles/CollectionGalleryStyles.css";
 
 interface AdminPanelProps {}
@@ -101,7 +103,8 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
           <Tab label="Overview" {...a11yProps(0)} />
           <Tab label="Manage Document Collections" {...a11yProps(1)} />
           <Tab label="Manage Documents" {...a11yProps(2)} />
-          <Tab label="Application Settings" {...a11yProps(3)} />
+          <Tab label="Manage Users" {...a11yProps(3)} />
+          <Tab label="Site Settings" {...a11yProps(4)} />
         </Tabs>
         {/* Tab content area */}
         <TabPanel value={activeTab} index={0}>
@@ -109,7 +112,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
             Administration Overview
           </Typography>
           <div>
-            <p>Here you can Manage Document Collections and change Application Settings.</p>
+            <p>Here you can Manage Document Collections, Manage Documents, Manage Users, and change Site Settings.</p>
           </div>
         </TabPanel>
 
@@ -122,12 +125,11 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
         </TabPanel>
 
         <TabPanel value={activeTab} index={3}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Application Settings
-          </Typography>
-          <div>
-            <p>Configure your application settings here.</p>
-          </div>
+          <ManageUsers />
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={4}>
+          <SiteSettings />
         </TabPanel>
       </Box>
     </Box>

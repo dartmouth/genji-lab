@@ -1,14 +1,20 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings, search
+
 from starlette.middleware.sessions import SessionMiddleware
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from routers import users, documents, document_collections, document_elements, annotations, search
 from routers.cas_auth import router as cas_router
 from routers.auth import router as auth_router 
+
 from database import engine
 from models import models
 
@@ -36,12 +42,19 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+# Create uploads directory and mount static files
+uploads_dir = Path("/app/uploads")
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+
 # Include routers
 app.include_router(users.router)
 app.include_router(documents.router)
 app.include_router(document_collections.router)
 app.include_router(document_elements.router)
 app.include_router(annotations.router)
+app.include_router(roles.router) 
+app.include_router(site_settings.router)
 app.include_router(cas_router) 
 app.include_router(auth_router)
 app.include_router(search.router)

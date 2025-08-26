@@ -111,6 +111,13 @@ const ManageDocuments: React.FC = () => {
       setRenameNewName('');
       setRenameDocuments([]);
     }
+    if (newValue === 6) {
+      // Reset update description form when entering update description tab
+      setUpdateDescriptionSelectedCollection('');
+      setUpdateDescriptionSelectedDocument('');
+      setUpdateDescriptionNewDescription('');
+      setUpdateDescriptionDocuments([]);
+    }
   };
 
   interface FormData {
@@ -226,6 +233,18 @@ const ManageDocuments: React.FC = () => {
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
   const [isLoadingRenameDocuments, setIsLoadingRenameDocuments] = useState<boolean>(false);
   const [renameDocuments, setRenameDocuments] = useState<Array<{
+    id: number;
+    title: string;
+    description: string;
+  }>>([]);
+
+  // Update description-specific state
+  const [updateDescriptionSelectedCollection, setUpdateDescriptionSelectedCollection] = useState<string>('');
+  const [updateDescriptionSelectedDocument, setUpdateDescriptionSelectedDocument] = useState<string>('');
+  const [updateDescriptionNewDescription, setUpdateDescriptionNewDescription] = useState<string>('');
+  const [isUpdatingDescription, setIsUpdatingDescription] = useState<boolean>(false);
+  const [isLoadingUpdateDescriptionDocuments, setIsLoadingUpdateDescriptionDocuments] = useState<boolean>(false);
+  const [updateDescriptionDocuments, setUpdateDescriptionDocuments] = useState<Array<{
     id: number;
     title: string;
     description: string;
@@ -733,6 +752,103 @@ The document itself will remain but will be empty. This action cannot be undone.
            renameNewName.trim().length > 0;
   };
 
+  // Update description functionality handlers
+  const handleUpdateDescriptionCollectionSelect = async (event: any) => {
+    const collectionId = event.target.value;
+    setUpdateDescriptionSelectedCollection(collectionId);
+    setUpdateDescriptionSelectedDocument('');
+    setUpdateDescriptionNewDescription('');
+    setUpdateDescriptionDocuments([]);
+    
+    if (collectionId) {
+      setIsLoadingUpdateDescriptionDocuments(true);
+      try {
+        // Fetch documents for the selected collection
+        const result = await dispatch(fetchDocumentsByCollection(parseInt(collectionId))).unwrap();
+        // Use the documents from the result
+        setUpdateDescriptionDocuments(result.documents);
+      } catch (error) {
+        console.error('Failed to fetch documents for collection:', error);
+        showNotification('Failed to load documents for selected collection', 'error');
+      } finally {
+        setIsLoadingUpdateDescriptionDocuments(false);
+      }
+    }
+  };
+
+  const handleUpdateDescriptionDocumentSelect = (event: any) => {
+    const documentId = event.target.value;
+    setUpdateDescriptionSelectedDocument(documentId);
+    
+    // Pre-fill the description field with current document description
+    if (documentId) {
+      const selectedDoc = updateDescriptionDocuments.find(d => d.id === parseInt(documentId));
+      setUpdateDescriptionNewDescription(selectedDoc?.description || '');
+    } else {
+      setUpdateDescriptionNewDescription('');
+    }
+  };
+
+  const handleUpdateDescriptionNewDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setUpdateDescriptionNewDescription(event.target.value);
+  };
+
+  const handleUpdateDocumentDescription = async () => {
+    if (!updateDescriptionSelectedDocument) {
+      showNotification('Please select a document', 'error');
+      return;
+    }
+
+    const selectedDocument = updateDescriptionDocuments.find(d => d.id === parseInt(updateDescriptionSelectedDocument));
+    if (!selectedDocument) {
+      showNotification('Selected document not found', 'error');
+      return;
+    }
+
+    if (updateDescriptionNewDescription.trim() === selectedDocument.description) {
+      showNotification('Description must be different from current description', 'error');
+      return;
+    }
+
+    setIsUpdatingDescription(true);
+    
+    try {
+      await dispatch(updateDocument({
+        id: parseInt(updateDescriptionSelectedDocument),
+        updates: {
+          description: updateDescriptionNewDescription.trim()
+        }
+      })).unwrap();
+      
+      // Refresh documents to show updated data
+      if (updateDescriptionSelectedCollection) {
+        const result = await dispatch(fetchDocumentsByCollection(parseInt(updateDescriptionSelectedCollection))).unwrap();
+        setUpdateDescriptionDocuments(result.documents);
+        
+        // Update the description in the form to reflect the change
+        const updatedDoc = result.documents.find(d => d.id === parseInt(updateDescriptionSelectedDocument));
+        setUpdateDescriptionNewDescription(updatedDoc?.description || '');
+      }
+      
+      showNotification(
+        `Document description updated successfully`, 
+        'success'
+      );
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showNotification(`Failed to update document description: ${errorMessage}`, 'error');
+    } finally {
+      setIsUpdatingDescription(false);
+    }
+  };
+
+  const isUpdateDescriptionFormValid = () => {
+    return updateDescriptionSelectedCollection && 
+           updateDescriptionSelectedDocument && 
+           updateDescriptionNewDescription.trim() !== undefined;
+  };
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -764,6 +880,7 @@ The document itself will remain but will be empty. This action cannot be undone.
           <Tab label="Delete" {...a11yPropsSubTab(3)} />
           <Tab label="Delete Document Content" {...a11yPropsSubTab(4)} />
           <Tab label="Rename" {...a11yPropsSubTab(5)} />
+          <Tab label="Update Description" {...a11yPropsSubTab(6)} />
         </Tabs>
         
         {/* Sub-tab content */}
@@ -1041,7 +1158,7 @@ The document itself will remain but will be empty. This action cannot be undone.
           </div>
           <StyledForm>
             <div className="form-group">
-              <FormControl fullWidth>
+              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
                 <InputLabel id="content-delete-collection-select-label">Collection</InputLabel>
                 <Select
                   labelId="content-delete-collection-select-label"
@@ -1187,6 +1304,96 @@ The document itself will remain but will be empty. This action cannot be undone.
               sx={{ marginTop: 2 }}
             >
               {isRenaming ? 'Renaming...' : 'Rename Document'}
+            </Button>
+          </StyledForm>
+        </SubTabPanel>
+
+        <SubTabPanel value={activeSubTab} index={6}>
+          <Typography variant="h5" gutterBottom>
+            Update Document Description
+          </Typography>
+          <div>
+            <p>Select a document to update its description:</p>
+          </div>
+          <StyledForm>
+            <div className="form-group">
+              <FormControl fullWidth>
+                <InputLabel id="update-description-collection-select-label">Collection</InputLabel>
+                <Select
+                  labelId="update-description-collection-select-label"
+                  id="update-description-collection-select"
+                  value={updateDescriptionSelectedCollection}
+                  onChange={handleUpdateDescriptionCollectionSelect}
+                  name="update_description_collection_id"
+                  disabled={isUpdatingDescription}
+                  sx={{ maxWidth: '400px' }}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {documentCollections.map((collection) => (
+                    <MenuItem key={collection.id} value={collection.id}>
+                      {collection.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+
+            <div className="form-group">
+              <FormControl fullWidth>
+                <InputLabel id="update-description-document-select-label">Document</InputLabel>
+                <Select
+                  labelId="update-description-document-select-label"
+                  id="update-description-document-select"
+                  value={updateDescriptionSelectedDocument}
+                  onChange={handleUpdateDescriptionDocumentSelect}
+                  name="update_description_document_id"
+                  disabled={!updateDescriptionSelectedCollection || isUpdatingDescription || isLoadingUpdateDescriptionDocuments}
+                  sx={{ maxWidth: '400px' }}
+                >
+                  <MenuItem value="">
+                    <em>{isLoadingUpdateDescriptionDocuments ? 'Loading documents...' : 'Select a document'}</em>
+                  </MenuItem>
+                  {updateDescriptionDocuments.map((document) => (
+                    <MenuItem key={document.id} value={document.id}>
+                      {document.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="update-description-new-description">Description: </label>
+              <textarea
+                id="update-description-new-description"
+                name="update_description_new_description"
+                value={updateDescriptionNewDescription}
+                onChange={handleUpdateDescriptionNewDescriptionChange}
+                disabled={isUpdatingDescription}
+                maxLength={1000}
+                placeholder="Enter document description"
+                rows={4}
+                style={{ 
+                  width: '100%', 
+                  maxWidth: '600px',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc',
+                  resize: 'vertical',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+
+            <Button
+              variant="contained"
+              onClick={handleUpdateDocumentDescription}
+              disabled={isUpdatingDescription || !isUpdateDescriptionFormValid()}
+              sx={{ marginTop: 2 }}
+            >
+              {isUpdatingDescription ? 'Updating...' : 'Update Description'}
             </Button>
           </StyledForm>
         </SubTabPanel>

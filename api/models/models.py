@@ -224,6 +224,19 @@ class Annotation(Base):
     creator = relationship("User", foreign_keys=[creator_id], back_populates="annotations")
     owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_annotations")
 
+class SiteSettings(Base):
+    __tablename__ = "site_settings"
+    __table_args__ = {'schema': 'app'}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    site_title = Column(String(50), nullable=False, default="Site Title")
+    site_logo_enabled = Column(Boolean, nullable=False, default=False)
+    updated_by_id = Column(Integer, ForeignKey(f"{'app'}.users.id"), nullable=False)
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+    
+    # Relationships
+    updated_by = relationship("User")
+
 # Indices
 # Foreign key indices
 Index('idx_user_passwords_user_id', UserPassword.user_id)
@@ -240,6 +253,7 @@ Index('idx_annotations_owner_id', Annotation.owner_id)
 Index('idx_annotations_collection_id', Annotation.document_collection_id)
 Index('idx_object_sharing_object', ObjectSharing.object_id, ObjectSharing.object_type)
 Index('idx_object_sharing_shared_with', ObjectSharing.shared_with_id, ObjectSharing.shared_with_type)
+Index('idx_site_settings_updated_by', SiteSettings.updated_by_id)
 
 # Annotation field indices
 Index('idx_annotations_type', Annotation.type)
