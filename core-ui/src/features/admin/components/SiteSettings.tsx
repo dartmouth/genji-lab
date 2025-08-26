@@ -287,10 +287,6 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Site Settings
       </Typography>
-      
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Configure the appearance and branding of your site. Changes will be applied immediately.
-      </Typography>
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>

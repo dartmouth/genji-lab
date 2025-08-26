@@ -112,7 +112,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
             Administration Overview
           </Typography>
           <div>
-            <p>Here you can Manage Document Collections, Manage Documents, and Manage Users.</p>
+            <p>Here you can Manage Document Collections, Manage Documents, Manage Users, and change Site Settings.</p>
           </div>
         </TabPanel>
 
