@@ -11,7 +11,7 @@ from models import models
 from fastapi import Depends
 from typing import Optional, Dict, Any, List  # Add List to the import
 import logging
-
+from schemas.auth import TicketValidation, UserResponse
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -26,20 +26,6 @@ router = APIRouter(
     prefix="/api/v1",
     tags=["authentication"]
 )
-
-class TicketValidation(BaseModel):
-    ticket: str
-    service: str
-
-class UserResponse(BaseModel):
-    id: int
-    first_name: str
-    last_name: str
-    netid: str
-    email: Optional[str] = None
-    user_metadata: Optional[Dict[str, Any]] = None
-    roles: List[str] = []  # Add this line
-    ttl: str  # ISO format timestamp for when the authentication expires
 
 def extract_and_format_email(xml_string):
     

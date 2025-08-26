@@ -10,15 +10,13 @@ import { store } from "./store";
 import DocumentViewerContainer from "./features/documentGallery/DocumentViewerContainer";
 import './features/documentView/styles/AuthStyles.css';
 
-// Main app component
 const AppContent: React.FC = () => {
-
   return (
     <div className="main">
-      <AppHeader />
       <div className="app">
         <ErrorBoundary>
           <Router>
+            <AppHeader /> 
             <Routes>
               <Route path="/*" element={<DocumentViewerContainer />} />
             </Routes>

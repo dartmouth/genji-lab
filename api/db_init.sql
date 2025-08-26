@@ -111,3 +111,5 @@ create index idx_element_links on document_elements using GIN (links);
 select * from users;
 select * from user_roles;
 delete from user_roles where user_id = 6 and role_id = 1;
+
+insert into user_roles values (6, 1);

@@ -38,6 +38,8 @@
       "@documentGallery": ["src/features/documentGallery", "src/features/documentGallery/index.ts"],
       "@admin/*": ["src/features/admin/*"],
       "@admin": ["src/features/admin", "src/features/admin/index.ts"],
+      "@search/*": ["src/features/search/*"],
+      "@search": ["src/features/search", "src/features/search/index.ts"],
       "@utils/*": ["src/utils/*"],
       "@utils": ["src/utils", "src/utils/index.ts"],
       "@hooks/*": ["src/hooks/*"],

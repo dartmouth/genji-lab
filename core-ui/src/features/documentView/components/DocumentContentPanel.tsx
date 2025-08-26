@@ -1,81 +1,163 @@
-import React, { useEffect } from 'react';
-import { 
-  HighlightedText,
-  MenuContext
-} from '.';
-import { 
-  RootState, 
+// src/features/documentView/components/DocumentContentPanel.tsx
+import React, { useEffect, useCallback, useMemo } from "react";
+import { HighlightedText, MenuContext } from ".";
+import {
+  RootState,
   fetchDocumentElements,
   selectElementsByDocumentId,
   selectDocumentStatusById,
-  selectDocumentErrorById
-} from '@store';
-import { useSelector } from 'react-redux';
-import { useAppDispatch } from '@store/hooks';
-import '../styles/DocumentContentStyles.css';
-import { DocumentElement } from '@documentView/types';
+  selectDocumentErrorById,
+} from "@store";
+import { useSelector } from "react-redux";
+import { useAppDispatch } from "@store/hooks";
+import "../styles/DocumentContentStyles.css";
+import { DocumentElement } from "@documentView/types";
 
 interface DocumentContentPanelProps {
   documentId: number;
   documentCollectionId: number;
+  viewedDocuments?: Array<{
+    id: number;
+    collectionId: number;
+    title: string;
+  }>;
+  onOpenLinkedDocument?: (
+    documentId: number,
+    collectionId: number,
+    targetInfo: {
+      sourceURI: string;
+      start: number;
+      end: number;
+    },
+    allTargets?: Array<{
+      sourceURI: string;
+      start: number;
+      end: number;
+      text: string;
+    }>
+  ) => void;
+  isLinkingModeActive?: boolean;
+  showLinkedTextHighlights?: boolean;
 }
 
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   documentId,
-  documentCollectionId
+  documentCollectionId,
+  viewedDocuments = [],
+  onOpenLinkedDocument,
+  isLinkingModeActive = false,
+  showLinkedTextHighlights = false,
 }) => {
-  // Redux
+  // Use memoized selectors to prevent unnecessary re-renders
   const dispatch = useAppDispatch();
-  
-  const documentElements = useSelector((state: RootState) => 
-    selectElementsByDocumentId(state, documentId)
+
+  const documentElements = useSelector(
+    useMemo(
+      () => (state: RootState) => selectElementsByDocumentId(state, documentId),
+      [documentId]
+    )
   ) as DocumentElement[];
-  
-  const documentStatus = useSelector((state: RootState) => 
-    selectDocumentStatusById(state, documentId)
+
+  const documentStatus = useSelector(
+    useMemo(
+      () => (state: RootState) => selectDocumentStatusById(state, documentId),
+      [documentId]
+    )
   );
-  
-  const documentError = useSelector((state: RootState) => 
-    selectDocumentErrorById(state, documentId)
+
+  const documentError = useSelector(
+    useMemo(
+      () => (state: RootState) => selectDocumentErrorById(state, documentId),
+      [documentId]
+    )
   );
-  
-  // Fetch document elements
+
+  // Enhanced element loading for cross-document navigation
   useEffect(() => {
     if (documentId) {
-      dispatch(fetchDocumentElements(documentId));
+      // Always fetch elements when document changes, even if some exist
+      dispatch(fetchDocumentElements(documentId))
+        .unwrap()
+        .catch((error) => {
+          console.error(
+            "Failed to fetch elements for document",
+            documentId,
+            ":",
+            error
+          );
+        });
     }
   }, [dispatch, documentId]);
-  
+
+  // Force element loading for all viewed documents when viewedDocuments changes
+  useEffect(() => {
+    viewedDocuments.forEach((doc) => {
+      // Always fetch elements for each viewed document to ensure cross-document linking works
+      dispatch(fetchDocumentElements(doc.id))
+        .unwrap()
+        .catch((error) => {
+          console.error(
+            `Failed to load elements for viewed document ${doc.id}:`,
+            error
+          );
+        });
+    });
+  }, [viewedDocuments, dispatch]);
+
+  // Enhanced callback wrapper with detailed logging
+  const handleOpenLinkedDocumentWrapper = useCallback(
+    (
+      linkedDocumentId: number,
+      collectionId: number,
+      targetInfo: {
+        sourceURI: string;
+        start: number;
+        end: number;
+      },
+      allTargets?: Array<{
+        sourceURI: string;
+        start: number;
+        end: number;
+        text: string;
+      }>
+    ) => {
+      if (onOpenLinkedDocument) {
+        try {
+          onOpenLinkedDocument(
+            linkedDocumentId,
+            collectionId,
+            targetInfo,
+            allTargets
+          );
+        } catch (error) {
+          console.error("Error in parent callback:", error);
+        }
+      } else {
+        console.error("No parent callback provided to DocumentContentPanel");
+      }
+    },
+    [onOpenLinkedDocument]
+  );
+
   // Loading/Error states
-  if (documentStatus === 'loading' && documentElements.length === 0) {
-    return <div className="loading-indicator">Loading document elements...</div>;
-  }
-  
-  if (documentStatus === 'failed') {
+  if (documentStatus === "loading" && documentElements.length === 0) {
     return (
-      <div className="error-message">
-        Error loading document: {documentError}
-        <br />
-        <button 
-          onClick={() => dispatch(fetchDocumentElements(documentId))}
-          className="retry-button"
-        >
-          Retry
-        </button>
-      </div>
+      <div className="loading-indicator">Loading document elements...</div>
     );
   }
-  
-  if (!documentElements || documentElements.length === 0) {
+
+  if (documentStatus === "failed") {
     return (
-      <div className="warning-message">
-        <p>No content found for this document.</p>
-        <p>The document may be empty or still loading.</p>
-        <button 
+      <div className="error-message">
+        <strong>Error loading document:</strong>
+        <br />
+        {documentError}
+        <button
           onClick={() => dispatch(fetchDocumentElements(documentId))}
           className="retry-button"
+          style={{ marginTop: "8px" }}
         >
-          Retry Loading
+          Retry
         </button>
       </div>
     );
@@ -84,13 +166,17 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   return (
     <div className="document-panel">
       <div className="document-content-container">
+        {/* Add data attributes for better element identification */}
         {documentElements.map((content) => {
           const paragraphId = `DocumentElements/${content.id}`;
           return (
-            <div 
-              key={content.id} 
+            <div
+              key={content.id}
               className="document-content"
               id={paragraphId}
+              data-element-id={content.id}
+              data-document-id={documentId}
+              data-source-uri={`/DocumentElements/${content.id}`}
             >
               <HighlightedText
                 text={content.content.text}
@@ -98,12 +184,19 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 format={content.content.formatting}
                 documentCollectionId={documentCollectionId}
                 documentId={documentId}
+                isLinkingModeActive={isLinkingModeActive}
+                showLinkedTextHighlights={showLinkedTextHighlights}
+                viewedDocuments={viewedDocuments}
               />
             </div>
           );
         })}
-        
-        <MenuContext/>
+
+        {/* Pass the enhanced wrapper callback */}
+        <MenuContext
+          viewedDocuments={viewedDocuments}
+          onOpenLinkedDocument={handleOpenLinkedDocumentWrapper}
+        />
       </div>
     </div>
   );

@@ -1,20 +1,25 @@
-export { 
-    commentingAnnotations, 
-    replyingAnnotations, 
-    scholarlyAnnotations, 
-    taggingAnnotations,
-    upvoteAnnotations,
-    sliceMap
-} from './annotationSlices'
-export {  
-    registerHighlight, 
-    updateHighlightPosition, 
-    removeHighlight,
-    setHoveredHighlights ,
-    selectHoveredHighlightIds
-} from './highlightRegistrySlice' 
+// store/slice/index.ts
 
-export * from './annotationCreate'
+export {      
+    commentingAnnotations,      
+    replyingAnnotations,      
+    scholarlyAnnotations,      
+    taggingAnnotations,     
+    upvoteAnnotations,     
+    sliceMap,     
+    linkingAnnotations 
+} from './annotationSlices'
+
+export {       
+    registerHighlight,      
+    updateHighlightPosition,      
+    removeHighlight,     
+    setHoveredHighlights,     
+    selectHoveredHighlightIds 
+} from './highlightRegistrySlice'   
+
+
+export * from './annotationCreate'  
 
 export {
     createDocumentCollection,
@@ -25,29 +30,64 @@ export {
     selectDocumentCollectionsError
 } from './documentCollectionSlice'
 
-export type {DocumentCollectionCreate, Hierarchy, CollectionMetadata} from './documentCollectionSlice'
+
+export {     
+    createDocumentCollection,     
+    clearCollections,     
+    fetchDocumentCollections,     
+    selectAllDocumentCollections,     
+    selectDocumentCollectionsStatus,     
+    selectDocumentCollectionsError 
+} from './documentCollectionSlice'  
+
+export type {
+    DocumentCollectionCreate, 
+    Hierarchy, 
+    CollectionMetadata
+} from './documentCollectionSlice'   
 
 
 export {
     createDocument,
     updateDocument,
     clearDocuments,
-    setSelectedCollectionId,
+    clearAllDocuments,
+    setSelectedCollectionId,     
     fetchDocumentsByCollection,
+    fetchAllDocuments,
+    fetchAllDocumentsByCollections,
+    addToAllDocuments,
     selectAllDocuments,
+    selectCollectionDocuments,     
     selectDocumentsStatus,
-    selectDocumentsError,
-    selectSelectedCollectionId
-} from './documentSlice'
+    selectAllDocumentsStatus,     
+    selectDocumentsError,     
+    selectSelectedCollectionId,
+    selectDocumentById
+} from './documentSlice'  
+
+
+export {     
+    setActiveParagraph,     
+    clearActiveParagraph,     
+    selectActiveParagraphId 
+} from './documentNavigationSlice'  
+
+export {     
+    fetchDocumentElements,     
+    clearElements,     
+    setCurrentDocumentId,     
+    selectElementsByDocumentId,     
+    selectDocumentStatusById,     
+    selectDocumentErrorById,     
+    selectCurrentDocumentId
+} from './documentElementsSlice'
 
 export type {DocumentCreate, DocumentUpdate} from './documentSlice'
 
-export {
-    setActiveParagraph,
-    clearActiveParagraph,
-    selectActiveParagraphId
-} from './documentNavigationSlice'
 
+
+// Navigation highlight exports
 export {
     fetchDocumentElements,
     clearElements,
@@ -62,6 +102,7 @@ export {
     // selectDocumentElementsError
 } from './documentElementsSlice'
 
+
 export {
     fetchSiteSettings,
     updateSiteSettings,
@@ -71,3 +112,20 @@ export {
     clearError,
     resetSiteSettings
 } from './siteSettingsSlice'
+
+export * from './searchResultsSlice'
+
+    startNavigationSession,
+    addNavigationHighlight,
+    removeNavigationHighlight,
+    clearNavigationSession,
+    clearAllNavigationHighlights,
+    selectIsElementHighlighted,
+    selectHighlightType,
+    selectNavigationHighlights,
+    selectCurrentNavigationSession
+} from './navigationHighlightSlice';
+
+export { default as navigationHighlightReducer } from './navigationHighlightSlice';
+
+

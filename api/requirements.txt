@@ -8,4 +8,8 @@ python-docx
 python-multipart
 httpx
 pillow
+passlib[bcrypt]
+python-jose[cryptography]
+itsdangerous
+pydantic[email]
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { CollectionsView, DocumentsView, DocumentContentView } from "@documentGallery/DocumentViewerContainer";
+import { SearchResultsApp } from '@features/search'
 import { AdminPanel } from "./features/admin";
 import { useAuth } from "@/hooks/useAuthContext";
 
@@ -10,7 +11,7 @@ import { useAuth } from "@/hooks/useAuthContext";
 const RouterSwitchBoard: React.FC = () => {
   
   const { user } = useAuth();
-  console.log("isadmin", user?.roles?.includes('admin'))
+  // console.log("isadmin", user?.roles?.includes('admin'))
   return (
     <Routes>
       <Route path="/" element={<CollectionsView />} />
@@ -18,6 +19,8 @@ const RouterSwitchBoard: React.FC = () => {
       <Route path="/collections/:collectionId" element={<DocumentsView />} />
       <Route path="/collections/:collectionId/documents/:documentId" element={<DocumentContentView />} />
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/collections/:collectionId" element={<DocumentsView />} />
+      <Route path="/search" element={<SearchResultsApp />} />
     </Routes>
   );
 };

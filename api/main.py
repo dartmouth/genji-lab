@@ -1,10 +1,20 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings
-from routers.cas_auth import router as cas_router  # Import the new CAS router
+from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings, search
+
+from starlette.middleware.sessions import SessionMiddleware
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from routers.cas_auth import router as cas_router
+from routers.auth import router as auth_router 
+
 from database import engine
 from models import models
 
@@ -15,6 +25,12 @@ app = FastAPI(
     title="Document Annotation API",
     description="API for managing document annotations",
     version="1.0.0"
+)
+
+# Configure session middleware
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=os.getenv("SESSION_SECRET_KEY", "your-secret-key-change-in-production")
 )
 
 # Configure CORS
@@ -37,9 +53,11 @@ app.include_router(documents.router)
 app.include_router(document_collections.router)
 app.include_router(document_elements.router)
 app.include_router(annotations.router)
-app.include_router(roles.router)  # Add the roles router
-app.include_router(site_settings.router)  # Add the site settings router
-app.include_router(cas_router)  # Add the CAS authentication router
+app.include_router(roles.router) 
+app.include_router(site_settings.router)
+app.include_router(cas_router) 
+app.include_router(auth_router)
+app.include_router(search.router)
 
 @app.get("/api/v1")
 def read_root():
