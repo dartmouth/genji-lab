@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import httpx
 import re
@@ -150,6 +150,17 @@ def get_user_roles(user: models.User) -> List[str]:
 from sqlalchemy.orm import joinedload
 from sqlalchemy import select
 
+def create_session(request: Request, user_id: int, username: str) -> None:
+    """Create a user session - imported from auth.py logic."""
+    SESSION_EXPIRE_WEEKS = 1  # 1 week default
+    session_data = {
+        "user_id": user_id,
+        "username": username,
+        "created_at": datetime.now().isoformat(),
+        "expires_at": (datetime.now() + timedelta(weeks=SESSION_EXPIRE_WEEKS)).isoformat()
+    }
+    request.session["user"] = session_data
+
 def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
     """
     Process CAS response and either retrieve an existing user or create a new one.
@@ -246,7 +257,7 @@ def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
         return result.scalars().unique().first()
 
 @router.post("/validate-cas-ticket", response_model=UserResponse)
-async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_db)):
+async def validate_cas_ticket(data: TicketValidation, request: Request, db: Session = Depends(get_db)):
     """
     Validates a CAS ticket with Dartmouth's CAS server and returns user information.
     Automatically assigns 'general_user' role to new users and returns user roles.
@@ -268,12 +279,30 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
             if "<cas:authenticationSuccess>" not in xml:
                 raise HTTPException(status_code=401, detail="CAS authentication failed")
             
-            # Extract netid from CAS response
+            # Log the XML for debugging
+            logger.debug(f"CAS XML response: {xml}")
+            
+            # Extract netid from CAS response - try multiple patterns
             netid_match = re.search(r'<cas:attribute name="netid" value="([^"]+)"', xml)
             if not netid_match:
+                # Try alternative pattern: <cas:netid>value</cas:netid>
+                netid_match = re.search(r'<cas:netid>([^<]+)</cas:netid>', xml)
+            if not netid_match:
+                # Try another pattern: <cas:user>netid</cas:user>
+                netid_match = re.search(r'<cas:user>([^<]+)</cas:user>', xml)
+            
+            if not netid_match:
+                logger.error(f"Could not extract netid from CAS XML: {xml}")
                 raise HTTPException(status_code=401, detail="CAS validation failed: netid not found")
             
             netid = netid_match.group(1).strip()
+            
+            # Ensure netid is not empty
+            if not netid:
+                logger.error(f"Extracted netid is empty from CAS XML: {xml}")
+                raise HTTPException(status_code=401, detail="CAS validation failed: empty netid")
+            
+            logger.debug(f"Extracted netid: {netid}")
             
             # Create or get user from database (now returns user with roles loaded)
             user = get_or_create_user_from_cas(db, xml)
@@ -283,6 +312,9 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
             
             # Calculate TTL (1 week from now)
             ttl = (datetime.now() + timedelta(weeks=1)).isoformat()
+            
+            # Create session for the user
+            create_session(request, user.id, netid)
             
             # Extract email from user metadata
             email = user.user_metadata.get('email') if user.user_metadata else None
