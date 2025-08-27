@@ -286,14 +286,15 @@ async def validate_cas_ticket(data: TicketValidation, db: Session = Depends(get_
             
             # Extract email from user metadata
             email = user.user_metadata.get('email') if user.user_metadata else None
-            logger.info(f"CAS success for user {user.id} with roles: {user_roles}")
-            
+            # logger.info(f"CAS success for user {user.id} with roles: {user_roles}")
+
             # Return user information with roles and TTL
             return UserResponse(
                 id=user.id,
                 first_name=user.first_name,
                 last_name=user.last_name,
-                netid=netid,
+                username=netid,
+                is_active=True,
                 email=email,
                 user_metadata=user.user_metadata,
                 roles=user_roles,
