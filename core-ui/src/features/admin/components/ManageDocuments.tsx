@@ -484,13 +484,15 @@ const handleSubmit = async (e: React.FormEvent) => {
       if (deleteAllInCollection) {
         // Delete all documents in collection
         response = await api.delete(`/collections/${collectionId}/documents`);
+        console.log(`Delete status is ${response.status}`)
       } else {
         // Delete selected documents
         const documentIds = selectedDocuments;
         response = await api.delete('/documents/bulk-delete', {
           data: { document_ids: documentIds }
-          
+
         });
+        console.log(`Delete status is ${response.status}`)
       }
 
       // Refresh the documents list after successful deletion
@@ -596,7 +598,7 @@ The document itself will remain but will be empty. This action cannot be undone.
     try {
       const documentId = parseInt(selectedContentDeleteDocument);
       const response = await api.delete(`/elements/document/${documentId}/all-elements?force=true`);
-
+      console.log(`Delete status is ${response.status}`)
       const selectedDoc = documents.find(d => d.id === documentId);
       const selectedCollection = documentCollections.find(c => c.id === parseInt(selectedContentDeleteCollection));
       

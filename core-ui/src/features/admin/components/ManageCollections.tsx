@@ -330,6 +330,7 @@ To confirm, please type the collection name exactly as shown:
       setDeleteProgress(20);
       
       const response = await api.delete(`/collections/${selectedCollection}?force=true`);
+      console.log(`Delete status is ${response.status}`)
       
       setDeleteProgress(70);
       setDeleteProgress(90);

@@ -92,6 +92,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onCancel, onSwitchToLogin }
     setIsLoading(true);
 
     try {
+      if (register === undefined) {
+        return
+      }
+      
       await register({
         first_name: formData.first_name,
         last_name: formData.last_name,
