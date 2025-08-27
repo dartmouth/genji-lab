@@ -23,9 +23,10 @@ export interface AuthContextType {
   error: string | null;
   
   // Authentication actions
-  login: (username?: string, password?: string) => Promise<void>;
-  logout: () => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  // FIXME both cas auth and basic auth should return the same types, get rid of the 'or void'
+  login: (username?: string, password?: string) => Promise<void>|void;
+  logout: () => Promise<void>|void;
+  register?: (userData: RegisterData) => Promise<void>;
 }
 
 // Registration data interface

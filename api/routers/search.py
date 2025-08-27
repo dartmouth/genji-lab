@@ -16,7 +16,76 @@ from schemas.search import (
     SearchResult
 )
 
-from tools import tsquery_generator
+from dataclasses import dataclass, field
+from typing import List
+
+@dataclass 
+class Term:
+    type: str
+    term: str
+    group: List['Term'] | None
+    operator: str | None
+    query_fragment: str = field(init=False)
+
+    OPERATOR_MAP = {
+        'AND': '&',
+        'and': '&',
+        'OR': '|',
+        'or': '|'
+    }
+    TYPES = ('group', 'term')
+
+    def __post_init__(self):
+
+        if self.operator is not None and self.operator not in self.OPERATOR_MAP:
+            raise ValueError(f"Only AND and OR operations supported")
+        
+        if self.type not in self.TYPES:
+            raise ValueError("Type must be one of 'group' or 'term'")
+
+        if self.group is not None:
+            self.group = [Term(**term) for term in self.group]
+
+        self.query_fragment = self._build_fragment()
+    
+    def _build_fragment(self):
+        if self.type == 'term':
+            return self._process_term()
+        
+        return self._process_group()
+
+    def _process_term(self):
+        if self.operator is None:
+            return f"'{self.term}'"
+        
+        return " ".join([self.OPERATOR_MAP[self.operator], f"'{self.term}'"])
+    
+    def _process_group(self):
+        return f"({' '.join([term._build_fragment() for term in self.group])})"
+
+
+@dataclass
+class Query:
+    query: str
+    parsedQuery: List[Term]
+    searchTypes: List[str]
+    tags: List[str]
+    sortBy: str
+    sortOrder: str
+    limit: int
+    tsquery: str = field(init=False)
+    def __post_init__(self):
+        if len(self.parsedQuery) == 0:
+            raise ValueError("No elements in parsed query")
+        self.parsedQuery = [Term(**t) for t in self.parsedQuery]
+
+        if self.parsedQuery[0].operator is not None:
+            raise ValueError("Invalid operand: first term must not have an operator")
+        
+        self.tsquery = self._build_tsquery()
+        
+    def _build_tsquery(self):
+        return " ".join([term.query_fragment for term in self.parsedQuery])
 
 load_dotenv(find_dotenv())
 
@@ -129,7 +198,7 @@ def search(query: SearchQuery,
            db: AsyncSession = Depends(get_db)
            ):
 
-    q = tsquery_generator.Query(**query.dict())
+    q = Query(**query.dict())
 
     print("beginning")
     try:

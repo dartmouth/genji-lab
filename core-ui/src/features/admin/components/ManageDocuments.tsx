@@ -12,6 +12,12 @@ import {
   fetchDocumentsByCollection,
 } from "@store";
 
+import axios, {AxiosInstance} from "axios";
+const api: AxiosInstance = axios.create({
+    baseURL: '/api/v1',
+    timeout: 10000,
+  });
+
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
   children?: React.ReactNode;
@@ -322,29 +328,22 @@ const ManageDocuments: React.FC = () => {
       const formData = new FormData();
       formData.append('file', wordUploadFormData.file);
       
-      const response = await fetch(`/api/v1/elements/upload-word-doc?document_collection_id=${wordUploadFormData.document_collection_id}&document_id=${wordUploadFormData.document_id}`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await api.post(`/elements/upload-word-doc?document_collection_id=${wordUploadFormData.document_collection_id}&document_id=${wordUploadFormData.document_id}`, formData);
 
-      if (response.ok) {
-        const result = await response.json();
-        setUploadSuccess(`Successfully uploaded! Created ${result.elements_created} paragraphs.`);
-        setWordUploadSubmitted(true);
-        // Reset form
-        setWordUploadFormData({
-          document_collection_id: undefined,
-          document_id: undefined,
-          file: null
-        });
-        setSelectedWordUploadCollection('');
-        setSelectedDocument('');
-      } else {
-        const errorData = await response.json();
-        setUploadError(errorData.detail || 'Upload failed');
-      }
-    } catch (error) {
-      setUploadError('Network error occurred during upload');
+      const result = response.data;
+      setUploadSuccess(`Successfully uploaded! Created ${result.elements_created} paragraphs.`);
+      setWordUploadSubmitted(true);
+      // Reset form
+      setWordUploadFormData({
+        document_collection_id: undefined,
+        document_id: undefined,
+        file: null
+      });
+      setSelectedWordUploadCollection('');
+      setSelectedDocument('');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Upload failed';
+      setUploadError(errorMessage);
     } finally {
       setWordUploadLoading(false);
     }
@@ -383,15 +382,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (collectionId) {
       try {
         // Fetch documents with annotation statistics
-        const response = await fetch(`/api/v1/documents/collection/${collectionId}/with-stats`);
-        if (response.ok) {
-          const documentsData = await response.json();
-          setDocumentsWithStats(documentsData);
-        } else {
-          showNotification('Failed to fetch document statistics', 'error');
-        }
-      } catch (error) {
-        showNotification('Error fetching document statistics', 'error');
+        const response = await api.get(`/documents/collection/${collectionId}/with-stats`);
+        const documentsData = response.data;
+        setDocumentsWithStats(documentsData);
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.detail || error.message || 'Error fetching document statistics';
+        showNotification(errorMessage, 'error');
       }
     }
   };
@@ -487,44 +483,32 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       if (deleteAllInCollection) {
         // Delete all documents in collection
-        response = await fetch(`/api/v1/collections/${collectionId}/documents`, {
-          method: 'DELETE',
-        });
+        response = await api.delete(`/collections/${collectionId}/documents`);
       } else {
         // Delete selected documents
         const documentIds = selectedDocuments;
-        response = await fetch('/api/v1/documents/bulk-delete', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ document_ids: documentIds }),
+        response = await api.delete('/documents/bulk-delete', {
+          data: { document_ids: documentIds }
+          
         });
       }
 
-      if (response.ok) {
-        // Refresh the documents list after successful deletion
-        if (selectedDeleteCollection) {
-          const collectionId = parseInt(selectedDeleteCollection);
-          try {
-            const refreshResponse = await fetch(`/api/v1/documents/collection/${collectionId}/with-stats`);
-            if (refreshResponse.ok) {
-              const documentsData = await refreshResponse.json();
-              setDocumentsWithStats(documentsData);
-            }
-          } catch (refreshError) {
-            console.error('Failed to refresh documents list:', refreshError);
-          }
+      // Refresh the documents list after successful deletion
+      if (selectedDeleteCollection) {
+        const collectionId = parseInt(selectedDeleteCollection);
+        try {
+          const refreshResponse = await api.get(`/documents/collection/${collectionId}/with-stats`);
+          const documentsData = refreshResponse.data;
+          setDocumentsWithStats(documentsData);
+        } catch (refreshError) {
+          console.error('Failed to refresh documents list:', refreshError);
         }
-        setSelectedDocuments([]);
-        setDeleteAllInCollection(false);
-        showNotification('Documents deleted successfully', 'success');
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to delete documents');
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      setSelectedDocuments([]);
+      setDeleteAllInCollection(false);
+      showNotification('Documents deleted successfully', 'success');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'An unknown error occurred';
       showNotification(`Failed to delete documents: ${errorMessage}`, 'error');
     } finally {
       setIsDeleting(false);
@@ -552,17 +536,16 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (documentId) {
       // Fetch stats for this document
       try {
-        const response = await fetch(`/api/v1/elements/document/${documentId}/stats`);
-        if (response.ok) {
-          const stats = await response.json();
-          setContentDeleteStats({
-            element_count: stats.element_count,
-            annotation_count: stats.annotation_count
-          });
-        }
-      } catch (error) {
+        const response = await api.get(`/elements/document/${documentId}/stats`);
+        const stats = response.data;
+        setContentDeleteStats({
+          element_count: stats.element_count,
+          annotation_count: stats.annotation_count
+        });
+      } catch (error: any) {
         console.error('Failed to fetch document content stats:', error);
-        showNotification('Failed to fetch document statistics', 'error');
+        const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch document statistics';
+        showNotification(errorMessage, 'error');
       }
     }
   };
@@ -612,31 +595,21 @@ The document itself will remain but will be empty. This action cannot be undone.
 
     try {
       const documentId = parseInt(selectedContentDeleteDocument);
-      const response = await fetch(`/api/v1/elements/document/${documentId}/all-elements?force=true`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await api.delete(`/elements/document/${documentId}/all-elements?force=true`);
 
-      if (response.ok) {
-        const selectedDoc = documents.find(d => d.id === documentId);
-        const selectedCollection = documentCollections.find(c => c.id === parseInt(selectedContentDeleteCollection));
-        
-        // Reset form
-        setSelectedContentDeleteDocument('');
-        setContentDeleteStats(null);
-        
-        showNotification(
-          `Successfully deleted all content from document '${selectedDoc?.title}' in collection '${selectedCollection?.title}'`, 
-          'success'
-        );
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to delete document content');
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      const selectedDoc = documents.find(d => d.id === documentId);
+      const selectedCollection = documentCollections.find(c => c.id === parseInt(selectedContentDeleteCollection));
+      
+      // Reset form
+      setSelectedContentDeleteDocument('');
+      setContentDeleteStats(null);
+      
+      showNotification(
+        `Successfully deleted all content from document '${selectedDoc?.title}' in collection '${selectedCollection?.title}'`, 
+        'success'
+      );
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'An unknown error occurred';
       showNotification(`Failed to delete document content: ${errorMessage}`, 'error');
     } finally {
       setIsDeletingContent(false);

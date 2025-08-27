@@ -15,6 +15,12 @@ import { useAuth } from "@hooks/useAuthContext.ts";
 import { useAppSelector } from "@store/hooks";
 import { selectAllDocumentCollections, fetchDocumentCollections } from "@store";
 
+import axios, {AxiosInstance} from "axios";
+const api: AxiosInstance = axios.create({
+    baseURL: '/api/v1',
+    timeout: 10000,
+  });
+
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
   children?: React.ReactNode;
@@ -244,26 +250,23 @@ const ManageCollections: React.FC = () => {
     if (collectionId) {
       setIsLoadingStats(true);
       try {
-        const response = await fetch(`/api/v1/collections/${collectionId}`);
-        if (response.ok) {
-          const stats = await response.json();
-          setCollectionStats({
-            document_count: stats.document_count || 0,
-            element_count: stats.element_count || 0,
-            scholarly_annotation_count: stats.scholarly_annotation_count || 0,
-            comment_count: stats.comment_count || 0,
-            title: stats.title,
-            description: stats.description,
-            visibility: stats.visibility,
-            created: stats.created,
-            modified: stats.modified
-          });
-        } else {
-          showNotification('Failed to fetch collection statistics', 'error');
-        }
-      } catch (error) {
+        const response = await api.get(`/collections/${collectionId}`);
+        const stats = response.data;
+        setCollectionStats({
+          document_count: stats.document_count || 0,
+          element_count: stats.element_count || 0,
+          scholarly_annotation_count: stats.scholarly_annotation_count || 0,
+          comment_count: stats.comment_count || 0,
+          title: stats.title,
+          description: stats.description,
+          visibility: stats.visibility,
+          created: stats.created,
+          modified: stats.modified
+        });
+      } catch (error: any) {
         console.error('Failed to fetch collection statistics:', error);
-        showNotification('Error fetching collection statistics', 'error');
+        const errorMessage = error.response?.data?.detail || error.message || 'Error fetching collection statistics';
+        showNotification(errorMessage, 'error');
       } finally {
         setIsLoadingStats(false);
       }
@@ -326,35 +329,24 @@ To confirm, please type the collection name exactly as shown:
     try {
       setDeleteProgress(20);
       
-      const response = await fetch(`/api/v1/collections/${selectedCollection}?force=true`, {
-        method: 'DELETE',
-      });
+      const response = await api.delete(`/collections/${selectedCollection}?force=true`);
       
       setDeleteProgress(70);
+      setDeleteProgress(90);
       
-      if (response.ok) {
-        setDeleteProgress(90);
-        
-        // Refresh the collections list after successful deletion
+      // Refresh the collections list after successful deletion
+      dispatch(fetchDocumentCollections({ includeUsers: true }));
+      refreshOverviewData();
 
-        dispatch(fetchDocumentCollections({ includeUsers: true }));
-        refreshOverviewData();
-
-        setSelectedCollection('');
-        setCollectionStats(null);
-        setConfirmationText('');
-        
-        setDeleteProgress(100);
-        
-        showNotification(`Collection "${collectionStats.title}" deleted successfully`, 'success');
-
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to delete collection");
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
+      setSelectedCollection('');
+      setCollectionStats(null);
+      setConfirmationText('');
+      
+      setDeleteProgress(100);
+      
+      showNotification(`Collection "${collectionStats.title}" deleted successfully`, 'success');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || "An unknown error occurred";
       showNotification(`Failed to delete collection: ${errorMessage}`, "error");
     } finally {
       setIsDeleting(false);
@@ -504,21 +496,18 @@ To confirm, please type the collection name exactly as shown:
     if (collectionId) {
       setIsLoadingVisibilityCollection(true);
       try {
-        const response = await fetch(`/api/v1/collections/${collectionId}`);
-        if (response.ok) {
-          const collectionData = await response.json();
-          setUpdateVisibilityCollectionDetails({
-            title: collectionData.title,
-            visibility: collectionData.visibility,
-            description: collectionData.description
-          });
-          setUpdateVisibilityNewVisibility(collectionData.visibility);
-        } else {
-          showNotification('Failed to fetch collection details', 'error');
-        }
-      } catch (error) {
+        const response = await api.get(`/collections/${collectionId}`);
+        const collectionData = response.data;
+        setUpdateVisibilityCollectionDetails({
+          title: collectionData.title,
+          visibility: collectionData.visibility,
+          description: collectionData.description
+        });
+        setUpdateVisibilityNewVisibility(collectionData.visibility);
+      } catch (error: any) {
         console.error('Failed to fetch collection details:', error);
-        showNotification('Error fetching collection details', 'error');
+        const errorMessage = error.response?.data?.detail || error.message || 'Error fetching collection details';
+        showNotification(errorMessage, 'error');
       } finally {
         setIsLoadingVisibilityCollection(false);
       }
@@ -594,18 +583,14 @@ To confirm, please type the collection name exactly as shown:
     setIsLoadingOverviewDetails(true);
     
     try {
-      const response = await fetch(`/api/v1/collections/${collectionId}`);
-      if (response.ok) {
-        const details = await response.json();
-        console.log('Collection details response:', details); // Debug logging
-        setOverviewCollectionDetails(details);
-      } else {
-        showNotification('Failed to fetch collection details', 'error');
-        setDetailsModalOpen(false);
-      }
-    } catch (error) {
+      const response = await api.get(`/collections/${collectionId}`);
+      const details = response.data;
+      console.log('Collection details response:', details); // Debug logging
+      setOverviewCollectionDetails(details);
+    } catch (error: any) {
       console.error('Failed to fetch collection details:', error);
-      showNotification('Failed to fetch collection details', 'error');
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch collection details';
+      showNotification(errorMessage, 'error');
       setDetailsModalOpen(false);
     } finally {
       setIsLoadingOverviewDetails(false);

@@ -1,5 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 
+import axios, {AxiosInstance} from "axios";
+const api: AxiosInstance = axios.create({
+    baseURL: '/api/v1',
+    timeout: 10000,
+  });
+
 export interface SiteSettings {
   id: number;
   site_title: string;
@@ -27,12 +33,8 @@ export const fetchSiteSettings = createAsyncThunk(
   'siteSettings/fetchSiteSettings',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/v1/site-settings/');
-      if (!response.ok) {
-        throw new Error('Failed to fetch site settings');
-      }
-      const data = await response.json();
-      return data;
+      const response = await api.get('/site-settings/');
+      return response.data;
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
     }
@@ -49,25 +51,17 @@ export const updateSiteSettings = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await fetch('/api/v1/site-settings/', {
-        method: 'PUT',
+      const response = await api.put('/site-settings/', settings, {
         headers: {
-          'Content-Type': 'application/json',
-          'X-User-ID': userId.toString(), // Send user ID in header
+          'X-User-ID': userId.toString(),
         },
-        body: JSON.stringify(settings),
-        credentials: 'include',
+        withCredentials: true,
       });
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Failed to update site settings' }));
-        throw new Error(errorData.detail || 'Failed to update site settings');
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to update site settings';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -82,24 +76,17 @@ export const uploadSiteLogo = createAsyncThunk(
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/api/v1/site-settings/upload-logo', {
-        method: 'POST',
+      const response = await api.post('/site-settings/upload-logo', formData, {
         headers: {
           'X-User-ID': userId.toString(),
         },
-        body: formData,
-        credentials: 'include',
+        withCredentials: true,
       });
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Failed to upload logo' }));
-        throw new Error(errorData.detail || 'Failed to upload logo');
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to upload logo';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -108,23 +95,17 @@ export const removeSiteLogo = createAsyncThunk(
   'siteSettings/removeSiteLogo',
   async (userId: number, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/v1/site-settings/remove-logo', {
-        method: 'DELETE',
+      const response = await api.delete('/site-settings/remove-logo', {
         headers: {
           'X-User-ID': userId.toString(),
         },
-        credentials: 'include',
+        withCredentials: true,
       });
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Failed to remove logo' }));
-        throw new Error(errorData.detail || 'Failed to remove logo');
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to remove logo';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -133,16 +114,11 @@ export const getCacheBuster = createAsyncThunk(
   'siteSettings/getCacheBuster',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/v1/site-settings/cache-buster');
-      
-      if (!response.ok) {
-        return rejectWithValue('Failed to get cache buster');
-      }
-      
-      const data = await response.json();
-      return data.timestamp;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+      const response = await api.get('/site-settings/cache-buster');
+      return response.data.timestamp;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to get cache buster';
+      return rejectWithValue(errorMessage);
     }
   }
 );

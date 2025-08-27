@@ -1,4 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import axios, {AxiosInstance} from "axios";
+
+const api: AxiosInstance = axios.create({
+    baseURL: '/api/v1',
+    timeout: 10000,
+  });
 
 interface AuthUser {
   id: number;
@@ -66,21 +72,11 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
     setError(null);
 
     try {
-      const response = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include', // Important for session cookies
+      const response = await api.post('/auth/login', { username, password }, {
+        withCredentials: true, // Important for session cookies
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Login failed');
-      }
-
-      const userData = await response.json();
+      const userData = response.data;
       
       // Convert username-based response to match expected user format
       const user: AuthUser = {
@@ -95,9 +91,10 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         user,
         expiresAt,
       });
-    } catch (e) {
+    } catch (e: any) {
       console.error('Basic auth login error:', e);
-      setError(e instanceof Error ? e.message : 'Login failed');
+      const errorMessage = e.response?.data?.detail || e.message || 'Login failed';
+      setError(errorMessage);
       setAuthState({ isAuthenticated: false, user: null });
       throw e;
     } finally {
@@ -125,27 +122,23 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
   // Check current session status
   const checkSession = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/auth/me', {
-        credentials: 'include',
+      const response = await api.get('/auth/me', {
+        withCredentials: true,
       });
 
-      if (response.ok) {
-        const userData = await response.json();
-        const user: AuthUser = {
-          ...userData,
-          netid: userData.username || userData.netid,
-        };
+      const userData = response.data;
+      const user: AuthUser = {
+        ...userData,
+        netid: userData.username || userData.netid,
+      };
 
-        const expiresAt = Date.now() + (sessionExpirationHours * 60 * 60 * 1000);
-        setAuthState({
-          isAuthenticated: true,
-          user,
-          expiresAt,
-        });
-      } else {
-        setAuthState({ isAuthenticated: false, user: null });
-      }
-    } catch (e) {
+      const expiresAt = Date.now() + (sessionExpirationHours * 60 * 60 * 1000);
+      setAuthState({
+        isAuthenticated: true,
+        user,
+        expiresAt,
+      });
+    } catch (e: any) {
       console.error('Session check error:', e);
       setAuthState({ isAuthenticated: false, user: null });
     }
@@ -168,20 +161,11 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         window.history.replaceState({}, document.title, newUrl);
         
         // Validate ticket with backend
-        const response = await fetch('/api/v1/validate-cas-ticket', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ ticket, service: serviceUrl }),
-          credentials: 'include',
+        const response = await api.post('/validate-cas-ticket', { ticket, service: serviceUrl }, {
+          withCredentials: true,
         });
         
-        if (!response.ok) {
-          throw new Error('Failed to validate CAS ticket');
-        }
-        
-        const userData = await response.json();
+        const userData = response.data;
         const user: AuthUser = {
           ...userData,
           netid: userData.netid || userData.username,
@@ -193,9 +177,10 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
           user,
           expiresAt,
         });
-      } catch (e) {
+      } catch (e: any) {
         console.error('CAS ticket validation error:', e);
-        setError(e instanceof Error ? e.message : 'Authentication failed');
+        const errorMessage = e.response?.data?.detail || e.message || 'Authentication failed';
+        setError(errorMessage);
         setAuthState({ isAuthenticated: false, user: null });
       } finally {
         setIsLoading(false);
@@ -218,21 +203,11 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
     setError(null);
 
     try {
-      const response = await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-        credentials: 'include',
+      const response = await api.post('/auth/register', userData, {
+        withCredentials: true,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Registration failed');
-      }
-
-      const userResponse = await response.json();
+      const userResponse = response.data;
       
       // Convert username-based response to match expected user format
       const user: AuthUser = {
@@ -247,9 +222,10 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         user,
         expiresAt,
       });
-    } catch (e) {
+    } catch (e: any) {
       console.error('Registration error:', e);
-      setError(e instanceof Error ? e.message : 'Registration failed');
+      const errorMessage = e.response?.data?.detail || e.message || 'Registration failed';
+      setError(errorMessage);
       setAuthState({ isAuthenticated: false, user: null });
       throw e;
     } finally {
@@ -263,11 +239,10 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
     
     try {
       // Call backend logout endpoint
-      await fetch('/api/v1/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
+      await api.post('/auth/logout', {}, {
+        withCredentials: true,
       });
-    } catch (e) {
+    } catch (e: any) {
       console.error('Logout error:', e);
     }
 
