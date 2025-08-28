@@ -236,11 +236,12 @@ def get_or_create_user_from_cas(db_session: Session, cas_xml_string: str):
         new_user = models.User(
             first_name=first_name,
             last_name=last_name,
+            username=netid,
+            email=email,
             user_metadata={
                 'email': email,
                 'created_at': datetime.now().isoformat(),
-                'last_login': datetime.now().isoformat(),
-                'cas_data': cas_metadata
+                'last_login': datetime.now().isoformat()
             }
         )
         db_session.add(new_user)

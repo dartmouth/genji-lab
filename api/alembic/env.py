@@ -1,27 +1,28 @@
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 
 from alembic import context
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 
 # Load environment variables
-load_dotenv()
+load_dotenv(find_dotenv())
 
 # Import your models to access the metadata
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from models.models import Base, metadata
+from models.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
 
+# Hardcode schema as 'app'
 schema = 'app'
 
 Base.metadata.schema = schema
@@ -40,9 +41,6 @@ if config.config_file_name is not None:
 # Set target metadata
 # This should reference your SQLAlchemy Base.metadata
 target_metadata = Base.metadata
-
-# Get schema from environment
-schema = os.environ.get('DB_SCHEMA', 'app')
 
 
 def include_object(object, name, type_, reflected, compare_to):
@@ -77,6 +75,10 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        # Create schema outside transaction
+        connection.execute(text("CREATE SCHEMA IF NOT EXISTS app"))
+        connection.commit()
+        
         context.configure(
             connection=connection, 
             target_metadata=target_metadata,
