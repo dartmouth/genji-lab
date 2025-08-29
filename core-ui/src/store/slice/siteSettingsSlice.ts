@@ -123,6 +123,50 @@ export const getCacheBuster = createAsyncThunk(
   }
 );
 
+export const uploadSiteFavicon = createAsyncThunk(
+  'siteSettings/uploadSiteFavicon',
+  async (
+    { file, userId }: { file: File; userId: number }, 
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/site-settings/upload-favicon', formData, {
+        headers: {
+          'X-User-ID': userId.toString(),
+        },
+        withCredentials: true,
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to upload favicon';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const removeSiteFavicon = createAsyncThunk(
+  'siteSettings/removeSiteFavicon',
+  async (userId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.delete('/site-settings/remove-favicon', {
+        headers: {
+          'X-User-ID': userId.toString(),
+        },
+        withCredentials: true,
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to remove favicon';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 const siteSettingsSlice = createSlice({
   name: 'siteSettings',
   initialState,
@@ -203,6 +247,36 @@ const siteSettingsSlice = createSlice({
         state.error = null;
       })
       .addCase(removeSiteLogo.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Upload favicon
+      .addCase(uploadSiteFavicon.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(uploadSiteFavicon.fulfilled, (state, action: PayloadAction<SiteSettings>) => {
+        state.isLoading = false;
+        state.settings = action.payload;
+        state.lastFetched = Date.now();
+        state.error = null;
+      })
+      .addCase(uploadSiteFavicon.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      // Remove favicon
+      .addCase(removeSiteFavicon.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(removeSiteFavicon.fulfilled, (state, action: PayloadAction<SiteSettings>) => {
+        state.isLoading = false;
+        state.settings = action.payload;
+        state.lastFetched = Date.now();
+        state.error = null;
+      })
+      .addCase(removeSiteFavicon.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

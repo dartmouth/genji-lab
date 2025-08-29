@@ -16,8 +16,9 @@ import {
 } from '@mui/material';
 import { CloudUpload, Delete, Image as ImageIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { fetchSiteSettings, updateSiteSettings, uploadSiteLogo, removeSiteLogo, clearError } from '@store/slice/siteSettingsSlice';
+import { fetchSiteSettings, updateSiteSettings, uploadSiteLogo, removeSiteLogo, uploadSiteFavicon, removeSiteFavicon, clearError } from '@store/slice/siteSettingsSlice';
 import { useAuth } from '@hooks/useAuthContext';
+import { updateFavicon, loadFaviconFromAPI } from '../../../utils/favicon';
 
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
@@ -82,6 +83,12 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Favicon-related state
+  const [selectedFaviconFile, setSelectedFaviconFile] = useState<File | null>(null);
+  const [faviconValidationError, setFaviconValidationError] = useState<string | null>(null);
+  const [isFaviconDragOver, setIsFaviconDragOver] = useState<boolean>(false);
+  const faviconFileInputRef = useRef<HTMLInputElement>(null);
+
   // Load current settings on component mount
   useEffect(() => {
     dispatch(fetchSiteSettings());
@@ -91,6 +98,10 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
   useEffect(() => {
     if (settings) {
       setSiteTitle(settings.site_title || 'Site Title');
+      // Refresh favicon when settings change to ensure it's in sync
+      loadFaviconFromAPI().catch(() => {
+        // Silently handle favicon refresh errors
+      });
     }
   }, [settings]);
 
@@ -123,6 +134,22 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
 
     if (file.size > maxSize) {
       return 'File too large. Maximum size is 2MB.';
+    }
+
+    return null;
+  };
+
+  // Favicon validation and handling functions
+  const validateFaviconFile = (file: File): string | null => {
+    const allowedTypes = ['image/png', 'image/x-icon'];
+    const maxSize = 500 * 1024; // 500KB
+
+    if (!allowedTypes.includes(file.type)) {
+      return 'Invalid file type. Only PNG and ICO files are allowed.';
+    }
+
+    if (file.size > maxSize) {
+      return 'File too large. Maximum size is 500KB.';
     }
 
     return null;
@@ -214,6 +241,105 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
     } catch (err: any) {
       console.error('Failed to remove logo:', err);
       setLogoValidationError(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Favicon handlers
+  const handleFaviconFileSelect = (file: File) => {
+    const error = validateFaviconFile(file);
+    if (error) {
+      setFaviconValidationError(error);
+      setSelectedFaviconFile(null);
+      return;
+    }
+
+    setSelectedFaviconFile(file);
+    setFaviconValidationError(null);
+  };
+
+  const handleFaviconFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFaviconFileSelect(file);
+    }
+  };
+
+  const handleFaviconDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsFaviconDragOver(true);
+  };
+
+  const handleFaviconDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsFaviconDragOver(false);
+  };
+
+  const handleFaviconDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsFaviconDragOver(false);
+
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      handleFaviconFileSelect(files[0]);
+    }
+  };
+
+  const handleFaviconUpload = async () => {
+    if (!selectedFaviconFile || !user?.id) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      dispatch(clearError());
+      setFaviconValidationError(null);
+
+      await dispatch(uploadSiteFavicon({ 
+        file: selectedFaviconFile, 
+        userId: user.id 
+      })).unwrap();
+
+      setSuccessMessage('Favicon uploaded successfully!');
+      setSelectedFaviconFile(null);
+      
+      // Update favicon in browser tab immediately
+      const cacheBuster = Date.now();
+      updateFavicon(`/api/v1/site-settings/favicon?t=${cacheBuster}`);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      console.error('Failed to upload favicon:', err);
+      setFaviconValidationError(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFaviconRemove = async () => {
+    if (!user?.id) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      dispatch(clearError());
+      setFaviconValidationError(null);
+
+      await dispatch(removeSiteFavicon(user.id)).unwrap();
+
+      setSuccessMessage('Favicon removed successfully!');
+      
+      // Update favicon in browser tab to fallback
+      updateFavicon('/favicon.png');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      console.error('Failed to remove favicon:', err);
+      setFaviconValidationError(err);
     } finally {
       setIsSaving(false);
     }
@@ -322,6 +448,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
           <Tab label="Overview" {...a11yPropsSubTab(0)} />
           <Tab label="Site Title" {...a11yPropsSubTab(1)} />
           <Tab label="Site Logo" {...a11yPropsSubTab(2)} />
+          <Tab label="Site Favicon" {...a11yPropsSubTab(3)} />
         </Tabs>
         
         {/* Sub-tab content */}
@@ -498,6 +625,119 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
                 startIcon={isSaving ? <CircularProgress size={20} /> : <CloudUpload />}
               >
                 {isSaving ? 'Uploading...' : 'Upload Logo'}
+              </Button>
+            </Box>
+          </Box>
+        </SubTabPanel>
+
+        {/* Site Favicon Tab */}
+        <SubTabPanel value={activeSubTab} index={3}>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Site Favicon
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Upload a custom favicon for your site. <strong>Recommended dimensions: 32x32 pixels</strong>
+              <br />
+              <strong>Supported formats:</strong> PNG, ICO | <strong>Maximum size:</strong> 500KB
+              <br />
+              <strong>Note:</strong> The favicon appears in browser tabs and bookmarks.
+            </Typography>
+
+            {faviconValidationError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {faviconValidationError}
+              </Alert>
+            )}
+
+            {/* Current Favicon Display */}
+            {settings && (
+              <Card sx={{ mb: 3, p: 2 }}>
+                <CardContent>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Current Favicon
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      component="img"
+                      src={`/api/v1/site-settings/favicon?t=${Date.now()}`}
+                      alt="Current Site Favicon"
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        objectFit: 'contain',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: 1,
+                        p: 0.5
+                      }}
+                      onError={(e) => {
+                        // If favicon file doesn't exist, hide the display
+                        const target = e.target as HTMLElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                    <IconButton
+                      color="error"
+                      onClick={handleFaviconRemove}
+                      disabled={isSaving}
+                      title="Remove current favicon"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Favicon Upload Area */}
+            <Paper
+              sx={{
+                p: 3,
+                border: isFaviconDragOver ? '2px dashed #1976d2' : '2px dashed #e0e0e0',
+                backgroundColor: isFaviconDragOver ? 'rgba(25, 118, 210, 0.04)' : 'transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                mb: 3,
+                textAlign: 'center'
+              }}
+              onDragOver={handleFaviconDragOver}
+              onDragLeave={handleFaviconDragLeave}
+              onDrop={handleFaviconDrop}
+              onClick={() => faviconFileInputRef.current?.click()}
+            >
+              <input
+                type="file"
+                ref={faviconFileInputRef}
+                onChange={handleFaviconFileInputChange}
+                accept=".png,.ico"
+                style={{ display: 'none' }}
+              />
+              
+              <ImageIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="body1" gutterBottom>
+                Drag and drop a favicon file here, or click to browse
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                32x32 pixels recommended • PNG or ICO • Max 500KB
+              </Typography>
+              
+              {selectedFaviconFile && (
+                <Typography variant="body2" sx={{ mt: 2, color: 'primary.main' }}>
+                  Selected: {selectedFaviconFile.name}
+                </Typography>
+              )}
+            </Paper>
+
+            {/* Favicon Upload Actions */}
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <Button
+                variant="contained"
+                onClick={handleFaviconUpload}
+                disabled={!selectedFaviconFile || isSaving || !!faviconValidationError}
+                startIcon={isSaving ? <CircularProgress size={20} /> : <CloudUpload />}
+              >
+                {isSaving ? 'Uploading...' : 'Upload Favicon'}
               </Button>
             </Box>
           </Box>
