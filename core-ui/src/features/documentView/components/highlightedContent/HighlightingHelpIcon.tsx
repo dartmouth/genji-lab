@@ -14,21 +14,40 @@ const HighlightingHelpIcon: React.FC<HighlightingHelpIconProps> = ({
   const highlightTypes = [
     {
       type: "Comment",
-      description: "Personal comments and notes",
+      description: (
+        <>
+          Personal comments and notes.{" "}
+          <strong>
+            Highlight and right-click on text to create a comment.
+          </strong>
+        </>
+      ),
       colorClass: "highlight-comment",
       backgroundColor: "rgba(196, 221, 136, 0.3)",
       borderColor: "#c4dd88",
     },
     {
       type: "Scholarly Annotation",
-      description: "Academic analysis and scholarly notes",
+      description: (
+        <>
+          Academic analysis and scholarly notes.{" "}
+          <strong>
+            Highlight and right-click on text to create a scholarly annotation.
+          </strong>
+        </>
+      ),
       colorClass: "highlight-scholarly",
       backgroundColor: "rgba(171, 247, 255, 0.3)",
       borderColor: "#abf7ff",
     },
     {
       type: "Linked Text",
-      description: "Text connected to other documents",
+      description: (
+        <>
+          Text connected to other documents.{" "}
+          <strong>Right-click and hover over "View Linked Text"</strong>
+        </>
+      ),
       colorClass: "highlight-linked",
       backgroundColor: "rgba(244, 67, 54, 0.15)",
       borderColor: "#f44336",
