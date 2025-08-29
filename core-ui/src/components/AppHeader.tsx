@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/useAuthContext";
 
 import { useAppDispatch, useAppSelector } from "@store/hooks";
@@ -12,6 +13,7 @@ import "../features/documentView/styles/AuthStyles.css";
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const navigate = useNavigate();
   
   const dispatch = useAppDispatch();
   const { settings } = useAppSelector((state) => state.siteSettings);
@@ -67,10 +69,15 @@ const AppHeader: React.FC = () => {
 
 
   // Site title
-  const siteTitle = settings?.site_title || 'Site Title';
+  const { isLoading: settingsLoading } = useAppSelector((state) => state.siteSettings);
+  const siteTitle = settings?.site_title || '';
 
   const handleCasLogin = () => {
     login(); // Call without parameters for CAS authentication
+  };
+
+  const handleTitleClick = () => {
+    navigate('/');
   };
 
   const handleBasicAuthClick = () => {
@@ -103,7 +110,9 @@ const AppHeader: React.FC = () => {
   return (
     <header className="app-header">
       <div className="header-left">
-        <h1 className="app-title">{siteTitle}</h1>
+        <h1 className="app-title clickable" onClick={handleTitleClick}>
+          {settingsLoading ? '\u00A0' : (siteTitle || 'Genji')}
+        </h1>
       </div>
       <SimpleSearchBar></SimpleSearchBar>
       <div className="header-right">

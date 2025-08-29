@@ -233,7 +233,13 @@ class SiteSettings(Base):
     site_logo_enabled = Column(Boolean, nullable=False, default=False)
     updated_by_id = Column(Integer, ForeignKey(f"{'app'}.users.id"), nullable=False)
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
-    
+
+    # New fields for logo and favicon storage
+    site_logo_data = Column(Text, nullable=True)
+    site_logo_mime_type = Column(String(50), nullable=True)
+    site_favicon_data = Column(Text, nullable=True)
+    site_favicon_mime_type = Column(String(50), nullable=True)
+
     # Relationships
     updated_by = relationship("User")
 
