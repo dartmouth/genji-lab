@@ -194,9 +194,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
         }
       });
 
-      // Add critical documents based on database analysis
-      [1, 2, 21].forEach((id) => referencedDocumentIds.add(id));
-
       // Get elements from all referenced documents
       referencedDocumentIds.forEach((docId) => {
         const docElements = selectElementsByDocumentId(state, docId);

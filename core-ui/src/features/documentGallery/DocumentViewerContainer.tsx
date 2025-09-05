@@ -29,12 +29,23 @@ import DocumentLinkingOverlay from "@/features/documentView/components/annotatio
 import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollToTextUtils";
 import RouterSwitchBoard from "@/RouterSwitchBoard";
 import "./styles/DocumentViewerStyles.css";
-
+import {
+  ToggleButton,
+  ToggleButtonGroup,
+  Switch,
+  FormControlLabel,
+  Box,
+  Chip,
+  Tooltip,
+} from "@mui/material";
+import {
+  MenuBook as ReadingIcon,
+  Comment as AnnotationIcon,
+} from "@mui/icons-material";
 
 import { useLocation } from "react-router-dom";
 
-const DocumentViewerContainer: React.FC = () => {  
-
+const DocumentViewerContainer: React.FC = () => {
   return <RouterSwitchBoard />;
 };
 
@@ -44,7 +55,7 @@ export const CollectionsView: React.FC = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(fetchDocumentCollections({includeUsers: false}));
+    dispatch(fetchDocumentCollections({ includeUsers: false }));
   }, [dispatch]);
 
   const handleCollectionSelect = (collectionId: number) => {
@@ -59,7 +70,7 @@ export const CollectionsView: React.FC = () => {
 // Documents gallery view component
 export const DocumentsView: React.FC = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
-  
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -105,29 +116,30 @@ export const DocumentContentView: React.FC = () => {
 
   const location = useLocation();
 
-
-
   useEffect(() => {
     const getAnnotationIdFromHash = (): string | null => {
-    const hash = location.hash; // e.g., "#annotation-21"
-    
-    if (hash.startsWith('#annotation-')) {
-      const annotationId = hash.replace('#annotation-', '');
-      // const id = parseInt(annotationId, 10);
-      return annotationId
-    }
-    
-    return null;
-  };
-  const hash = getAnnotationIdFromHash()
-  if (documentId && hash){
-    dispatch(setHoveredHighlights({documentId: documentId as unknown as number, highlightIds: [hash]}));
-  }
-  
-    console.log('Hash in DocumentContentView:', getAnnotationIdFromHash());
-  }, [location.hash, dispatch, documentId]);
+      const hash = location.hash; // e.g., "#annotation-21"
 
-   
+      if (hash.startsWith("#annotation-")) {
+        const annotationId = hash.replace("#annotation-", "");
+        // const id = parseInt(annotationId, 10);
+        return annotationId;
+      }
+
+      return null;
+    };
+    const hash = getAnnotationIdFromHash();
+    if (documentId && hash) {
+      dispatch(
+        setHoveredHighlights({
+          documentId: documentId as unknown as number,
+          highlightIds: [hash],
+        })
+      );
+    }
+
+    console.log("Hash in DocumentContentView:", getAnnotationIdFromHash());
+  }, [location.hash, dispatch, documentId]);
 
   // Use useRef for atomic state updates
   const isUpdatingDocuments = useRef(false);
@@ -186,7 +198,6 @@ export const DocumentContentView: React.FC = () => {
 
     return elements;
   });
-
 
   // Track documents by collection to handle the API response structure
   const [documentsByCollection, setDocumentsByCollection] = useState<{
@@ -312,7 +323,7 @@ export const DocumentContentView: React.FC = () => {
 
   // Fetch document collections when component mounts
   useEffect(() => {
-    dispatch(fetchDocumentCollections({includeUsers: false}));
+    dispatch(fetchDocumentCollections({ includeUsers: false }));
   }, [dispatch]);
 
   // Fetch documents for the current collection
@@ -1103,9 +1114,285 @@ export const DocumentContentView: React.FC = () => {
   return (
     <div className="document-content-view">
       <div className="document-view-header">
-        <button onClick={handleBackToDocuments} className="back-button">
-          ← Back to Documents
-        </button>
+        <div className="header-row">
+          {/* Back button */}
+          <button onClick={handleBackToDocuments} className="back-button">
+            ← Back to Documents
+          </button>
+
+          {/* View mode controls */}
+          <div className="view-controls">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 1, sm: 2 },
+                backgroundColor: "background.paper",
+                padding: { xs: 1, sm: 1.5 },
+                borderRadius: 2,
+                boxShadow: 1,
+                width: "fit-content",
+                minWidth: 0,
+              }}
+            >
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(event, newMode) => {
+                  if (newMode !== null) {
+                    handleViewModeChange(newMode);
+                  }
+                }}
+                size="small"
+                sx={{
+                  "& .MuiToggleButton-root": {
+                    px: { xs: 1, sm: 2 },
+                    py: { xs: 0.5, sm: 1 },
+                    fontWeight: 500,
+                    textTransform: "none",
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                    border: "1px solid",
+                    borderColor: "divider",
+                    "&.Mui-selected": {
+                      backgroundColor: "primary.main",
+                      color: "primary.contrastText",
+                      "&:hover": {
+                        backgroundColor: "primary.dark",
+                      },
+                    },
+                    "&:hover": {
+                      backgroundColor: "action.hover",
+                    },
+                    "& .MuiSvgIcon-root": {
+                      fontSize: { xs: 16, sm: 18 },
+                      mr: { xs: 0, sm: 1 },
+                    },
+                    "& span:not(.MuiSvgIcon-root)": {
+                      display: { xs: "none", sm: "inline" },
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="reading" aria-label="reading mode">
+                  <ReadingIcon />
+                  <span>Reading</span>
+                </ToggleButton>
+                <ToggleButton value="annotations" aria-label="annotations mode">
+                  <AnnotationIcon />
+                  <span>Annotations</span>
+                </ToggleButton>
+              </ToggleButtonGroup>
+
+              <Tooltip title="Highlight linked text between documents">
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={showLinkedTextHighlights}
+                      onChange={(event) =>
+                        setShowLinkedTextHighlights(event.target.checked)
+                      }
+                      color="primary"
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        "& > span:first-of-type": {
+                          display: { xs: "none", sm: "inline" },
+                        },
+                      }}
+                    >
+                      <span>Show Links</span>
+                      {showLinkedTextHighlights && (
+                        <Chip
+                          label="ON"
+                          size="small"
+                          color="primary"
+                          sx={{
+                            height: { xs: 16, sm: 18 },
+                            fontSize: { xs: "0.6rem", sm: "0.7rem" },
+                            ml: 0.5,
+                          }}
+                        />
+                      )}
+                    </Box>
+                  }
+                  sx={{
+                    margin: 0,
+                    "& .MuiFormControlLabel-label": {
+                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                      fontWeight: 500,
+                    },
+                  }}
+                />
+              </Tooltip>
+            </Box>
+          </div>
+
+          {/* Document Comparison Panel */}
+          <div
+            className={`document-comparison-panel ${
+              isManagementPanelCollapsed ? "collapsed" : ""
+            }`}
+          >
+            <div className="panel-header" onClick={toggleManagementPanel}>
+              <h3>Document Comparison</h3>
+              <button className="collapse-toggle" aria-label="Toggle panel">
+                {isManagementPanelCollapsed ? "▼" : "▲"}
+              </button>
+            </div>
+          </div>
+
+          {/* Help icon with high z-index */}
+          <div className="help-icon-container">
+            <HighlightingHelpIcon />
+          </div>
+        </div>
+
+        {/* Expanded panel content */}
+        {!isManagementPanelCollapsed && (
+          <div className="panel-content">
+            {viewedDocuments.length === 2 && (
+              <div className="document-linking-controls">
+                <button
+                  onClick={() => setIsLinkingModeActive(true)}
+                  className="link-documents-btn"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    width: "100%",
+                    padding: "8px 12px",
+                    backgroundColor: isLinkingModeActive
+                      ? "#1976d2"
+                      : "#e3f2fd",
+                    border: "1px solid #1976d2",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color: isLinkingModeActive ? "white" : "#1976d2",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <span className="icon">🔗</span>
+                  {isLinkingModeActive
+                    ? "Linking Mode Active"
+                    : "Link Documents"}
+                </button>
+
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#666",
+                    fontStyle: "italic",
+                    padding: "8px",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "4px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  💡 Right-click on linked text to navigate between documents
+                </div>
+              </div>
+            )}
+
+            <div className="viewed-documents">
+              <h4>Currently Viewing:</h4>
+              <ul className="document-list">
+                {viewedDocuments.map((doc, index) => (
+                  <li key={doc.id} className="document-item">
+                    <span className="document-indicator">
+                      {index === 0 ? "📄" : "📋"}
+                    </span>
+                    <span className="document-title">{doc.title}</span>
+                    {index === 0 && (
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: "#666",
+                          marginLeft: "6px",
+                        }}
+                      >
+                        (primary)
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleRemoveDocument(doc.id)}
+                      className="remove-document-btn"
+                      aria-label="Remove document"
+                      disabled={index === 0 && viewedDocuments.length === 1}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {viewedDocuments.length < 2 && (
+              <div className="add-document-controls">
+                <h4>Add Document for Comparison:</h4>
+
+                <div className="collection-selector">
+                  <label htmlFor="collection-select">Collection:</label>
+                  <select
+                    id="collection-select"
+                    value={selectedCollectionId}
+                    onChange={handleCollectionChange}
+                    className="collection-select"
+                  >
+                    {documentCollections.map((collection) => (
+                      <option key={collection.id} value={collection.id}>
+                        {collection.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="document-selector">
+                  <label htmlFor="document-select">Document:</label>
+                  <select
+                    id="document-select"
+                    onChange={(e) => {
+                      const selectedId = Number(e.target.value);
+                      if (selectedId) {
+                        handleAddComparisonDocument(selectedId);
+                      }
+                    }}
+                    value={comparisonDocumentId || ""}
+                    className="document-select"
+                    disabled={
+                      isLoadingDocuments ||
+                      availableInSelectedCollection.length === 0
+                    }
+                  >
+                    {isLoadingDocuments ? (
+                      <option value="">Loading...</option>
+                    ) : (
+                      <>
+                        <option value="">
+                          {availableInSelectedCollection.length === 0
+                            ? "No other documents available"
+                            : "Select a document"}
+                        </option>
+                        {availableInSelectedCollection.map((doc) => (
+                          <option key={doc.id} value={doc.id}>
+                            {doc.title || `Document ${doc.id}`}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {isLoadingDocuments && (
           <div
@@ -1125,201 +1412,6 @@ export const DocumentContentView: React.FC = () => {
             Loading document...
           </div>
         )}
-
-        {/* View mode toggles - positioned between dropdown and help icon */}
-        <div className="header-view-controls">
-          <div className="view-mode-toggle">
-            <button
-              className={`mode-button ${
-                viewMode === "reading" ? "active" : ""
-              }`}
-              onClick={() => handleViewModeChange("reading")}
-              title="Reading mode"
-            >
-              <span className="icon">📖</span> Reading
-            </button>
-            <button
-              className={`mode-button ${
-                viewMode === "annotations" ? "active" : ""
-              }`}
-              onClick={() => handleViewModeChange("annotations")}
-              title="Annotations mode"
-            >
-              <span className="icon">💬</span> Annotations
-            </button>
-            <button
-              className={`mode-button ${
-                showLinkedTextHighlights ? "active" : ""
-              }`}
-              onClick={() =>
-                setShowLinkedTextHighlights(!showLinkedTextHighlights)
-              }
-              title="Highlight all text that has links in both documents"
-            >
-              <span className="icon">🔗</span> Show Links
-            </button>
-          </div>
-        </div>
-
-        {/* Help icon on the far right */}
-        <div className="header-right-controls">
-          <HighlightingHelpIcon />
-        </div>
-
-        <div
-          className={`document-management-panel ${
-            isManagementPanelCollapsed ? "collapsed" : ""
-          }`}
-        >
-          <div className="panel-header" onClick={toggleManagementPanel}>
-            <h3>Document Comparison</h3>
-            <button className="collapse-toggle" aria-label="Toggle panel">
-              {isManagementPanelCollapsed ? "▼" : "▲"}
-            </button>
-          </div>
-
-          {!isManagementPanelCollapsed && (
-            <div className="panel-content">
-              {/* View mode toggle removed from here - now in header */}
-
-              {viewedDocuments.length === 2 && (
-                <div className="document-linking-controls">
-                  <button
-                    onClick={() => setIsLinkingModeActive(true)}
-                    className="link-documents-btn"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      width: "100%",
-                      padding: "8px 12px",
-                      backgroundColor: isLinkingModeActive
-                        ? "#1976d2"
-                        : "#e3f2fd",
-                      border: "1px solid #1976d2",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: isLinkingModeActive ? "white" : "#1976d2",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    <span className="icon">🔗</span>
-                    {isLinkingModeActive
-                      ? "Linking Mode Active"
-                      : "Link Documents"}
-                  </button>
-
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#666",
-                      fontStyle: "italic",
-                      padding: "8px",
-                      backgroundColor: "#f8f9fa",
-                      borderRadius: "4px",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    💡 Right-click on linked text to navigate between documents
-                  </div>
-                </div>
-              )}
-
-              <div className="viewed-documents">
-                <h4>Currently Viewing:</h4>
-                <ul className="document-list">
-                  {viewedDocuments.map((doc, index) => (
-                    <li key={doc.id} className="document-item">
-                      <span className="document-indicator">
-                        {index === 0 ? "📄" : "📋"}
-                      </span>
-                      <span className="document-title">{doc.title}</span>
-                      {index === 0 && (
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            color: "#666",
-                            marginLeft: "6px",
-                          }}
-                        >
-                          (primary)
-                        </span>
-                      )}
-                      <button
-                        onClick={() => handleRemoveDocument(doc.id)}
-                        className="remove-document-btn"
-                        aria-label="Remove document"
-                        disabled={index === 0 && viewedDocuments.length === 1}
-                      >
-                        ×
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {viewedDocuments.length < 2 && (
-                <div className="add-document-controls">
-                  <h4>Add Document for Comparison:</h4>
-
-                  <div className="collection-selector">
-                    <label htmlFor="collection-select">Collection:</label>
-                    <select
-                      id="collection-select"
-                      value={selectedCollectionId}
-                      onChange={handleCollectionChange}
-                      className="collection-select"
-                    >
-                      {documentCollections.map((collection) => (
-                        <option key={collection.id} value={collection.id}>
-                          {collection.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="document-selector">
-                    <label htmlFor="document-select">Document:</label>
-                    <select
-                      id="document-select"
-                      onChange={(e) => {
-                        const selectedId = Number(e.target.value);
-                        if (selectedId) {
-                          handleAddComparisonDocument(selectedId);
-                        }
-                      }}
-                      value={comparisonDocumentId || ""}
-                      className="document-select"
-                      disabled={
-                        isLoadingDocuments ||
-                        availableInSelectedCollection.length === 0
-                      }
-                    >
-                      {isLoadingDocuments ? (
-                        <option value="">Loading...</option>
-                      ) : (
-                        <>
-                          <option value="">
-                            {availableInSelectedCollection.length === 0
-                              ? "No other documents available"
-                              : "Select a document"}
-                          </option>
-                          {availableInSelectedCollection.map((doc) => (
-                            <option key={doc.id} value={doc.id}>
-                              {doc.title || `Document ${doc.id}`}
-                            </option>
-                          ))}
-                        </>
-                      )}
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
       </div>
 
       {viewedDocuments.length > 0 ? (
