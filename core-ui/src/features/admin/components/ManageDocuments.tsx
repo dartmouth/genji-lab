@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, Tab, Box, Typography, styled, FormControl, InputLabel, Select, MenuItem, 
   Snackbar, Alert, Dialog, DialogActions, DialogContent, DialogContentText, 
   DialogTitle, Button, Checkbox, FormControlLabel } from '@mui/material';
-import { createDocument, updateDocument, useAppDispatch } from '@store';
+import { updateDocument, useAppDispatch } from '@store';
 import { useAuth } from "@hooks/useAuthContext.ts";
 import { useAppSelector } from "@store/hooks";
 import { 
@@ -98,6 +99,7 @@ const StyledForm = styled('form')(({ theme }) => ({
 const ManageDocuments: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<number>(0);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const documentCollections = useAppSelector(selectAllDocumentCollections);
   const documents = useAppSelector(selectAllDocuments);
 
@@ -110,14 +112,28 @@ const ManageDocuments: React.FC = () => {
     setActiveSubTab(newValue);
     
     // Reset form states when changing tabs
-    if (newValue === 5) {
+    if (newValue === 1) {
+      // Reset import word form when entering import word tab
+      setImportWordFormData({
+        document_collection_id: undefined,
+        title: '',
+        description: '',
+        file: null
+      });
+      setSelectedImportWordCollection('');
+      setImportWordError('');
+      setImportWordSuccess('');
+      setImportWordSubmitted(false);
+      setImportedDocumentData(null);
+    }
+    if (newValue === 4) {
       // Reset rename form when entering rename tab
       setRenameSelectedCollection('');
       setRenameSelectedDocument('');
       setRenameNewName('');
       setRenameDocuments([]);
     }
-    if (newValue === 6) {
+    if (newValue === 5) {
       // Reset update description form when entering update description tab
       setUpdateDescriptionSelectedCollection('');
       setUpdateDescriptionSelectedDocument('');
@@ -126,57 +142,35 @@ const ManageDocuments: React.FC = () => {
     }
   };
 
-  interface FormData {
+  const { user } = useAuth();
+
+  // Import Word Document form state
+  interface ImportWordFormData {
+    document_collection_id: number | undefined;
     title: string;
     description: string;
-    document_collection_id?: number;
-  }
-
-  const { user } = useAuth();
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    description: '',
-    document_collection_id: undefined
-  });
-  const [submitted, setSubmitted] = useState<boolean>(false);
-  
-  const [selectedCollection, setSelectedCollection] = useState<string>('');
-  
-  // Memoized collection name lookup to prevent unnecessary re-renders
-  const selectedCollectionName = useMemo(() => {
-    if (!selectedCollection) return 'None';
-    return documentCollections.find(c => c.id === parseInt(selectedCollection))?.title || 'None';
-  }, [selectedCollection, documentCollections]);
-  
-  const handleCollectionSelect = (event: any) => {
-    setSelectedCollection(event.target.value);
-    setFormData(prevData => ({
-      ...prevData,
-      document_collection_id: parseInt(event.target.value) || undefined
-    }));
-  };
-
-  // Word document upload form state
-  interface WordUploadFormData {
-    document_collection_id: number | undefined;
-    document_id: number | undefined;
     file: File | null;
   }
 
-  const [wordUploadFormData, setWordUploadFormData] = useState<WordUploadFormData>({
+  const [importWordFormData, setImportWordFormData] = useState<ImportWordFormData>({
     document_collection_id: undefined,
-    document_id: undefined,
+    title: '',
+    description: '',
     file: null
   });
   
-  const [wordUploadSubmitted, setWordUploadSubmitted] = useState<boolean>(false);
-  const [wordUploadLoading, setWordUploadLoading] = useState<boolean>(false);
-  const [selectedWordUploadCollection, setSelectedWordUploadCollection] = useState<string>('');
-  const [selectedDocument, setSelectedDocument] = useState<string>('');
-  const [uploadError, setUploadError] = useState<string>('');
-  const [uploadSuccess, setUploadSuccess] = useState<string>('');
-  const [uploadedCollectionName, setUploadedCollectionName] = useState<string>('');
-  const [uploadedDocumentName, setUploadedDocumentName] = useState<string>('');
+  const [importWordSubmitted, setImportWordSubmitted] = useState<boolean>(false);
+  const [importWordLoading, setImportWordLoading] = useState<boolean>(false);
+  const [selectedImportWordCollection, setSelectedImportWordCollection] = useState<string>('');
+  const [importWordError, setImportWordError] = useState<string>('');
+  const [importWordSuccess, setImportWordSuccess] = useState<string>('');
+  const [importedDocumentData, setImportedDocumentData] = useState<{
+    id: number;
+    title: string;
+    collection_id: number;
+    collection_name: string;
+    elements_created: number;
+  } | null>(null);
 
   // Delete documents state
   const [selectedDeleteCollection, setSelectedDeleteCollection] = useState<string>('');
@@ -265,111 +259,101 @@ const ManageDocuments: React.FC = () => {
   }, [selectedContentDeleteCollection, documents]);
 
   // Fetch documents when collection is selected for word upload
-  const handleWordUploadCollectionSelect = (event: any) => {
+  const handleImportWordCollectionSelect = (event: any) => {
     const collectionId = parseInt(event.target.value);
-    const selectedCollection = documentCollections.find(c => c.id === collectionId);
     
-    setSelectedWordUploadCollection(event.target.value);
-    setSelectedDocument('');
-    setWordUploadFormData(prevData => ({
+    setSelectedImportWordCollection(event.target.value);
+    setImportWordFormData(prevData => ({
       ...prevData,
-      document_collection_id: collectionId || undefined,
-      document_id: undefined 
+      document_collection_id: collectionId || undefined
     }));
-    
-    // Store collection name for success message
-    setUploadedCollectionName(selectedCollection?.title || '');
-    
-    if (collectionId) {
-      dispatch(fetchDocumentsByCollection(collectionId));
-    }
   };
 
-  const handleDocumentSelect = (event: any) => {
-    const documentId = parseInt(event.target.value);
-    const selectedDoc = documents.find(d => d.id === documentId);
-    
-    setSelectedDocument(event.target.value);
-    setWordUploadFormData(prevData => ({
+  const handleImportWordTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setImportWordFormData(prevData => ({
       ...prevData,
-      document_id: documentId || undefined
+      title: event.target.value
     }));
-    
-    // Store document name for success message
-    setUploadedDocumentName(selectedDoc?.title || '');
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportWordDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setImportWordFormData(prevData => ({
+      ...prevData,
+      description: event.target.value
+    }));
+  };
+
+  const handleImportWordFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
-    setWordUploadFormData(prevData => ({
+    setImportWordFormData(prevData => ({
       ...prevData,
       file: file
     }));
   };
 
-  const handleWordUploadSubmit = async (e: React.FormEvent) => {
+  const handleImportWordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUploadError('');
-    setUploadSuccess('');
+    setImportWordError('');
+    setImportWordSuccess('');
     
-    if (!wordUploadFormData.document_collection_id || !wordUploadFormData.document_id || !wordUploadFormData.file) {
-      setUploadError('Please select a collection, document, and file');
+    if (!importWordFormData.document_collection_id || !importWordFormData.title.trim() || !importWordFormData.file) {
+      setImportWordError('Please select a collection, enter a title, and select a file');
       return;
     }
 
-    if (!wordUploadFormData.file.name.endsWith('.docx')) {
-      setUploadError('Please select a .docx file');
+    if (!importWordFormData.file.name.endsWith('.docx')) {
+      setImportWordError('Please select a .docx file');
       return;
     }
 
-    setWordUploadLoading(true);
+    setImportWordLoading(true);
     
     try {
       const formData = new FormData();
-      formData.append('file', wordUploadFormData.file);
+      formData.append('file', importWordFormData.file);
       
-      const response = await api.post(`/elements/upload-word-doc?document_collection_id=${wordUploadFormData.document_collection_id}&document_id=${wordUploadFormData.document_id}`, formData);
+      const selectedCollection = documentCollections.find(c => c.id === importWordFormData.document_collection_id);
+      
+      const response = await api.post(
+        `/documents/import-word-doc?document_collection_id=${importWordFormData.document_collection_id}&title=${encodeURIComponent(importWordFormData.title)}&description=${encodeURIComponent(importWordFormData.description)}`, 
+        formData
+      );
 
       const result = response.data;
-      setUploadSuccess(`Successfully uploaded! Created ${result.elements_created} paragraphs.`);
-      setWordUploadSubmitted(true);
+      setImportWordSuccess(`Document created and imported successfully! Created ${result.import_results.elements_created} paragraphs.`);
+      setImportWordSubmitted(true);
+      
+      // Store the imported document data for display
+      setImportedDocumentData({
+        id: result.document.id,
+        title: result.document.title,
+        collection_id: importWordFormData.document_collection_id!,
+        collection_name: selectedCollection?.title || 'Unknown',
+        elements_created: result.import_results.elements_created
+      });
+
       // Reset form
-      setWordUploadFormData({
+      setImportWordFormData({
         document_collection_id: undefined,
-        document_id: undefined,
+        title: '',
+        description: '',
         file: null
       });
-      setSelectedWordUploadCollection('');
-      setSelectedDocument('');
+      setSelectedImportWordCollection('');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || error.message || 'Upload failed';
-      setUploadError(errorMessage);
+      const errorMessage = error.response?.data?.detail || error.message || 'Import failed';
+      setImportWordError(errorMessage);
     } finally {
-      setWordUploadLoading(false);
+      setImportWordLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
+  // View document handler
+  const handleViewDocument = () => {
+    if (importedDocumentData) {
+      navigate(`/collections/${importedDocumentData.collection_id}/documents/${importedDocumentData.id}`);
+    }
   };
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  const payload: { title: string; description: string; document_collection_id?: number } = {
-    title: formData.title,
-    description: formData.description,
-  };
-  if (formData.document_collection_id !== undefined) {
-    payload.document_collection_id = formData.document_collection_id;
-  }
-  
-  dispatch(createDocument(payload as any));
-  setSubmitted(true);
-};
 
   // Delete functionality handlers
   const handleDeleteCollectionSelect = async (event: any) => {
@@ -850,12 +834,11 @@ The document itself will remain but will be empty. This action cannot be undone.
           }}
         >
           <Tab label="Overview" {...a11yPropsSubTab(0)} />
-          <Tab label="Add" {...a11yPropsSubTab(1)} />
-          <Tab label="Add Word Content to Document" {...a11yPropsSubTab(2)} />
-          <Tab label="Delete" {...a11yPropsSubTab(3)} />
-          <Tab label="Delete Document Content" {...a11yPropsSubTab(4)} />
-          <Tab label="Rename" {...a11yPropsSubTab(5)} />
-          <Tab label="Update Description" {...a11yPropsSubTab(6)} />
+          <Tab label="Import Word Document" {...a11yPropsSubTab(1)} />
+          <Tab label="Delete" {...a11yPropsSubTab(2)} />
+          <Tab label="Delete Document Content" {...a11yPropsSubTab(3)} />
+          <Tab label="Rename" {...a11yPropsSubTab(4)} />
+          <Tab label="Update Description" {...a11yPropsSubTab(5)} />
         </Tabs>
         
         {/* Sub-tab content */}
@@ -864,92 +847,33 @@ The document itself will remain but will be empty. This action cannot be undone.
             Documents Overview
           </Typography>
           <div>
-            <p>Features for managing documents.</p>
+            <p>Features for managing documents:</p>
+            <ul>
+              <li><strong>Import Word Document:</strong> Create a new document and import Word content</li>
+              <li><strong>Delete:</strong> Remove documents and their content permanently</li>
+              <li><strong>Delete Document Content:</strong> Remove all content from a document while keeping the document itself</li>
+              <li><strong>Rename:</strong> Change document titles</li>
+              <li><strong>Update Description:</strong> Modify document descriptions</li>
+            </ul>
           </div>
         </SubTabPanel>
 
         <SubTabPanel value={activeSubTab} index={1}>
-            <Typography variant="h5" gutterBottom>
-                Add Document
-            </Typography>
-            <div>
-            <p>Complete this form to add your new document.</p>
-            </div>
-            <StyledForm onSubmit={handleSubmit}>
-            <div className="form-group">
-                <FormControl fullWidth>
-                    <InputLabel id="collection-select-label">Collection</InputLabel>
-                    <Select
-                        labelId="collection-select-label"
-                        id="collection-select"
-                        value={selectedCollection}
-                        onChange={handleCollectionSelect}
-                        name="document_collection_id"
-                    >
-                        <MenuItem value="">
-                            <em>None</em>
-                        </MenuItem>
-                        {documentCollections.map((collection) => (
-                            <MenuItem key={collection.id} value={collection.id}>
-                                {collection.title}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            </div>
-            <div className="form-group">
-                <label htmlFor="title">Title: </label>
-                <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                />
-            </div>
-
-            <div className="form-group">
-                <label htmlFor="description">Description: </label>
-                <input
-                type="text"
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                />
-            </div>
-
-            <button type="submit">Add</button>
-            </StyledForm>
-
-            {submitted && (
-            <div className="submitted-data">
-                <h2>A new document has been added: </h2>
-                <p><strong>Title:</strong> {formData.title}</p>
-                <p><strong>Description:</strong> {formData.description}</p>
-                <p><strong>Collection:</strong> {selectedCollectionName}</p>
-                <p><strong>User:</strong> {user?.first_name} {user?.last_name}</p>
-            </div>
-            )}
-        </SubTabPanel>
-
-        <SubTabPanel value={activeSubTab} index={2}>
           <Typography variant="h5" gutterBottom>
-            Add Word Content to Document
+            Import Word Document
           </Typography>
           <div>
-            <p>Upload Word document (.docx) content to an existing document.</p>
+            <p>Create a new document and import Word document (.docx) content.</p>
           </div>
-          <StyledForm onSubmit={handleWordUploadSubmit}>
+          <StyledForm onSubmit={handleImportWordSubmit}>
             <div className="form-group">
               <FormControl fullWidth>
-                <InputLabel id="word-upload-collection-select-label">Document Collection</InputLabel>
+                <InputLabel id="import-word-collection-select-label">Document Collection</InputLabel>
                 <Select
-                  labelId="word-upload-collection-select-label"
-                  id="word-upload-collection-select"
-                  value={selectedWordUploadCollection}
-                  onChange={handleWordUploadCollectionSelect}
+                  labelId="import-word-collection-select-label"
+                  id="import-word-collection-select"
+                  value={selectedImportWordCollection}
+                  onChange={handleImportWordCollectionSelect}
                   name="document_collection_id"
                   required
                 >
@@ -966,69 +890,102 @@ The document itself will remain but will be empty. This action cannot be undone.
             </div>
 
             <div className="form-group">
-              <FormControl fullWidth>
-                <InputLabel id="document-select-label">Document</InputLabel>
-                <Select
-                  labelId="document-select-label"
-                  id="document-select"
-                  value={selectedDocument}
-                  onChange={handleDocumentSelect}
-                  name="document_id"
-                  required
-                  disabled={!selectedWordUploadCollection}
-                >
-                  <MenuItem value="">
-                    <em>Select a document</em>
-                  </MenuItem>
-                  {documents.map((document) => (
-                    <MenuItem key={document.id} value={document.id}>
-                      {document.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <label htmlFor="import-word-title">Document Title: </label>
+              <input
+                type="text"
+                id="import-word-title"
+                name="title"
+                value={importWordFormData.title}
+                onChange={handleImportWordTitleChange}
+                required
+                placeholder="Enter document title"
+                maxLength={200}
+              />
             </div>
 
             <div className="form-group">
-              <label htmlFor="word-file">Word Document (.docx): </label>
+              <label htmlFor="import-word-description">Description (optional): </label>
+              <input
+                type="text"
+                id="import-word-description"
+                name="description"
+                value={importWordFormData.description}
+                onChange={handleImportWordDescriptionChange}
+                placeholder="Enter document description"
+                maxLength={1000}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="import-word-file">Word Document (.docx): </label>
               <input
                 type="file"
-                id="word-file"
+                id="import-word-file"
                 name="file"
                 accept=".docx"
-                onChange={handleFileSelect}
+                onChange={handleImportWordFileSelect}
                 required
               />
             </div>
 
-            {uploadError && (
+            {importWordError && (
               <div style={{ color: 'red', marginBottom: '16px' }}>
-                {uploadError}
+                {importWordError}
               </div>
             )}
 
-            {uploadSuccess && (
+            {importWordSuccess && (
               <div style={{ color: 'green', marginBottom: '16px' }}>
-                {uploadSuccess}
+                {importWordSuccess}
               </div>
             )}
 
-            <button type="submit" disabled={wordUploadLoading}>
-              {wordUploadLoading ? 'Uploading...' : 'Upload Word Document'}
+            <button type="submit" disabled={importWordLoading}>
+              {importWordLoading ? 'Importing...' : 'Import Word Document'}
             </button>
           </StyledForm>
 
-          {wordUploadSubmitted && uploadSuccess && (
+          {importWordSubmitted && importWordSuccess && importedDocumentData && (
             <div className="submitted-data">
-              <h2>Word document uploaded successfully!</h2>
-              <p><strong>Collection:</strong> {uploadedCollectionName}</p>
-              <p><strong>Document:</strong> {uploadedDocumentName}</p>
+              <h2>Word document imported successfully!</h2>
+              <p><strong>Document ID:</strong> {importedDocumentData.id}</p>
+              <p><strong>Title:</strong> {importedDocumentData.title}</p>
+              <p><strong>Collection:</strong> {importedDocumentData.collection_name}</p>
+              <p><strong>Paragraphs Created:</strong> {importedDocumentData.elements_created}</p>
               <p><strong>User:</strong> {user?.first_name} {user?.last_name}</p>
+              
+              <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleViewDocument}
+                  sx={{
+                    backgroundColor: 'success.main',
+                    '&:hover': {
+                      backgroundColor: 'success.dark',
+                    },
+                    fontWeight: 'bold'
+                  }}
+                >
+                  📄 View Document
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setImportWordSubmitted(false);
+                    setImportWordSuccess('');
+                    setImportedDocumentData(null);
+                    setImportWordError('');
+                  }}
+                >
+                  Import Another Document
+                </Button>
+              </Box>
             </div>
           )}
         </SubTabPanel>
 
-        <SubTabPanel value={activeSubTab} index={3}>
+        <SubTabPanel value={activeSubTab} index={2}>
           <Typography variant="h5" gutterBottom>
             Delete Documents
           </Typography>
@@ -1123,7 +1080,7 @@ The document itself will remain but will be empty. This action cannot be undone.
           </div>
         </SubTabPanel>
         
-        <SubTabPanel value={activeSubTab} index={4}>
+        <SubTabPanel value={activeSubTab} index={3}>
           <Typography variant="h5" gutterBottom>
             Delete Document Content
           </Typography>
@@ -1203,7 +1160,7 @@ The document itself will remain but will be empty. This action cannot be undone.
           </StyledForm>
         </SubTabPanel>
         
-        <SubTabPanel value={activeSubTab} index={5}>
+        <SubTabPanel value={activeSubTab} index={4}>
           <Typography variant="h5" gutterBottom>
             Rename Document
           </Typography>
@@ -1283,7 +1240,7 @@ The document itself will remain but will be empty. This action cannot be undone.
           </StyledForm>
         </SubTabPanel>
 
-        <SubTabPanel value={activeSubTab} index={6}>
+        <SubTabPanel value={activeSubTab} index={5}>
           <Typography variant="h5" gutterBottom>
             Update Document Description
           </Typography>
