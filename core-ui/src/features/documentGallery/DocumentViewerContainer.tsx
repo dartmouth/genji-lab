@@ -291,35 +291,39 @@ export const DocumentContentView: React.FC = () => {
   }, [selectedCollectionId, collectionId, documentsByCollection, dispatch]);
 
   // Cross-document element loader
-  const loadCrossDocumentElements = useCallback(async () => {
-    try {
-      const criticalDocuments = [2, 21];
+  // const loadCrossDocumentElements = useCallback(async () => {
+  //   try {
+  //     const criticalDocuments = [2, 21];
 
-      const loadPromises = criticalDocuments.map(async (docId) => {
-        try {
-          await dispatch(fetchDocumentElements(docId)).unwrap();
-        } catch (error) {
-          console.error(
-            `Failed to load elements for document ${docId}:`,
-            error
-          );
-        }
-      });
+  //     const loadPromises = criticalDocuments.map(async (docId) => {
+  //       try {
+  //         await dispatch(fetchDocumentElements(docId)).unwrap();
+  //       } catch (error) {
+  //         console.error(
+  //           `Failed to load elements for document ${docId}:`,
+  //           error
+  //         );
+  //       }
+  //     });
 
-      await Promise.all(loadPromises);
-    } catch (error) {
-      console.error("Error loading cross-document elements:", error);
-    }
-  }, [dispatch]);
+  //     await Promise.all(loadPromises);
+  //   } catch (error) {
+  //     console.error("Error loading cross-document elements:", error);
+  //   }
+  // }, [dispatch]);
 
-  // Load all documents and cross-document elements
+  // // Load all documents and cross-document elements
+  // useEffect(() => {
+  //   dispatch(fetchAllDocuments())
+  //     .unwrap()
+  //     .then(() => {
+  //       return loadCrossDocumentElements();
+  //     });
+  // }, [dispatch, loadCrossDocumentElements]);
+
   useEffect(() => {
-    dispatch(fetchAllDocuments())
-      .unwrap()
-      .then(() => {
-        return loadCrossDocumentElements();
-      });
-  }, [dispatch, loadCrossDocumentElements]);
+    dispatch(fetchAllDocuments());
+  }, [dispatch]);
 
   // Fetch document collections when component mounts
   useEffect(() => {

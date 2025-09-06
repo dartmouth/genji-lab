@@ -248,7 +248,13 @@ export const getLinkedDocumentsSimple = (
         allElements,
         viewedDocuments
       );
-
+      console.log("🔍 DocInfo for element:", elementId, docInfo);
+      console.log(
+        "🔍 Checking if same doc:",
+        docInfo?.documentId,
+        "vs selection:",
+        selection.documentId
+      );
       if (docInfo) {
         // Skip same-document links (unless in debug mode)
         if (docInfo.documentId === selection.documentId) {
@@ -283,6 +289,11 @@ export const getLinkedDocumentsSimple = (
         }
       }
     });
+
+    console.log(
+      "🔍 Targets not current selection:",
+      targetsNotCurrentSelection
+    );
 
     // Process each document ID only once, with consistent title resolution
     Object.keys(targetsByDocumentId).forEach((docIdStr) => {
@@ -370,6 +381,10 @@ export const getLinkedDocumentsSimple = (
       }
     });
   });
+  console.log(
+    "🔍 Sample annotation full structure:",
+    JSON.stringify(allLinkingAnnotations[0], null, 2)
+  );
 
   return result;
 };
