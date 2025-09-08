@@ -1,4 +1,5 @@
 from typing import List, Optional, Dict, Any
+from sqlalchemy import Integer
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response, UploadFile, File
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -302,6 +303,7 @@ def get_document_elements(
     elements = db.execute(
         select(DocumentElement)
         .filter(DocumentElement.document_id == document_id)
+        .order_by(DocumentElement.hierarchy['element_order'].astext.cast(Integer))
         .offset(skip)
         .limit(limit)
     ).scalars().all()
