@@ -361,6 +361,7 @@ const DocumentComparisonContainer: React.FC<
                   documentId={doc.id}
                   documentCollectionId={doc.collectionId}
                   viewedDocuments={documents}
+                  viewMode={viewMode}
                   onOpenLinkedDocument={onOpenLinkedDocument}
                   isLinkingModeActive={isLinkingModeActive}
                   showLinkedTextHighlights={showLinkedTextHighlights}

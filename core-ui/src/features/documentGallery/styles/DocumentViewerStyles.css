@@ -1,404 +1,166 @@
-/* src/styles/DocumentViewerStyles.css */
+/* Simple working layout CSS */
 
 .document-content-view {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-  }
-  
-  .document-view-header {
-    display: flex;
-    padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
-    background-color: #f5f5f5;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  
-  .back-button {
-    padding: 0.5rem 1rem;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  
-  .back-button:hover {
-    background-color: #e0e0e0;
-  }
-  
-  /* Document management panel */
-  .document-management-panel {
-    flex: 1;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  }
-  
-  .document-management-panel h3 {
-    margin-top: 0;
-    margin-bottom: 0.75rem;
-    font-size: 1.2rem;
-    color: #333;
-  }
-  
-  .document-management-panel h4 {
-    margin: 0.5rem 0;
-    font-size: 1rem;
-    color: #666;
-  }
-  
-  /* Document list */
-  .document-list {
-    list-style: none;
-    padding: 0;
-    margin: 0.5rem 0 1rem 0;
-  }
-  
-  .document-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem;
-    margin-bottom: 0.25rem;
-    background-color: #f9f9f9;
-    border: 1px solid #eee;
-    border-radius: 3px;
-  }
-  
-  .document-title {
-    font-weight: 500;
-  }
-  
-  .remove-document-btn {
-    background-color: #ff5252;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    font-size: 1rem;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .remove-document-btn:hover {
-    background-color: #ff3333;
-  }
-  
-  /* Add document controls */
-  .add-document-controls {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
-  }
-  
-  .collection-selector,
-  .document-selector {
-    margin-bottom: 0.75rem;
-  }
-  
-  .collection-selector label,
-  .document-selector label {
-    display: block;
-    margin-bottom: 0.3rem;
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  .collection-select,
-  .document-select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
-  
-  /* No documents message */
-  .no-documents-message {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: #666;
-    font-style: italic;
-  }
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
 
-  /* Document Management Panel Styles */
-.document-management-panel {
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1rem;
-    transition: max-height 0.3s ease, padding 0.3s ease;
-    overflow: hidden;
-  }
-  
-  .document-management-panel.collapsed {
-    max-height: 50px;
-  }
-  
-  .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    background-color: #e9ecef;
-    border-bottom: 1px solid #dee2e6;
-  }
-  
-  .panel-header h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-  }
-  
-  .collapse-toggle {
-    background: none;
-    border: none;
-    font-size: 1rem;
-    color: #495057;
-    cursor: pointer;
-  }
-  
-  .panel-content {
-    padding: 1rem;
-  }
-  
-  /* View Mode Toggle */
-  .view-mode-toggle {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #dee2e6;
-    padding-bottom: 1rem;
-  }
-  
-  .mode-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    background-color: white;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-  }
-  
-  .mode-button.active {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
-  }
-  
-  .mode-button .icon {
-    font-size: 1.1rem;
-  }
-  
-  /* Document List */
-  .viewed-documents {
-    margin-bottom: 1rem;
-  }
-  
-  .viewed-documents h4 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    color: #495057;
-  }
-  
-  .document-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .document-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem;
-    background-color: white;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-  }
-  
-  .document-title {
-    font-weight: 500;
-    font-size: 0.9rem;
-  }
-  
-  .remove-document-btn {
-    background: none;
-    border: none;
-    color: #dc3545;
-    font-size: 1.1rem;
-    cursor: pointer;
-    padding: 0 0.5rem;
-  }
-  
-  /* Add Document Controls */
-  .add-document-controls h4 {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    color: #495057;
-  }
-  
-  .collection-selector,
-  .document-selector {
-    margin-bottom: 0.5rem;
-  }
-  
-  .collection-selector label,
-  .document-selector label {
-    display: block;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-    font-size: 0.8rem;
-  }
-  
-  .collection-select,
-  .document-select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
+.document-view-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
-/* Sleeker Document Management Panel */
-.document-management-panel {
-  background-color: #f8f9fa;
+/* Simple horizontal row */
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.back-button {
+  padding: 0.5rem 1rem;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.back-button:hover {
+  background-color: #e0e0e0;
+}
+
+.view-controls {
+  flex-shrink: 0;
+}
+
+.document-comparison-panel {
+  background-color: #ffffff;
+  border: 2px solid #dee2e6;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  margin-bottom: 16px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   overflow: hidden;
   transition: all 0.3s ease;
-  width: 100%;
-  max-width: 600px; /* Limit width for better appearance */
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
 }
 
-.document-management-panel.collapsed {
-  max-height: 40px;
-}
-
-/* Panel Header */
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background-color: #f0f2f5;
+  padding: 12px 16px;
+  background-color: #ffffff;
   cursor: pointer;
-  border-bottom: 1px solid #e2e6ea;
+  min-height: 24px;
 }
 
 .panel-header h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  color: #495057;
+  color: #212529;
 }
 
 .collapse-toggle {
   background: none;
   border: none;
-  color: #6c757d;
-  cursor: pointer;
-  font-size: 12px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-}
-
-/* Panel Content */
-.panel-content {
-  padding: 12px;
-}
-
-/* View Mode Toggle */
-.view-mode-toggle {
-  display: flex;
-  margin-bottom: 12px;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.mode-button {
-  flex: 1;
-  background-color: #ffffff;
-  border: none;
   color: #495057;
-  padding: 6px 8px;
-  font-size: 12px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 14px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
 }
 
-.mode-button:first-child {
-  border-right: 1px solid #dee2e6;
+.collapse-toggle:hover {
+  background-color: #f8f9fa;
 }
 
-.mode-button.active {
-  background-color: #e9ecef;
-  color: #212529;
-  font-weight: 500;
+/* Help icon with very high z-index */
+.help-icon-container {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 9999 !important;
+  margin-left: auto; /* Push to far right */
 }
 
-.mode-button .icon {
-  font-size: 12px;
-  margin-right: 4px;
+/* Force all tooltip content to highest z-index */
+.help-icon-container *,
+.help-icon-container [role="tooltip"],
+.help-icon-container .MuiTooltip-tooltip,
+.help-icon-container .MuiPopper-root {
+  z-index: 9999 !important;
 }
 
-/* Currently Viewing Documents */
+/* Panel content */
+.panel-content {
+  padding: 16px;
+  background-color: #ffffff;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  margin-top: 0.5rem;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: fit-content;
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.document-linking-controls {
+  margin-bottom: 16px;
+}
+
 .viewed-documents h4 {
-  font-size: 12px;
-  color: #6c757d;
+  font-size: 14px;
+  color: #495057;
   margin: 0 0 8px 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .document-list {
   list-style: none;
   padding: 0;
-  margin: 0 0 12px 0;
+  margin: 0 0 16px 0;
 }
 
 .document-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px;
+  padding: 8px 12px;
   background-color: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 4px;
-  margin-bottom: 4px;
-  font-size: 12px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.document-indicator {
+  margin-right: 8px;
+  font-size: 16px;
 }
 
 .document-title {
   font-weight: 500;
   color: #212529;
+  flex: 1;
 }
 
 .remove-document-btn {
@@ -406,14 +168,15 @@
   border: none;
   color: #6c757d;
   cursor: pointer;
-  font-size: 14px;
-  padding: 0;
-  width: 20px;
-  height: 20px;
+  font-size: 16px;
+  padding: 4px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
 .remove-document-btn:hover {
@@ -421,35 +184,82 @@
   color: #495057;
 }
 
-/* Add Document Controls */
+.remove-document-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .add-document-controls h4 {
-  font-size: 12px;
-  color: #6c757d;
-  margin: 0 0 8px 0;
-  font-weight: 500;
+  font-size: 14px;
+  color: #495057;
+  margin: 16px 0 12px 0;
+  font-weight: 600;
+  padding-top: 12px;
+  border-top: 1px solid #dee2e6;
 }
 
 .collection-selector,
 .document-selector {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
 .collection-selector label,
 .document-selector label {
-  font-size: 12px;
+  font-size: 14px;
   color: #495057;
-  width: 80px;
+  width: 90px;
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .collection-select,
 .document-select {
   flex: 1;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 8px 12px;
+  font-size: 14px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   color: #495057;
+  min-height: 36px;
+  background-color: #ffffff;
+}
+
+.collection-select:disabled,
+.document-select:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+}
+
+.no-documents-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-row {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .view-controls {
+    align-self: center;
+  }
+  
+  .document-comparison-panel {
+    max-width: 100%;
+  }
+  
+  .help-icon-container {
+    align-self: flex-end;
+  }
 }
