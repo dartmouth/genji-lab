@@ -137,8 +137,6 @@ export const DocumentContentView: React.FC = () => {
         })
       );
     }
-
-    console.log("Hash in DocumentContentView:", getAnnotationIdFromHash());
   }, [location.hash, dispatch, documentId]);
 
   // Use useRef for atomic state updates

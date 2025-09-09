@@ -16,6 +16,7 @@ import { DocumentElement } from "@documentView/types";
 interface DocumentContentPanelProps {
   documentId: number;
   documentCollectionId: number;
+  viewMode?: "reading" | "annotations";
   viewedDocuments?: Array<{
     id: number;
     collectionId: number;
@@ -45,6 +46,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   documentCollectionId,
   viewedDocuments = [],
   onOpenLinkedDocument,
+  viewMode = "annotations",
   isLinkingModeActive = false,
   showLinkedTextHighlights = false,
 }) => {
@@ -185,6 +187,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 documentCollectionId={documentCollectionId}
                 documentId={documentId}
                 isLinkingModeActive={isLinkingModeActive}
+                viewMode={viewMode}
                 showLinkedTextHighlights={showLinkedTextHighlights}
                 viewedDocuments={viewedDocuments}
               />

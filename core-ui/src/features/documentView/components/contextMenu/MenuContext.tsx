@@ -137,18 +137,13 @@ const MenuContext: React.FC<MenuContextProps> = ({
         bulkLoadingStatus === "succeeded" ||
         bulkLoadingStatus === "loading"
       ) {
-        console.log(`Bulk loading status: ${bulkLoadingStatus}, skipping load`);
         return;
       }
 
       bulkLoadingInitiated.current = true;
 
       try {
-        console.log("Loading all documents and elements in bulk...");
-        const result = await dispatch(fetchAllDocumentElements()).unwrap();
-        console.log(
-          `Successfully bulk loaded ${result.summary.total_elements} elements from ${result.summary.total_documents} documents`
-        );
+        await dispatch(fetchAllDocumentElements()).unwrap();
       } catch (error) {
         console.error("Failed to bulk load documents and elements:", error);
         // Reset the flag on error so it can be retried
@@ -275,30 +270,51 @@ const MenuContext: React.FC<MenuContextProps> = ({
   const findLinkedDocuments = useCallback(
     (selection: LinkedTextSelection): HierarchicalLinkedDocuments => {
       try {
-        console.log("Finding linked documents for selection:", selection);
-        console.log("Available elements:", allElements.length);
-        console.log("Available annotations:", allLinkingAnnotations.length);
-        console.log("Selection element ID:", selection.documentElementId);
+        const currentDocument =
+          viewedDocuments.find((d) => d.id === selection.documentId) ||
+          allDocuments.find((d) => d.id === selection.documentId);
+        const currentDocumentTitle =
+          currentDocument?.title || `Document ${selection.documentId}`;
 
-        const relevantAnnotations = allLinkingAnnotations.filter(
-          (ann) =>
-            String(ann.document_element_id) ===
-            String(selection.documentElementId)
-        );
-        console.log(
-          "Relevant annotations for this selection:",
-          relevantAnnotations
-        );
+        const interdocumentAnnotations = allLinkingAnnotations.filter((ann) => {
+          return ann.target?.some((target) => {
+            const elementIdMatch = target.source.match(
+              /\/DocumentElements\/(\d+)/
+            );
+            if (elementIdMatch) {
+              const elementId = parseInt(elementIdMatch[1]);
+              const targetElement = allElements.find(
+                (el) => el.id === elementId
+              );
+
+              if (targetElement) {
+                const targetDocument =
+                  allDocuments.find(
+                    (d) => d.id === targetElement.document_id
+                  ) ||
+                  viewedDocuments.find(
+                    (d) => d.id === targetElement.document_id
+                  );
+                const targetDocumentTitle =
+                  targetDocument?.title ||
+                  `Document ${targetElement.document_id}`;
+
+                // Only include if titles are different
+                return targetDocumentTitle !== currentDocumentTitle;
+              }
+            }
+            return false;
+          });
+        });
 
         const result = getLinkedDocumentsSimple(
           selection,
-          allLinkingAnnotations,
+          interdocumentAnnotations,
           allDocuments,
           viewedDocuments,
           allElements
         );
 
-        console.log("Found linked documents:", result);
         return result;
       } catch (error) {
         console.error("Error in linked document discovery:", error);
@@ -313,7 +329,6 @@ const MenuContext: React.FC<MenuContextProps> = ({
     const handleContextMenu = (e: MouseEvent) => {
       // Don't show context menu if bulk loading hasn't completed
       if (bulkLoadingStatus !== "succeeded") {
-        console.log("Bulk loading not complete, skipping context menu");
         return;
       }
 
