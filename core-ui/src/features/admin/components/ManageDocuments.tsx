@@ -866,28 +866,27 @@ The document itself will remain but will be empty. This action cannot be undone.
             <p>Create a new document and import Word document (.docx) content.</p>
           </div>
           <StyledForm onSubmit={handleImportWordSubmit}>
-            <div className="form-group">
-              <FormControl fullWidth>
-                <InputLabel id="import-word-collection-select-label">Document Collection</InputLabel>
-                <Select
-                  labelId="import-word-collection-select-label"
-                  id="import-word-collection-select"
-                  value={selectedImportWordCollection}
-                  onChange={handleImportWordCollectionSelect}
-                  name="document_collection_id"
-                  required
-                >
-                  <MenuItem value="">
-                    <em>Select a collection</em>
+            <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+              <InputLabel id="import-word-collection-select-label">Select a collection</InputLabel>
+              <Select
+                labelId="import-word-collection-select-label"
+                id="import-word-collection-select"
+                value={selectedImportWordCollection}
+                label="Select a collection"
+                onChange={handleImportWordCollectionSelect}
+                name="document_collection_id"
+                required
+              >
+                <MenuItem value="">
+                  <em>Select a collection</em>
+                </MenuItem>
+                {documentCollections.map((collection) => (
+                  <MenuItem key={collection.id} value={collection.id}>
+                    {collection.title}
                   </MenuItem>
-                  {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id}>
-                      {collection.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
+                ))}
+              </Select>
+            </FormControl>
 
             <div className="form-group">
               <label htmlFor="import-word-title">Document Title: </label>
@@ -1002,7 +1001,7 @@ The document itself will remain but will be empty. This action cannot be undone.
                   onChange={handleDeleteCollectionSelect}
                 >
                   <MenuItem value="">
-                    <em>-- Select a collection --</em>
+                    <em>Select a collection</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
                     <MenuItem key={collection.id} value={collection.id.toString()}>
@@ -1089,50 +1088,48 @@ The document itself will remain but will be empty. This action cannot be undone.
             <p style={{ color: 'red', fontWeight: 'bold' }}>⚠️ Warning: This action cannot be undone!</p>
           </div>
           <StyledForm>
-            <div className="form-group">
+            <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+              <InputLabel id="content-delete-collection-select-label">Select a collection</InputLabel>
+              <Select
+                labelId="content-delete-collection-select-label"
+                id="content-delete-collection-select"
+                value={selectedContentDeleteCollection}
+                label="Select a collection"
+                onChange={handleContentDeleteCollectionSelect}
+                name="content_delete_collection_id"
+              >
+                <MenuItem value="">
+                  <em>Select a collection</em>
+                </MenuItem>
+                {documentCollections.map((collection) => (
+                  <MenuItem key={collection.id} value={collection.id}>
+                    {collection.title}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {selectedContentDeleteCollection && (
               <FormControl fullWidth sx={{ maxWidth: '400px' }}>
-                <InputLabel id="content-delete-collection-select-label">Collection</InputLabel>
+                <InputLabel id="content-delete-document-select-label">Document</InputLabel>
                 <Select
-                  labelId="content-delete-collection-select-label"
-                  id="content-delete-collection-select"
-                  value={selectedContentDeleteCollection}
-                  onChange={handleContentDeleteCollectionSelect}
-                  name="content_delete_collection_id"
+                  labelId="content-delete-document-select-label"
+                  id="content-delete-document-select"
+                  value={selectedContentDeleteDocument}
+                  label="Document"
+                  onChange={handleContentDeleteDocumentSelect}
+                  name="content_delete_document_id"
                 >
                   <MenuItem value="">
-                    <em>Select a collection...</em>
+                    <em>Select a document</em>
                   </MenuItem>
-                  {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id}>
-                      {collection.title}
+                  {documentsInSelectedCollection.map((document) => (
+                    <MenuItem key={document.id} value={document.id}>
+                      {document.title}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-            </div>
-
-            {selectedContentDeleteCollection && (
-              <div className="form-group">
-                <FormControl fullWidth>
-                  <InputLabel id="content-delete-document-select-label">Document</InputLabel>
-                  <Select
-                    labelId="content-delete-document-select-label"
-                    id="content-delete-document-select"
-                    value={selectedContentDeleteDocument}
-                    onChange={handleContentDeleteDocumentSelect}
-                    name="content_delete_document_id"
-                  >
-                    <MenuItem value="">
-                      <em>Select a document...</em>
-                    </MenuItem>
-                    {documentsInSelectedCollection.map((document) => (
-                      <MenuItem key={document.id} value={document.id}>
-                        {document.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </div>
             )}
 
             {contentDeleteStats && (
@@ -1143,14 +1140,16 @@ The document itself will remain but will be empty. This action cannot be undone.
               </div>
             )}
 
-            <button 
-              type="button" 
-              onClick={initiateContentDelete}
-              disabled={!selectedContentDeleteDocument || isDeletingContent}
-              className="delete-button"
-            >
-              {isDeletingContent ? 'Deleting Content...' : 'Delete Document Content'}
-            </button>
+            <Box sx={{ mt: 2 }}>
+              <button 
+                type="button" 
+                onClick={initiateContentDelete}
+                disabled={!selectedContentDeleteDocument || isDeletingContent}
+                className="delete-button"
+              >
+                {isDeletingContent ? 'Deleting Content...' : 'Delete Document Content'}
+              </button>
+            </Box>
 
             {selectedContentDeleteCollection && documentsInSelectedCollection.length === 0 && (
               <Typography variant="body2" color="text.secondary" sx={{ marginTop: 2 }}>
@@ -1168,51 +1167,49 @@ The document itself will remain but will be empty. This action cannot be undone.
             <p>Select a document to rename:</p>
           </div>
           <StyledForm>
-            <div className="form-group">
-              <FormControl fullWidth>
-                <InputLabel id="rename-collection-select-label">Collection</InputLabel>
-                <Select
-                  labelId="rename-collection-select-label"
-                  id="rename-collection-select"
-                  value={renameSelectedCollection}
-                  onChange={handleRenameCollectionSelect}
-                  name="rename_collection_id"
-                  disabled={isRenaming}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
+            <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+              <InputLabel id="rename-collection-select-label">Select a collection</InputLabel>
+              <Select
+                labelId="rename-collection-select-label"
+                id="rename-collection-select"
+                value={renameSelectedCollection}
+                label="Select a collection"
+                onChange={handleRenameCollectionSelect}
+                name="rename_collection_id"
+                disabled={isRenaming}
+              >
+                <MenuItem value="">
+                  <em>Select a collection</em>
+                </MenuItem>
+                {documentCollections.map((collection) => (
+                  <MenuItem key={collection.id} value={collection.id}>
+                    {collection.title}
                   </MenuItem>
-                  {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id}>
-                      {collection.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
+                ))}
+              </Select>
+            </FormControl>
 
-            <div className="form-group">
-              <FormControl fullWidth>
-                <InputLabel id="rename-document-select-label">Document</InputLabel>
-                <Select
-                  labelId="rename-document-select-label"
-                  id="rename-document-select"
-                  value={renameSelectedDocument}
-                  onChange={handleRenameDocumentSelect}
-                  name="rename_document_id"
-                  disabled={!renameSelectedCollection || isRenaming || isLoadingRenameDocuments}
-                >
-                  <MenuItem value="">
-                    <em>{isLoadingRenameDocuments ? 'Loading documents...' : 'Select a document'}</em>
+            <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+              <InputLabel id="rename-document-select-label">Document</InputLabel>
+              <Select
+                labelId="rename-document-select-label"
+                id="rename-document-select"
+                value={renameSelectedDocument}
+                label="Document"
+                onChange={handleRenameDocumentSelect}
+                name="rename_document_id"
+                disabled={!renameSelectedCollection || isRenaming || isLoadingRenameDocuments}
+              >
+                <MenuItem value="">
+                  <em>{isLoadingRenameDocuments ? 'Loading documents...' : 'Select a document'}</em>
+                </MenuItem>
+                {renameDocuments.map((document) => (
+                  <MenuItem key={document.id} value={document.id}>
+                    {document.title}
                   </MenuItem>
-                  {renameDocuments.map((document) => (
-                    <MenuItem key={document.id} value={document.id}>
-                      {document.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
+                ))}
+              </Select>
+            </FormControl>
 
             <div className="form-group">
               <label htmlFor="rename-new-name">New Name: </label>
@@ -1248,53 +1245,49 @@ The document itself will remain but will be empty. This action cannot be undone.
             <p>Select a document to update its description:</p>
           </div>
           <StyledForm>
-            <div className="form-group">
-              <FormControl fullWidth>
-                <InputLabel id="update-description-collection-select-label">Collection</InputLabel>
-                <Select
-                  labelId="update-description-collection-select-label"
-                  id="update-description-collection-select"
-                  value={updateDescriptionSelectedCollection}
-                  onChange={handleUpdateDescriptionCollectionSelect}
-                  name="update_description_collection_id"
-                  disabled={isUpdatingDescription}
-                  sx={{ maxWidth: '400px' }}
-                >
-                  <MenuItem value="">
-                    <em>None</em>
+            <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+              <InputLabel id="update-description-collection-select-label">Select a collection</InputLabel>
+              <Select
+                labelId="update-description-collection-select-label"
+                id="update-description-collection-select"
+                value={updateDescriptionSelectedCollection}
+                label="Select a collection"
+                onChange={handleUpdateDescriptionCollectionSelect}
+                name="update_description_collection_id"
+                disabled={isUpdatingDescription}
+              >
+                <MenuItem value="">
+                  <em>Select a collection</em>
+                </MenuItem>
+                {documentCollections.map((collection) => (
+                  <MenuItem key={collection.id} value={collection.id}>
+                    {collection.title}
                   </MenuItem>
-                  {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id}>
-                      {collection.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
+                ))}
+              </Select>
+            </FormControl>
 
-            <div className="form-group">
-              <FormControl fullWidth>
-                <InputLabel id="update-description-document-select-label">Document</InputLabel>
-                <Select
-                  labelId="update-description-document-select-label"
-                  id="update-description-document-select"
-                  value={updateDescriptionSelectedDocument}
-                  onChange={handleUpdateDescriptionDocumentSelect}
-                  name="update_description_document_id"
-                  disabled={!updateDescriptionSelectedCollection || isUpdatingDescription || isLoadingUpdateDescriptionDocuments}
-                  sx={{ maxWidth: '400px' }}
-                >
-                  <MenuItem value="">
-                    <em>{isLoadingUpdateDescriptionDocuments ? 'Loading documents...' : 'Select a document'}</em>
+            <FormControl fullWidth sx={{ maxWidth: '400px' }}>
+              <InputLabel id="update-description-document-select-label">Document</InputLabel>
+              <Select
+                labelId="update-description-document-select-label"
+                id="update-description-document-select"
+                value={updateDescriptionSelectedDocument}
+                label="Document"
+                onChange={handleUpdateDescriptionDocumentSelect}
+                name="update_description_document_id"
+                disabled={!updateDescriptionSelectedCollection || isUpdatingDescription || isLoadingUpdateDescriptionDocuments}
+              >
+                <MenuItem value="">
+                  <em>{isLoadingUpdateDescriptionDocuments ? 'Loading documents...' : 'Select a document'}</em>
+                </MenuItem>
+                {updateDescriptionDocuments.map((document) => (
+                  <MenuItem key={document.id} value={document.id}>
+                    {document.title}
                   </MenuItem>
-                  {updateDescriptionDocuments.map((document) => (
-                    <MenuItem key={document.id} value={document.id}>
-                      {document.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
+                ))}
+              </Select>
+            </FormControl>
 
             <div className="form-group">
               <label htmlFor="update-description-new-description">Description: </label>

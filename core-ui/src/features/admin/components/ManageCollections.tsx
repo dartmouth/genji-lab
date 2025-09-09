@@ -1042,7 +1042,7 @@ To confirm, please type the collection name exactly as shown:
                   disabled={isDeleting}
                 >
                   <MenuItem value="">
-                    <em>-- Select a collection --</em>
+                    <em>Select a collection</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
                     <MenuItem
@@ -1147,7 +1147,7 @@ To confirm, please type the collection name exactly as shown:
                   disabled={isRenaming}
                 >
                   <MenuItem value="">
-                    <em>-- Select a collection --</em>
+                    <em>Select a collection</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
                     <MenuItem
@@ -1207,7 +1207,7 @@ To confirm, please type the collection name exactly as shown:
                   disabled={isUpdatingVisibility}
                 >
                   <MenuItem value="">
-                    <em>-- Select a collection --</em>
+                    <em>Select a collection</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
                     <MenuItem key={collection.id} value={collection.id.toString()}>
