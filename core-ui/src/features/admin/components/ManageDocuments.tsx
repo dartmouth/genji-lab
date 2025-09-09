@@ -11,6 +11,7 @@ import {
   fetchDocumentCollections,
   selectAllDocuments,
   fetchDocumentsByCollection,
+  fetchAllDocuments,
 } from "@store";
 
 import axios, {AxiosInstance} from "axios";
@@ -103,9 +104,10 @@ const ManageDocuments: React.FC = () => {
   const documentCollections = useAppSelector(selectAllDocumentCollections);
   const documents = useAppSelector(selectAllDocuments);
 
-  //fetch collections
+  //fetch collections and all documents
   useEffect(() => {
     dispatch(fetchDocumentCollections({includeUsers: false}));
+    dispatch(fetchAllDocuments());
   }, [dispatch]);
   
   const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -164,6 +166,7 @@ const ManageDocuments: React.FC = () => {
   const [selectedImportWordCollection, setSelectedImportWordCollection] = useState<string>('');
   const [importWordError, setImportWordError] = useState<string>('');
   const [importWordSuccess, setImportWordSuccess] = useState<string>('');
+  const [importWordTitleError, setImportWordTitleError] = useState<string>('');
   const [importedDocumentData, setImportedDocumentData] = useState<{
     id: number;
     title: string;
@@ -267,13 +270,50 @@ const ManageDocuments: React.FC = () => {
       ...prevData,
       document_collection_id: collectionId || undefined
     }));
+
+    // Clear previous error and recheck for duplicates with current title
+    setImportWordTitleError('');
+    
+    if (importWordFormData.title.trim() && collectionId) {
+      const documentsInCollection = documents.filter(doc => 
+        doc.document_collection_id === collectionId
+      );
+      
+      const nameExists = documentsInCollection.some(doc => 
+        doc.title.toLowerCase() === importWordFormData.title.trim().toLowerCase()
+      );
+      
+      if (nameExists) {
+        setImportWordTitleError('A document with this title already exists in the selected collection');
+      }
+    }
   };
 
   const handleImportWordTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = event.target.value;
+    
     setImportWordFormData(prevData => ({
       ...prevData,
-      title: event.target.value
+      title: newTitle
     }));
+
+    // Clear previous error
+    setImportWordTitleError('');
+
+    // Check for duplicate if we have a title and collection selected
+    if (newTitle.trim() && importWordFormData.document_collection_id) {
+      const documentsInCollection = documents.filter(doc => 
+        doc.document_collection_id === importWordFormData.document_collection_id
+      );
+      
+      const nameExists = documentsInCollection.some(doc => 
+        doc.title.toLowerCase() === newTitle.trim().toLowerCase()
+      );
+      
+      if (nameExists) {
+        setImportWordTitleError('A document with this title already exists in the selected collection');
+      }
+    }
   };
 
   const handleImportWordDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,6 +336,12 @@ const ManageDocuments: React.FC = () => {
     setImportWordError('');
     setImportWordSuccess('');
     
+    // Check for real-time validation error
+    if (importWordTitleError) {
+      setImportWordError(importWordTitleError);
+      return;
+    }
+    
     if (!importWordFormData.document_collection_id || !importWordFormData.title.trim() || !importWordFormData.file) {
       setImportWordError('Please select a collection, enter a title, and select a file');
       return;
@@ -303,6 +349,20 @@ const ManageDocuments: React.FC = () => {
 
     if (!importWordFormData.file.name.endsWith('.docx')) {
       setImportWordError('Please select a .docx file');
+      return;
+    }
+
+    // Check for duplicate document name within the same collection (case-insensitive)
+    const documentsInCollection = documents.filter(d => 
+      d.document_collection_id === importWordFormData.document_collection_id
+    );
+    
+    const nameExists = documentsInCollection.some(d => 
+      d.title.toLowerCase() === importWordFormData.title.trim().toLowerCase()
+    );
+    
+    if (nameExists) {
+      setImportWordError('Document name already exists in this collection');
       return;
     }
 
@@ -899,7 +959,15 @@ The document itself will remain but will be empty. This action cannot be undone.
                 required
                 placeholder="Enter document title"
                 maxLength={200}
+                style={{
+                  borderColor: importWordTitleError ? 'red' : undefined
+                }}
               />
+              {importWordTitleError && (
+                <div style={{ color: 'red', fontSize: '14px', marginTop: '4px' }}>
+                  {importWordTitleError}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -939,7 +1007,7 @@ The document itself will remain but will be empty. This action cannot be undone.
               </div>
             )}
 
-            <button type="submit" disabled={importWordLoading}>
+            <button type="submit" disabled={importWordLoading || !!importWordTitleError}>
               {importWordLoading ? 'Importing...' : 'Import Word Document'}
             </button>
           </StyledForm>

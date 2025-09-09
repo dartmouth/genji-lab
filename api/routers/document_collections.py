@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any, Union
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
+from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete, select, func, update
 from sqlalchemy.orm import joinedload
@@ -24,10 +25,23 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=DocumentCollection, status_code=status.HTTP_201_CREATED)
-def create_collection(collection: DocumentCollectionCreate, db: AsyncSession = Depends(get_db)):
+def create_collection(collection: DocumentCollectionCreate, db: Session = Depends(get_db)):
     """
     Create a new document collection
     """
+    # Check for duplicate collection name
+    existing_collection = db.execute(
+        select(DocumentCollectionModel).filter(
+            func.lower(DocumentCollectionModel.title) == collection.title.lower().strip()
+        )
+    ).scalar_one_or_none()
+    
+    if existing_collection:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Collection name already exists"
+        )
+    
     # Verify the user exists
     user = db.execute(
         select(User).filter(User.id == collection.created_by_id)
@@ -58,7 +72,7 @@ def read_collections(
     language: Optional[str] = None,
     created_by_id: Optional[int] = None,
     include_users: bool = False,
-    db: AsyncSession = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
     """
     Retrieve document collections with optional filtering
@@ -90,7 +104,7 @@ def read_collections(
     return collections
 
 @router.get("/{collection_id}", response_model=DocumentCollectionWithStats)
-def read_collection(collection_id: int, db: AsyncSession = Depends(get_db)):
+def read_collection(collection_id: int, db: Session = Depends(get_db)):
     """
     Get a specific document collection by ID with detailed information including full statistics
     """
@@ -199,6 +213,21 @@ def update_collection(
                 detail=f"User with ID {collection.modified_by_id} not found"
             )
     
+    # Check for duplicate collection name if title is being updated
+    if collection.title:
+        existing_collection = db.execute(
+            select(DocumentCollectionModel).filter(
+                func.lower(DocumentCollectionModel.title) == collection.title.lower().strip(),
+                DocumentCollectionModel.id != collection_id  # Exclude current collection
+            )
+        ).scalar_one_or_none()
+        
+        if existing_collection:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Collection name already exists"
+            )
+    
     # Update collection attributes
     update_data = collection.dict(exclude_unset=True)
     for key, value in update_data.items():
@@ -237,6 +266,21 @@ def partial_update_collection(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"User with ID {collection.modified_by_id} not found"
+            )
+    
+    # Check for duplicate collection name if title is being updated
+    if collection.title:
+        existing_collection = db.execute(
+            select(DocumentCollectionModel).filter(
+                func.lower(DocumentCollectionModel.title) == collection.title.lower().strip(),
+                DocumentCollectionModel.id != collection_id  # Exclude current collection
+            )
+        ).scalar_one_or_none()
+        
+        if existing_collection:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Collection name already exists"
             )
     
     # Update only provided fields

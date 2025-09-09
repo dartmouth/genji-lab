@@ -372,6 +372,7 @@ To confirm, please type the collection name exactly as shown:
     language: "en",
   });
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [titleError, setTitleError] = useState<string>('');
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -383,8 +384,48 @@ To confirm, please type the collection name exactly as shown:
     }));
   };
 
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    
+    setFormData((prevData) => ({
+      ...prevData,
+      title: newTitle,
+    }));
+
+    // Clear previous error
+    setTitleError('');
+
+    // Check for duplicate if we have a title
+    if (newTitle.trim()) {
+      const nameExists = documentCollections.some(c => 
+        c.title.toLowerCase() === newTitle.trim().toLowerCase()
+      );
+      
+      if (nameExists) {
+        setTitleError('A collection with this name already exists');
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for real-time validation error
+    if (titleError) {
+      showNotification(titleError, 'error');
+      return;
+    }
+    
+    // Check for duplicate collection names (case-insensitive) as backup
+    const nameExists = documentCollections.some(c => 
+      c.title.toLowerCase() === formData.title.trim().toLowerCase()
+    );
+    
+    if (nameExists) {
+      showNotification('Collection name already exists', 'error');
+      return;
+    }
+    
     const payload = {
       title: formData.title,
       visibility: formData.visibility,
@@ -948,9 +989,17 @@ To confirm, please type the collection name exactly as shown:
                 id="title"
                 name="title"
                 value={formData.title}
-                onChange={handleChange}
+                onChange={handleTitleChange}
                 required
+                style={{
+                  borderColor: titleError ? 'red' : undefined
+                }}
               />
+              {titleError && (
+                <div style={{ color: 'red', fontSize: '14px', marginTop: '4px' }}>
+                  {titleError}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -996,7 +1045,7 @@ To confirm, please type the collection name exactly as shown:
               </select>
             </div>
 
-            <button type="submit">Add</button>
+            <button type="submit" disabled={!!titleError}>Add</button>
           </StyledForm>
 
           {submitted && (
