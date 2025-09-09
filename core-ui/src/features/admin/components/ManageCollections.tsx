@@ -372,6 +372,8 @@ To confirm, please type the collection name exactly as shown:
     language: "en",
   });
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [titleError, setTitleError] = useState<string>('');
+  const [isCreating, setIsCreating] = useState<boolean>(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -383,24 +385,104 @@ To confirm, please type the collection name exactly as shown:
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      title: formData.title,
-      visibility: formData.visibility,
-      text_direction: formData.text_direction,
-      language: formData.language,
-      hierarchy: { chapter: 1, paragraph: 2 },
-      collection_metadata: {},
-      created_by_id: user?.id || 1,
-    };
-    dispatch(createDocumentCollection(payload));
-    setSubmitted(true);
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
     
-    // Refresh overview data after creation
-    setTimeout(() => {
-      refreshOverviewData();
-    }, 1000);
+    setFormData((prevData) => ({
+      ...prevData,
+      title: newTitle,
+    }));
+
+    // Clear previous error immediately
+    setTitleError('');
+
+    // Debounce validation check
+    if (newTitle.trim()) {
+      setTimeout(() => {
+        // Only validate if the value hasn't changed since this timeout was set
+        setFormData((currentData) => {
+          if (currentData.title === newTitle && newTitle.trim()) {
+            const nameExists = documentCollections.some(c => 
+              c.title.toLowerCase() === newTitle.trim().toLowerCase()
+            );
+            
+            if (nameExists) {
+              setTitleError('A collection with this name already exists');
+            }
+          }
+          return currentData;
+        });
+      }, 300); // 300ms debounce
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Prevent double submission
+    if (isCreating) {
+      return;
+    }
+    
+    // Check for real-time validation error
+    if (titleError) {
+      showNotification(titleError, 'error');
+      return;
+    }
+    
+    // Check for duplicate collection names (case-insensitive) as backup
+    const nameExists = documentCollections.some(c => 
+      c.title.toLowerCase() === formData.title.trim().toLowerCase()
+    );
+    
+    if (nameExists) {
+      showNotification('Collection name already exists', 'error');
+      return;
+    }
+    
+    // Start creation process
+    setIsCreating(true);
+    
+    // Clear form immediately to prevent re-submission with same data
+    const submittedData = { ...formData };
+    setFormData({
+      title: "",
+      visibility: "public",
+      text_direction: "ltr",
+      language: "en",
+    });
+    setTitleError('');
+    
+    try {
+      const payload = {
+        title: submittedData.title,
+        visibility: submittedData.visibility,
+        text_direction: submittedData.text_direction,
+        language: submittedData.language,
+        hierarchy: { chapter: 1, paragraph: 2 },
+        collection_metadata: {},
+        created_by_id: user?.id || 1,
+      };
+      
+      await dispatch(createDocumentCollection(payload)).unwrap();
+      setSubmitted(true);
+      showNotification(`Collection "${submittedData.title}" created successfully!`, 'success');
+      
+      // Refresh overview data after creation
+      setTimeout(() => {
+        refreshOverviewData();
+      }, 1000);
+      
+    } catch (error: any) {
+      // If creation fails, restore the form data so user doesn't lose their work
+      setFormData(submittedData);
+      showNotification(`Failed to create collection: ${error.message || 'Unknown error'}`, 'error');
+    } finally {
+      // Add a minimum delay to prevent rapid re-submission
+      setTimeout(() => {
+        setIsCreating(false);
+      }, 1000);
+    }
   };
 
   // Rename functionality handlers
@@ -948,9 +1030,19 @@ To confirm, please type the collection name exactly as shown:
                 id="title"
                 name="title"
                 value={formData.title}
-                onChange={handleChange}
+                onChange={handleTitleChange}
+                disabled={isCreating}
                 required
+                style={{
+                  borderColor: titleError ? 'red' : undefined,
+                  opacity: isCreating ? 0.6 : 1
+                }}
               />
+              {titleError && (
+                <div style={{ color: 'red', fontSize: '14px', marginTop: '4px' }}>
+                  {titleError}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -960,6 +1052,8 @@ To confirm, please type the collection name exactly as shown:
                 name="visibility"
                 value={formData.visibility}
                 onChange={handleChange}
+                disabled={isCreating}
+                style={{ opacity: isCreating ? 0.6 : 1 }}
               >
                 <option value="public">Public</option>
                 <option value="private">Private</option>
@@ -974,6 +1068,8 @@ To confirm, please type the collection name exactly as shown:
                 name="text_direction"
                 value={formData.text_direction}
                 onChange={handleChange}
+                disabled={isCreating}
+                style={{ opacity: isCreating ? 0.6 : 1 }}
               >
                 <option value="ltr">Left to Right (LTR)</option>
                 <option value="rtl">Right to Left (RTL)</option>
@@ -987,6 +1083,8 @@ To confirm, please type the collection name exactly as shown:
                 name="language"
                 value={formData.language}
                 onChange={handleChange}
+                disabled={isCreating}
+                style={{ opacity: isCreating ? 0.6 : 1 }}
               >
                 <option value="en">English</option>
                 <option value="ja">Japanese</option>
@@ -996,7 +1094,9 @@ To confirm, please type the collection name exactly as shown:
               </select>
             </div>
 
-            <button type="submit">Add</button>
+            <button type="submit" disabled={!!titleError || isCreating}>
+              {isCreating ? 'Creating Collection...' : 'Add'}
+            </button>
           </StyledForm>
 
           {submitted && (
@@ -1042,7 +1142,7 @@ To confirm, please type the collection name exactly as shown:
                   disabled={isDeleting}
                 >
                   <MenuItem value="">
-                    <em>-- Select a collection --</em>
+                    <em>Select a collection</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
                     <MenuItem
@@ -1147,7 +1247,7 @@ To confirm, please type the collection name exactly as shown:
                   disabled={isRenaming}
                 >
                   <MenuItem value="">
-                    <em>-- Select a collection --</em>
+                    <em>Select a collection</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
                     <MenuItem
@@ -1207,7 +1307,7 @@ To confirm, please type the collection name exactly as shown:
                   disabled={isUpdatingVisibility}
                 >
                   <MenuItem value="">
-                    <em>-- Select a collection --</em>
+                    <em>Select a collection</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
                     <MenuItem key={collection.id} value={collection.id.toString()}>

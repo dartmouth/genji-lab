@@ -1,13 +1,17 @@
 from typing import List, Optional, Dict, Any
 from sqlalchemy import Integer
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response, UploadFile, File
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, delete
 from sqlalchemy.orm import joinedload
 from pydantic import BaseModel
+from datetime import datetime
+import docx
+from io import BytesIO
 
 from database import get_db
-from models.models import Document as DocumentModel, DocumentCollection, DocumentElement
+from models.models import Document as DocumentModel, DocumentCollection, DocumentElement, DocumentElement as DocumentElementModel
 from schemas.documents import (
     Document, 
     DocumentCreate, 
@@ -42,6 +46,20 @@ def create_document(document: DocumentCreate, db: AsyncSession = Depends(get_db)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Document collection with ID {document.document_collection_id} not found"
+        )
+    
+    # Check for duplicate document name within the same collection (case-insensitive)
+    existing_document = db.execute(
+        select(DocumentModel).filter(
+            DocumentModel.document_collection_id == document.document_collection_id,
+            func.lower(DocumentModel.title) == document.title.lower().strip()
+        )
+    ).scalar_one_or_none()
+    
+    if existing_document:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Document name already exists in this collection"
         )
     
     # Create the document
@@ -130,6 +148,23 @@ def update_document(document_id: int, document: DocumentUpdate, db: AsyncSession
                 detail=f"Document collection with ID {document.document_collection_id} not found"
             )
     
+    # Check for duplicate document name if title is being updated
+    if document.title:
+        collection_id = document.document_collection_id or db_document.document_collection_id
+        existing_document = db.execute(
+            select(DocumentModel).filter(
+                DocumentModel.document_collection_id == collection_id,
+                func.lower(DocumentModel.title) == document.title.lower().strip(),
+                DocumentModel.id != document_id  # Exclude current document
+            )
+        ).scalar_one_or_none()
+        
+        if existing_document:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Document name already exists in this collection"
+            )
+    
     # Update document attributes
     update_data = document.dict(exclude_unset=True)
     for key, value in update_data.items():
@@ -165,6 +200,23 @@ def partial_update_document(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Document collection with ID {document.document_collection_id} not found"
+            )
+    
+    # Check for duplicate document name if title is being updated
+    if document.title:
+        collection_id = document.document_collection_id or db_document.document_collection_id
+        existing_document = db.execute(
+            select(DocumentModel).filter(
+                DocumentModel.document_collection_id == collection_id,
+                func.lower(DocumentModel.title) == document.title.lower().strip(),
+                DocumentModel.id != document_id  # Exclude current document
+            )
+        ).scalar_one_or_none()
+        
+        if existing_document:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Document name already exists in this collection"
             )
     
     # Update only provided fields
@@ -393,3 +445,104 @@ def get_documents_with_annotation_stats(
         result.append(doc_dict)
     
     return result
+
+@router.post("/import-word-doc", status_code=status.HTTP_201_CREATED)
+def import_word_document(
+    document_collection_id: int,
+    title: str,
+    description: str = "",
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Create a new document and import Word document content in one operation
+    """
+    # Import the extract_paragraphs function
+    from routers.test import extract_paragraphs
+    
+    # Validate file type
+    if not file.filename.endswith('.docx'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must be a .docx document"
+        )
+    
+    # Verify the document collection exists
+    collection = db.execute(
+        select(DocumentCollection).filter(DocumentCollection.id == document_collection_id)
+    ).scalar_one_or_none()
+    
+    if not collection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document collection with ID {document_collection_id} not found"
+        )
+    
+    try:
+        # First, create the document
+        document_data = DocumentCreate(
+            title=title,
+            description=description,
+            document_collection_id=document_collection_id
+        )
+        
+        db_document = DocumentModel(**document_data.dict())
+        db.add(db_document)
+        db.flush()  # Get the ID without committing yet
+        
+        # Process the Word document
+        contents = file.file.read()
+        doc = docx.Document(BytesIO(contents))
+        paragraph_count = len(doc.paragraphs)
+        
+        # Extract paragraphs
+        paragraphs = extract_paragraphs(doc, document_collection_id, db_document.id)
+        
+        # Create document elements
+        created_elements = []
+        for idx, element_data in enumerate(paragraphs):
+            db_element = DocumentElementModel(
+                document_id=db_document.id,
+                content=element_data.get("content", {}),
+                hierarchy=element_data.get("hierarchy", 0),
+                created=datetime.now(),
+                modified=datetime.now()
+            )
+            
+            db.add(db_element)
+            created_elements.append(db_element)
+        
+        # Commit the entire transaction
+        db.commit()
+        
+        # Refresh to get all IDs
+        db.refresh(db_document)
+        for element in created_elements:
+            db.refresh(element)
+
+        return JSONResponse(
+            content={
+                "document": {
+                    "id": db_document.id,
+                    "title": db_document.title,
+                    "description": db_document.description,
+                    "document_collection_id": db_document.document_collection_id,
+                    "created": db_document.created.isoformat(),
+                    "modified": db_document.modified.isoformat()
+                },
+                "import_results": {
+                    "filename": file.filename,
+                    "paragraph_count": paragraph_count,
+                    "elements_created": len(created_elements),
+                    "message": "Document created and Word content imported successfully"
+                }
+            },
+            status_code=status.HTTP_201_CREATED
+        )
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating document and importing Word content: {str(e)}"
+        )
