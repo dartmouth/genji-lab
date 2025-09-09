@@ -35,7 +35,6 @@ import {
   Switch,
   FormControlLabel,
   Box,
-  Chip,
   Tooltip,
 } from "@mui/material";
 import {
@@ -1209,18 +1208,6 @@ export const DocumentContentView: React.FC = () => {
                       }}
                     >
                       <span>Show Links</span>
-                      {showLinkedTextHighlights && (
-                        <Chip
-                          label="ON"
-                          size="small"
-                          color="primary"
-                          sx={{
-                            height: { xs: 16, sm: 18 },
-                            fontSize: { xs: "0.6rem", sm: "0.7rem" },
-                            ml: 0.5,
-                          }}
-                        />
-                      )}
                     </Box>
                   }
                   sx={{
