@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, Tab, Box, Typography, styled, FormControl, InputLabel, Select, MenuItem, 
   Snackbar, Alert, Dialog, DialogActions, DialogContent, DialogContentText, 
@@ -103,6 +103,7 @@ const ManageDocuments: React.FC = () => {
   const navigate = useNavigate();
   const documentCollections = useAppSelector(selectAllDocumentCollections);
   const documents = useAppSelector(selectAllDocuments);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   //fetch collections and all documents
   useEffect(() => {
@@ -297,22 +298,30 @@ const ManageDocuments: React.FC = () => {
       title: newTitle
     }));
 
-    // Clear previous error
+    // Clear previous error immediately
     setImportWordTitleError('');
 
-    // Check for duplicate if we have a title and collection selected
+    // Debounce validation check
     if (newTitle.trim() && importWordFormData.document_collection_id) {
-      const documentsInCollection = documents.filter(doc => 
-        doc.document_collection_id === importWordFormData.document_collection_id
-      );
-      
-      const nameExists = documentsInCollection.some(doc => 
-        doc.title.toLowerCase() === newTitle.trim().toLowerCase()
-      );
-      
-      if (nameExists) {
-        setImportWordTitleError('A document with this title already exists in the selected collection');
-      }
+      setTimeout(() => {
+        // Only validate if the value hasn't changed since this timeout was set
+        setImportWordFormData((currentData) => {
+          if (currentData.title === newTitle && newTitle.trim() && currentData.document_collection_id) {
+            const documentsInCollection = documents.filter(doc => 
+              doc.document_collection_id === currentData.document_collection_id
+            );
+            
+            const nameExists = documentsInCollection.some(doc => 
+              doc.title.toLowerCase() === newTitle.trim().toLowerCase()
+            );
+            
+            if (nameExists) {
+              setImportWordTitleError('A document with this title already exists in the selected collection');
+            }
+          }
+          return currentData;
+        });
+      }, 300); // 300ms debounce
     }
   };
 
@@ -333,6 +342,12 @@ const ManageDocuments: React.FC = () => {
 
   const handleImportWordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (importWordLoading) {
+      return;
+    }
+    
     setImportWordError('');
     setImportWordSuccess('');
     
@@ -368,43 +383,56 @@ const ManageDocuments: React.FC = () => {
 
     setImportWordLoading(true);
     
+    // Clear form immediately to prevent re-submission with same data
+    const submittedData = { ...importWordFormData };
+    setImportWordFormData({
+      document_collection_id: undefined,
+      title: '',
+      description: '',
+      file: null
+    });
+    setSelectedImportWordCollection('');
+    setImportWordTitleError('');
+    
+    // Clear the file input field
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    
     try {
       const formData = new FormData();
-      formData.append('file', importWordFormData.file);
+      formData.append('file', submittedData.file!);
       
-      const selectedCollection = documentCollections.find(c => c.id === importWordFormData.document_collection_id);
+      const selectedCollection = documentCollections.find(c => c.id === submittedData.document_collection_id);
       
       const response = await api.post(
-        `/documents/import-word-doc?document_collection_id=${importWordFormData.document_collection_id}&title=${encodeURIComponent(importWordFormData.title)}&description=${encodeURIComponent(importWordFormData.description)}`, 
+        `/documents/import-word-doc?document_collection_id=${submittedData.document_collection_id}&title=${encodeURIComponent(submittedData.title)}&description=${encodeURIComponent(submittedData.description)}`, 
         formData
       );
 
       const result = response.data;
-      setImportWordSuccess(`Document created and imported successfully! Created ${result.import_results.elements_created} paragraphs.`);
+      setImportWordSuccess(`Document "${submittedData.title}" created and imported successfully! Created ${result.import_results.elements_created} paragraphs.`);
       setImportWordSubmitted(true);
       
       // Store the imported document data for display
       setImportedDocumentData({
         id: result.document.id,
         title: result.document.title,
-        collection_id: importWordFormData.document_collection_id!,
-        collection_name: selectedCollection?.title || 'Unknown',
+        collection_id: submittedData.document_collection_id!,
+        collection_name: selectedCollection?.title || 'Unknown Collection',
         elements_created: result.import_results.elements_created
       });
-
-      // Reset form
-      setImportWordFormData({
-        document_collection_id: undefined,
-        title: '',
-        description: '',
-        file: null
-      });
-      setSelectedImportWordCollection('');
+      
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || error.message || 'Import failed';
-      setImportWordError(errorMessage);
+      // If import fails, restore the form data so user doesn't lose their work
+      setImportWordFormData(submittedData);
+      setSelectedImportWordCollection(submittedData.document_collection_id?.toString() || '');
+      setImportWordError(`Import failed: ${error.response?.data?.detail || error.message || 'Unknown error'}`);
     } finally {
-      setImportWordLoading(false);
+      // Add a minimum delay to prevent rapid re-submission
+      setTimeout(() => {
+        setImportWordLoading(false);
+      }, 1000);
     }
   };
 
@@ -935,6 +963,7 @@ The document itself will remain but will be empty. This action cannot be undone.
                 label="Select a collection"
                 onChange={handleImportWordCollectionSelect}
                 name="document_collection_id"
+                disabled={importWordLoading}
                 required
               >
                 <MenuItem value="">
@@ -956,11 +985,13 @@ The document itself will remain but will be empty. This action cannot be undone.
                 name="title"
                 value={importWordFormData.title}
                 onChange={handleImportWordTitleChange}
+                disabled={importWordLoading}
                 required
                 placeholder="Enter document title"
                 maxLength={200}
                 style={{
-                  borderColor: importWordTitleError ? 'red' : undefined
+                  borderColor: importWordTitleError ? 'red' : undefined,
+                  opacity: importWordLoading ? 0.6 : 1
                 }}
               />
               {importWordTitleError && (
@@ -978,8 +1009,10 @@ The document itself will remain but will be empty. This action cannot be undone.
                 name="description"
                 value={importWordFormData.description}
                 onChange={handleImportWordDescriptionChange}
+                disabled={importWordLoading}
                 placeholder="Enter document description"
                 maxLength={1000}
+                style={{ opacity: importWordLoading ? 0.6 : 1 }}
               />
             </div>
 
@@ -991,7 +1024,10 @@ The document itself will remain but will be empty. This action cannot be undone.
                 name="file"
                 accept=".docx"
                 onChange={handleImportWordFileSelect}
+                disabled={importWordLoading}
                 required
+                ref={fileInputRef}
+                style={{ opacity: importWordLoading ? 0.6 : 1 }}
               />
             </div>
 
