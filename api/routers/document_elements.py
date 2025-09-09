@@ -113,7 +113,7 @@ def read_element(element_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.get("/bulk/bulk-with-documents", response_model=Dict[str, Any])
 def get_all_documents_with_elements(
-    db: Session = Depends(get_db),  # Keep it as AsyncSession
+    db: Session = Depends(get_db),
 ):
     """
     Get all documents with their elements in a single efficient request.
@@ -139,10 +139,9 @@ def get_all_documents_with_elements(
             .order_by(Document.id, DocumentElementModel.id)
         )
 
-        result = db.execute(query)  # Add await here
+        result = db.execute(query)
         rows = result.fetchall()
 
-        # Rest of your logic stays the same...
         documents_dict = {}
 
         for row in rows:

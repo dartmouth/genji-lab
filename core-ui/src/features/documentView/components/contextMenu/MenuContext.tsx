@@ -1,4 +1,4 @@
-// src/features/documentView/components/contextMenu/MenuContext.tsx - FIXED
+// src/features/documentView/components/contextMenu/MenuContext.tsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
@@ -124,8 +124,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     return elements;
   });
 
-  // BULK LOADING: One API call to load all documents and elements
-  // FIXED: Removed bulkLoadingStatus from dependencies to prevent infinite loop
+  // One API call to load all documents and elements
   useEffect(() => {
     const loadAllDocumentsAndElements = async () => {
       // Use ref to prevent multiple calls
@@ -158,27 +157,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     };
 
     loadAllDocumentsAndElements();
-  }, [dispatch]); // FIXED: Only dispatch in dependencies
-
-  // Debug log when elements are loaded
-  useEffect(() => {
-    if (bulkLoadingStatus === "succeeded" && allElements.length > 0) {
-      console.log(`All elements loaded: ${allElements.length} total elements`);
-
-      // Check for specific elements that were problematic before
-      const targetElements = [32, 33, 34, 523, 524];
-      targetElements.forEach((elementId) => {
-        const found = allElements.find((el) => el.id === elementId);
-        if (found) {
-          console.log(
-            `Found target element ${elementId} in document ${found.document_id}`
-          );
-        } else {
-          console.log(`Target element ${elementId} still not found`);
-        }
-      });
-    }
-  }, [bulkLoadingStatus, allElements.length]); // FIXED: Use allElements.length instead of allElements
+  }, [dispatch]);
 
   // Smart selection creation with better element detection
   const createSelectionFromClickContext = useCallback(
@@ -220,7 +199,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
       let elementContainer: HTMLElement | null = clickedElement;
       let elementId: number | null = null;
 
-      // Strategy 1: Look for direct element ID
+      // Look for direct element ID
       while (elementContainer && !elementId) {
         if (elementContainer.id?.includes("DocumentElements")) {
           const match = elementContainer.id.match(/DocumentElements\/(\d+)/);
@@ -232,7 +211,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
         elementContainer = elementContainer.parentElement;
       }
 
-      // Strategy 2: Look for data attributes
+      // Look for data attributes
       if (!elementId) {
         elementContainer = clickedElement;
         while (elementContainer) {
@@ -246,7 +225,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
         }
       }
 
-      // Strategy 3: Look for any numeric ID that might be an element
+      // Look for any numeric ID that might be an element
       if (!elementId) {
         elementContainer = clickedElement;
         while (elementContainer) {

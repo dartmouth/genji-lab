@@ -85,16 +85,7 @@ export const fetchAllDocumentElements = createAsyncThunk<
   { rejectValue: string }
 >("documentElements/fetchAllElements", async (_, { rejectWithValue }) => {
   try {
-    console.log("🔍 Making request to:", "/elements/bulk/bulk-with-documents");
-    console.log(
-      "🔍 Full URL will be:",
-      `${api.defaults.baseURL}/elements/bulk/bulk-with-documents`
-    );
-
     const response = await api.get("/elements/bulk/bulk-with-documents");
-
-    console.log("✅ Response status:", response.status);
-    console.log("✅ Response data:", response.data);
 
     if (!(response.status === 200)) {
       return rejectWithValue(
@@ -103,18 +94,9 @@ export const fetchAllDocumentElements = createAsyncThunk<
     }
 
     return response.data as BulkDocumentResponse;
-  } catch (error: any) {
-    console.error("❌ Full error object:", error);
-    console.error("❌ Error response:", error.response);
-    console.error("❌ Error response data:", error.response?.data);
-    console.error(
-      "❌ Error response data details:",
-      error.response?.data?.detail
-    );
-    console.error("❌ Error response status:", error.response?.status);
-
+  } catch (error) {
     return rejectWithValue(
-      error.response?.data?.detail || error.message || "Unknown error"
+      error instanceof Error ? error.message : "Unknown error"
     );
   }
 });
