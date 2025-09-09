@@ -36,6 +36,7 @@ interface HighlightedTextProps {
   documentId: number;
   paragraphId: string;
   isLinkingModeActive?: boolean;
+  viewMode?: "reading" | "annotations";
   showLinkedTextHighlights?: boolean;
   viewedDocuments?: Array<{
     id: number;
@@ -49,6 +50,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   format,
   paragraphId,
   documentCollectionId,
+  viewMode = "annotations",
   documentId,
   isLinkingModeActive = false,
   showLinkedTextHighlights = false,
@@ -284,9 +286,18 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     >();
 
     // Calculate positions for regular annotations (non-linking)
-    const regularAnnotations = allAnnotations.filter(
-      (anno) => anno && anno.target && anno.motivation !== "linking"
-    );
+    const regularAnnotations = allAnnotations.filter((anno) => {
+      if (!anno || !anno.target || anno.motivation === "linking") {
+        return false;
+      }
+      // In reading mode, hide scholarly annotations and comments
+      if (viewMode === "reading") {
+        return false; // Hide all annotation highlights in reading mode
+      }
+
+      // In annotations mode, show all non-linking annotations
+      return true;
+    });
 
     regularAnnotations.forEach((annotation) => {
       const target = annotation.target.find((t) => t.source === paragraphId);
@@ -575,7 +586,12 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       debouncedHandleMouseMove.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allAnnotations, showLinkedTextHighlights, isNavigationHighlighted]);
+  }, [
+    allAnnotations,
+    showLinkedTextHighlights,
+    isNavigationHighlighted,
+    viewMode,
+  ]);
 
   // Handler to close the dialog
   const handleCloseDialog = () => {

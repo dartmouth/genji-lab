@@ -3,10 +3,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv, find_dotenv
 import os
+
 load_dotenv()
 
 # Get database URL
-DATABASE_URL = os.getenv('SQLALCHEMY_DATABASE_URL')
+DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("SQLALCHEMY_DATABASE_URL environment variable is not set")
 
@@ -18,6 +19,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create Base class
 Base = declarative_base()
+
 
 # Dependency to get DB session
 def get_db():
