@@ -37,6 +37,7 @@ class AnnotationBase(BaseModel):
     document_id: Optional[int] = None
     document_element_id: Optional[int] = None
     creator_id: int
+    classroom_id: Optional[int] = None
     
     type: Optional[str] = None
     motivation: str = None

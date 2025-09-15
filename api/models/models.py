@@ -202,6 +202,7 @@ class Annotation(Base):
     document_element_id = Column(Integer, ForeignKey(f"{'app'}.document_elements.id"))
     creator_id = Column(Integer, ForeignKey(f"{'app'}.users.id"))
     owner_id = Column(Integer, ForeignKey(f"{'app'}.users.id"))
+    classroom_id = Column(Integer, ForeignKey(f"{'app'}.groups.id"), nullable=True)
     
     type = Column(String(100))
     created = Column(DateTime)
@@ -223,6 +224,7 @@ class Annotation(Base):
     document_element = relationship("DocumentElement", back_populates="annotations")
     creator = relationship("User", foreign_keys=[creator_id], back_populates="annotations")
     owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_annotations")
+    classroom = relationship("Group", foreign_keys=[classroom_id])
 
 class SiteSettings(Base):
     __tablename__ = "site_settings"
@@ -257,6 +259,7 @@ Index('idx_annotations_document_element_id', Annotation.document_element_id)
 Index('idx_annotations_creator_id', Annotation.creator_id)
 Index('idx_annotations_owner_id', Annotation.owner_id)
 Index('idx_annotations_collection_id', Annotation.document_collection_id)
+Index('idx_annotations_classroom_id', Annotation.classroom_id)
 Index('idx_object_sharing_object', ObjectSharing.object_id, ObjectSharing.object_type)
 Index('idx_object_sharing_shared_with', ObjectSharing.shared_with_id, ObjectSharing.shared_with_type)
 Index('idx_site_settings_updated_by', SiteSettings.updated_by_id)

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings, search
+from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings, search, groups
 
 from starlette.middleware.sessions import SessionMiddleware
 import os
@@ -53,6 +53,7 @@ app.include_router(documents.router)
 app.include_router(document_collections.router)
 app.include_router(document_elements.router)
 app.include_router(annotations.router)
+app.include_router(groups.router)
 app.include_router(roles.router) 
 app.include_router(site_settings.router)
 app.include_router(cas_router) 
