@@ -29,6 +29,7 @@ import documentCollectionsReducer from "./slice/documentCollectionSlice";
 import usersReducer from "./slice/usersSlice";
 import rolesReducer from "./slice/rolesSlice";
 import siteSettingsReducer from "./slice/siteSettingsSlice";
+import classroomsReducer from "./slice/classroomsSlice";
 
 // Define the structure of our annotations reducers
 interface AnnotationReducers {
@@ -61,6 +62,7 @@ const rootReducer = {
   users: usersReducer,
   roles: rolesReducer,
   siteSettings: siteSettingsReducer,
+  classrooms: classroomsReducer,
   searchResults: searchResultReducer,
   navigationHighlight: navigationHighlightReducer,
 };
