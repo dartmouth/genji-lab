@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   Tabs, Tab, Box, Typography, Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, Button, TextField, 
-  CircularProgress, Alert 
+  CircularProgress, Alert, IconButton, InputAdornment 
 } from '@mui/material';
+import { ContentCopy } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { 
@@ -77,6 +78,7 @@ const ManageClassrooms: React.FC = () => {
     name: '',
     description: ''
   });
+  const [createdClassroomId, setCreatedClassroomId] = useState<number | null>(null);
   
   const dispatch = useAppDispatch();
   const { user: currentUser } = useAuth();
@@ -104,8 +106,8 @@ const ManageClassrooms: React.FC = () => {
   // Handle successful creation and cleanup
   useEffect(() => {
     if (createStatus === 'succeeded') {
-      setFormData({ name: '', description: '' });
-      dispatch(clearCreateStatus());
+      // Don't clear the status immediately so the UI can show the success state
+      // The status will be cleared when user creates another classroom
       // Refresh classrooms list if we're on that tab
       if (activeSubTab === 2) {
         dispatch(fetchClassrooms());
@@ -131,10 +133,31 @@ const ManageClassrooms: React.FC = () => {
       return;
     }
     
-    dispatch(createClassroom({
+    const result = await dispatch(createClassroom({
       name: formData.name.trim(),
       description: formData.description?.trim() || undefined
     }));
+    
+    // If classroom was created successfully, capture the ID
+    if (createClassroom.fulfilled.match(result)) {
+      setCreatedClassroomId(result.payload.id);
+    }
+  };
+
+  const handleCopyJoinLink = async (classroomId: number) => {
+    const joinLink = `${window.location.origin}/join-classroom/${classroomId}`;
+    try {
+      await navigator.clipboard.writeText(joinLink);
+      // Could add a toast notification here later
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  const handleNewClassroom = () => {
+    setFormData({ name: '', description: '' });
+    setCreatedClassroomId(null);
+    dispatch(clearCreateStatus());
   };
 
   const isCreateFormValid = formData.name.trim().length > 0;
@@ -255,23 +278,60 @@ const ManageClassrooms: React.FC = () => {
                   </Alert>
                 )}
 
+                {/* Share with Students Section */}
+                {createStatus === 'succeeded' && createdClassroomId && (
+                  <Box sx={{ mb: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>
+                    <Typography variant="h6" component="h3" gutterBottom>
+                      Share with Students
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                      Share this link with students so they can join your classroom:
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      value={`${window.location.origin}/join-classroom/${createdClassroomId}`}
+                      InputProps={{
+                        readOnly: true,
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => handleCopyJoinLink(createdClassroomId)}
+                              edge="end"
+                              title="Copy join link"
+                            >
+                              <ContentCopy />
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{ mb: 1 }}
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                      Students can use this link to join your classroom directly
+                    </Typography>
+                  </Box>
+                )}
+
                 <CreateButton
                   variant="contained"
-                  onClick={handleCreateSubmit}
-                  disabled={!isCreateFormValid || createStatus === 'loading'}
+                  onClick={createStatus === 'succeeded' ? handleNewClassroom : handleCreateSubmit}
+                  disabled={(!isCreateFormValid || createStatus === 'loading') && createStatus !== 'succeeded'}
                   startIcon={createStatus === 'loading' ? <CircularProgress size={16} /> : undefined}
                   sx={{ mr: 2 }}
                 >
-                  {createStatus === 'loading' ? 'Creating...' : 'Create Classroom'}
+                  {createStatus === 'loading' ? 'Creating...' : 
+                   createStatus === 'succeeded' ? 'Create Another Classroom' : 'Create Classroom'}
                 </CreateButton>
 
-                <Button
-                  variant="outlined"
-                  onClick={() => setFormData({ name: '', description: '' })}
-                  disabled={createStatus === 'loading'}
-                >
-                  Clear Form
-                </Button>
+                {createStatus !== 'succeeded' && (
+                  <Button
+                    variant="outlined"
+                    onClick={() => setFormData({ name: '', description: '' })}
+                    disabled={createStatus === 'loading'}
+                  >
+                    Clear Form
+                  </Button>
+                )}
               </Box>
             </SubTabPanel>
           )}
