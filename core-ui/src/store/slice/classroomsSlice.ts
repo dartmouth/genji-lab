@@ -23,6 +23,8 @@ export interface Classroom {
   created_at: string;
   created_by_id: number;
   member_count: number;
+  start_date: string; // Date will be serialized as ISO string
+  end_date: string;   // Date will be serialized as ISO string
 }
 
 export interface ClassroomWithMembers {
@@ -32,11 +34,15 @@ export interface ClassroomWithMembers {
   created_at: string;
   created_by_id: number;
   members: ClassroomMember[];
+  start_date: string; // Date will be serialized as ISO string
+  end_date: string;   // Date will be serialized as ISO string
 }
 
 export interface ClassroomCreate {
   name: string;
   description?: string;
+  start_date: string; // ISO date string (YYYY-MM-DD)
+  end_date: string;   // ISO date string (YYYY-MM-DD)
 }
 
 interface ClassroomState {

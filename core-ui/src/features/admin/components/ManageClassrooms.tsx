@@ -76,7 +76,9 @@ const ManageClassrooms: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<number>(0);
   const [formData, setFormData] = useState<ClassroomCreate>({
     name: '',
-    description: ''
+    description: '',
+    start_date: '', // No default value
+    end_date: ''    // No default value
   });
   const [createdClassroomId, setCreatedClassroomId] = useState<number | null>(null);
   
@@ -133,9 +135,20 @@ const ManageClassrooms: React.FC = () => {
       return;
     }
     
+    // Validate dates
+    if (!formData.start_date || !formData.end_date) {
+      return;
+    }
+    
+    if (new Date(formData.end_date) <= new Date(formData.start_date)) {
+      return;
+    }
+    
     const result = await dispatch(createClassroom({
       name: formData.name.trim(),
-      description: formData.description?.trim() || undefined
+      description: formData.description?.trim() || undefined,
+      start_date: formData.start_date,
+      end_date: formData.end_date
     }));
     
     // If classroom was created successfully, capture the ID
@@ -155,12 +168,20 @@ const ManageClassrooms: React.FC = () => {
   };
 
   const handleNewClassroom = () => {
-    setFormData({ name: '', description: '' });
+    setFormData({ 
+      name: '', 
+      description: '',
+      start_date: '', // No default value
+      end_date: ''    // No default value
+    });
     setCreatedClassroomId(null);
     dispatch(clearCreateStatus());
   };
 
-  const isCreateFormValid = formData.name.trim().length > 0;
+  const isCreateFormValid = formData.name.trim().length > 0 && 
+                           formData.start_date && 
+                           formData.end_date && 
+                           new Date(formData.end_date) > new Date(formData.start_date);
 
   return (
     <Box>
@@ -263,8 +284,33 @@ const ManageClassrooms: React.FC = () => {
                   multiline
                   rows={3}
                   placeholder="Optional description of the classroom"
-                  sx={{ mb: 3 }}
+                  sx={{ mb: 2 }}
                 />
+                
+                <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                  <TextField
+                    label="Start Date"
+                    type="date"
+                    value={formData.start_date}
+                    onChange={handleFormChange('start_date')}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ 
+                      min: '2025-09-17' // Sets the minimum selectable date to today, helps picker open to current month
+                    }}
+                    sx={{ flex: 1 }}
+                  />
+                  <TextField
+                    label="End Date"
+                    type="date"
+                    value={formData.end_date}
+                    onChange={handleFormChange('end_date')}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ 
+                      min: '2025-09-17' // Sets the minimum selectable date to today, helps picker open to current month
+                    }}
+                    sx={{ flex: 1 }}
+                  />
+                </Box>
                 
                 {createError && (
                   <Alert severity="error" sx={{ mb: 2 }}>
@@ -326,7 +372,12 @@ const ManageClassrooms: React.FC = () => {
                 {createStatus !== 'succeeded' && (
                   <Button
                     variant="outlined"
-                    onClick={() => setFormData({ name: '', description: '' })}
+                    onClick={() => setFormData({ 
+                      name: '', 
+                      description: '',
+                      start_date: '', // No default value
+                      end_date: ''    // No default value
+                    })}
                     disabled={createStatus === 'loading'}
                   >
                     Clear Form
@@ -363,6 +414,8 @@ const ManageClassrooms: React.FC = () => {
                       <TableRow>
                         <TableCell><strong>Name</strong></TableCell>
                         <TableCell><strong>Description</strong></TableCell>
+                        <TableCell><strong>Start Date</strong></TableCell>
+                        <TableCell><strong>End Date</strong></TableCell>
                         <TableCell><strong>Members</strong></TableCell>
                         <TableCell><strong>Created</strong></TableCell>
                         <TableCell><strong>Actions</strong></TableCell>
@@ -371,7 +424,7 @@ const ManageClassrooms: React.FC = () => {
                     <TableBody>
                       {filteredClassrooms.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} align="center">
+                          <TableCell colSpan={7} align="center">
                             No classrooms found
                           </TableCell>
                         </TableRow>
@@ -380,6 +433,8 @@ const ManageClassrooms: React.FC = () => {
                           <TableRow key={classroom.id}>
                             <TableCell>{classroom.name}</TableCell>
                             <TableCell>{classroom.description || '-'}</TableCell>
+                            <TableCell>{classroom.start_date ? formatDate(classroom.start_date) : '-'}</TableCell>
+                            <TableCell>{classroom.end_date ? formatDate(classroom.end_date) : '-'}</TableCell>
                             <TableCell>{classroom.member_count}</TableCell>
                             <TableCell>{formatDate(classroom.created_at)}</TableCell>
                             <TableCell>

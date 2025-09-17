@@ -2,8 +2,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, text
-from datetime import datetime
-from pydantic import BaseModel
+from datetime import datetime, date
+from pydantic import BaseModel, validator
 
 from database import get_db
 from models.models import Group, User, group_members
@@ -19,6 +19,14 @@ router = APIRouter(
 class GroupCreate(BaseModel):
     name: str
     description: Optional[str] = None
+    start_date: date
+    end_date: date
+    
+    @validator('end_date')
+    def validate_end_date_after_start_date(cls, v, values):
+        if 'start_date' in values and v <= values['start_date']:
+            raise ValueError('end_date must be after start_date')
+        return v
 
 class GroupResponse(BaseModel):
     id: int
@@ -27,6 +35,8 @@ class GroupResponse(BaseModel):
     created_at: datetime
     created_by_id: int
     member_count: int
+    start_date: date
+    end_date: date
     
     class Config:
         from_attributes = True
@@ -47,6 +57,8 @@ class GroupWithMembers(BaseModel):
     created_at: datetime
     created_by_id: int
     members: List[GroupMember]
+    start_date: date
+    end_date: date
     
     class Config:
         from_attributes = True
@@ -73,7 +85,9 @@ def create_group(
         name=group.name,
         description=group.description,
         created_at=datetime.now(),
-        created_by_id=current_user.id
+        created_by_id=current_user.id,
+        start_date=group.start_date,
+        end_date=group.end_date
     )
     
     db.add(db_group)
@@ -96,7 +110,9 @@ def create_group(
         description=db_group.description,
         created_at=db_group.created_at,
         created_by_id=db_group.created_by_id,
-        member_count=1
+        member_count=1,
+        start_date=db_group.start_date,
+        end_date=db_group.end_date
     )
 
 
@@ -116,7 +132,9 @@ def list_groups(
             description=group.description,
             created_at=group.created_at,
             created_by_id=group.created_by_id,
-            member_count=len(group.members)
+            member_count=len(group.members),
+            start_date=group.start_date,
+            end_date=group.end_date
         )
         for group in groups
     ]
@@ -149,7 +167,9 @@ def get_group(
                 last_name=member.last_name
             )
             for member in group.members
-        ]
+        ],
+        start_date=group.start_date,
+        end_date=group.end_date
     )
 
 
@@ -265,7 +285,9 @@ def get_my_groups(
             description=group.description,
             created_at=group.created_at,
             created_by_id=group.created_by_id,
-            member_count=len(group.members) if hasattr(group, 'members') else 0
+            member_count=len(group.members) if hasattr(group, 'members') else 0,
+            start_date=group.start_date,
+            end_date=group.end_date
         )
         for group in user_with_groups.groups
     ]
