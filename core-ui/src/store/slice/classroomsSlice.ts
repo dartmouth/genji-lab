@@ -34,8 +34,8 @@ export interface ClassroomWithMembers {
   created_at: string;
   created_by_id: number;
   members: ClassroomMember[];
-  start_date: string; // Date will be serialized as ISO string
-  end_date: string;   // Date will be serialized as ISO string
+  start_date?: string; // Date will be serialized as ISO string
+  end_date?: string;   // Date will be serialized as ISO string
 }
 
 export interface ClassroomCreate {
@@ -101,6 +101,24 @@ export const fetchClassroomById = createAsyncThunk(
   }
 );
 
+export const fetchClassroomByIdPublic = createAsyncThunk(
+  'classrooms/fetchByIdPublic',
+  async (classroomId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/groups/${classroomId}/public`);
+      
+      if (response.status !== 200) {
+        return rejectWithValue(`Failed to fetch classroom: ${response.statusText}`);
+      }
+      
+      const classroom: Classroom = response.data;
+      return classroom;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+);
+
 export const createClassroom = createAsyncThunk(
   'classrooms/create',
   async (classroomData: ClassroomCreate, { rejectWithValue }) => {
@@ -130,8 +148,12 @@ export const addUserToClassroom = createAsyncThunk(
       }
       
       return { classroomId, userId, message: response.data.message };
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    } catch (error: any) {
+      // Extract the specific error message from the response
+      if (error.response?.data?.detail) {
+        return rejectWithValue(error.response.data.detail);
+      }
+      return rejectWithValue(error.message || 'Unknown error');
     }
   }
 );
@@ -216,6 +238,23 @@ const classroomsSlice = createSlice({
         state.currentClassroom = action.payload;
       })
       .addCase(fetchClassroomById.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+      // Fetch classroom by ID (public)
+      .addCase(fetchClassroomByIdPublic.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchClassroomByIdPublic.fulfilled, (state, action: PayloadAction<Classroom>) => {
+        state.status = 'succeeded';
+        // Convert Classroom to ClassroomWithMembers for compatibility
+        state.currentClassroom = {
+          ...action.payload,
+          members: [] // Public endpoint doesn't return members
+        };
+      })
+      .addCase(fetchClassroomByIdPublic.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       })

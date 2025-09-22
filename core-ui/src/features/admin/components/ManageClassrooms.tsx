@@ -100,7 +100,7 @@ const ManageClassrooms: React.FC = () => {
 
   // Fetch classrooms when component mounts or when switching to relevant tabs
   useEffect(() => {
-    if (activeSubTab === 2 && userCanManage) { // List Classrooms tab
+    if (activeSubTab === 2 && userCanManage) { // Manage Classrooms tab
       dispatch(fetchClassrooms());
     }
   }, [activeSubTab, dispatch, userCanManage]);
@@ -158,7 +158,7 @@ const ManageClassrooms: React.FC = () => {
   };
 
   const handleCopyJoinLink = async (classroomId: number) => {
-    const joinLink = `${window.location.origin}/join-classroom/${classroomId}`;
+    const joinLink = `${window.location.origin}/join-classroom?classroom_id=${classroomId}`;
     try {
       await navigator.clipboard.writeText(joinLink);
       // Could add a toast notification here later
@@ -207,7 +207,7 @@ const ManageClassrooms: React.FC = () => {
           >
             <Tab label="Overview" {...a11yPropsSubTab(0)} />
             {userCanManage && <Tab label="Create Classroom" {...a11yPropsSubTab(1)} />}
-            {userCanManage && <Tab label="List Classrooms" {...a11yPropsSubTab(2)} />}
+            {userCanManage && <Tab label="Manage Classrooms" {...a11yPropsSubTab(2)} />}
           </Tabs>
         </Box>
 
@@ -233,7 +233,7 @@ const ManageClassrooms: React.FC = () => {
                     • <strong>Create Classroom:</strong> Set up new classrooms with names and descriptions
                   </Typography>
                   <Typography variant="body1" sx={{ mb: 1 }}>
-                    • <strong>List Classrooms:</strong> View and manage your classrooms
+                    • <strong>Manage Classrooms:</strong> View and manage your classrooms
                   </Typography>
                   {userRoles.includes('admin') && (
                     <Typography variant="body1" sx={{ mb: 1 }}>
@@ -335,7 +335,7 @@ const ManageClassrooms: React.FC = () => {
                     </Typography>
                     <TextField
                       fullWidth
-                      value={`${window.location.origin}/join-classroom/${createdClassroomId}`}
+                      value={`${window.location.origin}/join-classroom?classroom_id=${createdClassroomId}`}
                       InputProps={{
                         readOnly: true,
                         endAdornment: (
@@ -352,9 +352,6 @@ const ManageClassrooms: React.FC = () => {
                       }}
                       sx={{ mb: 1 }}
                     />
-                    <Typography variant="caption" color="text.secondary">
-                      Students can use this link to join your classroom directly
-                    </Typography>
                   </Box>
                 )}
 
@@ -387,7 +384,7 @@ const ManageClassrooms: React.FC = () => {
             </SubTabPanel>
           )}
 
-          {/* List Classrooms Tab */}
+          {/* Manage Classrooms Tab */}
           {userCanManage && (
             <SubTabPanel value={activeSubTab} index={2}>
               <Typography variant="h5" component="h2" gutterBottom>

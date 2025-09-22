@@ -63,6 +63,40 @@ class GroupWithMembers(BaseModel):
     class Config:
         from_attributes = True
 
+class InstructorInfo(BaseModel):
+    name: str
+    email: str
+    
+    class Config:
+        from_attributes = True
+
+
+@router.get("/{group_id}/public", response_model=GroupResponse, status_code=status.HTTP_200_OK)
+def get_group_public(
+    group_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get basic group information without authentication for join links."""
+    
+    group = db.query(Group).filter(Group.id == group_id).first()
+    
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Count members
+    member_count = db.query(group_members).filter(group_members.c.group_id == group_id).count()
+    
+    return GroupResponse(
+        id=group.id,
+        name=group.name,
+        description=group.description,
+        created_at=group.created_at,
+        created_by_id=group.created_by_id,
+        member_count=member_count,
+        start_date=group.start_date,
+        end_date=group.end_date
+    )
+
 
 @router.post("/", response_model=GroupResponse, status_code=status.HTTP_201_CREATED)
 def create_group(
@@ -173,6 +207,41 @@ def get_group(
     )
 
 
+@router.get("/{group_id}/instructor", response_model=InstructorInfo, status_code=status.HTTP_200_OK)
+def get_group_instructor(
+    group_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get instructor information for a group."""
+    
+    # Get the group with the creator information
+    group = db.query(Group).filter(Group.id == group_id).first()
+    
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Get the creator (instructor) information
+    instructor = db.query(User).filter(User.id == group.created_by_id).first()
+    
+    if not instructor:
+        raise HTTPException(status_code=404, detail="Instructor not found")
+    
+    # Build instructor name (similar pattern to existing GroupMember handling)
+    name_parts = []
+    if instructor.first_name:
+        name_parts.append(str(instructor.first_name))
+    if instructor.last_name:
+        name_parts.append(str(instructor.last_name))
+    
+    instructor_name = " ".join(name_parts) if name_parts else str(instructor.username)
+    instructor_email = str(instructor.email) if instructor.email else f"{instructor.username}@dartmouth.edu"
+    
+    return InstructorInfo(
+        name=instructor_name,
+        email=instructor_email
+    )
+
+
 @router.post("/{group_id}/members/{user_id}", status_code=status.HTTP_201_CREATED)
 def add_user_to_group(
     group_id: int,
@@ -262,35 +331,6 @@ def remove_user_from_group(
     db.commit()
     
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.get("/my-groups", response_model=List[GroupResponse], status_code=status.HTTP_200_OK)
-def get_my_groups(
-    current_user: User = Depends(get_current_user_sync),
-    db: Session = Depends(get_db)
-):
-    """Get groups the current user is a member of."""
-    
-    user_with_groups = db.query(User).options(
-        joinedload(User.groups)
-    ).filter(User.id == current_user.id).first()
-    
-    if not user_with_groups:
-        return []
-    
-    return [
-        GroupResponse(
-            id=group.id,
-            name=group.name,
-            description=group.description,
-            created_at=group.created_at,
-            created_by_id=group.created_by_id,
-            member_count=len(group.members) if hasattr(group, 'members') else 0,
-            start_date=group.start_date,
-            end_date=group.end_date
-        )
-        for group in user_with_groups.groups
-    ]
 
 
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
