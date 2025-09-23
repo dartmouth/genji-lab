@@ -1139,7 +1139,7 @@ export const DocumentContentView: React.FC = () => {
               <ToggleButtonGroup
                 value={viewMode}
                 exclusive
-                onChange={(event, newMode) => {
+                onChange={(_event, newMode) => {
                   if (newMode !== null) {
                     handleViewModeChange(newMode);
                   }
