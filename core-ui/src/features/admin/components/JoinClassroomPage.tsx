@@ -16,8 +16,7 @@ import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import {
   fetchClassroomByIdPublic,
   addUserToClassroom,
-  selectClassroomById,
-  selectClassroomsStatus
+  selectPublicFetchStatus
 } from '../../../store/slice/classroomsSlice';
 
 interface InstructorInfo {
@@ -39,20 +38,33 @@ const JoinClassroomPage: React.FC = () => {
   const [joinError, setJoinError] = useState<string | null>(null);
   
   const classroom = useAppSelector(state => {
+    // For join page, only use currentClassroom which is set by fetchClassroomByIdPublic
+    // Don't fall back to selectClassroomById to avoid showing stale data after API failures
     if (state.classrooms.currentClassroom && 
         state.classrooms.currentClassroom.id === parseInt(classroomId || '0')) {
       return state.classrooms.currentClassroom;
     }
-    return selectClassroomById(state, parseInt(classroomId || '0'));
+    return null;
   });
   
-  const classroomsStatus = useAppSelector(selectClassroomsStatus);
+  const classroomsStatus = useAppSelector(selectPublicFetchStatus);
+
+  // Helper function to check if classroom is active
+  const isClassroomActive = (classroom: any) => {
+    if (!classroom?.start_date || !classroom?.end_date) return true; // If no dates, assume active
+    const now = new Date();
+    const startDate = new Date(classroom.start_date);
+    const endDate = new Date(classroom.end_date);
+    // Set end date to end of day to be inclusive
+    endDate.setHours(23, 59, 59, 999);
+    return now >= startDate && now <= endDate;
+  };
 
   useEffect(() => {
-    if (classroomId && !classroom) {
+    if (classroomId) {
       dispatch(fetchClassroomByIdPublic(parseInt(classroomId)));
     }
-  }, [classroomId, classroom, dispatch]);
+  }, [classroomId, dispatch]);
 
   useEffect(() => {
     const fetchInstructorInfo = async () => {
@@ -73,7 +85,6 @@ const JoinClassroomPage: React.FC = () => {
         const data: InstructorInfo = await response.json();
         setInstructorInfo(data);
       } catch (error) {
-        console.error('Error fetching instructor info:', error);
         setInstructorError('Unable to load instructor information');
       } finally {
         setInstructorLoading(false);
@@ -93,8 +104,6 @@ const JoinClassroomPage: React.FC = () => {
       await dispatch(addUserToClassroom({ classroomId: classroom.id, userId: user.id })).unwrap();
       navigate('/classrooms');
     } catch (error) {
-      console.error('Error joining classroom:', error);
-      
       // Handle specific error cases
       if (typeof error === 'string' && error.includes('already a member')) {
         setJoinError('You are already a member of this classroom!');
@@ -131,7 +140,17 @@ const JoinClassroomPage: React.FC = () => {
     );
   }
 
-  if (classroomsStatus === 'failed' || (!classroom && classroomsStatus === 'idle')) {
+  if (classroomsStatus === 'failed') {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Alert severity="error">
+          Classroom not found. The link may be invalid or the classroom may no longer exist.
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (!classroom && classroomsStatus === 'idle') {
     return (
       <Container maxWidth="sm" sx={{ mt: 4 }}>
         <Alert severity="error">
@@ -143,6 +162,24 @@ const JoinClassroomPage: React.FC = () => {
 
   if (!classroom) {
     return null;
+  }
+
+  // Check if classroom is expired
+  if (!isClassroomActive(classroom)) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Alert severity="warning">
+          <Typography variant="h6" gutterBottom>
+            Classroom No Longer Available
+          </Typography>
+          <Typography variant="body1">
+            The classroom "{classroom.name}" was active from{' '}
+            {classroom.start_date ? new Date(classroom.start_date).toLocaleDateString() : 'unknown'} to{' '}
+            {classroom.end_date ? new Date(classroom.end_date).toLocaleDateString() : 'unknown'}, but is no longer accepting new members.
+          </Typography>
+        </Alert>
+      </Container>
+    );
   }
 
   return (
@@ -182,11 +219,21 @@ const JoinClassroomPage: React.FC = () => {
                   {instructorError}
                 </Alert>
               ) : instructorInfo ? (
-                <Box display="flex" alignItems="center">
-                  <Person color="action" sx={{ mr: 1 }} />
-                  <Typography variant="body1">
-                    {instructorInfo.name} ({instructorInfo.email})
-                  </Typography>
+                <Box>
+                  <Box display="flex" alignItems="center" mb={2}>
+                    <Person color="action" sx={{ mr: 1 }} />
+                    <Typography variant="body1">
+                      {instructorInfo.name} ({instructorInfo.email})
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => window.open(`mailto:${instructorInfo.email}?subject=Question about ${classroom.name}`, '_blank')}
+                    sx={{ mb: 1 }}
+                  >
+                    Contact Instructor
+                  </Button>
                 </Box>
               ) : null}
             </Box>

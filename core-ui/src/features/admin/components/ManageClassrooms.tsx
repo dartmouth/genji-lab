@@ -161,7 +161,6 @@ const ManageClassrooms: React.FC = () => {
     const joinLink = `${window.location.origin}/join-classroom?classroom_id=${classroomId}`;
     try {
       await navigator.clipboard.writeText(joinLink);
-      // Could add a toast notification here later
     } catch (err) {
       console.error('Failed to copy link:', err);
     }
@@ -207,7 +206,7 @@ const ManageClassrooms: React.FC = () => {
           >
             <Tab label="Overview" {...a11yPropsSubTab(0)} />
             {userCanManage && <Tab label="Create Classroom" {...a11yPropsSubTab(1)} />}
-            {userCanManage && <Tab label="Manage Classrooms" {...a11yPropsSubTab(2)} />}
+            {userCanManage && <Tab label="Classroom Admin" {...a11yPropsSubTab(2)} />}
           </Tabs>
         </Box>
 
@@ -233,13 +232,8 @@ const ManageClassrooms: React.FC = () => {
                     • <strong>Create Classroom:</strong> Set up new classrooms with names and descriptions
                   </Typography>
                   <Typography variant="body1" sx={{ mb: 1 }}>
-                    • <strong>Manage Classrooms:</strong> View and manage your classrooms
+                    • <strong>Classroom Admin:</strong> View and manage your classrooms
                   </Typography>
-                  {userRoles.includes('admin') && (
-                    <Typography variant="body1" sx={{ mb: 1 }}>
-                      • <strong>Admin View:</strong> As an admin, you can see all classrooms
-                    </Typography>
-                  )}
                   {userRoles.includes('instructor') && !userRoles.includes('admin') && (
                     <Typography variant="body1" sx={{ mb: 1 }}>
                       • <strong>Instructor View:</strong> You can see and manage only your own classrooms

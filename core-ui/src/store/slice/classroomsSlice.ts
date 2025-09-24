@@ -41,8 +41,8 @@ export interface ClassroomWithMembers {
 export interface ClassroomCreate {
   name: string;
   description?: string;
-  start_date: string; // ISO date string (YYYY-MM-DD)
-  end_date: string;   // ISO date string (YYYY-MM-DD)
+  start_date: string; // Date will be serialized as ISO string
+  end_date: string;   // Date will be serialized as ISO string
 }
 
 interface ClassroomState {
@@ -50,6 +50,8 @@ interface ClassroomState {
   currentClassroom: ClassroomWithMembers | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
+  publicFetchStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  publicFetchError: string | null;
   createStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   createError: string | null;
 }
@@ -60,6 +62,8 @@ const initialState: ClassroomState = {
   currentClassroom: null,
   status: 'idle',
   error: null,
+  publicFetchStatus: 'idle',
+  publicFetchError: null,
   createStatus: 'idle',
   createError: null,
 };
@@ -201,6 +205,8 @@ const classroomsSlice = createSlice({
       state.classrooms = [];
       state.currentClassroom = null;
       state.status = 'idle';
+      state.publicFetchStatus = 'idle';
+      state.publicFetchError = null;
     },
     clearError: (state) => {
       state.error = null;
@@ -243,11 +249,12 @@ const classroomsSlice = createSlice({
       })
       // Fetch classroom by ID (public)
       .addCase(fetchClassroomByIdPublic.pending, (state) => {
-        state.status = 'loading';
-        state.error = null;
+        state.publicFetchStatus = 'loading';
+        state.publicFetchError = null;
+        state.currentClassroom = null; // Clear any stale classroom data
       })
       .addCase(fetchClassroomByIdPublic.fulfilled, (state, action: PayloadAction<Classroom>) => {
-        state.status = 'succeeded';
+        state.publicFetchStatus = 'succeeded';
         // Convert Classroom to ClassroomWithMembers for compatibility
         state.currentClassroom = {
           ...action.payload,
@@ -255,8 +262,9 @@ const classroomsSlice = createSlice({
         };
       })
       .addCase(fetchClassroomByIdPublic.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload as string;
+        state.publicFetchStatus = 'failed';
+        state.publicFetchError = action.payload as string;
+        state.currentClassroom = null; // Clear classroom data on error
       })
       // Create classroom
       .addCase(createClassroom.pending, (state) => {
@@ -302,6 +310,8 @@ export const selectAllClassrooms = (state: RootState) => state.classrooms.classr
 export const selectCurrentClassroom = (state: RootState) => state.classrooms.currentClassroom;
 export const selectClassroomsStatus = (state: RootState) => state.classrooms.status;
 export const selectClassroomsError = (state: RootState) => state.classrooms.error;
+export const selectPublicFetchStatus = (state: RootState) => state.classrooms.publicFetchStatus;
+export const selectPublicFetchError = (state: RootState) => state.classrooms.publicFetchError;
 export const selectCreateClassroomStatus = (state: RootState) => state.classrooms.createStatus;
 export const selectCreateClassroomError = (state: RootState) => state.classrooms.createError;
 export const selectClassroomById = (state: RootState, classroomId: number) => 
