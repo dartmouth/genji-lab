@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Tabs, Tab, Box, Typography, Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, Button, TextField, 
-  CircularProgress, Alert, IconButton, InputAdornment 
+  CircularProgress, Alert, IconButton, InputAdornment, Select, MenuItem, FormControl, InputLabel 
 } from '@mui/material';
 import { ContentCopy } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
@@ -10,11 +10,13 @@ import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { 
   fetchClassrooms, 
   createClassroom,
+  fetchClassroomById,
   selectClassroomsStatus,
   selectClassroomsError,
   selectCreateClassroomStatus,
   selectCreateClassroomError,
   selectClassroomsForUser,
+  selectCurrentClassroom,
   clearCreateStatus,
   type ClassroomCreate
 } from '../../../store/slice/classroomsSlice';
@@ -23,6 +25,14 @@ import { useAuth } from '../../../hooks/useAuthContext';
 // Utility function to format dates
 const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString();
+};
+
+// Utility function to format member names
+const formatMemberName = (member: any): string => {
+  const nameParts = [];
+  if (member.first_name) nameParts.push(member.first_name);
+  if (member.last_name) nameParts.push(member.last_name);
+  return nameParts.length > 0 ? nameParts.join(' ') : member.username;
 };
 
 // TabPanel for the sub-tabs
@@ -81,6 +91,7 @@ const ManageClassrooms: React.FC = () => {
     end_date: ''    // No default value
   });
   const [createdClassroomId, setCreatedClassroomId] = useState<number | null>(null);
+  const [selectedClassroomId, setSelectedClassroomId] = useState<string>('');
   
   const dispatch = useAppDispatch();
   const { user: currentUser } = useAuth();
@@ -90,6 +101,7 @@ const ManageClassrooms: React.FC = () => {
   const classroomsError = useAppSelector(selectClassroomsError);
   const createStatus = useAppSelector(selectCreateClassroomStatus);
   const createError = useAppSelector(selectCreateClassroomError);
+  const currentClassroom = useAppSelector(selectCurrentClassroom);
 
   // Get user's roles and filter classrooms based on role
   const userRoles = currentUser?.roles || [];
@@ -100,10 +112,18 @@ const ManageClassrooms: React.FC = () => {
 
   // Fetch classrooms when component mounts or when switching to relevant tabs
   useEffect(() => {
-    if (activeSubTab === 2 && userCanManage) { // Manage Classrooms tab
+    if (activeSubTab === 2 && userCanManage) { // Classroom Admin tab
       dispatch(fetchClassrooms());
     }
   }, [activeSubTab, dispatch, userCanManage]);
+
+  // Handle classroom selection for roster view
+  const handleClassroomSelection = (classroomId: string) => {
+    setSelectedClassroomId(classroomId);
+    if (classroomId) {
+      dispatch(fetchClassroomById(parseInt(classroomId)));
+    }
+  };
 
   // Handle successful creation and cleanup
   useEffect(() => {
@@ -232,13 +252,8 @@ const ManageClassrooms: React.FC = () => {
                     • <strong>Create Classroom:</strong> Set up new classrooms with names and descriptions
                   </Typography>
                   <Typography variant="body1" sx={{ mb: 1 }}>
-                    • <strong>Classroom Admin:</strong> View and manage your classrooms
+                    • <strong>Classroom Admin:</strong> View and manage classrooms
                   </Typography>
-                  {userRoles.includes('instructor') && !userRoles.includes('admin') && (
-                    <Typography variant="body1" sx={{ mb: 1 }}>
-                      • <strong>Instructor View:</strong> You can see and manage only your own classrooms
-                    </Typography>
-                  )}
                 </Box>
               </Box>
             ) : (
@@ -378,67 +393,113 @@ const ManageClassrooms: React.FC = () => {
             </SubTabPanel>
           )}
 
-          {/* Manage Classrooms Tab */}
+          {/* Classroom Admin Tab */}
           {userCanManage && (
             <SubTabPanel value={activeSubTab} index={2}>
               <Typography variant="h5" component="h2" gutterBottom>
-                {userRoles.includes('admin') ? 'All Classrooms' : 'My Classrooms'}
+                Class Roster
               </Typography>
               
+              <Typography variant="body1" sx={{ mb: 3 }}>
+                Select a classroom to view its student roster.
+              </Typography>
+
               {/* Error Display */}
               {classroomsError && (
                 <Alert severity="error" sx={{ mb: 2 }}>
                   {classroomsError}
                 </Alert>
               )}
-              
-              {/* Classrooms Table */}
-              {classroomsLoading ? (
+
+              {/* Classroom Selection Dropdown */}
+              <Box sx={{ mb: 3, maxWidth: 400 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="classroom-select-label">Select Classroom</InputLabel>
+                  <Select
+                    labelId="classroom-select-label"
+                    value={selectedClassroomId}
+                    label="Select Classroom"
+                    onChange={(e) => handleClassroomSelection(e.target.value as string)}
+                    disabled={classroomsLoading}
+                  >
+                    <MenuItem value="">
+                      <em>Select a classroom...</em>
+                    </MenuItem>
+                    {filteredClassrooms.map((classroom) => (
+                      <MenuItem key={classroom.id} value={classroom.id.toString()}>
+                        {classroom.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Class Roster Table */}
+              {selectedClassroomId && currentClassroom && (
+                <>
+                  <Typography variant="h6" component="h3" gutterBottom>
+                    {currentClassroom.name}
+                  </Typography>
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Instructor: {(() => {
+                      const instructor = currentClassroom.members?.find(m => m.id === currentClassroom.created_by_id);
+                      return instructor ? formatMemberName(instructor) : 'Unknown';
+                    })()}
+                  </Typography>
+                  
+                  {currentClassroom.members && currentClassroom.members.length > 0 ? (
+                    <TableContainer component={Paper} sx={{ mt: 2 }}>
+                      <Table>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell><strong>Student Name</strong></TableCell>
+                            <TableCell><strong>Email</strong></TableCell>
+                            <TableCell><strong>Joined Date</strong></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {currentClassroom.members
+                            .filter((member) => member.id !== currentClassroom.created_by_id)
+                            .map((member) => (
+                            <TableRow key={member.id}>
+                              <TableCell>
+                                {formatMemberName(member)}
+                              </TableCell>
+                              <TableCell>
+                                {member.email ? (
+                                  <a 
+                                    href={`mailto:${member.email}`}
+                                    style={{ textDecoration: 'none', color: '#00693e' }}
+                                  >
+                                    {member.email}
+                                  </a>
+                                ) : (
+                                  '-'
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {member.joined_at ? formatDate(member.joined_at) : '-'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                      No students have joined this classroom yet.
+                    </Alert>
+                  )}
+                </>
+              )}
+
+              {/* Loading State for Classroom Details */}
+              {selectedClassroomId && !currentClassroom && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
                   <CircularProgress />
-                  <Typography sx={{ ml: 2 }}>Loading classrooms...</Typography>
+                  <Typography sx={{ ml: 2 }}>Loading classroom roster...</Typography>
                 </Box>
-              ) : (
-                <TableContainer component={Paper}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell><strong>Name</strong></TableCell>
-                        <TableCell><strong>Description</strong></TableCell>
-                        <TableCell><strong>Start Date</strong></TableCell>
-                        <TableCell><strong>End Date</strong></TableCell>
-                        <TableCell><strong>Members</strong></TableCell>
-                        <TableCell><strong>Created</strong></TableCell>
-                        <TableCell><strong>Actions</strong></TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredClassrooms.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} align="center">
-                            No classrooms found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredClassrooms.map((classroom) => (
-                          <TableRow key={classroom.id}>
-                            <TableCell>{classroom.name}</TableCell>
-                            <TableCell>{classroom.description || '-'}</TableCell>
-                            <TableCell>{classroom.start_date ? formatDate(classroom.start_date) : '-'}</TableCell>
-                            <TableCell>{classroom.end_date ? formatDate(classroom.end_date) : '-'}</TableCell>
-                            <TableCell>{classroom.member_count}</TableCell>
-                            <TableCell>{formatDate(classroom.created_at)}</TableCell>
-                            <TableCell>
-                              <Button size="small" variant="outlined">
-                                Manage
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
               )}
             </SubTabPanel>
           )}

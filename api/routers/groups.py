@@ -46,6 +46,8 @@ class GroupMember(BaseModel):
     username: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    email: Optional[str] = None
+    joined_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
@@ -182,10 +184,21 @@ def get_group(
 ):
     """Get a specific group with its members."""
     
-    group = db.query(Group).options(joinedload(Group.members)).filter(Group.id == group_id).first()
+    # Get group basic info
+    group = db.query(Group).filter(Group.id == group_id).first()
     
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Get members with joined_at from the association table
+    members_query = db.query(
+        User.id, User.username, User.first_name, User.last_name, User.email,
+        group_members.c.joined_at
+    ).join(
+        group_members, User.id == group_members.c.user_id
+    ).filter(
+        group_members.c.group_id == group_id
+    ).all()
     
     return GroupWithMembers(
         id=group.id,
@@ -195,12 +208,14 @@ def get_group(
         created_by_id=group.created_by_id,
         members=[
             GroupMember(
-                id=member.id,
-                username=member.username,
-                first_name=member.first_name,
-                last_name=member.last_name
+                id=member_data.id,
+                username=member_data.username,
+                first_name=member_data.first_name,
+                last_name=member_data.last_name,
+                email=member_data.email,
+                joined_at=member_data.joined_at
             )
-            for member in group.members
+            for member_data in members_query
         ],
         start_date=group.start_date,
         end_date=group.end_date
