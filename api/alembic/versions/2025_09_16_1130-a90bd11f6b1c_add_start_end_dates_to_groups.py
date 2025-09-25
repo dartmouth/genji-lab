@@ -9,7 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.schema import Sequence, CreateSequence
 
 # revision identifiers, used by Alembic.
 revision: str = 'a90bd11f6b1c'
@@ -31,6 +31,9 @@ def upgrade() -> None:
         'end_date > start_date OR start_date IS NULL OR end_date IS NULL',
         schema='app'
     )
+
+    op.execute(CreateSequence(Sequence('annotation_body_id_seq', schema='app', start=1)))
+    op.execute(CreateSequence(Sequence('annotation_target_id_seq', schema='app', start=1)))
 
 
 def downgrade() -> None:
