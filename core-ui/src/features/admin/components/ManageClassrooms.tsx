@@ -340,7 +340,8 @@ const ManageClassrooms: React.FC = () => {
                       Share with Students
                     </Typography>
                     <Typography variant="body2" sx={{ mb: 2 }}>
-                      Share this link with students so they can join your classroom:
+                      Share this link with students so they can join your classroom. 
+                      <strong> Note:</strong> Join links expire 2 weeks after the classroom start date.
                     </Typography>
                     <TextField
                       fullWidth

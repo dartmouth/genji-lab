@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, text
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pydantic import BaseModel, validator
 
 from database import get_db
@@ -14,6 +14,9 @@ router = APIRouter(
     tags=["groups"],
     responses={404: {"description": "Group not found"}},
 )
+
+# Configuration: Join link expires X weeks after classroom start date
+JOIN_LINK_EXPIRATION_WEEKS = 2
 
 # Pydantic schemas
 class GroupCreate(BaseModel):
@@ -289,6 +292,16 @@ def add_user_to_group(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User is already a member of this group"
         )
+    
+    # Check if join period is still active
+    if group.start_date is not None:
+        today = date.today()
+        join_expiration_date = group.start_date + timedelta(weeks=JOIN_LINK_EXPIRATION_WEEKS)
+        if today > join_expiration_date:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Join period has expired. Join links expire {JOIN_LINK_EXPIRATION_WEEKS} weeks after the classroom start date."
+            )
     
     # Add user to group
     db.execute(

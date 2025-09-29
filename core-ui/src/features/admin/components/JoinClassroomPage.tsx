@@ -19,6 +19,9 @@ import {
   selectPublicFetchStatus
 } from '../../../store/slice/classroomsSlice';
 
+// Configuration: Join link expires X weeks after classroom start date
+const JOIN_LINK_EXPIRATION_WEEKS = 2;
+
 interface InstructorInfo {
   name: string;
   email: string;
@@ -49,14 +52,25 @@ const JoinClassroomPage: React.FC = () => {
   
   const classroomsStatus = useAppSelector(selectPublicFetchStatus);
 
-  // Helper function to check if classroom is active
-  const isClassroomActive = (classroom: any) => {
+  // Helper function to check if join period is still active
+  const isJoinPeriodActive = (classroom: any) => {
+    if (!classroom?.start_date) return true; // If no start date, assume active
+    const now = new Date();
+    // Parse date as local time to avoid timezone issues
+    const startDate = new Date(classroom.start_date + 'T00:00:00');
+    const joinExpirationDate = new Date(startDate);
+    joinExpirationDate.setDate(startDate.getDate() + (JOIN_LINK_EXPIRATION_WEEKS * 7));
+    joinExpirationDate.setHours(23, 59, 59, 999); // End of expiration day
+    return now <= joinExpirationDate;
+  };
+
+  // Helper function to check if classroom period is active
+  const isClassroomPeriodActive = (classroom: any) => {
     if (!classroom?.start_date || !classroom?.end_date) return true; // If no dates, assume active
     const now = new Date();
-    const startDate = new Date(classroom.start_date);
-    const endDate = new Date(classroom.end_date);
-    // Set end date to end of day to be inclusive
-    endDate.setHours(23, 59, 59, 999);
+    // Parse dates as local time to avoid timezone issues
+    const startDate = new Date(classroom.start_date + 'T00:00:00');
+    const endDate = new Date(classroom.end_date + 'T23:59:59');
     return now >= startDate && now <= endDate;
   };
 
@@ -164,8 +178,37 @@ const JoinClassroomPage: React.FC = () => {
     return null;
   }
 
-  // Check if classroom is expired
-  if (!isClassroomActive(classroom)) {
+  // Check if join period has expired
+  if (!isJoinPeriodActive(classroom)) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Alert severity="warning">
+          <Typography variant="h6" gutterBottom>
+            Join Period Has Expired
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            The join period for "{classroom.name}" has expired. Join links expire {JOIN_LINK_EXPIRATION_WEEKS} weeks after the classroom start date, which was {classroom.start_date ? new Date(classroom.start_date + 'T00:00:00').toLocaleDateString() : 'unknown'}.
+          </Typography>
+          {instructorInfo && (
+            <Typography variant="body1">
+              Please contact the instructor for assistance: {' '}
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => window.open(`mailto:${instructorInfo.email}?subject=Request to join ${classroom.name}`, '_blank')}
+                sx={{ p: 0, textTransform: 'none', textDecoration: 'underline' }}
+              >
+                {instructorInfo.name} ({instructorInfo.email})
+              </Button>
+            </Typography>
+          )}
+        </Alert>
+      </Container>
+    );
+  }
+
+  // Check if classroom period has ended
+  if (!isClassroomPeriodActive(classroom)) {
     return (
       <Container maxWidth="sm" sx={{ mt: 4 }}>
         <Alert severity="warning">
@@ -174,8 +217,8 @@ const JoinClassroomPage: React.FC = () => {
           </Typography>
           <Typography variant="body1">
             The classroom "{classroom.name}" was active from{' '}
-            {classroom.start_date ? new Date(classroom.start_date).toLocaleDateString() : 'unknown'} to{' '}
-            {classroom.end_date ? new Date(classroom.end_date).toLocaleDateString() : 'unknown'}, but is no longer accepting new members.
+            {classroom.start_date ? new Date(classroom.start_date + 'T00:00:00').toLocaleDateString() : 'unknown'} to{' '}
+            {classroom.end_date ? new Date(classroom.end_date + 'T00:00:00').toLocaleDateString() : 'unknown'}, but is no longer accepting new members.
           </Typography>
         </Alert>
       </Container>
