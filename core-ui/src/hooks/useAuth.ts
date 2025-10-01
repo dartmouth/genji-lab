@@ -291,11 +291,25 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
       }
     });
   }, [checkForTicket, checkSession, localStorageKey]);
+  
+  const activeClassroomKey = 'active_classroom'
 
   // Save auth state to localStorage whenever it changes
   useEffect(() => {
     if (authState.isAuthenticated) {
       localStorage.setItem(localStorageKey, JSON.stringify(authState));
+      
+      if (authState.user?.groups && authState.user.groups.length > 0){
+        const activeClassroom = localStorage.getItem(activeClassroomKey)
+        if (!activeClassroom){
+          localStorage.setItem(activeClassroomKey, authState.user.groups[0].id as unknown as string)
+        } else {
+          const currentActiveClassroom = localStorage.getItem(activeClassroomKey)
+          if (!authState.user.groups.map(group => group.id).includes(currentActiveClassroom as unknown as number)){
+            localStorage.removeItem(activeClassroomKey)
+          }
+        }
+      }
     } else {
       localStorage.removeItem(localStorageKey);
     }

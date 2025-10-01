@@ -128,7 +128,7 @@ const AppHeader: React.FC = () => {
                   {`Welcome, ${user.first_name} ${user.last_name}`}
                 </div>
                 {user?.roles && user.roles.includes('admin') ?
-                (<button className="admin-button" onClick={() =>
+                (<button className="logout-button" onClick={() =>
                    window.location.href = "/admin"}
                 >
                   Administration
@@ -139,20 +139,25 @@ const AppHeader: React.FC = () => {
                 {user?.groups && user.groups.length > 0 ? (
                   <div>
                     <div>Classroom</div>
-                <select 
-                  className="group-selector"
-                  defaultValue={user.groups[0].id}
-                  onChange={(e) => {
-                    // Handle group selection
-                    console.log('Selected group ID:', e.target.value);
-                  }}
-                >
+                    <select 
+                      className="group-selector"
+                      defaultValue={user.groups[0].id}
+                      onChange={(e) => {
+                        console.log('Selected group ID:', e.target.value);
+                      }}
+                    >
                   {user.groups.map((group) => (
                     <option key={group.id} value={group.id}>
                       {group.name}
                     </option>
                   ))}
                 </select>
+                <br/><br/>
+                <button className="logout-button" onClick={() => {
+                  toggleDropdown()
+                  }}>
+                    Toggle Classroom
+                  </button>
                 </div>
               ) : (
                 <div>No groups</div>)}
