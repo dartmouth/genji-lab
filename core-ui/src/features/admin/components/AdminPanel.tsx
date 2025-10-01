@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Tabs, Tab, Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../hooks/useAuthContext';
 import ManageCollections from './ManageCollections';
 import ManageDocuments from './ManageDocuments';
 import ManageUsers from './ManageUsers';
@@ -51,6 +52,30 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
   // State to manage which tab is active
   const [activeTab, setActiveTab] = useState<number>(0);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Check user roles
+  const userRoles = user?.roles || [];
+
+  // Define which tabs should be visible based on role
+  const availableTabs = [
+    { label: "Overview", component: "overview", roles: ['admin'] }, // Admin only
+    { label: "Manage Document Collections", component: "collections", roles: ['admin'] }, // Admin only
+    { label: "Manage Documents", component: "documents", roles: ['admin'] }, // Admin only
+    { label: "Manage Users", component: "users", roles: ['admin'] }, // Admin only
+    { label: "Manage Classrooms", component: "classrooms", roles: ['admin', 'instructor'] },
+    { label: "Site Settings", component: "settings", roles: ['admin'] } // Admin only
+  ];
+
+  // Filter tabs based on user roles
+  const visibleTabs = availableTabs.filter(tab => 
+    tab.roles.some(role => userRoles.includes(role))
+  );
+
+  // Helper function to get tab index by component name
+  const getTabIndex = (componentName: string) => {
+    return visibleTabs.findIndex(tab => tab.component === componentName);
+  };
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -101,12 +126,9 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
             }
           }}
         >
-          <Tab label="Overview" {...a11yProps(0)} />
-          <Tab label="Manage Document Collections" {...a11yProps(1)} />
-          <Tab label="Manage Documents" {...a11yProps(2)} />
-          <Tab label="Manage Users" {...a11yProps(3)} />
-          <Tab label="Manage Classrooms" {...a11yProps(4)} />
-          <Tab label="Site Settings" {...a11yProps(5)} />
+          {visibleTabs.map((tab, index) => (
+            <Tab key={tab.component} label={tab.label} {...a11yProps(index)} />
+          ))}
         </Tabs>
         {/* Tab content area */}
         <TabPanel value={activeTab} index={0}>
@@ -142,7 +164,10 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }
                 }}
-                onClick={() => setActiveTab(1)}
+                onClick={() => {
+                  const tabIndex = getTabIndex('collections');
+                  if (tabIndex !== -1) setActiveTab(tabIndex);
+                }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Box
@@ -194,7 +219,10 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }
                 }}
-                onClick={() => setActiveTab(2)}
+                onClick={() => {
+                  const tabIndex = getTabIndex('documents');
+                  if (tabIndex !== -1) setActiveTab(tabIndex);
+                }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Box
@@ -291,31 +319,44 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
                   title: 'Document Collections', 
                   description: 'Create and manage collections',
                   icon: '📚',
-                  tabIndex: 1,
+                  component: 'collections',
                   color: 'primary'
                 },
                 { 
                   title: 'Documents', 
                   description: 'Import, delete, and organize',
                   icon: '📄',
-                  tabIndex: 2,
+                  component: 'documents',
                   color: 'success'
                 },
                 { 
                   title: 'Users', 
                   description: 'Manage user accounts',
                   icon: '👥',
-                  tabIndex: 3,
+                  component: 'users',
                   color: 'warning'
+                },
+                { 
+                  title: 'Classrooms', 
+                  description: 'Manage classrooms and students',
+                  icon: '🏫',
+                  component: 'classrooms',
+                  color: 'secondary'
                 },
                 { 
                   title: 'Site Settings', 
                   description: 'Configure system settings',
                   icon: '⚙️',
-                  tabIndex: 4,
+                  component: 'settings',
                   color: 'info'
                 }
-              ].map((tool, index) => (
+              ]
+              .filter(tool => {
+                // Only show tools for tabs that are visible to this user
+                const tabIndex = getTabIndex(tool.component);
+                return tabIndex !== -1;
+              })
+              .map((tool, index) => (
                 <Box
                   key={index}
                   sx={{
@@ -332,7 +373,10 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
                       boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
                     }
                   }}
-                  onClick={() => setActiveTab(tool.tabIndex)}
+                  onClick={() => {
+                    const tabIndex = getTabIndex(tool.component);
+                    if (tabIndex !== -1) setActiveTab(tabIndex);
+                  }}
                 >
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" component="div" sx={{ mb: 1 }}>
@@ -377,25 +421,20 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
           </Box>
         </TabPanel>
 
-        <TabPanel value={activeTab} index={1}>
-          <ManageCollections />
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={2}>
-          <ManageDocuments />
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={3}>
-          <ManageUsers />
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={4}>
-          <ManageClassrooms />
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={5}>
-          <SiteSettings />
-        </TabPanel>
+        {/* Dynamic Tab Content based on visible tabs */}
+        {visibleTabs.map((tab, index) => {
+          if (index === 0) return null; // Skip overview tab as it's handled above
+          
+          return (
+            <TabPanel key={tab.component} value={activeTab} index={index}>
+              {tab.component === 'collections' && <ManageCollections />}
+              {tab.component === 'documents' && <ManageDocuments />}
+              {tab.component === 'users' && <ManageUsers />}
+              {tab.component === 'classrooms' && <ManageClassrooms />}
+              {tab.component === 'settings' && <SiteSettings />}
+            </TabPanel>
+          );
+        })}
       </Box>
     </Box>
   );
