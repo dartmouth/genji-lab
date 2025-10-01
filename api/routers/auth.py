@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, Request
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from database import get_db
 from models import models
@@ -62,6 +62,7 @@ def clear_session(request: Request) -> None:
     """Clear user session."""
     request.session.pop("user", None)
 
+
 router = APIRouter(
     prefix="/api/v1/auth",
     tags=["authentication"]
@@ -71,6 +72,11 @@ router = APIRouter(
 def get_user_roles(user: models.User) -> List[str]:
     """Get list of role names for a user."""
     return [role.name for role in user.roles]
+
+
+def get_user_groups(user: models.User) -> List[Dict[str, Any]]:
+    """Get list of group information for a user."""
+    return [{"name": group.name, "id": group.id} for group in user.groups]
 
 
 def assign_default_role_to_user(db_session: Session, user: models.User, role_name: str = "general_user"):
@@ -110,8 +116,11 @@ def get_current_user(
             detail="Invalid session data"
         )
     
-    # Load user with roles
-    query = select(models.User).options(joinedload(models.User.roles)).filter(
+    # Load user with roles and groups
+    query = select(models.User).options(
+        joinedload(models.User.roles),
+        joinedload(models.User.groups)
+    ).filter(
         models.User.id == int(user_id)
     )
     result = db.execute(query)
@@ -183,8 +192,11 @@ async def register_user(user_data: UserRegister, request: Request, db: Session =
     # Assign default role
     assign_default_role_to_user(db, new_user)
     
-    # Reload user with roles
-    query = select(models.User).options(joinedload(models.User.roles)).filter(
+    # Reload user with roles and groups
+    query = select(models.User).options(
+        joinedload(models.User.roles),
+        joinedload(models.User.groups)
+    ).filter(
         models.User.id == new_user.id
     )
     result = db.execute(query)
@@ -204,6 +216,7 @@ async def register_user(user_data: UserRegister, request: Request, db: Session =
         username=user_with_roles.username,
         is_active=user_with_roles.is_active,
         roles=get_user_roles(user_with_roles),
+        groups=get_user_groups(user_with_roles),
         user_metadata=user_with_roles.user_metadata,
         ttl=ttl
     )
@@ -216,6 +229,7 @@ async def login_user(login_data: UserLogin, request: Request, db: Session = Depe
     # Find user by username
     query = select(models.User).options(
         joinedload(models.User.roles),
+        joinedload(models.User.groups),
         joinedload(models.User.password_auth)
     ).filter(models.User.username == login_data.username)
     
@@ -270,6 +284,7 @@ async def login_user(login_data: UserLogin, request: Request, db: Session = Depe
         username=user.username,
         is_active=user.is_active,
         roles=get_user_roles(user),
+        groups=get_user_groups(user),
         user_metadata=user.user_metadata,
         ttl=ttl
     )
@@ -289,6 +304,7 @@ async def get_current_user_info(request: Request, current_user: models.User = De
         username=current_user.username,
         is_active=current_user.is_active,
         roles=get_user_roles(current_user),
+        groups=get_user_groups(current_user),
         user_metadata=current_user.user_metadata,
         ttl=ttl
     )

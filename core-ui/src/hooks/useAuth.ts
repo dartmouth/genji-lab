@@ -16,6 +16,7 @@ interface AuthUser {
   user_metadata?: Record<string, string|number>;
   roles?: Array<string>;
   ttl: string;
+  groups: Array<{name: string; id: number}>;
   [key: string]: unknown;
 }
 
@@ -91,6 +92,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         user,
         expiresAt,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('Basic auth login error:', e);
       const errorMessage = e.response?.data?.detail || e.message || 'Login failed';
@@ -138,6 +140,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         user,
         expiresAt,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('Session check error:', e);
       setAuthState({ isAuthenticated: false, user: null });
@@ -177,6 +180,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
           user,
           expiresAt,
         });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         console.error('CAS ticket validation error:', e);
         const errorMessage = e.response?.data?.detail || e.message || 'Authentication failed';
@@ -222,6 +226,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         user,
         expiresAt,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('Registration error:', e);
       const errorMessage = e.response?.data?.detail || e.message || 'Registration failed';
@@ -242,6 +247,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
       await api.post('/auth/logout', {}, {
         withCredentials: true,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('Logout error:', e);
     }

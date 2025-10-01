@@ -13,6 +13,7 @@ export interface AuthContextType {
     email?: string;
     user_metadata?: Record<string, string|number>;
     roles?: Array<string>,
+    groups: Array<{name: string; id: number}>,
     ttl: string; // ISO format timestamp for expiration
     [key: string]: unknown;
   } | null;

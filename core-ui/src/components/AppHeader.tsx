@@ -135,6 +135,7 @@ const AppHeader: React.FC = () => {
                 </button>):(
                   <div></div>
                   )}
+                {user?.groups ? (<div>Has a group {user.groups[0]['name']}</div>):(<div></div>)}
                 <br/><br/>
                 <button className="logout-button" onClick={() => {
                   toggleDropdown()
