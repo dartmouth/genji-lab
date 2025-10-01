@@ -135,7 +135,27 @@ const AppHeader: React.FC = () => {
                 </button>):(
                   <div></div>
                   )}
-                {user?.groups ? (<div>Has a group {user.groups[0]['name']}</div>):(<div></div>)}
+                <br/><br/>
+                {user?.groups && user.groups.length > 0 ? (
+                  <div>
+                    <div>Classroom</div>
+                <select 
+                  className="group-selector"
+                  defaultValue={user.groups[0].id}
+                  onChange={(e) => {
+                    // Handle group selection
+                    console.log('Selected group ID:', e.target.value);
+                  }}
+                >
+                  {user.groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+                </div>
+              ) : (
+                <div>No groups</div>)}
                 <br/><br/>
                 <button className="logout-button" onClick={() => {
                   toggleDropdown()
