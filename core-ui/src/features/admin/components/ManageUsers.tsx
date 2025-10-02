@@ -272,7 +272,7 @@ const ManageUsers: React.FC = () => {
               User Management Overview
             </Typography>
             <div>
-              <p>Features for managing users.</p>
+              <p>Features for managing users including managing roles and permissions.</p>
             </div>
           </SubTabPanel>
 

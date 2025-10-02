@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Tabs, Tab, Box, Typography, Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, Paper, Button, TextField, 
   CircularProgress, Alert, IconButton, InputAdornment, Select, MenuItem, FormControl, InputLabel 
 } from '@mui/material';
-import { ContentCopy } from '@mui/icons-material';
+import { ContentCopy, PersonAdd } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { 
@@ -20,11 +20,26 @@ import {
   clearCreateStatus,
   type ClassroomCreate
 } from '../../../store/slice/classroomsSlice';
+import { User } from '../../../store/slice/usersSlice';
 import { useAuth } from '../../../hooks/useAuthContext';
+import AddStudentModal from './AddStudentModal';
 
 // Utility function to format dates
 const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString();
+};
+
+// Utility function to format dates that are date-only (YYYY-MM-DD format)
+const formatDateOnly = (dateString: string): string => {
+  return new Date(dateString + 'T00:00:00').toLocaleDateString();
+};
+
+// Utility function to check if classroom has ended
+const isClassroomEnded = (classroom: any): boolean => {
+  if (!classroom?.end_date) return false;
+  const now = new Date();
+  const endDate = new Date(classroom.end_date + 'T23:59:59');
+  return now > endDate;
 };
 
 // Utility function to format member names
@@ -92,6 +107,9 @@ const ManageClassrooms: React.FC = () => {
   });
   const [createdClassroomId, setCreatedClassroomId] = useState<number | null>(null);
   const [selectedClassroomId, setSelectedClassroomId] = useState<string>('');
+  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [newlyAddedStudentId, setNewlyAddedStudentId] = useState<number | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   const dispatch = useAppDispatch();
   const { user: currentUser } = useAuth();
@@ -197,10 +215,46 @@ const ManageClassrooms: React.FC = () => {
     dispatch(clearCreateStatus());
   };
 
+  const handleOpenAddStudentModal = () => {
+    setIsAddStudentModalOpen(true);
+  };
+
+  const handleCloseAddStudentModal = () => {
+    setIsAddStudentModalOpen(false);
+  };
+
+  const handleStudentAdded = (user: User) => {
+    // Set the newly added student for highlighting
+    setNewlyAddedStudentId(user.id);
+    
+    // Show success message
+    setSuccessMessage(`${user.first_name} ${user.last_name} has been added to the classroom!`);
+    
+    // Refresh the classroom data to show the new student, but delay it
+    // to avoid interfering with the modal's closing animation
+    setTimeout(() => {
+      if (selectedClassroomId) {
+        dispatch(fetchClassroomById(parseInt(selectedClassroomId)));
+      }
+    }, 100);
+    
+    // Clear highlighting and success message after 3 seconds
+    setTimeout(() => {
+      setNewlyAddedStudentId(null);
+      setSuccessMessage(null);
+    }, 3000);
+  };
+
   const isCreateFormValid = formData.name.trim().length > 0 && 
                            formData.start_date && 
                            formData.end_date && 
                            new Date(formData.end_date) > new Date(formData.start_date);
+
+  // Memoize existing member IDs to prevent unnecessary re-renders of search component
+  const existingMemberIds = useMemo(() => 
+    currentClassroom?.members?.map(m => m.id) || [],
+    [currentClassroom?.members]
+  );
 
   return (
     <Box>
@@ -340,7 +394,8 @@ const ManageClassrooms: React.FC = () => {
                       Share with Students
                     </Typography>
                     <Typography variant="body2" sx={{ mb: 2 }}>
-                      Share this link with students so they can join your classroom:
+                      Share this link with students so they can join your classroom. 
+                      <strong> Note:</strong> Join links expire 2 weeks after the classroom start date.
                     </Typography>
                     <TextField
                       fullWidth
@@ -448,6 +503,37 @@ const ManageClassrooms: React.FC = () => {
                     })()}
                   </Typography>
                   
+                  {/* Success Message */}
+                  {successMessage && (
+                    <Alert severity="success" sx={{ mb: 2 }}>
+                      {successMessage}
+                    </Alert>
+                  )}
+                  
+                  {/* Add Student Button or End Message */}
+                  <Box sx={{ mb: 3 }}>
+                    {isClassroomEnded(currentClassroom) ? (
+                      <Alert severity="info" sx={{ mb: 2 }}>
+                        Students can no longer be added because the class ended on {currentClassroom.end_date ? formatDateOnly(currentClassroom.end_date) : 'N/A'}.
+                      </Alert>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        startIcon={<PersonAdd />}
+                        onClick={handleOpenAddStudentModal}
+                        sx={{
+                          backgroundColor: '#00693e',
+                          color: 'white',
+                          '&:hover': {
+                            backgroundColor: '#004d2d',
+                          },
+                        }}
+                      >
+                        Add Student
+                      </Button>
+                    )}
+                  </Box>
+                  
                   {currentClassroom.members && currentClassroom.members.length > 0 ? (
                     <TableContainer component={Paper} sx={{ mt: 2 }}>
                       <Table>
@@ -462,7 +548,13 @@ const ManageClassrooms: React.FC = () => {
                           {currentClassroom.members
                             .filter((member) => member.id !== currentClassroom.created_by_id)
                             .map((member) => (
-                            <TableRow key={member.id}>
+                            <TableRow 
+                              key={member.id}
+                              sx={{
+                                backgroundColor: newlyAddedStudentId === member.id ? '#e8f5e8' : 'inherit',
+                                transition: 'background-color 0.3s ease'
+                              }}
+                            >
                               <TableCell>
                                 {formatMemberName(member)}
                               </TableCell>
@@ -505,6 +597,19 @@ const ManageClassrooms: React.FC = () => {
           )}
         </Box>
       </Box>
+      
+      {/* Add Student Modal */}
+      {selectedClassroomId && (
+        <AddStudentModal
+          key={`add-student-modal-${selectedClassroomId}`}
+          open={isAddStudentModalOpen}
+          onClose={handleCloseAddStudentModal}
+          classroomId={parseInt(selectedClassroomId)}
+          classroomName={currentClassroom?.name || ''}
+          existingMemberIds={existingMemberIds}
+          onStudentAdded={handleStudentAdded}
+        />
+      )}
     </Box>
   );
 };

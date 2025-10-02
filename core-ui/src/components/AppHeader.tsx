@@ -127,8 +127,8 @@ const AppHeader: React.FC = () => {
                 <div className="user-info">
                   {`Welcome, ${user.first_name} ${user.last_name}`}
                 </div>
-                {user?.roles && user.roles.includes('admin') ?
-                (<button className="logout-button" onClick={() =>
+                {user?.roles && (user.roles.includes('admin') || user.roles.includes('instructor')) ?
+                (<button className="admin-button" onClick={() =>
                    window.location.href = "/admin"}
                 >
                   Administration
