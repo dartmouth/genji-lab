@@ -581,6 +581,7 @@ const ManageDocuments: React.FC = () => {
       setSelectedDocuments([]);
       setDeleteAllInCollection(false);
       showNotification('Documents deleted successfully', 'success');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || error.message || 'An unknown error occurred';
       showNotification(`Failed to delete documents: ${errorMessage}`, 'error');
