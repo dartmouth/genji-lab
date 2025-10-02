@@ -48,7 +48,6 @@ const DocumentViewerContainer: React.FC = () => {
   return <RouterSwitchBoard />;
 };
 
-// Collections view component
 export const CollectionsView: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -66,10 +65,8 @@ export const CollectionsView: React.FC = () => {
   );
 };
 
-// Documents gallery view component
 export const DocumentsView: React.FC = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
-
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -97,14 +94,12 @@ export const DocumentsView: React.FC = () => {
   );
 };
 
-// Document element type
 interface DocumentElement {
   id: number;
   document_id: number;
   content?: unknown;
 }
 
-// Main document content view component with cross-document element loading
 export const DocumentContentView: React.FC = () => {
   const { collectionId, documentId } = useParams<{
     collectionId: string;
@@ -112,21 +107,17 @@ export const DocumentContentView: React.FC = () => {
   }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-
   const location = useLocation();
 
   useEffect(() => {
     const getAnnotationIdFromHash = (): string | null => {
-      const hash = location.hash; // e.g., "#annotation-21"
-
+      const hash = location.hash;
       if (hash.startsWith("#annotation-")) {
-        const annotationId = hash.replace("#annotation-", "");
-        // const id = parseInt(annotationId, 10);
-        return annotationId;
+        return hash.replace("#annotation-", "");
       }
-
       return null;
     };
+
     const hash = getAnnotationIdFromHash();
     if (documentId && hash) {
       dispatch(
@@ -138,10 +129,8 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [location.hash, dispatch, documentId]);
 
-  // Use useRef for atomic state updates
   const isUpdatingDocuments = useRef(false);
 
-  // State to track the documents being viewed
   const [viewedDocuments, setViewedDocuments] = useState<
     Array<{
       id: number;
@@ -150,11 +139,9 @@ export const DocumentContentView: React.FC = () => {
     }>
   >([]);
 
-  // Properly typed elements selector
   const allElements = useAppSelector((state: RootState) => {
     const elements: DocumentElement[] = [];
 
-    // Get elements for all viewed documents
     for (const doc of viewedDocuments) {
       const docElements = selectElementsByDocumentId(state, doc.id);
       if (docElements && docElements.length > 0) {
@@ -162,23 +149,17 @@ export const DocumentContentView: React.FC = () => {
       }
     }
 
-    // Get elements from critical cross-document navigation documents
     try {
       const linkingAnns =
         linkingAnnotations.selectors.selectAllAnnotations(state);
       const referencedDocumentIds = new Set<number>();
 
-      // Extract all document IDs from annotations
       linkingAnns.forEach((annotation) => {
         if (annotation.document_id) {
           referencedDocumentIds.add(annotation.document_id);
         }
       });
 
-      // Add critical documents based on database analysis
-      [2, 21].forEach((id) => referencedDocumentIds.add(id));
-
-      // Get elements from all referenced documents
       referencedDocumentIds.forEach((docId) => {
         const docElements = selectElementsByDocumentId(state, docId);
         if (docElements && docElements.length > 0) {
@@ -196,13 +177,12 @@ export const DocumentContentView: React.FC = () => {
     return elements;
   });
 
-  // Track documents by collection to handle the API response structure
   const [documentsByCollection, setDocumentsByCollection] = useState<{
     [collectionId: number]: Array<{ id: number; title: string }>;
   }>({});
+
   const [isLinkingModeActive, setIsLinkingModeActive] = useState(false);
 
-  // Simplified pending scroll target state
   const [pendingScrollTarget, setPendingScrollTarget] = useState<{
     documentId: number;
     targetInfo: {
@@ -218,7 +198,6 @@ export const DocumentContentView: React.FC = () => {
     }>;
   } | null>(null);
 
-  // Get all documents and collections
   const documents = useAppSelector(selectAllDocuments);
   const documentCollections = useAppSelector(
     selectAllDocumentCollections
@@ -228,19 +207,12 @@ export const DocumentContentView: React.FC = () => {
     description?: string;
   }>;
 
-  // Track loading state
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
-
-  // State for document selection dropdown
   const [selectedCollectionId, setSelectedCollectionId] = useState<number>(
     Number(collectionId)
   );
-
-  // State for management panel collapse
   const [isManagementPanelCollapsed, setIsManagementPanelCollapsed] =
     useState(true);
-
-  // State for view mode (reading vs annotations)
   const [viewMode, setViewMode] = useState<"reading" | "annotations">(
     "annotations"
   );
@@ -251,16 +223,13 @@ export const DocumentContentView: React.FC = () => {
     setIsAnnotationsPanelCollapsed(!isAnnotationsPanelCollapsed);
   }, [isAnnotationsPanelCollapsed]);
 
-  // State for showing linked text highlights
   const [showLinkedTextHighlights, setShowLinkedTextHighlights] =
     useState(false);
 
-  // State to track if we're in comparison mode
   const [comparisonDocumentId, setComparisonDocumentId] = useState<
     number | null
   >(null);
 
-  // Collection loading effect
   useEffect(() => {
     if (
       selectedCollectionId &&
@@ -287,47 +256,14 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [selectedCollectionId, collectionId, documentsByCollection, dispatch]);
 
-  // Cross-document element loader
-  // const loadCrossDocumentElements = useCallback(async () => {
-  //   try {
-  //     const criticalDocuments = [2, 21];
-
-  //     const loadPromises = criticalDocuments.map(async (docId) => {
-  //       try {
-  //         await dispatch(fetchDocumentElements(docId)).unwrap();
-  //       } catch (error) {
-  //         console.error(
-  //           `Failed to load elements for document ${docId}:`,
-  //           error
-  //         );
-  //       }
-  //     });
-
-  //     await Promise.all(loadPromises);
-  //   } catch (error) {
-  //     console.error("Error loading cross-document elements:", error);
-  //   }
-  // }, [dispatch]);
-
-  // // Load all documents and cross-document elements
-  // useEffect(() => {
-  //   dispatch(fetchAllDocuments())
-  //     .unwrap()
-  //     .then(() => {
-  //       return loadCrossDocumentElements();
-  //     });
-  // }, [dispatch, loadCrossDocumentElements]);
-
   useEffect(() => {
     dispatch(fetchAllDocuments());
   }, [dispatch]);
 
-  // Fetch document collections when component mounts
   useEffect(() => {
     dispatch(fetchDocumentCollections({ includeUsers: false }));
   }, [dispatch]);
 
-  // Fetch documents for the current collection
   useEffect(() => {
     if (collectionId) {
       setIsLoadingDocuments(true);
@@ -350,10 +286,8 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [collectionId, dispatch]);
 
-  // Helper function to get document title
   const getDocumentTitle = useCallback(
     (docId: number, docCollectionId: number): string => {
-      // Method 1: Check documentsByCollection cache
       const docInCache = documentsByCollection[docCollectionId]?.find(
         (d) => d.id === docId
       );
@@ -361,19 +295,16 @@ export const DocumentContentView: React.FC = () => {
         return docInCache.title;
       }
 
-      // Method 2: Check Redux store
       const docInRedux = documents.find((d) => d.id === docId);
       if (docInRedux) {
         return docInRedux.title;
       }
 
-      // Fallback
       return `Document ${docId}`;
     },
     [documentsByCollection, documents]
   );
 
-  // Set up initial document view
   useEffect(() => {
     if (documentId && collectionId) {
       const docId = Number(documentId);
@@ -381,14 +312,12 @@ export const DocumentContentView: React.FC = () => {
 
       let initialTitle = `Document ${docId}`;
 
-      // Try to get from documentsByCollection cache
       const docInCache = documentsByCollection[colId]?.find(
         (d) => d.id === docId
       );
       if (docInCache) {
         initialTitle = docInCache.title;
       } else {
-        // Try to get from Redux store
         const docInRedux = documents.find((d) => d.id === docId);
         if (docInRedux) {
           initialTitle = docInRedux.title;
@@ -403,12 +332,10 @@ export const DocumentContentView: React.FC = () => {
         },
       ]);
 
-      // Reset comparison state
       setComparisonDocumentId(null);
     }
   }, [documentId, collectionId, documentsByCollection, documents]);
 
-  // Sync viewedDocuments with comparisonDocumentId
   useEffect(() => {
     if (viewedDocuments.length === 2) {
       const comparisonDoc = viewedDocuments[1];
@@ -418,7 +345,6 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [viewedDocuments]);
 
-  // Handle scrolling with better timing and error handling
   useEffect(() => {
     if (
       pendingScrollTarget &&
@@ -454,7 +380,6 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [pendingScrollTarget, viewedDocuments]);
 
-  // Helper function for element-based document titles
   const getElementBasedDocumentTitle = useCallback(
     (documentId: number): string | null => {
       const document = documents.find((doc) => doc.id === documentId);
@@ -485,7 +410,6 @@ export const DocumentContentView: React.FC = () => {
     [documents, documentsByCollection, viewedDocuments]
   );
 
-  // Replace secondary document function
   const replaceSecondaryDocument = useCallback(
     async (
       linkedDocumentId: number,
@@ -588,7 +512,6 @@ export const DocumentContentView: React.FC = () => {
     ]
   );
 
-  // Replace primary document function
   const replacePrimaryDocument = useCallback(
     async (
       linkedDocumentId: number,
@@ -691,7 +614,6 @@ export const DocumentContentView: React.FC = () => {
     ]
   );
 
-  // Add linked document as secondary
   const addLinkedDocumentAsSecondary = useCallback(
     async (
       linkedDocumentId: number,
@@ -726,14 +648,18 @@ export const DocumentContentView: React.FC = () => {
           linkedCollectionId
         );
 
-        setViewedDocuments((prev) => {
-          const newDoc = {
-            id: linkedDocumentId,
-            collectionId: linkedCollectionId,
-            title: linkedDocTitle,
-          };
-          return [...prev, newDoc];
-        });
+        setViewedDocuments(
+          (
+            prev: Array<{ id: number; collectionId: number; title: string }>
+          ) => {
+            const newDoc = {
+              id: linkedDocumentId,
+              collectionId: linkedCollectionId,
+              title: linkedDocTitle,
+            };
+            return [...prev, newDoc];
+          }
+        );
 
         setPendingScrollTarget({
           documentId: linkedDocumentId,
@@ -763,27 +689,25 @@ export const DocumentContentView: React.FC = () => {
         text: string;
       }>
     ) => {
-      console.log("🎯 handleOpenLinkedDocument received:", {
+      console.log("🎯 handleOpenLinkedDocument called:", {
         linkedDocumentId,
         linkedCollectionId,
         targetInfo,
         allTargets,
-        currentViewedDocuments: viewedDocuments,
-        isUpdating: isUpdatingDocuments.current,
+        currentlyViewed: viewedDocuments.map((d) => d.id),
       });
-      // Create unique session ID for this navigation
+
       const sessionId = `nav-${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 9)}`;
-
-      // Start navigation session in Redux
       dispatch(startNavigationSession({ sessionId }));
 
-      // Determine the actual target document to open
-      let actualTargetDocumentId = linkedDocumentId;
-      let actualTargetInfo = targetInfo;
+      // linkedDocumentId IS the target - use it directly
+      const targetDocumentId = linkedDocumentId;
+      const actualTargetInfo = targetInfo; // Renamed to avoid collision
 
-      // If we have multiple targets, find the target document (different from source)
+      // Find which document the user clicked in by checking allTargets
+      let sourceDocumentId: number | null = null;
       if (allTargets && allTargets.length > 1) {
         for (const target of allTargets) {
           const elementIdMatch = target.sourceURI.match(
@@ -793,145 +717,56 @@ export const DocumentContentView: React.FC = () => {
             const elementId = parseInt(elementIdMatch[1]);
             const element = allElements.find((el) => el.id === elementId);
 
-            if (element && element.document_id !== linkedDocumentId) {
-              actualTargetDocumentId = element.document_id;
-              actualTargetInfo = {
-                sourceURI: target.sourceURI,
-                start: target.start,
-                end: target.end,
-              };
+            if (element && element.document_id !== targetDocumentId) {
+              sourceDocumentId = element.document_id;
               break;
             }
           }
         }
       }
 
-      const triggerReduxSynchronizedHighlighting = (delay: number = 2500) => {
+      console.log("📍 Navigation decision:", {
+        sourceDocumentId,
+        targetDocumentId,
+        willNavigate: targetDocumentId !== sourceDocumentId,
+        currentlyViewed: viewedDocuments.map((d) => d.id),
+      });
+
+      const triggerSynchronizedHighlighting = (delay: number = 2000) => {
         setTimeout(() => {
-          try {
-            if (!allTargets || allTargets.length === 0) {
-              dispatch(clearNavigationSession({ sessionId }));
-              return;
-            }
-
-            // Find the target element to scroll to
-            const targetElement = allTargets.find((target) => {
-              const elementIdMatch = target.sourceURI.match(
-                /\/DocumentElements\/(\d+)/
-              );
-              if (elementIdMatch) {
-                const elementId = parseInt(elementIdMatch[1]);
-                const element = allElements.find((el) => el.id === elementId);
-                return element && element.document_id !== linkedDocumentId; // Not the source document
-              }
-              return false;
-            });
-
-            if (targetElement) {
-              const domElement = document.getElementById(
-                targetElement.sourceURI.replace("/", "")
-              );
-              if (domElement) {
-                domElement.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                  inline: "nearest",
-                });
-              }
-            }
-
-            // Add all targets to Redux store simultaneously for perfect sync
-            allTargets.forEach((target, index) => {
-              const elementIdMatch = target.sourceURI.match(
-                /\/DocumentElements\/(\d+)/
-              );
-              if (elementIdMatch) {
-                const elementId = parseInt(elementIdMatch[1]);
-                const element = allElements.find((el) => el.id === elementId);
-
-                if (element) {
-                  const isSource = element.document_id === linkedDocumentId;
-                  const elementType = isSource ? "source" : "target";
-
-                  // Add slight stagger for visual effect (50ms between elements)
-                  setTimeout(() => {
-                    dispatch(
-                      addNavigationHighlight({
-                        elementURI: target.sourceURI,
-                        type: elementType,
-                        sessionId,
-                      })
-                    );
-                  }, index * 50);
-                }
-              }
-            });
-
-            // Auto-cleanup after animation completes
-            const cleanupDelay = 3500 + allTargets.length * 50; // Base animation time + stagger time
-            setTimeout(() => {
-              dispatch(clearNavigationSession({ sessionId }));
-            }, cleanupDelay);
-          } catch (error) {
-            console.error("Redux highlighting error:", error);
+          if (!allTargets || allTargets.length === 0) {
             dispatch(clearNavigationSession({ sessionId }));
+            return;
           }
-        }, delay);
-      };
 
-      // Redux synchronized highlighting with tight timing for replacement scenarios
-      const triggerTightlySynchronizedHighlighting = async (
-        sourceDocId: number,
-        replacementFunction: () => Promise<void>,
-        delay: number = 200
-      ) => {
-        // Step 1: Execute the document replacement first
-        await replacementFunction();
+          allTargets.forEach((target, index) => {
+            const elementIdMatch = target.sourceURI.match(
+              /\/DocumentElements\/(\d+)/
+            );
+            if (elementIdMatch) {
+              const elementId = parseInt(elementIdMatch[1]);
+              const element = allElements.find((el) => el.id === elementId);
 
-        // Step 2: Wait for DOM to settle, then highlight BOTH source and target together
-        setTimeout(() => {
-          try {
-            if (!allTargets || allTargets.length === 0) {
-              dispatch(clearNavigationSession({ sessionId }));
-              return;
-            }
+              if (element) {
+                const isSource = element.document_id === sourceDocumentId;
+                const elementType = isSource ? "source" : "target";
 
-            // Add all targets to Redux store with minimal stagger for tight synchronization
-            allTargets.forEach((target, index) => {
-              const elementIdMatch = target.sourceURI.match(
-                /\/DocumentElements\/(\d+)/
-              );
-              if (elementIdMatch) {
-                const elementId = parseInt(elementIdMatch[1]);
-                const element = allElements.find((el) => el.id === elementId);
-
-                if (element) {
-                  const isSource = element.document_id === sourceDocId;
-                  const elementType = isSource ? "source" : "target";
-
-                  // Use minimal stagger (25ms) for tight synchronization
-                  setTimeout(() => {
-                    dispatch(
-                      addNavigationHighlight({
-                        elementURI: target.sourceURI,
-                        type: elementType,
-                        sessionId,
-                      })
-                    );
-                  }, index * 25);
-                }
+                setTimeout(() => {
+                  dispatch(
+                    addNavigationHighlight({
+                      elementURI: target.sourceURI,
+                      type: elementType,
+                      sessionId,
+                    })
+                  );
+                }, index * 50);
               }
-            });
+            }
+          });
 
-            // Auto-cleanup after animation completes
-            const cleanupDelay = 3500 + allTargets.length * 25;
-            setTimeout(() => {
-              dispatch(clearNavigationSession({ sessionId }));
-            }, cleanupDelay);
-          } catch (error) {
-            console.error("Synchronized highlighting error:", error);
+          setTimeout(() => {
             dispatch(clearNavigationSession({ sessionId }));
-          }
+          }, 3500 + allTargets.length * 50);
         }, delay);
       };
 
@@ -940,99 +775,72 @@ export const DocumentContentView: React.FC = () => {
         return;
       }
 
-      // Check if the target document is already viewed
-      const isTargetAlreadyViewed = viewedDocuments.some(
-        (doc) => doc.id === actualTargetDocumentId
-      );
-      const isSourceSameAsTarget = actualTargetDocumentId === linkedDocumentId;
+      const sourceDocumentIndex = sourceDocumentId
+        ? viewedDocuments.findIndex((doc) => doc.id === sourceDocumentId)
+        : -1;
 
-      if (isTargetAlreadyViewed && isSourceSameAsTarget) {
-        triggerReduxSynchronizedHighlighting(500); // Shorter delay for same document
+      if (sourceDocumentIndex === -1) {
+        console.error("⚠️ Source document not in viewed documents");
+        dispatch(clearNavigationSession({ sessionId }));
         return;
       }
-
-      if (isTargetAlreadyViewed && !isSourceSameAsTarget) {
-        triggerReduxSynchronizedHighlighting(500); // Shorter delay since both documents are ready
-        return;
-      }
-
-      console.log("📍 Target document determined:", {
-        actualTargetDocumentId,
-        actualTargetInfo,
-        isTargetAlreadyViewed,
-        isSourceSameAsTarget,
-        viewedDocumentsLength: viewedDocuments.length,
-      });
 
       try {
         if (viewedDocuments.length === 1) {
-          // Add secondary document
+          console.log("✅ Adding as secondary document");
           await addLinkedDocumentAsSecondary(
-            actualTargetDocumentId,
+            targetDocumentId,
             linkedCollectionId,
             actualTargetInfo,
             allTargets
           );
-
-          // Standard synchronization via Redux
-          triggerReduxSynchronizedHighlighting(2500);
+          triggerSynchronizedHighlighting(2000);
         } else if (viewedDocuments.length === 2) {
-          const primaryDocId = viewedDocuments[0].id;
-          const secondaryDocId = viewedDocuments[1].id;
+          const targetAlreadyViewed = viewedDocuments.some(
+            (doc) => doc.id === targetDocumentId
+          );
 
-          if (linkedDocumentId === primaryDocId) {
-            // Replace secondary document
-            await replaceSecondaryDocument(
-              actualTargetDocumentId,
-              linkedCollectionId,
-              actualTargetInfo,
-              allTargets
-            );
-
-            // Standard synchronization via Redux
-            triggerReduxSynchronizedHighlighting(2500);
-          } else if (linkedDocumentId === secondaryDocId) {
-            // Use tightly synchronized highlighting for perfect timing
-            await triggerTightlySynchronizedHighlighting(
-              linkedDocumentId, // Source document ID (secondary)
-              async () => {
-                await replacePrimaryDocument(
-                  actualTargetDocumentId,
-                  linkedCollectionId,
-                  actualTargetInfo,
-                  allTargets
-                );
-              },
-              200 // Short delay for tight synchronization
-            );
-          } else {
-            await replaceSecondaryDocument(
-              actualTargetDocumentId,
-              linkedCollectionId,
-              actualTargetInfo,
-              allTargets
-            );
-            triggerReduxSynchronizedHighlighting(2500);
+          if (targetAlreadyViewed) {
+            console.log("✅ Both documents already viewed, highlighting only");
+            triggerSynchronizedHighlighting(500);
+            return;
           }
-        } else {
-          dispatch(clearNavigationSession({ sessionId }));
+
+          if (sourceDocumentIndex === 0) {
+            console.log("✅ Clicked from primary, replacing secondary");
+            await replaceSecondaryDocument(
+              targetDocumentId,
+              linkedCollectionId,
+              actualTargetInfo,
+              allTargets
+            );
+            triggerSynchronizedHighlighting(2000);
+          } else if (sourceDocumentIndex === 1) {
+            console.log("✅ Clicked from secondary, replacing primary");
+            await replacePrimaryDocument(
+              targetDocumentId,
+              linkedCollectionId,
+              actualTargetInfo,
+              allTargets
+            );
+            triggerSynchronizedHighlighting(2000);
+          }
         }
       } catch (error) {
-        console.error("Error in document navigation:", error);
+        console.error("Navigation error:", error);
         dispatch(clearNavigationSession({ sessionId }));
       }
     },
     [
       viewedDocuments,
+      allElements,
+      dispatch,
       addLinkedDocumentAsSecondary,
       replaceSecondaryDocument,
       replacePrimaryDocument,
-      allElements,
-      dispatch,
     ]
   );
 
-  // Handle comparison document changes
   const handleComparisonDocumentChange = useCallback(
     async (newComparisonDocumentId: number | null) => {
       if (newComparisonDocumentId === null) {
@@ -1060,7 +868,6 @@ export const DocumentContentView: React.FC = () => {
     [viewedDocuments, selectedCollectionId, getDocumentTitle]
   );
 
-  // Handle adding a document for comparison
   const handleAddComparisonDocument = useCallback(
     (docId: number) => {
       handleComparisonDocumentChange(docId);
@@ -1068,7 +875,6 @@ export const DocumentContentView: React.FC = () => {
     [handleComparisonDocumentChange]
   );
 
-  // Handle removing a document from comparison
   const handleRemoveDocument = useCallback(
     (docId: number) => {
       setViewedDocuments((prev) => prev.filter((doc) => doc.id !== docId));
@@ -1094,12 +900,10 @@ export const DocumentContentView: React.FC = () => {
     ]
   );
 
-  // Handle back button
   const handleBackToDocuments = useCallback(() => {
     navigate(`/collections/${collectionId}`);
   }, [navigate, collectionId]);
 
-  // Handle collection selection change
   const handleCollectionChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const newCollectionId = Number(e.target.value);
@@ -1108,12 +912,10 @@ export const DocumentContentView: React.FC = () => {
     []
   );
 
-  // Toggle management panel collapsed state
   const toggleManagementPanel = useCallback(() => {
     setIsManagementPanelCollapsed(!isManagementPanelCollapsed);
   }, [isManagementPanelCollapsed]);
 
-  // Handle view mode change
   const handleViewModeChange = useCallback(
     (mode: "reading" | "annotations") => {
       setViewMode(mode);
@@ -1121,7 +923,6 @@ export const DocumentContentView: React.FC = () => {
     []
   );
 
-  // Get available documents in the selected collection
   const availableInSelectedCollection = (
     documentsByCollection[selectedCollectionId] || []
   ).filter(
@@ -1132,12 +933,10 @@ export const DocumentContentView: React.FC = () => {
     <div className="document-content-view">
       <div className="document-view-header">
         <div className="header-row">
-          {/* Back button */}
           <button onClick={handleBackToDocuments} className="back-button">
             ← Back to Documents
           </button>
 
-          {/* View mode controls */}
           <div className="view-controls">
             <Box
               sx={{
@@ -1238,7 +1037,6 @@ export const DocumentContentView: React.FC = () => {
             </Box>
           </div>
 
-          {/* Document Comparison Panel */}
           <div
             className={`document-comparison-panel ${
               isManagementPanelCollapsed ? "collapsed" : ""
@@ -1252,13 +1050,11 @@ export const DocumentContentView: React.FC = () => {
             </div>
           </div>
 
-          {/* Help icon with high z-index */}
           <div className="help-icon-container">
             <HighlightingHelpIcon />
           </div>
         </div>
 
-        {/* Expanded panel content */}
         {!isManagementPanelCollapsed && (
           <div className="panel-content">
             {viewedDocuments.length === 2 && (
