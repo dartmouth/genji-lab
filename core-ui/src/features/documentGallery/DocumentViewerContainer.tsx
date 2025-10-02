@@ -763,6 +763,14 @@ export const DocumentContentView: React.FC = () => {
         text: string;
       }>
     ) => {
+      console.log("🎯 handleOpenLinkedDocument received:", {
+        linkedDocumentId,
+        linkedCollectionId,
+        targetInfo,
+        allTargets,
+        currentViewedDocuments: viewedDocuments,
+        isUpdating: isUpdatingDocuments.current,
+      });
       // Create unique session ID for this navigation
       const sessionId = `nav-${Date.now()}-${Math.random()
         .toString(36)
@@ -947,6 +955,14 @@ export const DocumentContentView: React.FC = () => {
         triggerReduxSynchronizedHighlighting(500); // Shorter delay since both documents are ready
         return;
       }
+
+      console.log("📍 Target document determined:", {
+        actualTargetDocumentId,
+        actualTargetInfo,
+        isTargetAlreadyViewed,
+        isSourceSameAsTarget,
+        viewedDocumentsLength: viewedDocuments.length,
+      });
 
       try {
         if (viewedDocuments.length === 1) {
