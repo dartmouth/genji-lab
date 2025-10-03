@@ -309,7 +309,8 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
           // localStorage.setItem(activeClassroomKey, authState.user.groups[0].id as unknown as string)
         } else {
           // const currentActiveClassroom = localStorage.getItem(activeClassroomKey)
-          if (!authState.user.groups.map(group => group.id).includes(activeClassroomValue as unknown as number)){
+          if (!authState.user.groups.map(group => group.id).includes(Number(activeClassroomValue))){
+            console.log('WARNING resetting classroom')
             // localStorage.removeItem(activeClassroomKey)
             setActiveClassroomValue(null)
           }

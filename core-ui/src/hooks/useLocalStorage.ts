@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 
 function useLocalStorage(key: string): [string | null, (newValue: string | null) => void] {
-  const [value, setValue] = useState(() => localStorage.getItem(key));
+  const [value, setValue] = useState(() => {
+    const stored = localStorage.getItem(key);
+    console.log(`Initial load of ${key}:`, stored);
+    return stored;
+    });
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {

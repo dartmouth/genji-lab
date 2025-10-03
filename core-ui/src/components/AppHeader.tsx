@@ -17,6 +17,18 @@ const AppHeader: React.FC = () => {
   const navigate = useNavigate();
 
   const [activeClassroomValue, setActiveClassroomValue ] = useLocalStorage('active_classroom')
+
+  // Add this useEffect to debug
+  useEffect(() => {
+    console.log('activeClassroomValue changed:', activeClassroomValue);
+    console.log('localStorage direct read:', localStorage.getItem('active_classroom'));
+  }, [activeClassroomValue]);
+
+  useEffect(() => {
+    console.log('User groups on mount:', user?.groups);
+    console.log('Active classroom on mount:', activeClassroomValue);
+  }, []);
+  // const [isOptedOut, setIsOptedOut] = useLocalStorage('classroom_opted_out');
   
   const dispatch = useAppDispatch();
   const { settings } = useAppSelector((state) => state.siteSettings);
@@ -144,10 +156,13 @@ const AppHeader: React.FC = () => {
                     <div>Classroom</div>
                     <select 
                       className="group-selector"
-                      defaultValue={ activeClassroomValue ? activeClassroomValue : user.groups[0].id}
+                      value={activeClassroomValue || (user.groups[0]?.id || '')}
                       onChange={(e) => {
-                        console.log('Selected group ID:', e.target.value);
-                        setActiveClassroomValue(e.target.value as unknown as string)
+                        const newValue = e.target.value;
+                        console.log('Setting classroom to:', newValue, typeof newValue);
+                        if (newValue) {  // Only set if truthy
+                          setActiveClassroomValue(newValue);
+                        }
                       }}
                     >
                   {user.groups.map((group) => (
