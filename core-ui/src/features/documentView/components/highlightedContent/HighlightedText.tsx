@@ -64,6 +64,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeClassroomValue, _setActiveClassroomValue ] = useLocalStorage('active_classroom')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isOptedOut, _setIsOptedOut] = useLocalStorage('classroom_opted_out');
 
   // State for dialog visibility
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -72,7 +74,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const annotationCreate = useAppSelector(selectAnnotationCreate);
   const { isVisible, shouldPrefetch } = useVisibilityWithPrefetch(containerRef);
 
-  // 🎯 REDUX: Navigation highlighting state from Redux store
   const isNavigationHighlighted = useAppSelector(
     selectIsElementHighlighted(paragraphId)
   );
@@ -173,6 +174,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       // Clear positions when highlighting deactivates
       setReduxNavigationPositions([]);
     }
+    // FIXME -- add calculateReduxNavigationPositions to dep array and wrap in useCallback to avoid infinite rerender
   }, [isNavigationHighlighted, paragraphId, highlightType]);
 
   // Check if we need to show the dialog when annotation creation state changes
@@ -191,23 +193,24 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   useEffect(() => {
     notFetched.current = true;
     dispatch(commentingAnnotations.actions.clearAnnotations())
-  }, [dispatch, activeClassroomValue]);
+  }, [dispatch, activeClassroomValue, isOptedOut]);
 
   // Fetch annotations when component becomes visible
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
-      if (activeClassroomValue){
-        dispatch(
-          fetchAnnotationByMotivation({documentElementId: parseURI(paragraphId) as unknown as number, classroomID: activeClassroomValue as unknown as number})
-        );
-      } else {
-        dispatch(
-          fetchAnnotationByMotivation({documentElementId: parseURI(paragraphId) as unknown as number})
-        );
+      
+      const params: { documentElementId: number; classroomID?: number } = {
+        documentElementId: parseURI(paragraphId) as unknown as number
+      };
+      
+      if (activeClassroomValue && isOptedOut !== 'true') {
+        params.classroomID = activeClassroomValue as unknown as number;
+      }
+      
+      dispatch(fetchAnnotationByMotivation(params));
     }
-    }
-  }, [dispatch, activeClassroomValue, paragraphId, isVisible, shouldPrefetch]);
+  }, [dispatch, activeClassroomValue, isOptedOut, paragraphId, isVisible, shouldPrefetch]);
 
   // Calculate precise Redux navigation highlight positions
   const calculateReduxNavigationPositions = () => {
