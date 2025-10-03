@@ -4,7 +4,7 @@ import {
   TableHead, TableRow, Paper, Button, TextField, 
   CircularProgress, Alert, IconButton, InputAdornment, Select, MenuItem, FormControl, InputLabel 
 } from '@mui/material';
-import { ContentCopy, PersonAdd } from '@mui/icons-material';
+import { ContentCopy, PersonAdd, Link } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { 
@@ -40,6 +40,23 @@ const isClassroomEnded = (classroom: any): boolean => {
   const now = new Date();
   const endDate = new Date(classroom.end_date + 'T23:59:59');
   return now > endDate;
+};
+
+// Utility function to check if join link has expired
+const isJoinLinkExpired = (classroom: any): boolean => {
+  if (!classroom?.start_date) return false;
+  const now = new Date();
+  const startDate = new Date(classroom.start_date + 'T00:00:00');
+  const expirationDate = new Date(startDate.getTime() + (14 * 24 * 60 * 60 * 1000)); // 14 days after start
+  return now > expirationDate;
+};
+
+// Utility function to get join link expiration date
+const getJoinLinkExpirationDate = (classroom: any): string => {
+  if (!classroom?.start_date) return 'N/A';
+  const startDate = new Date(classroom.start_date + 'T00:00:00');
+  const expirationDate = new Date(startDate.getTime() + (14 * 24 * 60 * 60 * 1000)); // 14 days after start
+  return expirationDate.toLocaleDateString();
 };
 
 // Utility function to format member names
@@ -110,6 +127,7 @@ const ManageClassrooms: React.FC = () => {
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [newlyAddedStudentId, setNewlyAddedStudentId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   
   const dispatch = useAppDispatch();
   const { user: currentUser } = useAuth();
@@ -199,8 +217,12 @@ const ManageClassrooms: React.FC = () => {
     const joinLink = `${window.location.origin}/join-classroom?classroom_id=${classroomId}`;
     try {
       await navigator.clipboard.writeText(joinLink);
+      setCopyFeedback('Join link copied to clipboard!');
+      setTimeout(() => setCopyFeedback(null), 3000);
     } catch (err) {
       console.error('Failed to copy link:', err);
+      setCopyFeedback('Failed to copy link');
+      setTimeout(() => setCopyFeedback(null), 3000);
     }
   };
 
@@ -493,7 +515,7 @@ const ManageClassrooms: React.FC = () => {
               {selectedClassroomId && currentClassroom && (
                 <>
                   <Typography variant="h6" component="h3" gutterBottom>
-                    {currentClassroom.name}
+                    {currentClassroom.name} ({currentClassroom.start_date ? formatDateOnly(currentClassroom.start_date) : 'N/A'}-{currentClassroom.end_date ? formatDateOnly(currentClassroom.end_date) : 'N/A'})
                   </Typography>
                   
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -502,6 +524,64 @@ const ManageClassrooms: React.FC = () => {
                       return instructor ? formatMemberName(instructor) : 'Unknown';
                     })()}
                   </Typography>
+                  
+                  {/* Join Link Section */}
+                  <Box sx={{ 
+                    mb: 3, 
+                    p: 2, 
+                    border: '1px solid', 
+                    borderColor: isJoinLinkExpired(currentClassroom) ? 'warning.main' : 'primary.main',
+                    borderRadius: 2,
+                    backgroundColor: isJoinLinkExpired(currentClassroom) ? 'warning.50' : 'primary.50'
+                  }}>
+                    <Typography variant="h6" component="h4" sx={{ mb: 1, color: isJoinLinkExpired(currentClassroom) ? 'warning.dark' : 'primary.dark' }}>
+                      <Link sx={{ verticalAlign: 'middle', mr: 0.5 }} /> Classroom Join Link
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Typography variant="body2" sx={{ 
+                        fontFamily: 'monospace',
+                        backgroundColor: 'grey.100',
+                        p: 1,
+                        borderRadius: 1,
+                        flex: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {`${window.location.origin}/join-classroom?classroom_id=${currentClassroom.id}`}
+                      </Typography>
+                      <IconButton 
+                        onClick={() => handleCopyJoinLink(currentClassroom.id)}
+                        size="small"
+                        title="Copy join link"
+                        sx={{ color: isJoinLinkExpired(currentClassroom) ? 'warning.dark' : 'primary.dark' }}
+                      >
+                        <ContentCopy />
+                      </IconButton>
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {isJoinLinkExpired(currentClassroom) ? (
+                        <span style={{ color: '#f57c00' }}>
+                          <strong>⚠️ Expired:</strong> This join link expired on {getJoinLinkExpirationDate(currentClassroom)}
+                        </span>
+                      ) : (
+                        <span>
+                          <strong>Expires:</strong> {getJoinLinkExpirationDate(currentClassroom)} (2 weeks after start date)
+                        </span>
+                      )}
+                    </Typography>
+                    
+                    <Typography variant="body2" color="text.secondary">
+                      💡 <em>Join links expire automatically 2 weeks after start date, but you can always add students using the "Add Student" button below.</em>
+                    </Typography>
+                    
+                    {copyFeedback && (
+                      <Alert severity={copyFeedback.includes('Failed') ? 'error' : 'success'} sx={{ mt: 1 }}>
+                        {copyFeedback}
+                      </Alert>
+                    )}
+                  </Box>
                   
                   {/* Success Message */}
                   {successMessage && (
