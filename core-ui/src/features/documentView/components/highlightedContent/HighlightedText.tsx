@@ -186,7 +186,10 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       setIsDialogOpen(true);
     }
   }, [annotationCreate, paragraphId]);
-
+  
+  useEffect(() => {
+    notFetched.current = true;
+  }, [activeClassroomValue]);
 
   // Fetch annotations when component becomes visible
   useEffect(() => {
