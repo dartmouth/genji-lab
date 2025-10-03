@@ -24,11 +24,7 @@ const AppHeader: React.FC = () => {
     console.log('localStorage direct read:', localStorage.getItem('active_classroom'));
   }, [activeClassroomValue]);
 
-  useEffect(() => {
-    console.log('User groups on mount:', user?.groups);
-    console.log('Active classroom on mount:', activeClassroomValue);
-  }, []);
-  // const [isOptedOut, setIsOptedOut] = useLocalStorage('classroom_opted_out');
+  const [isOptedOut, setIsOptedOut] = useLocalStorage('classroom_opted_out');
   
   const dispatch = useAppDispatch();
   const { settings } = useAppSelector((state) => state.siteSettings);
@@ -37,6 +33,12 @@ const AppHeader: React.FC = () => {
   useEffect(() => {
     dispatch(fetchSiteSettings());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (typeof isOptedOut !== 'string'){
+      setIsOptedOut('false')
+    }
+  })
 
   // Update CSS when settings change
   useEffect(() => {
@@ -173,7 +175,18 @@ const AppHeader: React.FC = () => {
                 </select>
                 <br/><br/>
                 <button className="logout-button" onClick={() => {
-                  toggleDropdown()
+                  if (!isOptedOut){
+                    setIsOptedOut('false')
+                  } else {
+                    const curVal = JSON.parse(isOptedOut)
+                    if (curVal === false){
+                      setIsOptedOut('true')
+                    } else {
+                      setIsOptedOut('false')
+                    };
+                  }
+
+                  // toggleDropdown()
                   }}>
                     Toggle Classroom
                   </button>
