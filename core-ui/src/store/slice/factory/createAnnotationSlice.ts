@@ -153,7 +153,12 @@ export function createAnnotationSlice(bucketName: string) {
             }
           });
         }
-      }
+      },
+      clearAnnotations(state) {
+        state.byId = {};
+        state.byParent = {};
+        state.error = null;
+    }
     }
   });
 

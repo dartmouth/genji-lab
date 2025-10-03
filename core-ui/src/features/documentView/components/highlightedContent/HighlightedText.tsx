@@ -7,6 +7,7 @@ import { debounce } from "lodash";
 import { TextFormatting } from "@documentView/types";
 import { useVisibilityWithPrefetch } from "@/hooks/useVisibilityWithPrefetch";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import { commentingAnnotations } from "@store";
 
 import {
   RootState,
@@ -189,7 +190,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   
   useEffect(() => {
     notFetched.current = true;
-  }, [activeClassroomValue]);
+    dispatch(commentingAnnotations.actions.clearAnnotations())
+  }, [dispatch, activeClassroomValue]);
 
   // Fetch annotations when component becomes visible
   useEffect(() => {
