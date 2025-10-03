@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios, {AxiosInstance} from "axios";
+import useLocalStorage from './useLocalStorage';
 
 const api: AxiosInstance = axios.create({
     baseURL: '/api/v1',
@@ -66,6 +67,8 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
     isAuthenticated: false,
     user: null,
   });
+
+  const [activeClassroomValue, setActiveClassroomValue ] = useLocalStorage('active_classroom')
 
   // Basic auth login
   const basicAuthLogin = useCallback(async (username: string, password: string) => {
@@ -292,7 +295,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
     });
   }, [checkForTicket, checkSession, localStorageKey]);
   
-  const activeClassroomKey = 'active_classroom'
+  // const activeClassroomKey = 'active_classroom'
 
   // Save auth state to localStorage whenever it changes
   useEffect(() => {
@@ -300,13 +303,15 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
       localStorage.setItem(localStorageKey, JSON.stringify(authState));
       
       if (authState.user?.groups && authState.user.groups.length > 0){
-        const activeClassroom = localStorage.getItem(activeClassroomKey)
-        if (!activeClassroom){
-          localStorage.setItem(activeClassroomKey, authState.user.groups[0].id as unknown as string)
+        // const activeClassroom = localStorage.getItem(activeClassroomKey)
+        if (!activeClassroomValue){
+          setActiveClassroomValue(authState.user.groups[0].id as unknown as string)
+          // localStorage.setItem(activeClassroomKey, authState.user.groups[0].id as unknown as string)
         } else {
-          const currentActiveClassroom = localStorage.getItem(activeClassroomKey)
-          if (!authState.user.groups.map(group => group.id).includes(currentActiveClassroom as unknown as number)){
-            localStorage.removeItem(activeClassroomKey)
+          // const currentActiveClassroom = localStorage.getItem(activeClassroomKey)
+          if (!authState.user.groups.map(group => group.id).includes(activeClassroomValue as unknown as number)){
+            // localStorage.removeItem(activeClassroomKey)
+            setActiveClassroomValue(null)
           }
         }
       }

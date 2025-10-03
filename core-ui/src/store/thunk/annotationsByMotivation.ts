@@ -10,14 +10,25 @@ const api: AxiosInstance = axios.create({
   timeout: 10000,
 });
 
+interface FetchAnnotationParams {
+  documentElementId: number;
+  classroomID?: number;
+}
+
 // In annotationsByMotivation.ts, modify fetchAnnotationByMotivation:
 export const fetchAnnotationByMotivation = createAsyncThunk(
   "annotations/fetchByDocumentElement",
-  async (documentElementId: number, { dispatch }) => {
+  async ({documentElementId, classroomID}: FetchAnnotationParams, { dispatch }) => {
+    const params: Record<string, number> = {
+    }
+    if (classroomID !== undefined) {
+          params.classroom_id = classroomID;
+    }
     try {
       // Regular endpoint for most annotations
       const response = await api.get(
-        `/annotations/by-motivation/${documentElementId}`
+        `/annotations/by-motivation/${documentElementId}`,
+        { params }
       );
       const annotationsByMotivation: AnnotationsByMotivation =
         await response.data;

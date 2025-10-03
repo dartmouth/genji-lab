@@ -6,6 +6,8 @@ import { parseURI } from "@documentView/utils";
 import { debounce } from "lodash";
 import { TextFormatting } from "@documentView/types";
 import { useVisibilityWithPrefetch } from "@/hooks/useVisibilityWithPrefetch";
+import useLocalStorage from "@/hooks/useLocalStorage";
+
 import {
   RootState,
   useAppDispatch,
@@ -58,6 +60,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const dispatch = useAppDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
   const notFetched = useRef(true);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeClassroomValue, _setActiveClassroomValue ] = useLocalStorage('active_classroom')
 
   // State for dialog visibility
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -182,15 +187,22 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     }
   }, [annotationCreate, paragraphId]);
 
+
   // Fetch annotations when component becomes visible
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
-      dispatch(
-        fetchAnnotationByMotivation(parseURI(paragraphId) as unknown as number)
-      );
+      if (activeClassroomValue){
+        dispatch(
+          fetchAnnotationByMotivation({documentElementId: parseURI(paragraphId) as unknown as number, classroomID: activeClassroomValue as unknown as number})
+        );
+      } else {
+        dispatch(
+          fetchAnnotationByMotivation({documentElementId: parseURI(paragraphId) as unknown as number})
+        );
     }
-  }, [dispatch, paragraphId, isVisible, shouldPrefetch]);
+    }
+  }, [dispatch, activeClassroomValue, paragraphId, isVisible, shouldPrefetch]);
 
   // Calculate precise Redux navigation highlight positions
   const calculateReduxNavigationPositions = () => {

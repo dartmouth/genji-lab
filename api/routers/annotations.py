@@ -222,12 +222,12 @@ def read_annotations_by_motivation(
             query = query.filter(
         or_(
             and_(AnnotationModel.motivation == 'commenting', 
-                 AnnotationModel.group_id == classroom_id),
+                 AnnotationModel.classroom_id == classroom_id),
             AnnotationModel.motivation != 'commenting'
         )
     )
     else:
-        query = query.filter(AnnotationModel.group_id.is_(None))
+        query = query.filter(AnnotationModel.classroom_id.is_(None))
     
     annotations = query.all()
     

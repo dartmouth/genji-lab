@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/useAuthContext";
+import useLocalStorage  from '@hooks/useLocalStorage';
 
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import { fetchSiteSettings, getCacheBuster } from "@store/slice/siteSettingsSlice";
@@ -14,6 +15,8 @@ const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const navigate = useNavigate();
+
+  const [activeClassroomValue, setActiveClassroomValue ] = useLocalStorage('active_classroom')
   
   const dispatch = useAppDispatch();
   const { settings } = useAppSelector((state) => state.siteSettings);
@@ -141,9 +144,10 @@ const AppHeader: React.FC = () => {
                     <div>Classroom</div>
                     <select 
                       className="group-selector"
-                      defaultValue={user.groups[0].id}
+                      defaultValue={ activeClassroomValue ? activeClassroomValue : user.groups[0].id}
                       onChange={(e) => {
                         console.log('Selected group ID:', e.target.value);
+                        setActiveClassroomValue(e.target.value as unknown as string)
                       }}
                     >
                   {user.groups.map((group) => (
