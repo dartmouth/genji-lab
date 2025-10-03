@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/useAuthContext";
+import useLocalStorage  from '@hooks/useLocalStorage';
 
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import { fetchSiteSettings, getCacheBuster } from "@store/slice/siteSettingsSlice";
@@ -14,6 +15,8 @@ const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const navigate = useNavigate();
+
+  const [activeClassroomValue, setActiveClassroomValue ] = useLocalStorage('active_classroom')
   
   const dispatch = useAppDispatch();
   const { settings } = useAppSelector((state) => state.siteSettings);
@@ -127,7 +130,7 @@ const AppHeader: React.FC = () => {
                 <div className="user-info">
                   {`Welcome, ${user.first_name} ${user.last_name}`}
                 </div>
-                {user?.roles && user.roles.includes('admin') ?
+                {user?.roles && (user.roles.includes('admin') || user.roles.includes('instructor')) ?
                 (<button className="admin-button" onClick={() =>
                    window.location.href = "/admin"}
                 >
@@ -135,6 +138,33 @@ const AppHeader: React.FC = () => {
                 </button>):(
                   <div></div>
                   )}
+                <br/><br/>
+                {user?.groups && user.groups.length > 0 ? (
+                  <div>
+                    <div>Classroom</div>
+                    <select 
+                      className="group-selector"
+                      defaultValue={ activeClassroomValue ? activeClassroomValue : user.groups[0].id}
+                      onChange={(e) => {
+                        console.log('Selected group ID:', e.target.value);
+                        setActiveClassroomValue(e.target.value as unknown as string)
+                      }}
+                    >
+                  {user.groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+                <br/><br/>
+                <button className="logout-button" onClick={() => {
+                  toggleDropdown()
+                  }}>
+                    Toggle Classroom
+                  </button>
+                </div>
+              ) : (
+                <div>No groups</div>)}
                 <br/><br/>
                 <button className="logout-button" onClick={() => {
                   toggleDropdown()

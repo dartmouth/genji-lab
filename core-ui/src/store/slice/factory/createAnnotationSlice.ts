@@ -37,8 +37,8 @@ export type AnnotationSlice = {
     deleteAnnotation: (annotationDelete: AnnotationDelete) => PayloadAction<AnnotationDelete>;
   };
   thunks: {
-    fetchAnnotations: AsyncThunk<Annotation[], string, { state: RootState }>;
-    saveAnnotation: AsyncThunk<Annotation, AnnotationCreate, { state: RootState }>;
+    fetchAnnotations: AsyncThunk<Annotation[], { documentElementId: string; classroomId?: string }, { state: RootState }>;
+    saveAnnotation: AsyncThunk<Annotation, { annotation: AnnotationCreate; classroomId?: string }, { state: RootState }>;
     patchAnnotation: AsyncThunk<Annotation, AnnotationPatch, { state: RootState }>;
     deleteAnnotation: AsyncThunk<AnnotationDelete, AnnotationDelete, { state: RootState }>;
   };

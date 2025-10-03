@@ -54,7 +54,9 @@ function a11yPropsSubTab(index: number) {
 }
 
 // Styled components
-const RoleChip = styled(Chip)<{ assigned?: boolean }>(({ theme, assigned }) => ({
+const RoleChip = styled(Chip, {
+  shouldForwardProp: (prop) => prop !== 'assigned',
+})<{ assigned?: boolean }>(({ theme, assigned }) => ({
   margin: theme.spacing(0.25),
   cursor: 'pointer',
   ...(assigned ? {
@@ -96,6 +98,7 @@ const SaveButton = styled(Button)(({ theme }) => ({
 const ManageUsers: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<number>(0);
   const [userRoleChanges, setUserRoleChanges] = useState<{ [userId: number]: number[] }>({});
+  const [userSavedRoles, setUserSavedRoles] = useState<{ [userId: number]: number[] }>({});
   const [savingUsers, setSavingUsers] = useState<{ [userId: number]: boolean }>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
@@ -126,7 +129,23 @@ const ManageUsers: React.FC = () => {
     users.forEach(user => {
       initialChanges[user.id] = user.roles?.map(role => role.id) || [];
     });
-    setUserRoleChanges(initialChanges);
+    
+    setUserRoleChanges(prevChanges => {
+      // Only update if we don't have any existing changes or if it's the first load
+      if (Object.keys(prevChanges).length === 0) {
+        // Also initialize the saved roles state
+        setUserSavedRoles(initialChanges);
+        return initialChanges;
+      }
+      // Otherwise, keep existing changes but add any new users
+      const updated = { ...prevChanges };
+      users.forEach(user => {
+        if (!(user.id in updated)) {
+          updated[user.id] = user.roles?.map(role => role.id) || [];
+        }
+      });
+      return updated;
+    });
   }, [users]);
 
   const handleRoleToggle = (userId: number, roleId: number) => {
@@ -172,8 +191,8 @@ const ManageUsers: React.FC = () => {
   };
 
   const hasChanges = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    const originalRoles = user?.roles?.map(role => role.id).sort() || [];
+    // Use our saved roles state instead of the Redux store data
+    const originalRoles = (userSavedRoles[userId] || []).sort();
     const currentRoles = (userRoleChanges[userId] || []).sort();
     
     return JSON.stringify(originalRoles) !== JSON.stringify(currentRoles);
@@ -186,7 +205,22 @@ const ManageUsers: React.FC = () => {
     setSavingUsers(prev => ({ ...prev, [userId]: true }));
     
     try {
-      await dispatch(updateUserRoles({ id: userId, roleIds })).unwrap();
+      const result = await dispatch(updateUserRoles({ id: userId, roleIds })).unwrap();
+      
+      // Get the saved roles from the result
+      const newRoles = result.roles?.map(role => role.id) || roleIds;
+      
+      // Update both the current changes and the saved state to match
+      setUserRoleChanges(prev => ({
+        ...prev,
+        [userId]: newRoles
+      }));
+      
+      setUserSavedRoles(prev => ({
+        ...prev,
+        [userId]: newRoles
+      }));
+      
       // Show success message
       setSuccessMessage(`Successfully updated roles for ${user?.first_name} ${user?.last_name}`);
       // Clear success message after 3 seconds
@@ -238,7 +272,7 @@ const ManageUsers: React.FC = () => {
               User Management Overview
             </Typography>
             <div>
-              <p>Features for managing users.</p>
+              <p>Features for managing users including managing roles and permissions.</p>
             </div>
           </SubTabPanel>
 

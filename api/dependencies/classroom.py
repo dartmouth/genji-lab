@@ -41,7 +41,7 @@ def get_current_user_sync(
             detail="User not found"
         )
     
-    if not user.is_active:
+    if not bool(user.is_active):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account is inactive"

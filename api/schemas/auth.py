@@ -46,7 +46,6 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
-
 class UserResponse(BaseModel):
     id: int
     first_name: str
@@ -55,12 +54,12 @@ class UserResponse(BaseModel):
     username: str
     is_active: bool
     roles: List[str] = []
+    groups: List[Dict[str, Any]] = []  # Changed from List[int]
     user_metadata: Optional[Dict[str, Any]] = None
     ttl: str  # ISO format timestamp for when the authentication expires
     
     class Config:
         from_attributes = True
-
 
 class TokenResponse(BaseModel):
     access_token: str

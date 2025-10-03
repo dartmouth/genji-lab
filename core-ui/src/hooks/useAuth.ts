@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios, {AxiosInstance} from "axios";
+import useLocalStorage from './useLocalStorage';
 
 const api: AxiosInstance = axios.create({
     baseURL: '/api/v1',
@@ -16,6 +17,7 @@ interface AuthUser {
   user_metadata?: Record<string, string|number>;
   roles?: Array<string>;
   ttl: string;
+  groups: Array<{name: string; id: number}>;
   [key: string]: unknown;
 }
 
@@ -66,6 +68,8 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
     user: null,
   });
 
+  const [activeClassroomValue, setActiveClassroomValue ] = useLocalStorage('active_classroom')
+
   // Basic auth login
   const basicAuthLogin = useCallback(async (username: string, password: string) => {
     setIsLoading(true);
@@ -91,6 +95,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         user,
         expiresAt,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('Basic auth login error:', e);
       const errorMessage = e.response?.data?.detail || e.message || 'Login failed';
@@ -138,6 +143,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         user,
         expiresAt,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('Session check error:', e);
       setAuthState({ isAuthenticated: false, user: null });
@@ -177,6 +183,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
           user,
           expiresAt,
         });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         console.error('CAS ticket validation error:', e);
         const errorMessage = e.response?.data?.detail || e.message || 'Authentication failed';
@@ -222,6 +229,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
         user,
         expiresAt,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('Registration error:', e);
       const errorMessage = e.response?.data?.detail || e.message || 'Registration failed';
@@ -242,6 +250,7 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
       await api.post('/auth/logout', {}, {
         withCredentials: true,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error('Logout error:', e);
     }
@@ -285,11 +294,27 @@ export const useAuth = (config: AuthConfig = {}): UseAuthReturn => {
       }
     });
   }, [checkForTicket, checkSession, localStorageKey]);
+  
+  // const activeClassroomKey = 'active_classroom'
 
   // Save auth state to localStorage whenever it changes
   useEffect(() => {
     if (authState.isAuthenticated) {
       localStorage.setItem(localStorageKey, JSON.stringify(authState));
+      
+      if (authState.user?.groups && authState.user.groups.length > 0){
+        // const activeClassroom = localStorage.getItem(activeClassroomKey)
+        if (!activeClassroomValue){
+          setActiveClassroomValue(authState.user.groups[0].id as unknown as string)
+          // localStorage.setItem(activeClassroomKey, authState.user.groups[0].id as unknown as string)
+        } else {
+          // const currentActiveClassroom = localStorage.getItem(activeClassroomKey)
+          if (!authState.user.groups.map(group => group.id).includes(activeClassroomValue as unknown as number)){
+            // localStorage.removeItem(activeClassroomKey)
+            setActiveClassroomValue(null)
+          }
+        }
+      }
     } else {
       localStorage.removeItem(localStorageKey);
     }

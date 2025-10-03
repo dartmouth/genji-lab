@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select, text
+from sqlalchemy import select, text, and_, or_
 from datetime import datetime
 from collections import defaultdict
 from typing import Dict, List
@@ -219,7 +219,13 @@ def read_annotations_by_motivation(
     
     # Apply classroom filtering
     if classroom_id is not None:
-        query = query.filter(AnnotationModel.classroom_id == classroom_id)
+            query = query.filter(
+        or_(
+            and_(AnnotationModel.motivation == 'commenting', 
+                 AnnotationModel.classroom_id == classroom_id),
+            AnnotationModel.motivation != 'commenting'
+        )
+    )
     else:
         query = query.filter(AnnotationModel.classroom_id.is_(None))
     

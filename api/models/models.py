@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, func, MetaData, Boolean, Table
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Date, func, MetaData, Boolean, Table
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy import Sequence, Index
@@ -115,6 +115,8 @@ class Group(Base):
     description = Column(String(255))
     created_at = Column(DateTime, default=func.current_timestamp())
     created_by_id = Column(Integer, ForeignKey(f"{'app'}.users.id"))
+    start_date = Column(Date, nullable=True)  # TODO: Make not nullable after existing groups are updated
+    end_date = Column(Date, nullable=True)    # TODO: Make not nullable after existing groups are updated
     
     # Relationships
     members = relationship("User", secondary=group_members, back_populates="groups")

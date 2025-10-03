@@ -33,19 +33,22 @@ export function createFetchAnnotationsThunk(
   
   return createAsyncThunk<
     Annotation[],
-    string,
+    { documentElementId: string; classroomId?: string },
     { state: RootState }
   >(
     thunkName,
-    async (documentElementId: string, { dispatch, rejectWithValue }) => {
+    async ({ documentElementId, classroomId }, { dispatch, rejectWithValue }) => {
       try {
+        const params: Record<string, string | number> = {
+          motivation: bucketName,
+          document_element_id: documentElementId
+        };
         
-        const response = await api.get('/annotations/', {
-            params:{
-                motivation: bucketName,
-                document_element_id: documentElementId
-            }
-        });
+        if (classroomId !== undefined) {
+          params.classroom_id = classroomId;
+        }
+        
+        const response = await api.get('/annotations/', { params });
         
         if (!(response.status === 200)) {
           return rejectWithValue(`Failed to fetch ${bucketName} annotations: ${response.statusText}`);
@@ -74,15 +77,20 @@ export function createSaveAnnotationThunk(
     
     return createAsyncThunk<
       Annotation,
-      AnnotationCreate,
+      { annotation: AnnotationCreate; classroomId?: string },
       { state: RootState }
     >(
       thunkName,
-      async (annotation: AnnotationCreate, { dispatch, rejectWithValue }) => {
+      async ({ annotation, classroomId }, { dispatch, rejectWithValue }) => {
         try {
+          const params: Record<string, string> = {};
+          
+          if (classroomId !== undefined) {
+            params.classroom_id = classroomId;
+          }
 
           // Use your API client
-          const response = await api.post(`/annotations/`, annotation);
+          const response = await api.post(`/annotations/`, annotation, { params });
           
           const savedAnnotation: Annotation = response.data;
           

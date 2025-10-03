@@ -18,6 +18,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+
 def upgrade() -> None:
     """Upgrade schema."""
     # Ensure the app schema exists
@@ -332,6 +333,7 @@ def upgrade() -> None:
         })
     
     op.bulk_insert(role_permissions_table, role_permission_mappings)
+
     ### end Alembic commands ###
 
 def downgrade() -> None:
