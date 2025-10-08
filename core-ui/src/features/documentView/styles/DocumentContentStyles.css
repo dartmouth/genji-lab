@@ -468,3 +468,43 @@
     box-shadow: 0 0 4px rgba(255, 235, 59, 0.6);
   }
 }
+
+.navigation-flash-precise {
+  animation: precise-flash 2s ease-in-out;
+}
+
+@keyframes precise-flash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.linked-text-highlight.navigation-flash {
+  animation: navigation-yellow-flash 3s ease-in-out !important;
+  background-color: rgba(255, 235, 59, 0.8) !important; /* Slightly more visible */
+  z-index: 10 !important; /* Ensure it's on top */
+}
+
+@keyframes navigation-yellow-flash {
+  0% { 
+    opacity: 0;
+    background-color: rgba(255, 235, 59, 0.8);
+  }
+  10% { 
+    opacity: 1;
+    background-color: rgba(255, 255, 0, 0.9); /* Bright yellow peak */
+  }
+  50% { 
+    opacity: 0.8;
+    background-color: rgba(255, 235, 59, 0.8);
+  }
+  90% { 
+    opacity: 1;
+    background-color: rgba(255, 235, 59, 0.8);
+  }
+  100% { 
+    opacity: 0;
+    background-color: rgba(255, 235, 59, 0);
+  }
+}

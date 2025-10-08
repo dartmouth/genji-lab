@@ -14,19 +14,18 @@ import {
   selectElementsByDocumentId,
   fetchDocumentElements,
 } from "@store";
-
-import {
-  startNavigationSession,
-  addNavigationHighlight,
-  clearNavigationSession,
-} from "@store/slice/navigationHighlightSlice";
+import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollToTextUtils";
+// import {
+//   startNavigationSession,
+//   addNavigationHighlight,
+//   clearNavigationSession,
+// } from "@store/slice/navigationHighlightSlice";
 import HighlightingHelpIcon from "@/features/documentView/components/highlightedContent/HighlightingHelpIcon";
 import { RootState } from "@store";
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
 import { DocumentComparisonContainer } from "@documentView";
 import DocumentLinkingOverlay from "@/features/documentView/components/annotationCard/DocumentLinkingOverlay";
-import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollToTextUtils";
 import RouterSwitchBoard from "@/RouterSwitchBoard";
 import "./styles/DocumentViewerStyles.css";
 import {
@@ -356,23 +355,34 @@ export const DocumentContentView: React.FC = () => {
             `[data-document-id="${pendingScrollTarget.documentId}"]`
           );
           if (documentPanel) {
-            scrollToAndHighlightText(
-              pendingScrollTarget.targetInfo,
-              pendingScrollTarget.allTargets
+            // Just scroll, don't highlight - Redux will handle highlighting
+            const element = document.getElementById(
+              pendingScrollTarget.targetInfo.sourceURI.replace("/", "")
             );
+            if (element) {
+              element.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
             setPendingScrollTarget(null);
           } else {
             setTimeout(() => {
-              scrollToAndHighlightText(
-                pendingScrollTarget.targetInfo,
-                pendingScrollTarget.allTargets
+              const element = document.getElementById(
+                pendingScrollTarget.targetInfo.sourceURI.replace("/", "")
               );
+              if (element) {
+                element.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+              }
               setPendingScrollTarget(null);
             }, 2000);
           }
         } catch (error) {
           setPendingScrollTarget(null);
-          console.error("Error during scroll and highlight:", error);
+          console.error("Error during scroll:", error);
         }
       }, 1500);
 
@@ -689,24 +699,8 @@ export const DocumentContentView: React.FC = () => {
         text: string;
       }>
     ) => {
-      console.log("🎯 handleOpenLinkedDocument called:", {
-        linkedDocumentId,
-        linkedCollectionId,
-        targetInfo,
-        allTargets,
-        currentlyViewed: viewedDocuments.map((d) => d.id),
-      });
-
-      const sessionId = `nav-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 9)}`;
-      dispatch(startNavigationSession({ sessionId }));
-
-      // linkedDocumentId IS the target - use it directly
       const targetDocumentId = linkedDocumentId;
-      const actualTargetInfo = targetInfo; // Renamed to avoid collision
 
-      // Find which document the user clicked in by checking allTargets
       let sourceDocumentId: number | null = null;
       if (allTargets && allTargets.length > 1) {
         for (const target of allTargets) {
@@ -716,7 +710,6 @@ export const DocumentContentView: React.FC = () => {
           if (elementIdMatch) {
             const elementId = parseInt(elementIdMatch[1]);
             const element = allElements.find((el) => el.id === elementId);
-
             if (element && element.document_id !== targetDocumentId) {
               sourceDocumentId = element.document_id;
               break;
@@ -725,116 +718,63 @@ export const DocumentContentView: React.FC = () => {
         }
       }
 
-      console.log("📍 Navigation decision:", {
-        sourceDocumentId,
-        targetDocumentId,
-        willNavigate: targetDocumentId !== sourceDocumentId,
-        currentlyViewed: viewedDocuments.map((d) => d.id),
-      });
-
-      const triggerSynchronizedHighlighting = (delay: number = 2000) => {
-        setTimeout(() => {
-          if (!allTargets || allTargets.length === 0) {
-            dispatch(clearNavigationSession({ sessionId }));
-            return;
-          }
-
-          allTargets.forEach((target, index) => {
-            const elementIdMatch = target.sourceURI.match(
-              /\/DocumentElements\/(\d+)/
-            );
-            if (elementIdMatch) {
-              const elementId = parseInt(elementIdMatch[1]);
-              const element = allElements.find((el) => el.id === elementId);
-
-              if (element) {
-                const isSource = element.document_id === sourceDocumentId;
-                const elementType = isSource ? "source" : "target";
-
-                setTimeout(() => {
-                  dispatch(
-                    addNavigationHighlight({
-                      elementURI: target.sourceURI,
-                      type: elementType,
-                      sessionId,
-                    })
-                  );
-                }, index * 50);
-              }
-            }
-          });
-
-          setTimeout(() => {
-            dispatch(clearNavigationSession({ sessionId }));
-          }, 3500 + allTargets.length * 50);
-        }, delay);
-      };
-
-      if (isUpdatingDocuments.current) {
-        dispatch(clearNavigationSession({ sessionId }));
-        return;
-      }
+      if (isUpdatingDocuments.current) return;
 
       const sourceDocumentIndex = sourceDocumentId
         ? viewedDocuments.findIndex((doc) => doc.id === sourceDocumentId)
         : -1;
 
-      if (sourceDocumentIndex === -1) {
-        console.error("⚠️ Source document not in viewed documents");
-        dispatch(clearNavigationSession({ sessionId }));
-        return;
-      }
+      if (sourceDocumentIndex === -1) return;
+
+      const highlightTargets = () => {
+        setTimeout(() => {
+          scrollToAndHighlightText(targetInfo, allTargets);
+        }, 2000);
+      };
 
       try {
         if (viewedDocuments.length === 1) {
-          console.log("✅ Adding as secondary document");
           await addLinkedDocumentAsSecondary(
             targetDocumentId,
             linkedCollectionId,
-            actualTargetInfo,
+            targetInfo,
             allTargets
           );
-          triggerSynchronizedHighlighting(2000);
+          highlightTargets();
         } else if (viewedDocuments.length === 2) {
           const targetAlreadyViewed = viewedDocuments.some(
             (doc) => doc.id === targetDocumentId
           );
-
           if (targetAlreadyViewed) {
-            console.log("✅ Both documents already viewed, highlighting only");
-            triggerSynchronizedHighlighting(500);
+            highlightTargets();
             return;
           }
 
           if (sourceDocumentIndex === 0) {
-            console.log("✅ Clicked from primary, replacing secondary");
             await replaceSecondaryDocument(
               targetDocumentId,
               linkedCollectionId,
-              actualTargetInfo,
+              targetInfo,
               allTargets
             );
-            triggerSynchronizedHighlighting(2000);
+            highlightTargets();
           } else if (sourceDocumentIndex === 1) {
-            console.log("✅ Clicked from secondary, replacing primary");
             await replacePrimaryDocument(
               targetDocumentId,
               linkedCollectionId,
-              actualTargetInfo,
+              targetInfo,
               allTargets
             );
-            triggerSynchronizedHighlighting(2000);
+            highlightTargets();
           }
         }
       } catch (error) {
         console.error("Navigation error:", error);
-        dispatch(clearNavigationSession({ sessionId }));
       }
     },
     [
       viewedDocuments,
       allElements,
-      dispatch,
       addLinkedDocumentAsSecondary,
       replaceSecondaryDocument,
       replacePrimaryDocument,

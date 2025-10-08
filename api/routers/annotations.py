@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import Dict, List, Any
 from dotenv import load_dotenv, find_dotenv
 import os
+import json
 
 from database import get_db
 from models.models import Annotation as AnnotationModel, User
@@ -328,12 +329,10 @@ def get_my_classrooms(
 )
 def get_linked_text_info(
     document_element_id: int,
-    classroom_id: Optional[int] = Depends(get_classroom_context),
     current_user: User = Depends(get_current_user_sync),
     db: Session = Depends(get_db),
 ):
     """
-    Get minimal linked text information for context menu display.
     Returns only the specific documents and elements that are linked.
     """
     from models.models import DocumentElement as DocumentElementModel, Document
@@ -345,11 +344,9 @@ def get_linked_text_info(
         .filter(AnnotationModel.motivation == "linking")
     )
 
-    # Apply classroom filtering
-    if classroom_id is not None:
-        query = query.filter(AnnotationModel.classroom_id == classroom_id)
-    else:
-        query = query.filter(AnnotationModel.classroom_id.is_(None))
+    # SELECT * FROM annotations WHERE motivation = 'linking' AND (target->>'source') LIKE '%/DocumentElements/{document_element_id}';
+    # Index on JSONB
+    # 1 or more targets, how to do a SQL query over JSONB array?
 
     all_linking_annotations = query.all()
 
@@ -383,7 +380,7 @@ def get_linked_text_info(
         if annotation.target:
             for target in annotation.target:
                 source = target.get("source", "")
-                match = source.split("/")[-1]  # Get last part of URI
+                match = source.split("/")[-1]
                 try:
                     element_id = int(match)
                     # Don't include the source element itself
@@ -418,6 +415,9 @@ def get_linked_text_info(
         if not annotation.target:
             continue
 
+        # Track which documents we've already added this annotation to
+        processed_documents = set()
+
         for target in annotation.target:
             source = target.get("source", "")
             match = source.split("/")[-1]
@@ -436,6 +436,14 @@ def get_linked_text_info(
                 if not document:
                     continue
 
+                doc_id = document.id
+
+                # Skip if we've already added this annotation for this document
+                if doc_id in processed_documents:
+                    continue
+
+                processed_documents.add(doc_id)
+
                 # Get selector info
                 selector = target.get("selector", {})
                 text_value = selector.get("value", "Linked text")
@@ -450,7 +458,6 @@ def get_linked_text_info(
                 }
 
                 # Group by document
-                doc_id = document.id
                 if doc_id not in linked_documents:
                     linked_documents[doc_id] = {
                         "documentId": doc_id,
@@ -459,7 +466,7 @@ def get_linked_text_info(
                         "linkedTextOptions": [],
                     }
 
-                # Add this as a linked text option
+                # Add this as a linked text option (only once per annotation per document)
                 linked_documents[doc_id]["linkedTextOptions"].append(
                     {
                         "linkedText": text_value,
@@ -485,8 +492,10 @@ def get_linked_text_info(
             except (ValueError, IndexError, AttributeError):
                 continue
 
-    return {
+    response = {
         "source_element_id": document_element_id,
         "linked_documents": list(linked_documents.values()),
         "total_links": len(linked_documents),
     }
+
+    return response

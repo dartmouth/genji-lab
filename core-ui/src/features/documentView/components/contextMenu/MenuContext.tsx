@@ -67,7 +67,10 @@ const MenuContext: React.FC<MenuContextProps> = ({
   });
 
   const fetchLinkedTextInfo = useCallback(
-    async (elementId: number): Promise<HierarchicalLinkedDocuments> => {
+    async (
+      elementId: number,
+      sourceDocumentId: number
+    ): Promise<HierarchicalLinkedDocuments> => {
       try {
         const response = await fetch(
           `/api/v1/annotations/linked-text-info/${elementId}`
@@ -82,19 +85,31 @@ const MenuContext: React.FC<MenuContextProps> = ({
 
         const result: HierarchicalLinkedDocuments = {};
 
-        data.linked_documents.forEach((doc: any) => {
-          const isCurrentlyViewed = viewedDocuments.some(
-            (d) => d.id === doc.documentId
-          );
+        data.linked_documents.forEach(
+          (doc: {
+            documentId: number;
+            documentTitle: string;
+            collectionId: number;
+            linkedTextOptions: LinkedTextOption[];
+          }) => {
+            // 🎯 Filter out same-document links
+            if (doc.documentId === sourceDocumentId) {
+              return; // Skip this document
+            }
 
-          result[doc.documentId] = {
-            documentId: doc.documentId,
-            documentTitle: doc.documentTitle,
-            collectionId: doc.collectionId,
-            isCurrentlyOpen: isCurrentlyViewed,
-            linkedTextOptions: doc.linkedTextOptions,
-          };
-        });
+            const isCurrentlyViewed = viewedDocuments.some(
+              (d) => d.id === doc.documentId
+            );
+
+            result[doc.documentId] = {
+              documentId: doc.documentId,
+              documentTitle: doc.documentTitle,
+              collectionId: doc.collectionId,
+              isCurrentlyOpen: isCurrentlyViewed,
+              linkedTextOptions: doc.linkedTextOptions,
+            };
+          }
+        );
 
         return result;
       } catch (error) {
@@ -225,7 +240,8 @@ const MenuContext: React.FC<MenuContextProps> = ({
       };
 
       const hierarchicalDocuments = await fetchLinkedTextInfo(
-        selection.documentElementId
+        selection.documentElementId,
+        selection.documentId
       );
 
       setMenuState({
@@ -294,18 +310,9 @@ const MenuContext: React.FC<MenuContextProps> = ({
     (
       documentId: number, // This is the linked document (where to navigate TO)
       collectionId: number,
-      option: LinkedTextOption,
-      isCurrentlyOpen: boolean
+      option: LinkedTextOption
     ) => {
-      const sourceDocumentId = menuState.selection?.documentId; // Where you clicked FROM
-
-      console.log("handleLinkedTextSelection called with:", {
-        linkedDocumentId: documentId, // Document 2 - where to go
-        sourceDocumentId, // Document 1 - where you clicked
-        collectionId,
-        option,
-        isCurrentlyOpen,
-      });
+      const sourceDocumentId = menuState.selection?.documentId;
 
       setMenuState((prev) => ({
         ...prev,
@@ -349,8 +356,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
           handleLinkedTextSelection(
             singleDoc.documentId,
             singleDoc.collectionId,
-            singleDoc.linkedTextOptions[0],
-            singleDoc.isCurrentlyOpen
+            singleDoc.linkedTextOptions[0]
           );
           return;
         }

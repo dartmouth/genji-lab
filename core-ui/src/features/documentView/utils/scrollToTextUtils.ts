@@ -217,14 +217,13 @@ const waitForRedHighlightsAndEnhance = (
       element.classList.contains("has-linked-text") ||
       element.hasAttribute("data-debug-linked");
 
-    // Check if red highlights are ready
     if (existingHighlights.length > 0) {
-      const result = enhanceExistingLinkedTextHighlights(element);
+      // 🎯 CHANGE: Pass start/end parameters
+      const result = enhanceExistingLinkedTextHighlights(element, start, end);
       resolve(result);
       return;
     }
 
-    // If no highlights found but element should have them, wait and retry
     if (hasLinkedTextClass && currentAttempt < maxAttempts) {
       setTimeout(() => {
         waitForRedHighlightsAndEnhance(
@@ -239,7 +238,6 @@ const waitForRedHighlightsAndEnhance = (
       return;
     }
 
-    // If no highlights expected or max attempts reached, use fallback
     if (existingHighlights.length === 0) {
       element.classList.add("navigation-flash-fallback");
       setTimeout(() => {
@@ -257,10 +255,11 @@ const waitForRedHighlightsAndEnhance = (
  * Navigation highlighting that waits for red link indicators
  */
 const enhanceExistingLinkedTextHighlights = (
-  element: HTMLElement
+  element: HTMLElement,
+  targetStart?: number,
+  targetEnd?: number
 ): HighlightResult => {
   try {
-    // Find existing linked text highlights in this element
     const existingHighlights = element.querySelectorAll(
       ".linked-text-highlight"
     );
@@ -271,25 +270,54 @@ const enhanceExistingLinkedTextHighlights = (
       setTimeout(() => {
         element.classList.remove("navigation-flash-fallback");
       }, 3000);
-
       return { success: true, highlightCount: 0 };
     }
 
-    // Enhance existing highlights with navigation flash
     let highlightCount = 0;
-    existingHighlights.forEach((highlight, index) => {
-      if (highlight instanceof HTMLElement) {
-        // Add the navigation flash class
-        highlight.classList.add("navigation-flash");
+    const matchedHighlights: HTMLElement[] = [];
 
-        // Add a staggered animation delay for multiple highlights
-        if (index > 0) {
-          highlight.style.animationDelay = `${index * 100}ms`;
+    // First pass: find matching highlights
+    existingHighlights.forEach((highlight) => {
+      if (highlight instanceof HTMLElement) {
+        // 🎯 Filter by exact position if provided
+        if (targetStart !== undefined && targetEnd !== undefined) {
+          const highlightStart = parseInt(
+            highlight.getAttribute("data-start") || "-1"
+          );
+          const highlightEnd = parseInt(
+            highlight.getAttribute("data-end") || "-1"
+          );
+
+          // Skip if this highlight doesn't match the target range
+          if (highlightStart !== targetStart || highlightEnd !== targetEnd) {
+            return;
+          }
         }
 
+        matchedHighlights.push(highlight);
         highlightCount++;
       }
     });
+
+    // Second pass: apply animation to matched highlights only
+    if (matchedHighlights.length > 0) {
+      // Generate a unique animation ID to force restart
+      const animationId = `nav-flash-${Date.now()}`;
+
+      matchedHighlights.forEach((highlight) => {
+        // Add the navigation flash class
+        highlight.classList.add("navigation-flash");
+        highlight.setAttribute("data-animation-id", animationId);
+      });
+
+      // Remove flash class after animation completes
+      setTimeout(() => {
+        matchedHighlights.forEach((highlight) => {
+          highlight.classList.remove("navigation-flash");
+          highlight.removeAttribute("data-animation-id");
+        });
+      }, 3000);
+    }
 
     // Also flash the paragraph-level indicator if it exists
     if (
@@ -297,19 +325,11 @@ const enhanceExistingLinkedTextHighlights = (
       element.hasAttribute("data-debug-linked")
     ) {
       element.classList.add("paragraph-navigation-flash");
+
+      setTimeout(() => {
+        element.classList.remove("paragraph-navigation-flash");
+      }, 3000);
     }
-
-    // Set up removal of flash classes
-    setTimeout(() => {
-      existingHighlights.forEach((highlight) => {
-        if (highlight instanceof HTMLElement) {
-          highlight.classList.remove("navigation-flash");
-          highlight.style.animationDelay = ""; // Clear delay
-        }
-      });
-
-      element.classList.remove("paragraph-navigation-flash");
-    }, 3000);
 
     return { success: true, highlightCount };
   } catch (error) {
