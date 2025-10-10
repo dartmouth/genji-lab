@@ -1,5 +1,5 @@
 // src/features/documentView/components/highlightedContent/HighlightedText.tsx
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import Highlight from "./Highlight";
 import AnnotationCreationDialog from "../annotationCard/AnnotationCreationDialog";
 import { parseURI } from "@documentView/utils";
@@ -131,60 +131,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
   const hasLinkedText = linkingAnnotations.length > 0;
 
-  useEffect(() => {
-    if (isNavigationHighlighted) {
-      // Calculate precise positions when Redux highlighting activates
-      calculateReduxNavigationPositions();
-    } else {
-      // Clear positions when highlighting deactivates
-      setReduxNavigationPositions([]);
-    }
-  }, [isNavigationHighlighted, paragraphId, highlightType]);
-
-  // Check if we need to show the dialog when annotation creation state changes
-  useEffect(() => {
-    if (
-      annotationCreate &&
-      annotationCreate.motivation &&
-      annotationCreate.target.segments.some(
-        (seg) => seg.sourceURI === paragraphId
-      )
-    ) {
-      setIsDialogOpen(true);
-    }
-  }, [annotationCreate, paragraphId]);
-
-  useEffect(() => {
-    notFetched.current = true;
-    dispatch(commentingAnnotations.actions.clearAnnotations());
-  }, [dispatch, activeClassroomValue, isOptedOut]);
-
-  // Fetch annotations when component becomes visible
-  useEffect(() => {
-    if ((shouldPrefetch || isVisible) && notFetched.current) {
-      notFetched.current = false;
-
-      const params: { documentElementId: number; classroomID?: number } = {
-        documentElementId: parseURI(paragraphId) as unknown as number,
-      };
-
-      if (activeClassroomValue && isOptedOut !== "true") {
-        params.classroomID = activeClassroomValue as unknown as number;
-      }
-
-      dispatch(fetchAnnotationByMotivation(params));
-    }
-  }, [
-    dispatch,
-    activeClassroomValue,
-    isOptedOut,
-    paragraphId,
-    isVisible,
-    shouldPrefetch,
-  ]);
-
-  // Calculate precise Redux navigation highlight positions
-  const calculateReduxNavigationPositions = () => {
+  // Calculate precise Redux navigation highlight positions with useCallback
+  const calculateReduxNavigationPositions = useCallback(() => {
     if (!containerRef.current || !isNavigationHighlighted || !hasLinkedText) {
       setReduxNavigationPositions([]);
       return;
@@ -254,7 +202,59 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     });
 
     setReduxNavigationPositions(navigationPositions);
-  };
+  }, [isNavigationHighlighted, hasLinkedText, linkingAnnotations, paragraphId]);
+
+  useEffect(() => {
+    if (isNavigationHighlighted) {
+      // Calculate precise positions when Redux highlighting activates
+      calculateReduxNavigationPositions();
+    } else {
+      // Clear positions when highlighting deactivates
+      setReduxNavigationPositions([]);
+    }
+  }, [isNavigationHighlighted, calculateReduxNavigationPositions]);
+
+  // Check if we need to show the dialog when annotation creation state changes
+  useEffect(() => {
+    if (
+      annotationCreate &&
+      annotationCreate.motivation &&
+      annotationCreate.target.segments.some(
+        (seg) => seg.sourceURI === paragraphId
+      )
+    ) {
+      setIsDialogOpen(true);
+    }
+  }, [annotationCreate, paragraphId]);
+
+  useEffect(() => {
+    notFetched.current = true;
+    dispatch(commentingAnnotations.actions.clearAnnotations());
+  }, [dispatch, activeClassroomValue, isOptedOut]);
+
+  // Fetch annotations when component becomes visible
+  useEffect(() => {
+    if ((shouldPrefetch || isVisible) && notFetched.current) {
+      notFetched.current = false;
+
+      const params: { documentElementId: number; classroomID?: number } = {
+        documentElementId: parseURI(paragraphId) as unknown as number,
+      };
+
+      if (activeClassroomValue && isOptedOut !== "true") {
+        params.classroomID = activeClassroomValue as unknown as number;
+      }
+
+      dispatch(fetchAnnotationByMotivation(params));
+    }
+  }, [
+    dispatch,
+    activeClassroomValue,
+    isOptedOut,
+    paragraphId,
+    isVisible,
+    shouldPrefetch,
+  ]);
 
   // Calculate highlight positions for existing annotations
   const calculateHighlightPositions = () => {
