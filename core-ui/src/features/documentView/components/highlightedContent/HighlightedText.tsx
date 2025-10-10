@@ -1,4 +1,5 @@
 // src/features/documentView/components/highlightedContent/HighlightedText.tsx
+
 import React, { useRef, useEffect, useState } from "react";
 import Highlight from "./Highlight";
 import AnnotationCreationDialog from "../annotationCard/AnnotationCreationDialog";
@@ -32,6 +33,9 @@ import {
 } from "../../utils/selectionUtils";
 import "@documentView/styles/DocumentLinkingStyles.css";
 
+// 🎯 IMPORT THE NEW MEMOIZED SELECTOR
+import { selectLinkingAnnotationsByParagraph } from "@store/selector/combinedSelectors";
+
 interface HighlightedTextProps {
   text: string;
   format?: TextFormatting;
@@ -63,9 +67,10 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   const notFetched = useRef(true);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [activeClassroomValue, _setActiveClassroomValue ] = useLocalStorage('active_classroom')
+  const [activeClassroomValue, _setActiveClassroomValue] =
+    useLocalStorage("active_classroom");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isOptedOut, _setIsOptedOut] = useLocalStorage('classroom_opted_out');
+  const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
 
   // State for dialog visibility
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -122,48 +127,11 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     selectAllAnnotationsForParagraph(state, paragraphId)
   );
 
-  // Get linking annotations directly from the Redux state
-  const allLinkingAnnotations = useAppSelector((state: RootState) => {
-    try {
-      const linkingState = state.annotations?.linking;
+  // 🎯 FIXED: Use memoized selector instead of inline selector
+  const linkingAnnotations = useAppSelector((state: RootState) =>
+    selectLinkingAnnotationsByParagraph(state, paragraphId)
+  );
 
-      if (!linkingState) {
-        return [];
-      }
-
-      const annotations = Object.values(linkingState.byId || {}).filter(
-        Boolean
-      );
-      return annotations;
-    } catch (error) {
-      console.error("Error accessing linking annotations from state:", error);
-      return [];
-    }
-  });
-
-  // Filter linking annotations for this specific paragraph
-  const paragraphLinkingAnnotations = allLinkingAnnotations.filter((anno) => {
-    if (!anno?.target) return false;
-
-    const numericId = parseURI(paragraphId);
-
-    return anno.target.some((target) => {
-      const targetSource = target.source;
-
-      const matches = [
-        targetSource === paragraphId,
-        targetSource === `/${paragraphId}`,
-        targetSource === `/DocumentElements/${numericId}`,
-        targetSource === `DocumentElements/${numericId}`,
-        targetSource === String(numericId),
-        targetSource === `/${numericId}`,
-      ];
-
-      return matches.some((match) => match);
-    });
-  });
-
-  const linkingAnnotations = paragraphLinkingAnnotations;
   const hasLinkedText = linkingAnnotations.length > 0;
 
   useEffect(() => {
@@ -189,28 +157,35 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       setIsDialogOpen(true);
     }
   }, [annotationCreate, paragraphId]);
-  
+
   useEffect(() => {
     notFetched.current = true;
-    dispatch(commentingAnnotations.actions.clearAnnotations())
+    dispatch(commentingAnnotations.actions.clearAnnotations());
   }, [dispatch, activeClassroomValue, isOptedOut]);
 
   // Fetch annotations when component becomes visible
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
-      
+
       const params: { documentElementId: number; classroomID?: number } = {
-        documentElementId: parseURI(paragraphId) as unknown as number
+        documentElementId: parseURI(paragraphId) as unknown as number,
       };
-      
-      if (activeClassroomValue && isOptedOut !== 'true') {
+
+      if (activeClassroomValue && isOptedOut !== "true") {
         params.classroomID = activeClassroomValue as unknown as number;
       }
-      
+
       dispatch(fetchAnnotationByMotivation(params));
     }
-  }, [dispatch, activeClassroomValue, isOptedOut, paragraphId, isVisible, shouldPrefetch]);
+  }, [
+    dispatch,
+    activeClassroomValue,
+    isOptedOut,
+    paragraphId,
+    isVisible,
+    shouldPrefetch,
+  ]);
 
   // Calculate precise Redux navigation highlight positions
   const calculateReduxNavigationPositions = () => {

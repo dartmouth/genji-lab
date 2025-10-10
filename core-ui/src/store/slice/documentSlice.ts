@@ -20,7 +20,7 @@ export interface Document {
 
 interface DocumentState {
   documents: Document[]; // Documents for the currently selected collection
-  allDocuments: Document[]; // 🎯 NEW: All documents across all collections
+  allDocuments: Document[]; // All documents across all collections
   status: "idle" | "loading" | "succeeded" | "failed";
   allDocumentsStatus: "idle" | "loading" | "succeeded" | "failed"; // 🎯 NEW: Status for all documents
   error: string | null;
@@ -44,14 +44,14 @@ export type { DocumentCreate, DocumentUpdate };
 // Initial state
 const initialState: DocumentState = {
   documents: [],
-  allDocuments: [], // 🎯 NEW: Initialize empty
+  allDocuments: [], // Initialize empty
   status: "idle",
-  allDocumentsStatus: "idle", // 🎯 NEW: Initialize status
+  allDocumentsStatus: "idle", // Initialize status
   error: null,
   selectedCollectionId: null,
 };
 
-// 🎯 NEW: Thunk to fetch ALL documents across all collections
+// Thunk to fetch ALL documents across all collections
 export const fetchAllDocuments = createAsyncThunk(
   "documents/fetchAll",
   async (_, { rejectWithValue }) => {
@@ -74,7 +74,7 @@ export const fetchAllDocuments = createAsyncThunk(
       const allDocuments: Document[] = response.data;
       return allDocuments;
     } catch (error) {
-      console.error("🎯 fetchAllDocuments error:", error);
+      console.error("fetchAllDocuments error:", error);
       return rejectWithValue(
         error instanceof Error ? error.message : "Unknown error"
       );
@@ -82,7 +82,7 @@ export const fetchAllDocuments = createAsyncThunk(
   }
 );
 
-// 🎯 NEW: Alternative thunk if you need to fetch by collections
+// Alternative thunk if you need to fetch by collections
 export const fetchAllDocumentsByCollections = createAsyncThunk(
   "documents/fetchAllByCollections",
   async (collectionIds: number[], { rejectWithValue }) => {
@@ -108,7 +108,7 @@ export const fetchAllDocumentsByCollections = createAsyncThunk(
   }
 );
 
-// Existing thunk - unchanged
+// Existing thunk
 export const fetchDocumentsByCollection = createAsyncThunk(
   "documents/fetchByCollection",
   async (collectionId: number, { rejectWithValue }) => {
@@ -202,7 +202,7 @@ const documentSlice = createSlice({
         state.status = "idle";
       }
     },
-    // 🎯 NEW: Manually add documents to allDocuments (useful for when documents are loaded individually)
+    // Manually add documents to allDocuments (useful for when documents are loaded individually)
     addToAllDocuments: (state, action: PayloadAction<Document[]>) => {
       const newDocs = action.payload;
       // Only add documents that aren't already in allDocuments
@@ -230,7 +230,7 @@ const documentSlice = createSlice({
           state.documents = action.payload.documents;
           state.selectedCollectionId = action.payload.collectionId;
 
-          // 🎯 NEW: Also add these documents to allDocuments
+          // Also add these documents to allDocuments
           const newDocs = action.payload.documents;
           for (const newDoc of newDocs) {
             if (!state.allDocuments.find((doc) => doc.id === newDoc.id)) {
@@ -244,7 +244,7 @@ const documentSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // 🎯 NEW: fetchAllDocuments handlers
+      // fetchAllDocuments handlers
       .addCase(fetchAllDocuments.pending, (state) => {
         state.allDocumentsStatus = "loading";
         state.error = null;
@@ -261,7 +261,7 @@ const documentSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // 🎯 NEW: fetchAllDocumentsByCollections handlers
+      // fetchAllDocumentsByCollections handlers
       .addCase(fetchAllDocumentsByCollections.pending, (state) => {
         state.allDocumentsStatus = "loading";
         state.error = null;
@@ -293,7 +293,7 @@ const documentSlice = createSlice({
             state.documents.push(action.payload);
           }
 
-          // 🎯 NEW: Also add to allDocuments
+          // Also add to allDocuments
           if (!state.allDocuments.find((doc) => doc.id === action.payload.id)) {
             state.allDocuments.push(action.payload);
           }
@@ -330,25 +330,25 @@ const documentSlice = createSlice({
 // Export actions
 export const {
   clearDocuments,
-  clearAllDocuments, // 🎯 NEW
+  clearAllDocuments,
   setSelectedCollectionId,
-  addToAllDocuments, // 🎯 NEW
+  addToAllDocuments,
 } = documentSlice.actions;
 
 // Export selectors
 export const selectAllDocuments = (state: RootState) =>
-  state.documents.allDocuments; // 🎯 FIXED: Now returns ALL documents
+  state.documents.allDocuments; // Now returns ALL documents
 export const selectCollectionDocuments = (state: RootState) =>
-  state.documents.documents; // 🎯 NEW: Get documents for current collection
+  state.documents.documents; // Get documents for current collection
 export const selectDocumentsStatus = (state: RootState) =>
   state.documents.status;
 export const selectAllDocumentsStatus = (state: RootState) =>
-  state.documents.allDocumentsStatus; // 🎯 NEW
+  state.documents.allDocumentsStatus;
 export const selectDocumentsError = (state: RootState) => state.documents.error;
 export const selectSelectedCollectionId = (state: RootState) =>
   state.documents.selectedCollectionId;
 
-// 🎯 NEW: Get a specific document by ID from allDocuments
+// Get a specific document by ID from allDocuments
 export const selectDocumentById = (state: RootState, documentId: number) =>
   state.documents.allDocuments.find((doc) => doc.id === documentId);
 

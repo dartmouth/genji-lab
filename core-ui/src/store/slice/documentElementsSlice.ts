@@ -1,4 +1,11 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+// src/store/slice/documentElementsSlice.ts
+
+import {
+  createSlice,
+  createAsyncThunk,
+  PayloadAction,
+  createSelector,
+} from "@reduxjs/toolkit";
 import { RootState } from "../index";
 import axios from "axios";
 
@@ -205,35 +212,63 @@ const documentElementsSlice = createSlice({
 export const { clearElements, setCurrentDocumentId } =
   documentElementsSlice.actions;
 
-// Export selectors with proper typing
-export const selectElementsByDocumentId = (
-  state: RootState,
-  documentId: number | null
-): DocumentElement[] =>
-  documentId
-    ? state.documentElements.elementsByDocumentId[documentId] || []
-    : [];
+// ============================================================================
+// 🎯 MEMOIZED SELECTORS - These replace the old plain function selectors
+// ============================================================================
 
-export const selectDocumentStatusById = (
-  state: RootState,
-  documentId: number | null
-): "idle" | "loading" | "succeeded" | "failed" =>
-  documentId
-    ? state.documentElements.documentStatus[documentId] || "idle"
-    : "idle";
+// Base selector to get the entire documentElements state
+const selectDocumentElementsState = (state: RootState) =>
+  state.documentElements;
 
-export const selectDocumentErrorById = (
-  state: RootState,
-  documentId: number | null
-): string | null =>
-  documentId ? state.documentElements.documentErrors[documentId] || null : null;
+// Memoized selector for elements by document ID
+export const selectElementsByDocumentId = createSelector(
+  [
+    selectDocumentElementsState,
+    (_state: RootState, documentId: number | null) => documentId,
+  ],
+  (documentElementsState, documentId) => {
+    if (!documentId) return [];
+    return documentElementsState.elementsByDocumentId[documentId] || [];
+  }
+);
 
-export const selectCurrentDocumentId = (state: RootState): number | null =>
-  state.documentElements.currentDocumentId;
+// Memoized selector for document status by ID
+export const selectDocumentStatusById = createSelector(
+  [
+    selectDocumentElementsState,
+    (_state: RootState, documentId: number | null) => documentId,
+  ],
+  (
+    documentElementsState,
+    documentId
+  ): "idle" | "loading" | "succeeded" | "failed" => {
+    if (!documentId) return "idle";
+    return documentElementsState.documentStatus[documentId] || "idle";
+  }
+);
 
-export const selectBulkLoadingStatus = (
-  state: RootState
-): "idle" | "loading" | "succeeded" | "failed" =>
-  state.documentElements.bulkLoadingStatus;
+// Memoized selector for document error by ID
+export const selectDocumentErrorById = createSelector(
+  [
+    selectDocumentElementsState,
+    (_state: RootState, documentId: number | null) => documentId,
+  ],
+  (documentElementsState, documentId) => {
+    if (!documentId) return null;
+    return documentElementsState.documentErrors[documentId] || null;
+  }
+);
+
+// Memoized selector for current document ID
+export const selectCurrentDocumentId = createSelector(
+  [selectDocumentElementsState],
+  (documentElementsState) => documentElementsState.currentDocumentId
+);
+
+// Memoized selector for bulk loading status
+export const selectBulkLoadingStatus = createSelector(
+  [selectDocumentElementsState],
+  (documentElementsState) => documentElementsState.bulkLoadingStatus
+);
 
 export default documentElementsSlice.reducer;

@@ -1,5 +1,5 @@
 // src/features/documentView/components/DocumentContentPanel.tsx
-import React, { useEffect, useCallback, useMemo } from "react";
+import React, { useEffect, useCallback } from "react";
 import { HighlightedText, MenuContext } from ".";
 import {
   RootState,
@@ -53,25 +53,16 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   // Use memoized selectors to prevent unnecessary re-renders
   const dispatch = useAppDispatch();
 
-  const documentElements = useSelector(
-    useMemo(
-      () => (state: RootState) => selectElementsByDocumentId(state, documentId),
-      [documentId]
-    )
+  const documentElements = useSelector((state: RootState) =>
+    selectElementsByDocumentId(state, documentId)
   ) as DocumentElement[];
 
-  const documentStatus = useSelector(
-    useMemo(
-      () => (state: RootState) => selectDocumentStatusById(state, documentId),
-      [documentId]
-    )
+  const documentStatus = useSelector((state: RootState) =>
+    selectDocumentStatusById(state, documentId)
   );
 
-  const documentError = useSelector(
-    useMemo(
-      () => (state: RootState) => selectDocumentErrorById(state, documentId),
-      [documentId]
-    )
+  const documentError = useSelector((state: RootState) =>
+    selectDocumentErrorById(state, documentId)
   );
 
   // Enhanced element loading for cross-document navigation
