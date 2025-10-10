@@ -213,7 +213,7 @@ export const { clearElements, setCurrentDocumentId } =
   documentElementsSlice.actions;
 
 // ============================================================================
-// 🎯 MEMOIZED SELECTORS - These replace the old plain function selectors
+// MEMOIZED SELECTORS
 // ============================================================================
 
 // Base selector to get the entire documentElements state

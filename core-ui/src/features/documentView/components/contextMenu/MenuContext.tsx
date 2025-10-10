@@ -22,8 +22,6 @@ import {
   LinkedTextOption,
 } from "@documentView/utils/linkedTextUtils";
 import { RootState } from "@store";
-
-// 🎯 IMPORT THE NEW MEMOIZED SELECTORS
 import {
   selectAllLinkingAnnotations,
   selectAllLoadedElements,
@@ -73,7 +71,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
   // Use ref to track if bulk loading has been initiated
   const bulkLoadingInitiated = useRef(false);
 
-  // 🎯 FIXED: Use memoized selector instead of inline selector
+  // Use memoized selector instead of inline selector
   const allLinkingAnnotations = useAppSelector(selectAllLinkingAnnotations);
 
   // Get bulk loading status
@@ -90,7 +88,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     showHierarchicalMenu: false,
   });
 
-  // 🎯 FIXED: Use memoized selector instead of inline selector
+  // Use memoized selector instead of inline selector
   const allElements = useAppSelector(selectAllLoadedElements);
 
   // One API call to load all documents and elements

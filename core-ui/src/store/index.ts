@@ -1,4 +1,4 @@
-// store/index.ts - FIXED
+// store/index.ts
 import {
   configureStore,
   combineReducers,
@@ -70,7 +70,7 @@ const rootReducer = {
 // Create the store
 export const store = configureStore({
   reducer: rootReducer,
-  // 🎯 FIXED: Removed the incorrectly placed navigationHighlight line
+  // Removed the incorrectly placed navigationHighlight line
   devTools: true,
 });
 

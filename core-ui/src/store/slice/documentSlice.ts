@@ -22,7 +22,7 @@ interface DocumentState {
   documents: Document[]; // Documents for the currently selected collection
   allDocuments: Document[]; // All documents across all collections
   status: "idle" | "loading" | "succeeded" | "failed";
-  allDocumentsStatus: "idle" | "loading" | "succeeded" | "failed"; // 🎯 NEW: Status for all documents
+  allDocumentsStatus: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
   selectedCollectionId: number | null;
 }
@@ -190,7 +190,7 @@ const documentSlice = createSlice({
       state.status = "idle";
       state.selectedCollectionId = null;
     },
-    // 🎯 NEW: Clear all documents
+    // Clear all documents
     clearAllDocuments: (state) => {
       state.allDocuments = [];
       state.allDocumentsStatus = "idle";

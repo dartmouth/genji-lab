@@ -9,7 +9,7 @@ import { Annotation } from "@documentView/types";
 import { DocumentElement } from "@/types";
 
 // ============================================================================
-// EXISTING SELECTOR (already memoized, keep as is)
+// EXISTING SELECTOR
 // ============================================================================
 export const selectAllAnnotationsForParagraph = createSelector(
   [

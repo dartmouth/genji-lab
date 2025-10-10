@@ -1,5 +1,4 @@
 // src/features/documentView/components/highlightedContent/HighlightedText.tsx
-
 import React, { useRef, useEffect, useState } from "react";
 import Highlight from "./Highlight";
 import AnnotationCreationDialog from "../annotationCard/AnnotationCreationDialog";
@@ -32,8 +31,6 @@ import {
   calculateSegmentForParagraph,
 } from "../../utils/selectionUtils";
 import "@documentView/styles/DocumentLinkingStyles.css";
-
-// 🎯 IMPORT THE NEW MEMOIZED SELECTOR
 import { selectLinkingAnnotationsByParagraph } from "@store/selector/combinedSelectors";
 
 interface HighlightedTextProps {
@@ -127,7 +124,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     selectAllAnnotationsForParagraph(state, paragraphId)
   );
 
-  // 🎯 FIXED: Use memoized selector instead of inline selector
+  // Use memoized selector instead of inline selector
   const linkingAnnotations = useAppSelector((state: RootState) =>
     selectLinkingAnnotationsByParagraph(state, paragraphId)
   );
@@ -142,7 +139,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       // Clear positions when highlighting deactivates
       setReduxNavigationPositions([]);
     }
-    // FIXME -- add calculateReduxNavigationPositions to dep array and wrap in useCallback to avoid infinite rerender
   }, [isNavigationHighlighted, paragraphId, highlightType]);
 
   // Check if we need to show the dialog when annotation creation state changes
