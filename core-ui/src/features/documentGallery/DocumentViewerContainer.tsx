@@ -10,11 +10,9 @@ import {
   selectAllDocuments,
   selectAllDocumentCollections,
   setHoveredHighlights,
-  linkingAnnotations,
-  selectElementsByDocumentId,
   fetchDocumentElements,
 } from "@store";
-
+import { selectAllElementsForViewing } from "@store/selector/combinedSelectors";
 import {
   startNavigationSession,
   addNavigationHighlight,
@@ -97,13 +95,6 @@ export const DocumentsView: React.FC = () => {
   );
 };
 
-// Document element type
-interface DocumentElement {
-  id: number;
-  document_id: number;
-  content?: unknown;
-}
-
 // Main document content view component with cross-document element loading
 export const DocumentContentView: React.FC = () => {
   const { collectionId, documentId } = useParams<{
@@ -151,50 +142,9 @@ export const DocumentContentView: React.FC = () => {
   >([]);
 
   // Properly typed elements selector
-  const allElements = useAppSelector((state: RootState) => {
-    const elements: DocumentElement[] = [];
-
-    // Get elements for all viewed documents
-    for (const doc of viewedDocuments) {
-      const docElements = selectElementsByDocumentId(state, doc.id);
-      if (docElements && docElements.length > 0) {
-        elements.push(...docElements);
-      }
-    }
-
-    // Get elements from critical cross-document navigation documents
-    try {
-      const linkingAnns =
-        linkingAnnotations.selectors.selectAllAnnotations(state);
-      const referencedDocumentIds = new Set<number>();
-
-      // Extract all document IDs from annotations
-      linkingAnns.forEach((annotation) => {
-        if (annotation.document_id) {
-          referencedDocumentIds.add(annotation.document_id);
-        }
-      });
-
-      // Add critical documents based on database analysis
-      [2, 21].forEach((id) => referencedDocumentIds.add(id));
-
-      // Get elements from all referenced documents
-      referencedDocumentIds.forEach((docId) => {
-        const docElements = selectElementsByDocumentId(state, docId);
-        if (docElements && docElements.length > 0) {
-          docElements.forEach((element) => {
-            if (!elements.find((el) => el.id === element.id)) {
-              elements.push(element);
-            }
-          });
-        }
-      });
-    } catch (error) {
-      console.error(error);
-    }
-
-    return elements;
-  });
+  const allElements = useAppSelector((state: RootState) =>
+    selectAllElementsForViewing(state, viewedDocuments)
+  );
 
   // Track documents by collection to handle the API response structure
   const [documentsByCollection, setDocumentsByCollection] = useState<{

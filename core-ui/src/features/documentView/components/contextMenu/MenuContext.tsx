@@ -1,4 +1,5 @@
 // src/features/documentView/components/contextMenu/MenuContext.tsx
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
@@ -10,9 +11,7 @@ import {
   selectSegments,
   setMotivation,
   selectAnnotationCreate,
-  linkingAnnotations,
   selectAllDocuments,
-  selectElementsByDocumentId,
   fetchAllDocumentElements,
 } from "@store";
 import {
@@ -23,6 +22,10 @@ import {
   LinkedTextOption,
 } from "@documentView/utils/linkedTextUtils";
 import { RootState } from "@store";
+import {
+  selectAllLinkingAnnotations,
+  selectAllLoadedElements,
+} from "@store/selector/combinedSelectors";
 
 interface MenuContextProps {
   viewedDocuments?: Array<{
@@ -47,12 +50,6 @@ interface MenuContextProps {
   ) => void;
 }
 
-interface DocumentElement {
-  id: number;
-  document_id: number;
-  content?: unknown;
-}
-
 interface ContextMenuState {
   isVisible: boolean;
   position: { x: number; y: number };
@@ -74,17 +71,8 @@ const MenuContext: React.FC<MenuContextProps> = ({
   // Use ref to track if bulk loading has been initiated
   const bulkLoadingInitiated = useRef(false);
 
-  // Get linking annotations with error handling
-  const allLinkingAnnotations = useAppSelector((state: RootState) => {
-    try {
-      const annotations =
-        linkingAnnotations.selectors.selectAllAnnotations(state);
-      return annotations;
-    } catch (error) {
-      console.warn("Error accessing linking annotations:", error);
-      return [];
-    }
-  });
+  // Use memoized selector instead of inline selector
+  const allLinkingAnnotations = useAppSelector(selectAllLinkingAnnotations);
 
   // Get bulk loading status
   const bulkLoadingStatus = useAppSelector(
@@ -100,29 +88,8 @@ const MenuContext: React.FC<MenuContextProps> = ({
     showHierarchicalMenu: false,
   });
 
-  // Get all elements from loaded documents in Redux
-  const allElements = useAppSelector((state: RootState) => {
-    const elements: DocumentElement[] = [];
-    const elementIds = new Set<number>();
-
-    const allLoadedDocumentIds = Object.keys(
-      state.documentElements.elementsByDocumentId
-    ).map(Number);
-
-    allLoadedDocumentIds.forEach((docId) => {
-      const docElements = selectElementsByDocumentId(state, docId);
-      if (docElements && docElements.length > 0) {
-        docElements.forEach((element) => {
-          if (!elementIds.has(element.id)) {
-            elements.push(element);
-            elementIds.add(element.id);
-          }
-        });
-      }
-    });
-
-    return elements;
-  });
+  // Use memoized selector instead of inline selector
+  const allElements = useAppSelector(selectAllLoadedElements);
 
   // One API call to load all documents and elements
   useEffect(() => {
@@ -152,7 +119,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     };
 
     loadAllDocumentsAndElements();
-  }, [dispatch]);
+  }, [dispatch, bulkLoadingStatus]);
 
   // Smart selection creation with better element detection
   const createSelectionFromClickContext = useCallback(

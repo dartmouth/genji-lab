@@ -255,7 +255,7 @@ export const getLinkedDocumentsSimple = (
           return;
         }
 
-        // 🎯 CRITICAL: Group by document ID only
+        // Group by document ID only
         if (!targetsByDocumentId[docInfo.documentId]) {
           targetsByDocumentId[docInfo.documentId] = {
             targets: [],
