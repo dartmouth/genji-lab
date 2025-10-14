@@ -1,24 +1,29 @@
-// createAnnotationSlice.ts - Fixed Version
-import { 
-  createSlice, 
-  PayloadAction, 
+// createAnnotationSlice.ts
+import {
+  createSlice,
+  PayloadAction,
   createSelector,
-  AsyncThunk, 
-  Selector, 
-  Reducer 
-} from '@reduxjs/toolkit';
+  AsyncThunk,
+  Selector,
+  Reducer,
+} from "@reduxjs/toolkit";
 
-import { Annotation, AnnotationDelete, AnnotationCreate, AnnotationPatch } from '@documentView/types';
+import {
+  Annotation,
+  AnnotationDelete,
+  AnnotationCreate,
+  AnnotationPatch,
+} from "@documentView/types";
 
-import { 
-  createFetchAnnotationsThunk, 
-  createSaveAnnotationThunk, 
+import {
+  createFetchAnnotationsThunk,
+  createSaveAnnotationThunk,
   createPatchAnnotationThunk,
-  createDeleteAnnotationThunk 
-} from '@store/thunk/factory/createAnnotationThunks';
+  createDeleteAnnotationThunk,
+} from "@store/thunk/factory/createAnnotationThunks";
 
 // Import RootState type - but we'll use a type import to avoid circular references
-import type { RootState } from '@store/index';
+import type { RootState } from "@store/index";
 
 // The state structure for a single annotation bucket
 export interface AnnotationState {
@@ -34,21 +39,56 @@ export type AnnotationSlice = {
   actions: {
     addAnnotations: (annotations: Annotation[]) => PayloadAction<Annotation[]>;
     addAnnotation: (annotation: Annotation) => PayloadAction<Annotation>;
-    deleteAnnotation: (annotationDelete: AnnotationDelete) => PayloadAction<AnnotationDelete>;
+    deleteAnnotation: (
+      annotationDelete: AnnotationDelete
+    ) => PayloadAction<AnnotationDelete>;
   };
   thunks: {
-    fetchAnnotations: AsyncThunk<Annotation[], { documentElementId: string; classroomId?: string }, { state: RootState }>;
-    saveAnnotation: AsyncThunk<Annotation, { annotation: AnnotationCreate; classroomId?: string }, { state: RootState }>;
-    patchAnnotation: AsyncThunk<Annotation, AnnotationPatch, { state: RootState }>;
-    deleteAnnotation: AsyncThunk<AnnotationDelete, AnnotationDelete, { state: RootState }>;
+    fetchAnnotations: AsyncThunk<
+      Annotation[],
+      { documentElementId: string; classroomId?: string },
+      { state: RootState }
+    >;
+    saveAnnotation: AsyncThunk<
+      Annotation,
+      { annotation: AnnotationCreate; classroomId?: string },
+      { state: RootState }
+    >;
+    patchAnnotation: AsyncThunk<
+      Annotation,
+      AnnotationPatch,
+      { state: RootState }
+    >;
+    deleteAnnotation: AsyncThunk<
+      AnnotationDelete,
+      AnnotationDelete,
+      { state: RootState }
+    >;
   };
   selectors: {
-    selectAnnotationById: (state: RootState, id: string) => Annotation | undefined;
-    selectAnnotationsById: (state: RootState, ids: string[]) => (Annotation | undefined)[];
+    selectAnnotationById: (
+      state: RootState,
+      id: string
+    ) => Annotation | undefined;
+    selectAnnotationsById: (
+      state: RootState,
+      ids: string[]
+    ) => (Annotation | undefined)[];
     selectAllAnnotations: (state: RootState) => Annotation[];
-    selectAnnotationsByParent: (state: RootState, documentElementId: string) => Annotation[];
-    makeSelectAnnotationsById: () => Selector<RootState, Annotation[], [string[]]>;
-    makeSelectAnnotationsByParent: () => Selector<RootState, Annotation[], [string]>;
+    selectAnnotationsByParent: (
+      state: RootState,
+      documentElementId: string
+    ) => Annotation[];
+    makeSelectAnnotationsById: () => Selector<
+      RootState,
+      Annotation[],
+      [string[]]
+    >;
+    makeSelectAnnotationsByParent: () => Selector<
+      RootState,
+      Annotation[],
+      [string]
+    >;
   };
 };
 
@@ -67,7 +107,7 @@ export function createAnnotationSlice(bucketName: string) {
     byId: {},
     byParent: {},
     loading: false,
-    error: null
+    error: null,
   };
 
   const slice = createSlice({
@@ -75,12 +115,12 @@ export function createAnnotationSlice(bucketName: string) {
     initialState,
     reducers: {
       addAnnotations(state, action: PayloadAction<Annotation[]>) {
-        action.payload.forEach(annotation => {
+        action.payload.forEach((annotation) => {
           // Add to primary index
           state.byId[annotation.id] = annotation;
-          
+
           // Extract document element ID from target
-          annotation.target.forEach(target => {
+          annotation.target.forEach((target) => {
             const sourceId = target.source;
             if (sourceId) {
               // Initialize array if needed
@@ -98,12 +138,12 @@ export function createAnnotationSlice(bucketName: string) {
 
       addAnnotation(state, action: PayloadAction<Annotation>) {
         const annotation = action.payload;
-        
+
         // Add to primary index
         state.byId[annotation.id] = annotation;
-        
+
         // Extract document element ID from target
-        annotation.target.forEach(target => {
+        annotation.target.forEach((target) => {
           const sourceId = target.source;
           if (sourceId) {
             // Initialize array if needed
@@ -117,36 +157,39 @@ export function createAnnotationSlice(bucketName: string) {
           }
         });
       },
-      
+
       deleteAnnotation(state, action: PayloadAction<AnnotationDelete>) {
         const { annotationId } = action.payload;
         const stringId = String(annotationId);
-        
+
         // Get the annotation to be deleted
         const annotation = state.byId[stringId];
-        
+
         if (annotation) {
           // Remove from byId index first
           delete state.byId[stringId];
-          
+
           // Remove from byParent indexes
-          annotation.target.forEach(target => {
+          annotation.target.forEach((target) => {
             const sourceId = target.source;
             if (sourceId && state.byParent[sourceId]) {
               // Filter out the annotation ID from the array
-              state.byParent[sourceId] = state.byParent[sourceId]
-                .filter(id => id !== stringId);
-              
+              state.byParent[sourceId] = state.byParent[sourceId].filter(
+                (id) => id !== stringId
+              );
+
               // Clean up empty arrays to prevent memory leaks
               if (state.byParent[sourceId].length === 0) {
                 delete state.byParent[sourceId];
               }
             }
           });
-          
+
           // This handles edge cases where the annotation might be referenced elsewhere
-          Object.keys(state.byParent).forEach(parentId => {
-            state.byParent[parentId] = state.byParent[parentId].filter(id => id !== stringId);
+          Object.keys(state.byParent).forEach((parentId) => {
+            state.byParent[parentId] = state.byParent[parentId].filter(
+              (id) => id !== stringId
+            );
             // Clean up empty arrays
             if (state.byParent[parentId].length === 0) {
               delete state.byParent[parentId];
@@ -158,16 +201,16 @@ export function createAnnotationSlice(bucketName: string) {
         state.byId = {};
         state.byParent = {};
         state.error = null;
-    }
-    }
+      },
+    },
   });
 
   const thunks = {
     fetchAnnotations: createFetchAnnotationsThunk(bucketName, slice.actions),
     saveAnnotation: createSaveAnnotationThunk(bucketName, slice.actions),
     patchAnnotation: createPatchAnnotationThunk(bucketName, slice.actions),
-    deleteAnnotation: createDeleteAnnotationThunk(bucketName, slice.actions)
-  }
+    deleteAnnotation: createDeleteAnnotationThunk(bucketName, slice.actions),
+  };
 
   const getBucketState = (state: RootState): AnnotationState => {
     return state.annotations[bucketName] as AnnotationState;
@@ -182,58 +225,72 @@ export function createAnnotationSlice(bucketName: string) {
   const selectAnnotationsById = (state: RootState, ids: string[]) => {
     const bucketState = getBucketState(state);
     // FIX: Filter out undefined values to prevent crashes
-    return ids.map(key => bucketState.byId?.[key]).filter((annotation): annotation is Annotation => annotation !== undefined);
+    return ids
+      .map((key) => bucketState.byId?.[key])
+      .filter(
+        (annotation): annotation is Annotation => annotation !== undefined
+      );
   };
 
   const selectAllAnnotations = (state: RootState) => {
     const bucketState = getBucketState(state);
-    const ids = Object.keys(bucketState.byId)
+    const ids = Object.keys(bucketState.byId);
     // FIX: Filter out undefined values
-    return ids.map(key => bucketState.byId[key]).filter((annotation): annotation is Annotation => annotation !== undefined);
+    return ids
+      .map((key) => bucketState.byId[key])
+      .filter(
+        (annotation): annotation is Annotation => annotation !== undefined
+      );
   };
 
-  const makeSelectAnnotationsByParent = () => 
+  const makeSelectAnnotationsByParent = () =>
     createSelector(
       [
         getBucketState,
-        (_: RootState, documentElementId: string) => documentElementId
+        (_: RootState, documentElementId: string) => documentElementId,
       ],
       (bucketState, documentElementId) => {
         const annotationIds = bucketState.byParent[documentElementId] || [];
         // FIX: Filter out undefined annotations to prevent crashes
         return annotationIds
-          .map(id => bucketState.byId[id])
-          .filter((annotation): annotation is Annotation => annotation !== undefined);
+          .map((id) => bucketState.byId[id])
+          .filter(
+            (annotation): annotation is Annotation => annotation !== undefined
+          );
       }
     );
-  
+
   const selectAnnotationsByParent = createSelector(
     [
       getBucketState,
-      (_: RootState, documentElementId: string) => documentElementId
+      (_: RootState, documentElementId: string) => documentElementId,
     ],
     (bucketState, documentElementId) => {
       const annotationIds = bucketState.byParent[documentElementId] || [];
       // FIX: Filter out undefined annotations to prevent crashes
       return annotationIds
-        .map(id => bucketState.byId[id])
-        .filter((annotation): annotation is Annotation => annotation !== undefined);
+        .map((id) => bucketState.byId[id])
+        .filter(
+          (annotation): annotation is Annotation => annotation !== undefined
+        );
     }
   );
 
-  const makeSelectAnnotationsById = () => 
+  const makeSelectAnnotationsById = () =>
     createSelector(
       [
-        (state: RootState) => getBucketState(state).byId, 
-        (_: RootState, ids: string[]) => ids
+        (state: RootState) => getBucketState(state).byId,
+        (_: RootState, ids: string[]) => ids,
       ],
       (byId, ids) => {
         if (!byId || !ids || ids.length === 0) return [];
-        
+
         // FIX: Filter out undefined values and ensure type safety
         const results = ids
-          .map(key => byId[key])
-          .filter((annotation): annotation is Annotation => annotation !== undefined);
+          .map((key) => byId[key])
+          .filter(
+            (annotation): annotation is Annotation => annotation !== undefined
+          );
         return results;
       }
     );
@@ -249,7 +306,7 @@ export function createAnnotationSlice(bucketName: string) {
       selectAllAnnotations,
       selectAnnotationsByParent,
       makeSelectAnnotationsById,
-      makeSelectAnnotationsByParent
-    }
+      makeSelectAnnotationsByParent,
+    },
   };
 }

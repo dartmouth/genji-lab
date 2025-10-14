@@ -10,8 +10,6 @@ import {
   selectAllDocuments,
   selectAllDocumentCollections,
   setHoveredHighlights,
-  linkingAnnotations,
-  selectElementsByDocumentId,
   fetchDocumentElements,
 } from "@store";
 import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollToTextUtils";
@@ -20,6 +18,12 @@ import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollTo
 //   addNavigationHighlight,
 //   clearNavigationSession,
 // } from "@store/slice/navigationHighlightSlice";
+import { selectAllElementsForViewing } from "@store/selector/combinedSelectors";
+import {
+  startNavigationSession,
+  addNavigationHighlight,
+  clearNavigationSession,
+} from "@store/slice/navigationHighlightSlice";
 import HighlightingHelpIcon from "@/features/documentView/components/highlightedContent/HighlightingHelpIcon";
 import { RootState } from "@store";
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";
@@ -93,12 +97,7 @@ export const DocumentsView: React.FC = () => {
   );
 };
 
-interface DocumentElement {
-  id: number;
-  document_id: number;
-  content?: unknown;
-}
-
+// Main document content view component with cross-document element loading
 export const DocumentContentView: React.FC = () => {
   const { collectionId, documentId } = useParams<{
     collectionId: string;
@@ -138,43 +137,10 @@ export const DocumentContentView: React.FC = () => {
     }>
   >([]);
 
-  const allElements = useAppSelector((state: RootState) => {
-    const elements: DocumentElement[] = [];
-
-    for (const doc of viewedDocuments) {
-      const docElements = selectElementsByDocumentId(state, doc.id);
-      if (docElements && docElements.length > 0) {
-        elements.push(...docElements);
-      }
-    }
-
-    try {
-      const linkingAnns =
-        linkingAnnotations.selectors.selectAllAnnotations(state);
-      const referencedDocumentIds = new Set<number>();
-
-      linkingAnns.forEach((annotation) => {
-        if (annotation.document_id) {
-          referencedDocumentIds.add(annotation.document_id);
-        }
-      });
-
-      referencedDocumentIds.forEach((docId) => {
-        const docElements = selectElementsByDocumentId(state, docId);
-        if (docElements && docElements.length > 0) {
-          docElements.forEach((element) => {
-            if (!elements.find((el) => el.id === element.id)) {
-              elements.push(element);
-            }
-          });
-        }
-      });
-    } catch (error) {
-      console.error(error);
-    }
-
-    return elements;
-  });
+  // Properly typed elements selector
+  const allElements = useAppSelector((state: RootState) =>
+    selectAllElementsForViewing(state, viewedDocuments)
+  );
 
   const [documentsByCollection, setDocumentsByCollection] = useState<{
     [collectionId: number]: Array<{ id: number; title: string }>;

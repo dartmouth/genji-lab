@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchDocumentsByCollection,
-  selectCollectionDocuments, // 🎯 CHANGED: Use selectCollectionDocuments instead of selectAllDocuments
+  selectCollectionDocuments,
   selectDocumentsStatus,
   selectDocumentsError,
   selectSelectedCollectionId,

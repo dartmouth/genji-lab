@@ -351,7 +351,7 @@ const isValidTextRange = (element: HTMLElement, range: TextRange): boolean => {
 };
 
 /**
- * 🎯 ENHANCED: Highlight source text immediately with synchronized timing
+ * Highlight source text immediately with synchronized timing
  */
 export const highlightSourceTextImmediately = async (
   sourceURI: string,
@@ -472,7 +472,7 @@ export const scrollToAndHighlightText = (
       // Find the first element to scroll to
       let primaryTarget = validTargets[0];
 
-      // 🎯 FIXED: Always prioritize target elements for scrolling in cross-document scenarios
+      // Always prioritize target elements for scrolling in cross-document scenarios
       if (validTargets.length > 1) {
         const targetElements = validTargets.filter(
           (target) =>

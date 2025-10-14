@@ -11,6 +11,7 @@ import { Link as LinkIcon } from "@mui/icons-material";
 import { debounce } from 'lodash';
 import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
 import { useAuth } from "@hooks/useAuthContext";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 interface AnnotationCreationDialogProps {
   onClose: () => void;
@@ -30,6 +31,10 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
   const newAnno = useAppSelector(selectAnnotationCreate);
   const dialogRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Get classroom context from localStorage
+  const [activeClassroomValue] = useLocalStorage('active_classroom');
+  const [isOptedOut] = useLocalStorage('classroom_opted_out');
   
   // Link dialog state
   const [linkDialog, setLinkDialog] = useState<LinkDialogState>({
@@ -160,7 +165,17 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
       newAnno.target.segments
     );
     
-    dispatch(slice.thunks.saveAnnotation(annoBody));
+    // Prepare save parameters with classroom context
+    const saveParams: { annotation: typeof annoBody; classroomId?: string } = {
+      annotation: annoBody
+    };
+    
+    // Only include classroomId if user is in a classroom and hasn't opted out
+    if (activeClassroomValue && isOptedOut !== 'true') {
+      saveParams.classroomId = activeClassroomValue as string;
+    }
+    
+    dispatch(slice.thunks.saveAnnotation(saveParams));
     dispatch(resetCreateAnnotation());
     onClose();
   };

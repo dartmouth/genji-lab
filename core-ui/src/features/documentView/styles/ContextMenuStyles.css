@@ -1,4 +1,4 @@
-/* 🎯 CRITICAL FIXES: Enhanced context menu positioning */
+/* Enhanced context menu positioning */
 
 .menu-context-container {
   border: 1px solid #ffffff2d;
@@ -31,34 +31,33 @@
   box-shadow: 0 0 0 2px rgba(0, 105, 62, 0.3);
 }
 
-/* 🎯 CRITICAL FIX: Enhanced context menu positioning */
+/* Enhanced context menu positioning */
 .context-menu {
-  position: fixed; /* 🎯 CHANGED: Use fixed instead of absolute for better control */
+  position: fixed;
   width: 200px;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 5px;
   box-sizing: border-box;
-  z-index: 10000; /* 🎯 INCREASED: Higher z-index to ensure visibility */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* 🎯 ENHANCED: Better shadow for visibility */
+  z-index: 10000; 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); 
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 400px; /* 🎯 NEW: Prevent menu from being too tall */
-  overflow-y: auto; /* 🎯 NEW: Allow scrolling if needed */
-  /* 🎯 CRITICAL: Ensure pointer events work */
+  max-height: 400px; 
+  overflow-y: auto; 
   pointer-events: auto;
 }
 
-/* 🎯 NEW: Hierarchical menu specific styles */
+/* Hierarchical menu specific styles */
 .hierarchical-linked-text-menu {
-  position: fixed; /* 🎯 CRITICAL: Use fixed positioning */
+  position: fixed; 
   background: white;
   border: 1px solid #ddd;
   border-radius: 6px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-  z-index: 10001; /* 🎯 CRITICAL: Higher than main menu */
+  z-index: 10001; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   max-width: 320px;
   max-height: 400px;
@@ -66,30 +65,30 @@
   pointer-events: auto;
 }
 
-/* 🎯 NEW: Submenu positioning helper */
+/* Submenu positioning helper */
 .linked-text-options-submenu {
   position: fixed;
   background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 10002; /* 🎯 CRITICAL: Highest z-index */
+  z-index: 10002; 
   max-width: 280px;
   max-height: 300px;
   overflow-y: auto;
   pointer-events: auto;
 }
 
-/* 🎯 ENHANCED: Linked Text Dropdown Styles */
+/* Linked Text Dropdown Styles */
 .linked-text-dropdown {
-  position: fixed; /* 🎯 CHANGED: Use fixed positioning */
+  position: fixed; 
   background: white;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 10000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  pointer-events: auto; /* 🎯 NEW: Ensure clicks work */
+  pointer-events: auto; 
 }
 
 .linked-text-dropdown:focus {
@@ -97,12 +96,12 @@
 }
 
 .linked-document-item {
-  padding: 12px 16px; /* 🎯 INCREASED: Better padding for easier clicking */
+  padding: 12px 16px;
   cursor: pointer;
   transition: background-color 0.2s ease;
   border-bottom: 1px solid #f0f0f0;
-  font-size: 14px; /* 🎯 NEW: Consistent font size */
-  line-height: 1.4; /* 🎯 NEW: Better line height */
+  font-size: 14px; 
+  line-height: 1.4; 
 }
 
 .linked-document-item:last-child {
@@ -117,7 +116,6 @@
   background-color: #e8e8e8;
 }
 
-/* 🎯 NEW: Document item structure styling */
 .linked-document-item .document-title {
   font-weight: 500;
   color: #1976d2;
@@ -141,7 +139,7 @@
   background-color: #e3f2fd;
 }
 
-/* 🎯 ENHANCED: Temporary highlight animation */
+/* Temporary highlight animation */
 .temp-highlight {
   background-color: #ffeb3b !important;
   transition: background-color 0.3s ease;
@@ -184,7 +182,7 @@
   background-color: #e3f2fd;
 }
 
-/* 🎯 NEW: Loading and empty states */
+/* Loading and empty states */
 .linked-text-dropdown .loading {
   padding: 16px;
   text-align: center;
@@ -200,7 +198,7 @@
   font-size: 13px;
 }
 
-/* 🎯 NEW: Prevent text selection in menus */
+/* Prevent text selection in menus */
 .context-menu,
 .hierarchical-linked-text-menu,
 .linked-text-dropdown,
@@ -211,7 +209,7 @@
   -ms-user-select: none;
 }
 
-/* 🎯 NEW: Ensure menus are always on top */
+/* Ensure menus are always on top */
 .context-menu,
 .hierarchical-linked-text-menu,
 .linked-text-dropdown,
@@ -220,7 +218,7 @@
   z-index: 10000;
 }
 
-/* 🎯 NEW: Debug helpers for positioning (set opacity to 1 for debugging) */
+/* Debug helpers for positioning (set opacity to 1 for debugging) */
 .context-menu::before {
   content: "Main Menu";
   position: absolute;
@@ -231,7 +229,7 @@
   background: white;
   padding: 2px 4px;
   border: 1px solid red;
-  opacity: 0; /* Set to 1 for debugging positioning */
+  opacity: 0; 
   pointer-events: none;
   z-index: 1;
 }
@@ -246,7 +244,7 @@
   background: white;
   padding: 2px 4px;
   border: 1px solid blue;
-  opacity: 0; /* Set to 1 for debugging positioning */
+  opacity: 0; 
   pointer-events: none;
   z-index: 1;
 }
@@ -261,7 +259,7 @@
   background: white;
   padding: 2px 4px;
   border: 1px solid green;
-  opacity: 0; /* Set to 1 for debugging positioning */
+  opacity: 0; 
   pointer-events: none;
   z-index: 1;
 }

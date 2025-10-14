@@ -1,5 +1,6 @@
 // src/features/documentView/components/contextMenu/MenuContext.tsx
-import React, { useState, useEffect, useCallback } from "react";
+
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
 import { createPortal } from "react-dom";
@@ -10,6 +11,8 @@ import {
   selectSegments,
   setMotivation,
   selectAnnotationCreate,
+  selectAllDocuments,
+  fetchAllDocumentElements,
 } from "@store";
 import {
   createSelectionFromDOMSelection,
@@ -17,6 +20,11 @@ import {
   HierarchicalLinkedDocuments,
   LinkedTextOption,
 } from "@documentView/utils/linkedTextUtils";
+import { RootState } from "@store";
+import {
+  selectAllLinkingAnnotations,
+  selectAllLoadedElements,
+} from "@store/selector/combinedSelectors";
 
 interface MenuContextProps {
   viewedDocuments?: Array<{
@@ -57,6 +65,13 @@ const MenuContext: React.FC<MenuContextProps> = ({
   const { user } = useAuth();
   const text = useAppSelector(selectSegments);
   const annotationCreate = useAppSelector(selectAnnotationCreate);
+  const allDocuments = useAppSelector(selectAllDocuments);
+
+  // Use ref to track if bulk loading has been initiated
+  const bulkLoadingInitiated = useRef(false);
+
+  // Use memoized selector instead of inline selector
+  const allLinkingAnnotations = useAppSelector(selectAllLinkingAnnotations);
 
   const [menuState, setMenuState] = useState<ContextMenuState>({
     isVisible: false,
@@ -66,20 +81,8 @@ const MenuContext: React.FC<MenuContextProps> = ({
     showHierarchicalMenu: false,
   });
 
-  const fetchLinkedTextInfo = useCallback(
-    async (
-      elementId: number,
-      sourceDocumentId: number
-    ): Promise<HierarchicalLinkedDocuments> => {
-      try {
-        const response = await fetch(
-          `/api/v1/annotations/linked-text-info/${elementId}`
-        );
-
-        if (!response.ok) {
-          console.error("Failed to fetch linked text info");
-          return {};
-        }
+  // Use memoized selector instead of inline selector
+  const allElements = useAppSelector(selectAllLoadedElements);
 
         const data = await response.json();
 
@@ -116,9 +119,10 @@ const MenuContext: React.FC<MenuContextProps> = ({
         console.error("Error fetching linked text info:", error);
         return {};
       }
-    },
-    [viewedDocuments]
-  );
+    };
+
+    loadAllDocumentsAndElements();
+  }, [dispatch, bulkLoadingStatus]);
 
   const createSelectionFromClickContext = useCallback(
     (clickedElement: HTMLElement): LinkedTextSelection | null => {
