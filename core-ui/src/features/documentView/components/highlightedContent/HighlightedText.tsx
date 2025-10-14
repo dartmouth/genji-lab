@@ -97,14 +97,18 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     >
   >(new Map());
 
+  interface LinkedTextPosition {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    annotationStart: number;
+    annotationEnd: number;
+  }
+
   // State for linked text positions when showLinkedTextHighlights is active
   const [linkedTextPositions, setLinkedTextPositions] = useState<
-    Array<{
-      left: number;
-      top: number;
-      width: number;
-      height: number;
-    }>
+    LinkedTextPosition[]
   >([]);
 
   // State for precise Redux navigation highlights
@@ -343,23 +347,24 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     }
 
     const containerRect = containerRef.current.getBoundingClientRect();
+
+    // Store annotation range with each position
     const allLinkedPositions: Array<{
       left: number;
       top: number;
       width: number;
       height: number;
+      annotationStart: number; // 🎯 ADD THIS
+      annotationEnd: number; // 🎯 ADD THIS
     }> = [];
 
-    // Calculate positions for all linking annotations in this paragraph
     linkingAnnotations.forEach((annotation) => {
       let target = annotation.target?.find((t) => t.source === paragraphId);
-
       if (!target) {
         target = annotation.target?.find(
           (t) => t.source === `DocumentElements/${parseURI(paragraphId)}`
         );
       }
-
       if (!target) {
         const numericId = parseURI(paragraphId);
         target = annotation.target?.find(
@@ -392,6 +397,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           top: rect.top - containerRect.top,
           width: rect.width,
           height: rect.height,
+          annotationStart: start, // 🎯 ADD THIS
+          annotationEnd: adjustedEnd, // 🎯 ADD THIS
         }));
 
         allLinkedPositions.push(...positions);
@@ -683,18 +690,44 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
             {/* Container to prevent opacity stacking */}
             <div className="linked-text-highlights-container">
-              {linkedTextPositions.map((position, index) => (
-                <div
-                  key={`linked-${index}`}
-                  className="linked-text-highlight"
-                  style={{
-                    left: position.left,
-                    top: position.top,
-                    width: position.width,
-                    height: position.height,
-                  }}
-                />
-              ))}
+              {linkedTextPositions.map((position, index) => {
+                // 🎯 NEW: Find which annotation this position belongs to
+                const annotationData = linkingAnnotations.find((annotation) => {
+                  const target = annotation.target?.find((t) => {
+                    const numericId = parseURI(paragraphId);
+                    return [
+                      t.source === paragraphId,
+                      t.source === `/DocumentElements/${numericId}`,
+                      t.source === `DocumentElements/${numericId}`,
+                    ].some((match) => match);
+                  });
+
+                  if (!target?.selector) return false;
+
+                  // Check if this position matches the annotation's range
+                  const { start, end } = target.selector.refined_by;
+                  return (
+                    position.annotationStart === start &&
+                    position.annotationEnd === end
+                  );
+                });
+
+                return (
+                  <div
+                    key={`linked-${index}`}
+                    className="linked-text-highlight"
+                    data-start={position.annotationStart}
+                    data-end={position.annotationEnd}
+                    data-annotation-id={annotationData?.id}
+                    style={{
+                      left: position.left,
+                      top: position.top,
+                      width: position.width,
+                      height: position.height,
+                    }}
+                  />
+                );
+              })}
             </div>
           </>
         )}
