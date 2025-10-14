@@ -13,17 +13,7 @@ import {
   fetchDocumentElements,
 } from "@store";
 import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollToTextUtils";
-// import {
-//   startNavigationSession,
-//   addNavigationHighlight,
-//   clearNavigationSession,
-// } from "@store/slice/navigationHighlightSlice";
 import { selectAllElementsForViewing } from "@store/selector/combinedSelectors";
-import {
-  startNavigationSession,
-  addNavigationHighlight,
-  clearNavigationSession,
-} from "@store/slice/navigationHighlightSlice";
 import HighlightingHelpIcon from "@/features/documentView/components/highlightedContent/HighlightingHelpIcon";
 import { RootState } from "@store";
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";

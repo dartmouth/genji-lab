@@ -197,9 +197,6 @@ const documentElementsSlice = createSlice({
         }
 
         state.bulkLoadingStatus = "succeeded";
-        console.log(
-          `Bulk loaded ${action.payload.summary.total_elements} elements from ${action.payload.summary.total_documents} documents`
-        );
       })
       .addCase(fetchAllDocumentElements.rejected, (state, action) => {
         state.bulkLoadingStatus = "failed";

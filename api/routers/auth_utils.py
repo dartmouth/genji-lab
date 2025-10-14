@@ -63,6 +63,8 @@ def get_session_user(request: Request) -> Optional[Dict[str, Any]]:
     # Check if session has expired
     expires_at = datetime.fromisoformat(session_data["expires_at"])
     if datetime.now() > expires_at:
+        # Clear expired session
+        clear_session(request)
         return None
 
     return session_data
