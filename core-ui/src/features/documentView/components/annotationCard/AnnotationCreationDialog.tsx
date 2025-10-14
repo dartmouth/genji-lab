@@ -235,7 +235,12 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
             fontWeight: 600, 
             color: '#333'
           }}>
-            {newAnno.motivation === 'commenting' ? "Add Comment" : "Add Scholarly Annotation"}
+            {/* {newAnno.motivation === 'commenting' ? "Add Comment" : "Add Scholarly Annotation"} */}
+            {newAnno.motivation === 'commenting' 
+              ? "Add Comment" 
+              : newAnno.motivation === 'scholarly'
+              ? "Add Scholarly Annotation"
+              : "Add Content to Link"}
           </h3>
           <button 
             onClick={onCancel}
@@ -299,65 +304,67 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
         ) : (
           // Show annotation form for authenticated users
           <>
-            {/* Link Toolbar - only show for authenticated users */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginBottom: '8px',
-              padding: '6px 8px',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '4px',
-              border: '1px solid #e9ecef'
-            }}>
-              <button
-                type="button"
-                onClick={handleAddLink}
-                title="Add external link (select text first)"
-                style={{
+              {newAnno.motivation === 'linking' ? (<div></div>) : (
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#1976d2',
-                  padding: '4px 8px',
+                  gap: '8px',
+                  marginBottom: '8px',
+                  padding: '6px 8px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '4px',
-                  fontSize: '12px',
-                  transition: 'background-color 0.2s'
+                  border: '1px solid #e9ecef'
+                }}>
+                  <button
+                    type="button"
+                    onClick={handleAddLink}
+                    title="Add external link (select text first)"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#1976d2',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e3f2fd'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <LinkIcon sx={{ fontSize: '16px' }} />
+                    Add Link
+                  </button>
+                  <span style={{ fontSize: '11px', color: '#666' }}>
+                    Select text and click "Add Link" to embed external URLs
+                  </span>
+                </div>
+            )}
+            {newAnno.motivation === 'linking' ? (<div></div>) : (
+                <textarea
+                ref={textareaRef}
+                value={newAnno.content}
+                onChange={(e) => onTextChangeDebounce(e.target.value)}
+                placeholder={newAnno.motivation === 'commenting' 
+                  ? "Enter your comment here..." 
+                  : "Enter your scholarly annotation here..."}
+                style={{ 
+                  width: '100%', 
+                  minHeight: '120px',
+                  padding: '12px',
+                  marginBottom: '8px',
+                  borderRadius: '6px',
+                  border: '1px solid #ddd',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box',
+                  resize: 'vertical'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e3f2fd'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <LinkIcon sx={{ fontSize: '16px' }} />
-                Add Link
-              </button>
-              <span style={{ fontSize: '11px', color: '#666' }}>
-                Select text and click "Add Link" to embed external URLs
-              </span>
-            </div>
-
-            <textarea
-              ref={textareaRef}
-              value={newAnno.content}
-              onChange={(e) => onTextChangeDebounce(e.target.value)}
-              placeholder={newAnno.motivation === 'commenting' 
-                ? "Enter your comment here..." 
-                : "Enter your scholarly annotation here..."}
-              style={{ 
-                width: '100%', 
-                minHeight: '120px',
-                padding: '12px',
-                marginBottom: '8px',
-                borderRadius: '6px',
-                border: '1px solid #ddd',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                boxSizing: 'border-box',
-                resize: 'vertical'
-              }}
-            />
+              />
+            )}
 
             {/* Preview of rendered links */}
             {newAnno.content.includes('[') && newAnno.content.includes('](') && (
@@ -496,7 +503,32 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
             </div>
           </div>
         )}
-        
+{newAnno.motivation === 'linking' && (
+  <div style={{ marginBottom: '12px' }}>
+    <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: 500 }}>
+      Select Option:
+    </label>
+    <select
+      value={''}
+      onChange={(e) => console.log(e.target.value)}
+      style={{
+        padding: '8px 12px',
+        fontSize: '14px',
+        borderRadius: '6px',
+        border: '1px solid #ddd',
+        width: '100%',
+        cursor: 'pointer',
+        backgroundColor: 'white'
+      }}
+    >
+      <option value="">Select an option</option>
+      <option value="A">A</option>
+      <option value="B">B</option>
+      <option value="C">C</option>
+    </select>
+  </div>
+)}
+
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
           <button
             onClick={onCancel}
@@ -513,23 +545,29 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
             Cancel
           </button>
           {isAuthenticated && (
-            <button
-              onClick={onSave}
-              disabled={!newAnno.content.trim()}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: newAnno.content.trim() ? '#4285f4' : '#cccccc',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: newAnno.content.trim() ? 'pointer' : 'not-allowed',
-                fontSize: '14px',
-                fontWeight: 500
-              }}
-            >
-              Save
-            </button>
-          )}
+          (() => {
+            const isEnabled = newAnno.content.trim() || newAnno.motivation === 'linking';
+            
+            return (
+              <button
+                onClick={onSave}
+                disabled={!isEnabled}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: isEnabled ? '#4285f4' : '#cccccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: isEnabled ? 'pointer' : 'not-allowed',
+                  fontSize: '14px',
+                  fontWeight: 500
+                }}
+              >
+                Save
+              </button>
+            );
+          })()
+        )}
         </div>
       </div>
     </div>

@@ -543,6 +543,17 @@ const MenuContext: React.FC<MenuContextProps> = ({
                 Create Scholarly Annotation
               </ContextButton>
             )}
+            {(user?.roles?.includes('admin')) && (
+              <ContextButton
+                onClick={(e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch(setMotivation("linking"));
+                }}
+              >
+                Add Content to Link
+              </ContextButton>
+            )}
 
             {hasLinkedDocuments && (
               <ContextButton

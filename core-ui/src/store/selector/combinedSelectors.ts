@@ -136,9 +136,6 @@ const selectReferencedDocumentIds = createSelector(
       }
     });
 
-    // Add critical documents based on database analysis
-    [2, 21].forEach((id) => referencedDocumentIds.add(id));
-
     return Array.from(referencedDocumentIds);
   }
 );
