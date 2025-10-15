@@ -11,7 +11,7 @@ import json
 
 from database import get_db
 from models.models import Annotation as AnnotationModel, User
-from schemas.annotations import Annotation, AnnotationCreate, AnnotationPatch
+from schemas.annotations import Annotation, AnnotationCreate, AnnotationPatch, AnnotationAddTarget
 from dependencies.classroom import (
     get_classroom_context,
     get_current_user_sync,
@@ -218,6 +218,34 @@ def update_annotation(
 
     return db_annotation
 
+@router.patch(
+    "/add-target/{annotation_id}", response_model=Annotation, status_code=status.HTTP_200_OK
+)
+def update_annotation(
+    annotation_id: int,
+    payload: AnnotationAddTarget,
+    current_user: User = Depends(get_current_user_sync),
+    db: Session = Depends(get_db),
+):
+    """Update an annotation, respecting classroom context."""
+
+    query = db.query(AnnotationModel).filter(AnnotationModel.id == annotation_id)
+
+    db_annotation = query.first()
+
+    if not db_annotation:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+
+    payload.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
+    current_target = db_annotation.target
+    current_target.append(payload)
+    db_annotation.target = current_target
+    db_annotation.modified = datetime.now()
+
+    db.commit()
+    db.refresh(db_annotation)
+
+    return db_annotation
 
 @router.get(
     "/by-motivation/{document_element_id}",

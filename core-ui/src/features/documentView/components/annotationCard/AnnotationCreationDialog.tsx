@@ -5,6 +5,7 @@ import {
   setContent, 
   resetCreateAnnotation, 
   selectAnnotationCreate, 
+  selectAllLinkingAnnotations,
   sliceMap 
 } from '@store';
 import { Link as LinkIcon } from "@mui/icons-material";
@@ -29,6 +30,9 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
   const dispatch = useAppDispatch();
   const { user, isAuthenticated, login, isLoading } = useAuth();
   const newAnno = useAppSelector(selectAnnotationCreate);
+  const links = useAppSelector(selectAllLinkingAnnotations)
+  const [selectedLink, setSelectedLink] = useState(links ? links[0].id : null)
+  console.log(links)
   const dialogRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -510,7 +514,7 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
     </label>
     <select
       value={''}
-      onChange={(e) => console.log(e.target.value)}
+      onChange={(e) => setSelectedLink(e.target.value)}
       style={{
         padding: '8px 12px',
         fontSize: '14px',
@@ -521,13 +525,19 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
         backgroundColor: 'white'
       }}
     >
-      <option value="">Select an option</option>
+      {links.map((l) => (
+        <option key={l.body.id} value={l.body.id}>
+          {l.body.value}
+        </option>
+      ))}
+      {/* <option value="">Select an option</option>
       <option value="A">A</option>
       <option value="B">B</option>
-      <option value="C">C</option>
+      <option value="C">C</option> */}
     </select>
   </div>
 )}
+
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
           <button

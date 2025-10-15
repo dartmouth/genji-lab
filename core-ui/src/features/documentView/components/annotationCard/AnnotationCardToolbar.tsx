@@ -88,7 +88,7 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
             segment
         );
             
-        dispatch(upvoteAnnotations.thunks.saveAnnotation(upvote));
+        dispatch(upvoteAnnotations.thunks.saveAnnotation({annotation: upvote}));
     };
 
     const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {

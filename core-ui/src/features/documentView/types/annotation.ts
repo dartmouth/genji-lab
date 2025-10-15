@@ -30,14 +30,14 @@ interface Annotation {
     "generated": string;
     "motivation": string;
     "body": {
-        "id": string;
+        "id": number;
         "type": string;
         "value": string;
         "format": string;
         "language": string;
     };
     "target": Array<{
-        "id": string;
+        "id"?: number;
         "type": string;
         "source": string;
         "selector"?: Selector;
@@ -77,7 +77,37 @@ interface AnnotationPatch {
       body: string
     }
   }
+interface TextPositionSelector {
+  type: "TextPositionSelector";
+  start: number;
+  end: number;
+}
 
+interface TextQuoteSelector {
+  type: "TextQuoteSelector";
+  value: string;
+  refined_by: TextPositionSelector;
+}
+
+interface TextTarget {
+  id?: number;
+  type: string;
+  source: string;
+  selector?: TextQuoteSelector;
+}
+
+interface ObjectTarget {
+  id?: number;
+  type: string;
+  source: string;
+}
+
+export type AnnotationTarget = TextTarget | ObjectTarget;
+
+export interface AnnotationAddTarget {
+  annotationId: number;
+  target: AnnotationTarget[];
+}
 // export annotation not using default
 export type { Annotation }
 export type { AnnotationCreate }

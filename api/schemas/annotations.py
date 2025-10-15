@@ -72,3 +72,6 @@ class DocumentElementAnnotationsResponse(RootModel):
 class AnnotationPatch(BaseModel):
     body: Optional[str] = None
     motivation: Optional[str] = None
+
+class AnnotationAddTarget(BaseModel):
+    target: Optional[List[Union[TextTarget, ObjectTarget]]] = None

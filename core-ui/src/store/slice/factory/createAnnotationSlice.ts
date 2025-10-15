@@ -267,7 +267,7 @@ export function createAnnotationSlice(bucketName: string) {
     ],
     (bucketState, documentElementId) => {
       const annotationIds = bucketState.byParent[documentElementId] || [];
-      // FIX: Filter out undefined annotations to prevent crashes
+      
       return annotationIds
         .map((id) => bucketState.byId[id])
         .filter(
@@ -285,7 +285,6 @@ export function createAnnotationSlice(bucketName: string) {
       (byId, ids) => {
         if (!byId || !ids || ids.length === 0) return [];
 
-        // FIX: Filter out undefined values and ensure type safety
         const results = ids
           .map((key) => byId[key])
           .filter(
