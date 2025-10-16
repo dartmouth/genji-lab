@@ -1,0 +1,134 @@
+/* src/features/documentView/components/externalReferences/ExternalReferenceStyles.css */
+
+.external-reference-icon {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  
+  .external-references-section {
+    margin-top: 24px;
+    padding: 16px;
+    border-top: 2px solid #e0e0e0;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+  }
+  
+  .external-references-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .external-references-header:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .external-references-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .external-references-toggle {
+    font-size: 0.75rem;
+    color: #666;
+    transition: transform 0.2s ease;
+  }
+  
+  .external-references-toggle.expanded {
+    transform: rotate(180deg);
+  }
+  
+  .external-references-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .external-reference-item {
+    padding: 12px;
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .external-reference-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .external-reference-item-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .external-reference-number {
+    font-weight: 600;
+    color: #0066cc;
+    min-width: 24px;
+  }
+  
+  .external-reference-content {
+    flex: 1;
+  }
+  
+  .external-reference-title {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    color: #333;
+  }
+  
+  .external-reference-description {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  
+  .external-reference-url {
+    font-size: 0.8rem;
+    color: #0066cc;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .external-reference-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  .external-reference-button {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    border: 1px solid #0066cc;
+    background-color: white;
+    color: #0066cc;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .external-reference-button:hover {
+    background-color: #0066cc;
+    color: white;
+  }
+
+  .annotatable-paragraph {
+    position: relative;
+  }

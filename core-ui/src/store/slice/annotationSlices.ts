@@ -12,6 +12,8 @@ export const taggingAnnotations = createAnnotationSlice("tagging");
 export const upvoteAnnotations = createAnnotationSlice("upvoting");
 export const flaggingAnnotations = createAnnotationSlice("flagging");
 export const linkingAnnotations = createAnnotationSlice("linking");
+export const externalReferenceAnnotations =
+  createAnnotationSlice("external_reference");
 
 export const sliceMap: AnnotationSliceMap = {
   commenting: commentingAnnotations,

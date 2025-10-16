@@ -7,11 +7,14 @@ import {
   selectElementsByDocumentId,
   selectDocumentStatusById,
   selectDocumentErrorById,
+  externalReferenceThunks,
 } from "@store";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "@store/hooks";
 import "../styles/DocumentContentStyles.css";
 import { DocumentElement } from "@documentView/types";
+import { ExternalReferencesSection } from "./externalReferences";
+import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
 
 interface DocumentContentPanelProps {
   documentId: number;
@@ -97,6 +100,22 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     });
   }, [viewedDocuments, dispatch]);
 
+  // Fetch external references for each document element
+  useEffect(() => {
+    documentElements.forEach((element) => {
+      dispatch(
+        externalReferenceThunks.fetchAnnotations({
+          documentElementId: element.id.toString(),
+        })
+      ).catch((error) => {
+        console.error(
+          `Failed to fetch external references for element ${element.id}:`,
+          error
+        );
+      });
+    });
+  }, [documentElements, dispatch]);
+
   // Enhanced callback wrapper with detailed logging
   const handleOpenLinkedDocumentWrapper = useCallback(
     (
@@ -163,25 +182,29 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         {documentElements.map((content) => {
           const paragraphId = `DocumentElements/${content.id}`;
           return (
-            <div
-              key={content.id}
-              className="document-content"
-              id={paragraphId}
-              data-element-id={content.id}
-              data-document-id={documentId}
-              data-source-uri={`/DocumentElements/${content.id}`}
-            >
-              <HighlightedText
-                text={content.content.text}
-                paragraphId={paragraphId}
-                format={content.content.formatting}
-                documentCollectionId={documentCollectionId}
-                documentId={documentId}
-                isLinkingModeActive={isLinkingModeActive}
-                viewMode={viewMode}
-                showLinkedTextHighlights={showLinkedTextHighlights}
-                viewedDocuments={viewedDocuments}
-              />
+            <div key={content.id} className="document-element-wrapper">
+              <div
+                className="document-content"
+                id={paragraphId}
+                data-element-id={content.id}
+                data-document-id={documentId}
+                data-source-uri={`/DocumentElements/${content.id}`}
+              >
+                <HighlightedText
+                  text={content.content.text}
+                  paragraphId={paragraphId}
+                  format={content.content.formatting}
+                  documentCollectionId={documentCollectionId}
+                  documentId={documentId}
+                  isLinkingModeActive={isLinkingModeActive}
+                  viewMode={viewMode}
+                  showLinkedTextHighlights={showLinkedTextHighlights}
+                  viewedDocuments={viewedDocuments}
+                />
+              </div>
+
+              {/* NEW: External References Section */}
+              <ExternalReferencesDisplay paragraphId={paragraphId} />
             </div>
           );
         })}
@@ -194,6 +217,16 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
       </div>
     </div>
   );
+};
+
+const ExternalReferencesDisplay: React.FC<{ paragraphId: string }> = ({
+  paragraphId,
+}) => {
+  const externalReferences = useSelector((state: RootState) =>
+    selectExternalReferencesByParagraph(state, paragraphId)
+  );
+
+  return <ExternalReferencesSection references={externalReferences} />;
 };
 
 export default DocumentContentPanel;
