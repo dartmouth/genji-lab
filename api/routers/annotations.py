@@ -10,7 +10,7 @@ import os
 import json
 
 from database import get_db
-from models.models import Annotation as AnnotationModel, User
+from models.models import Annotation as AnnotationModel, User, Group
 from schemas.annotations import Annotation, AnnotationCreate, AnnotationPatch
 from dependencies.classroom import (
     get_classroom_context,
@@ -104,6 +104,12 @@ def read_annotations(
     # Apply classroom filtering BEFORE offset/limit
     if classroom_id is not None:
         query = query.filter(AnnotationModel.classroom_id == classroom_id)
+        
+        # Only show annotations from current classroom members
+        classroom = db.query(Group).filter(Group.id == classroom_id).first()
+        if classroom:
+            member_ids = [member.id for member in classroom.members]
+            query = query.filter(AnnotationModel.creator_id.in_(member_ids))
     else:
         query = query.filter(AnnotationModel.classroom_id.is_(None))
 
@@ -240,13 +246,19 @@ def read_annotations_by_motivation(
 
     # Apply classroom filtering
     if classroom_id is not None:
-            query = query.filter(
-        or_(
-            and_(AnnotationModel.motivation == 'commenting', 
-                 AnnotationModel.classroom_id == classroom_id),
-            AnnotationModel.motivation != 'commenting'
+        query = query.filter(
+            or_(
+                and_(AnnotationModel.motivation == 'commenting', 
+                     AnnotationModel.classroom_id == classroom_id),
+                AnnotationModel.motivation != 'commenting'
+            )
         )
-    )
+        
+        # Only show annotations from current classroom members
+        classroom = db.query(Group).filter(Group.id == classroom_id).first()
+        if classroom:
+            member_ids = [member.id for member in classroom.members]
+            query = query.filter(AnnotationModel.creator_id.in_(member_ids))
     else:
         query = query.filter(AnnotationModel.classroom_id.is_(None))
 

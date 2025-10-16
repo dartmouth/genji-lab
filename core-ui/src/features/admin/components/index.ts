@@ -5,3 +5,4 @@ export * from './ManageClassrooms';
 export { default as JoinClassroomPage } from './JoinClassroomPage';
 export { default as UserSearchWithResults } from './UserSearchWithResults';
 export { default as AddStudentModal } from './AddStudentModal';
+export { default as RemoveStudentDialog } from './RemoveStudentDialog';
