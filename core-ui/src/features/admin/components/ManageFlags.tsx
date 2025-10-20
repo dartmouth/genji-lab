@@ -4,7 +4,7 @@ import {
   TableHead, TableRow, Paper, IconButton, Alert, CircularProgress,
   Dialog, DialogTitle, DialogContent, DialogActions, Button
 } from '@mui/material';
-import { Visibility, FlagOutlined, DeleteOutline } from '@mui/icons-material';
+import { FlagOutlined, DeleteOutline } from '@mui/icons-material';
 import axios from 'axios';
 
 interface Flag {
@@ -26,7 +26,6 @@ const ManageFlags: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFlag, setSelectedFlag] = useState<Flag | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<'unflag' | 'remove' | null>(null);
 
@@ -48,11 +47,6 @@ const ManageFlags: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleViewClick = (flag: Flag) => {
-    setSelectedFlag(flag);
-    setViewDialogOpen(true);
   };
 
   const handleActionClick = (flag: Flag, action: 'unflag' | 'remove') => {
@@ -160,16 +154,9 @@ const ManageFlags: React.FC = () => {
                   <TableCell>
                     <IconButton
                       size="small"
-                      onClick={() => handleViewClick(flag)}
-                      title="View details"
-                    >
-                      <Visibility fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
                       onClick={() => handleActionClick(flag, 'unflag')}
                       title="Unflag (keep comment)"
-                      color="primary"
+                      sx={{ color: '#00693e' }}
                     >
                       <FlagOutlined fontSize="small" />
                     </IconButton>
@@ -188,47 +175,6 @@ const ManageFlags: React.FC = () => {
           </Table>
         </TableContainer>
       )}
-
-      {/* View Dialog */}
-      <Dialog
-        open={viewDialogOpen}
-        onClose={() => setViewDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Flag Details</DialogTitle>
-        <DialogContent>
-          {selectedFlag && (
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Flagged Content:
-              </Typography>
-              <Paper sx={{ p: 2, mb: 2, bgcolor: '#f5f5f5' }}>
-                <Typography>{selectedFlag.flagged_annotation?.content}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  By: {selectedFlag.flagged_annotation?.author?.name} on{' '}
-                  {selectedFlag.flagged_annotation?.created && 
-                    new Date(selectedFlag.flagged_annotation.created).toLocaleString()}
-                </Typography>
-              </Paper>
-
-              <Typography variant="subtitle2" gutterBottom>
-                Flag Reason:
-              </Typography>
-              <Paper sx={{ p: 2, bgcolor: '#fff3e0' }}>
-                <Typography>{selectedFlag.flag_reason}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Flagged by: {selectedFlag.flagged_by.name} on{' '}
-                  {new Date(selectedFlag.flagged_at).toLocaleString()}
-                </Typography>
-              </Paper>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Confirmation Dialog */}
       <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
