@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@hooks/useLocalStorage";
+import { Flag } from '@mui/icons-material';
+import axios from 'axios';
 
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import {
@@ -77,10 +79,45 @@ const AppHeader: React.FC = () => {
 
   const [showLoginForm, setShowLoginForm] = React.useState(false);
   const [showRegisterForm, setShowRegisterForm] = React.useState(false);
+  const [flagCount, setFlagCount] = React.useState(0);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
+
+  // Fetch flag count for admins
+  const fetchFlagCount = async () => {
+    try {
+      const response = await axios.get('/api/v1/flags/count', {
+        withCredentials: true,
+      });
+      setFlagCount(response.data.count);
+    } catch (error) {
+      console.error('Failed to fetch flag count:', error);
+    }
+  };
+
+  // Fetch flag count on mount and every 4 hours if user is admin
+  useEffect(() => {
+    if (isAuthenticated && user?.roles?.includes('admin')) {
+      fetchFlagCount(); // Fetch immediately on mount/login
+      // Refresh every 4 hours (14400000 ms)
+      const interval = setInterval(fetchFlagCount, 14400000);
+      
+      // Expose function globally so other components can trigger refresh
+      (window as any).refreshFlagCount = fetchFlagCount;
+      
+      // Listen for custom event to refresh flag count
+      const handleRefresh = () => fetchFlagCount();
+      window.addEventListener('refreshFlagCount', handleRefresh);
+      
+      return () => {
+        clearInterval(interval);
+        delete (window as any).refreshFlagCount;
+        window.removeEventListener('refreshFlagCount', handleRefresh);
+      };
+    }
+  }, [isAuthenticated, user]);
 
   // Site title
   const { isLoading: settingsLoading } = useAppSelector(
@@ -134,12 +171,39 @@ const AppHeader: React.FC = () => {
         {isAuthenticated && user ? (
           // Authenticated user - show avatar and dropdown
           <div className="user-avatar-container">
-            <div className="user-avatar" onClick={toggleDropdown}>
+            <div className="user-avatar" onClick={toggleDropdown} style={{ position: 'relative' }}>
               <span>
                 {`${user.first_name.charAt(0)}${user.last_name.charAt(
                   0
                 )}`.toUpperCase()}
               </span>
+              
+              {/* Flag notification badge - admin only, positioned at bottom-left */}
+              {user?.roles?.includes('admin') && flagCount > 0 && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/admin?tab=flags');
+                  }}
+                  style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: '-2px',
+                    cursor: 'pointer',
+                    backgroundColor: '#fff',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                  }}
+                  title={`${flagCount} flagged comment${flagCount !== 1 ? 's' : ''}`}
+                >
+                  <Flag sx={{ fontSize: '14px', color: '#d32f2f' }} />
+                </div>
+              )}
             </div>
             {dropdownOpen && (
               <div className="dropdown-menu">
