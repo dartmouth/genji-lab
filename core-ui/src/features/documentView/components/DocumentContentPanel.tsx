@@ -13,8 +13,8 @@ import { useSelector } from "react-redux";
 import { useAppDispatch } from "@store/hooks";
 import "../styles/DocumentContentStyles.css";
 import { DocumentElement } from "@documentView/types";
-import { ExternalReferencesSection } from "./externalReferences";
-import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
+// import { ExternalReferencesSection } from "./externalReferences";
+// import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
 
 interface DocumentContentPanelProps {
   documentId: number;
@@ -203,8 +203,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                 />
               </div>
 
-              {/* NEW: External References Section */}
-              <ExternalReferencesDisplay paragraphId={paragraphId} />
+              {/* <ExternalReferencesDisplay paragraphId={paragraphId} /> */}
             </div>
           );
         })}
@@ -219,14 +218,14 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   );
 };
 
-const ExternalReferencesDisplay: React.FC<{ paragraphId: string }> = ({
-  paragraphId,
-}) => {
-  const externalReferences = useSelector((state: RootState) =>
-    selectExternalReferencesByParagraph(state, paragraphId)
-  );
+// const ExternalReferencesDisplay: React.FC<{ paragraphId: string }> = ({
+//   paragraphId,
+// }) => {
+//   const externalReferences = useSelector((state: RootState) =>
+//     selectExternalReferencesByParagraph(state, paragraphId)
+//   );
 
-  return <ExternalReferencesSection references={externalReferences} />;
-};
+//   return <ExternalReferencesSection references={externalReferences} />;
+// };
 
 export default DocumentContentPanel;

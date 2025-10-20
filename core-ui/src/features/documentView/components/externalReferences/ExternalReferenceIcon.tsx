@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Tooltip, Box } from "@mui/material";
+import { Link as LinkIcon } from "@mui/icons-material";
 import "@documentView/styles/ExternalReferenceStyles.css";
 
 interface ExternalReferenceIconProps {
@@ -12,7 +13,6 @@ interface ExternalReferenceIconProps {
 }
 
 const ExternalReferenceIcon: React.FC<ExternalReferenceIconProps> = ({
-  index,
   url,
   title,
   onPreview,
@@ -46,19 +46,24 @@ const ExternalReferenceIcon: React.FC<ExternalReferenceIconProps> = ({
         }}
         style={{
           cursor: "pointer",
-          color: isHovered ? "#1976d2" : "#0066cc",
-          fontWeight: 600,
-          fontSize: "0.50em",
-          textDecoration: isHovered ? "underline" : "none",
-          marginLeft: "0px",
+          marginLeft: "-3px",
           transition: "all 0.2s ease",
           verticalAlign: "super",
-          lineHeight: "0",
+          lineHeight: "-2em",
           position: "relative",
-          top: "-0.4em",
+          top: "-0.6em",
+          display: "inline-flex",
+          alignItems: "center",
         }}
       >
-        [{index}]
+        <LinkIcon
+          sx={{
+            fontSize: "1em",
+            color: isHovered ? "#1976d2" : "#0066cc",
+            transform: isHovered ? "scale(1.1)" : "scale(1)",
+            transition: "all 0.2s ease",
+          }}
+        />
       </sup>
     </Tooltip>
   );

@@ -43,7 +43,7 @@ export const selectExternalReferencesByParagraph = createSelector(
 );
 
 // ============================================================================
-// NEW MEMOIZED SELECTORS FOR LINKING ANNOTATIONS
+// MEMOIZED SELECTORS FOR LINKING ANNOTATIONS
 // ============================================================================
 
 // Selector to get all linking annotations (memoized)

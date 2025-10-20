@@ -1,4 +1,4 @@
-// annotationSlices.ts
+// slice/annotationSlices.ts
 import {
   createAnnotationSlice,
   AnnotationSliceMap,
@@ -23,4 +23,5 @@ export const sliceMap: AnnotationSliceMap = {
   upvoting: upvoteAnnotations,
   flagging: flaggingAnnotations,
   linking: linkingAnnotations,
+  external_reference: externalReferenceAnnotations,
 };

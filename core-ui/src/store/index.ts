@@ -75,7 +75,7 @@ export const store = configureStore({
   devTools: true,
 });
 
-// Define types AFTER store creation to avoid circular references
+// Define types after store creation to avoid circular references
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 

@@ -354,8 +354,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       top: number;
       width: number;
       height: number;
-      annotationStart: number; // 🎯 ADD THIS
-      annotationEnd: number; // 🎯 ADD THIS
+      annotationStart: number;
+      annotationEnd: number;
     }> = [];
 
     linkingAnnotations.forEach((annotation) => {
@@ -578,7 +578,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       resizeObserver.observe(containerRef.current);
     }
 
-    // Clean up
     return () => {
       resizeObserver.disconnect();
       debouncedHandleMouseMove.cancel();
