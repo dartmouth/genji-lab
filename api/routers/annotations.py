@@ -227,7 +227,6 @@ def update_annotation(
     current_user: User = Depends(get_current_user_sync),
     db: Session = Depends(get_db),
 ):
-    """Update an annotation, respecting classroom context."""
 
     query = db.query(AnnotationModel).filter(AnnotationModel.id == annotation_id)
 
@@ -235,11 +234,19 @@ def update_annotation(
 
     if not db_annotation:
         raise HTTPException(status_code=404, detail="Annotation not found")
-
-    payload.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
-    current_target = db_annotation.target
-    current_target.append(payload)
-    db_annotation.target = current_target
+    
+    new_targ = payload.model_dump(exclude_none=True, mode='json')['target'] 
+    # print(new_targ)
+    if isinstance(new_targ, list):
+        targets_to_add = [t.model_dump(exclude_none=True) if hasattr(t, 'model_dump') else t for t in new_targ]
+    else:
+        targets_to_add = [new_targ.model_dump(exclude_none=True)]
+    # print(targets_to_add)
+    
+    for target in targets_to_add:
+        target['id'] = generate_target_id(db, os.environ.get("DB_SCHEMA"))
+    
+    db_annotation.target = [*db_annotation.target, targets_to_add]
     db_annotation.modified = datetime.now()
 
     db.commit()
@@ -317,17 +324,22 @@ def fetch_links(
 
     # Filter annotations that have our document_element_id in their target sources
     target_sources = [
-        f"DocumentElements/{document_element_id}",
-        f"DocumentElements/DocumentElements/{document_element_id}",  # Handle both formats
+        f"DocumentElements/{document_element_id}"
     ]
 
     matching_annotations = []
     for annotation in all_linking_annotations:
         if annotation.target:  # target is stored as JSON
             for target in annotation.target:
-                if target.get("source") in target_sources:
-                    matching_annotations.append(annotation)
-                    break  # Found a match, no need to check other targets
+                if isinstance(target, list):
+                    for sub_targ in target:
+                        if sub_targ.get("source") in target_sources:
+                            matching_annotations.append(annotation)
+                            break
+                else:
+                    if target.get("source") in target_sources:
+                        matching_annotations.append(annotation)
+                        break  # Found a match, no need to check other targets
 
     return matching_annotations
 

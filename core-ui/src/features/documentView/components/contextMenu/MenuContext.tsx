@@ -5,6 +5,7 @@ import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
 import { createPortal } from "react-dom";
 import { useAuth } from "@hooks/useAuthContext";
+
 import {
   useAppDispatch,
   useAppSelector,
@@ -26,6 +27,7 @@ import {
   selectAllLinkingAnnotations,
   selectAllLoadedElements,
 } from "@store/selector/combinedSelectors";
+import { TextTarget } from "../../types";
 
 interface MenuContextProps {
   viewedDocuments?: Array<{
@@ -234,62 +236,190 @@ const MenuContext: React.FC<MenuContextProps> = ({
   );
 
   // Simple linked document discovery (no on-demand loading needed since everything is bulk loaded)
+  // const findLinkedDocuments = useCallback(
+  //   (selection: LinkedTextSelection): HierarchicalLinkedDocuments => {
+  //     try {
+  //       const currentDocument =
+  //         viewedDocuments.find((d) => d.id === selection.documentId) ||
+  //         allDocuments.find((d) => d.id === selection.documentId);
+  //       const currentDocumentTitle =
+  //         currentDocument?.title || `Document ${selection.documentId}`;
+
+  //       const interdocumentAnnotations = allLinkingAnnotations.filter((ann) => {
+  //         return ann.target?.some((target) => {
+  //           const elementIdMatch = target.source.match(
+  //             /\/DocumentElements\/(\d+)/
+  //           );
+  //           if (elementIdMatch) {
+  //             const elementId = parseInt(elementIdMatch[1]);
+  //             const targetElement = allElements.find(
+  //               (el) => el.id === elementId
+  //             );
+
+  //             if (targetElement) {
+  //               const targetDocument =
+  //                 allDocuments.find(
+  //                   (d) => d.id === targetElement.document_id
+  //                 ) ||
+  //                 viewedDocuments.find(
+  //                   (d) => d.id === targetElement.document_id
+  //                 );
+  //               const targetDocumentTitle =
+  //                 targetDocument?.title ||
+  //                 `Document ${targetElement.document_id}`;
+
+  //               // Only include if titles are different
+  //               return targetDocumentTitle !== currentDocumentTitle;
+  //             }
+  //           }
+  //           return false;
+  //         });
+  //       });
+
+  //       const result = getLinkedDocumentsSimple(
+  //         selection,
+  //         interdocumentAnnotations,
+  //         allDocuments,
+  //         viewedDocuments,
+  //         allElements
+  //       );
+
+  //       return result;
+  //     } catch (error) {
+  //       console.error("Error in linked document discovery:", error);
+  //       return {};
+  //     }
+  //   },
+  //   [allElements, allDocuments, allLinkingAnnotations, viewedDocuments]
+  // );
+  
   const findLinkedDocuments = useCallback(
-    (selection: LinkedTextSelection): HierarchicalLinkedDocuments => {
-      try {
-        const currentDocument =
-          viewedDocuments.find((d) => d.id === selection.documentId) ||
-          allDocuments.find((d) => d.id === selection.documentId);
-        const currentDocumentTitle =
-          currentDocument?.title || `Document ${selection.documentId}`;
-
-        const interdocumentAnnotations = allLinkingAnnotations.filter((ann) => {
-          return ann.target?.some((target) => {
-            const elementIdMatch = target.source.match(
-              /\/DocumentElements\/(\d+)/
-            );
-            if (elementIdMatch) {
-              const elementId = parseInt(elementIdMatch[1]);
-              const targetElement = allElements.find(
-                (el) => el.id === elementId
-              );
-
-              if (targetElement) {
-                const targetDocument =
-                  allDocuments.find(
-                    (d) => d.id === targetElement.document_id
-                  ) ||
-                  viewedDocuments.find(
-                    (d) => d.id === targetElement.document_id
-                  );
-                const targetDocumentTitle =
-                  targetDocument?.title ||
-                  `Document ${targetElement.document_id}`;
-
-                // Only include if titles are different
-                return targetDocumentTitle !== currentDocumentTitle;
-              }
+  (selection: LinkedTextSelection): HierarchicalLinkedDocuments => {
+    try {
+      const currentDocument =
+        viewedDocuments.find((d) => d.id === selection.documentId) ||
+        allDocuments.find((d) => d.id === selection.documentId);
+      const currentDocumentTitle =
+        currentDocument?.title || `Document ${selection.documentId}`;
+      
+      // const interdocumentAnnotations = allLinkingAnnotations.filter((ann) => {
+      //   // Flatten targets to handle nested arrays
+      //   const flatTargets = ann.target?.flatMap(t => 
+      //     Array.isArray(t) ? t : [t]
+      //   ) || [];
+        
+      //   return flatTargets.some((target) => {
+      //     const elementIdMatch = target.source.match(
+      //       /\/DocumentElements\/(\d+)/
+      //     );
+      //     if (elementIdMatch) {
+      //       const elementId = parseInt(elementIdMatch[1]);
+      //       const targetElement = allElements.find(
+      //         (el) => el.id === elementId
+      //       );
+      //       if (targetElement) {
+      //         const targetDocument =
+      //           allDocuments.find(
+      //             (d) => d.id === targetElement.document_id
+      //           ) ||
+      //           viewedDocuments.find(
+      //             (d) => d.id === targetElement.document_id
+      //           );
+      //         const targetDocumentTitle =
+      //           targetDocument?.title ||
+      //           `Document ${targetElement.document_id}`;
+      //         return targetDocumentTitle !== currentDocumentTitle;
+      //       }
+      //     }
+      //     return false;
+      //   });
+      // });
+      const matchTarget = (target: TextTarget) => {
+          const sourcePath = target.source.startsWith('/') ? target.source : `/${target.source}`;
+          const elementIdMatch = sourcePath.match(/\/DocumentElements\/(\d+)/);
+          if (elementIdMatch) {
+            const elementId = parseInt(elementIdMatch[1]);
+            const targetElement = allElements.find((el) => el.id === elementId);
+            if (targetElement) {
+              const targetDocument =
+                allDocuments.find((d) => d.id === targetElement.document_id) ||
+                viewedDocuments.find((d) => d.id === targetElement.document_id);
+              const targetDocumentTitle =
+                targetDocument?.title || `Document ${targetElement.document_id}`;
+              return targetDocumentTitle !== currentDocumentTitle;
             }
-            return false;
-          });
-        });
-
-        const result = getLinkedDocumentsSimple(
-          selection,
-          interdocumentAnnotations,
-          allDocuments,
-          viewedDocuments,
-          allElements
-        );
-
-        return result;
-      } catch (error) {
-        console.error("Error in linked document discovery:", error);
-        return {};
+          }
+          console.warn("No element ID match")
+          return false
       }
-    },
-    [allElements, allDocuments, allLinkingAnnotations, viewedDocuments]
-  );
+      const interdocumentAnnotations = allLinkingAnnotations.filter((annotation) => {
+        return annotation.target.some((targ) => {
+          if (Array.isArray(targ)){
+            return targ.some((t) => {
+              matchTarget(t)
+            })
+          }
+          return matchTarget(targ)
+        })
+      })
+      // const interdocumentAnnotations = allLinkingAnnotations.filter((ann) => {
+      //   const targets = Array.isArray(ann.target) ? [ann.target] : ann.target ? [ann.target] : [];
+        
+      //   return targets.some((target) => {
+      //     console.log("target is ", ann.id, target)
+      //     // target is either a single Target or Target[] (multi-element selection)
+      //     const targetGroup = Array.isArray(target) ? target : [target];
+      //     // console.log("Grp is ", targetGroup)
+      //     // Check if ANY element in this target group is from a different document
+      //     return targetGroup.some((t) => {
+      //       // console.log("t is ", t)
+      //       if (!t || typeof t !== 'object' || !('source' in t)) {
+      //         return false;
+      //       }
+      //       console.log(ann.id, Array.isArray(t), t.source)
+      //       if (Array.isArray(t)){
+      //         console.log("array")
+      //       } else {
+      //         const sourcePath = t.source.startsWith('/') ? t.source : `/${t.source}`;
+      //         console.log(sourcePath, typeof(sourcePath))
+      //         let elementIdMatch
+      //         try {
+      //         elementIdMatch = sourcePath.match(/\/DocumentElements\/(\d+)/);
+      //         } catch {
+      //           console.error('borked, string was ', sourcePath, t.id)
+      //         }
+      //         if (elementIdMatch) {
+      //           const elementId = parseInt(elementIdMatch[1]);
+      //           const targetElement = allElements.find((el) => el.id === elementId);
+      //           if (targetElement) {
+      //             const targetDocument =
+      //               allDocuments.find((d) => d.id === targetElement.document_id) ||
+      //               viewedDocuments.find((d) => d.id === targetElement.document_id);
+      //             const targetDocumentTitle =
+      //               targetDocument?.title || `Document ${targetElement.document_id}`;
+      //             return targetDocumentTitle !== currentDocumentTitle;
+      //           }
+      //         }
+      //       }
+      //       return false;
+      //     });
+      //   });
+      // });
+      const result = getLinkedDocumentsSimple(
+        selection,
+        interdocumentAnnotations,
+        allDocuments,
+        viewedDocuments,
+        allElements
+      );
+      return result;
+    } catch (error) {
+      console.error("Error in linked document discovery:", error);
+      return {};
+    }
+  },
+  [allElements, allDocuments, allLinkingAnnotations, viewedDocuments]
+);
 
   // Context menu event handler
   useEffect(() => {

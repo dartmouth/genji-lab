@@ -119,7 +119,6 @@ export function createSaveAnnotationThunk(
       thunkName,
       async (patch: AnnotationPatch, { dispatch, rejectWithValue }) => {
         try {
-
           // Use your API client
           const response = await api.patch(`/annotations/${patch.annotationId}`, patch.payload);
           
@@ -149,9 +148,10 @@ export function createSaveAnnotationThunk(
       thunkName,
       async (patch: AnnotationAddTarget, { dispatch, rejectWithValue }) => {
         try {
-
+          const newTarg = {target: patch.target}
+          console.log(newTarg)
           // Use your API client
-          const response = await api.patch(`/annotations/add-target/${patch.annotationId}`, patch.target);
+          const response = await api.patch(`/annotations/add-target/${patch.annotationId}`, newTarg);
           
           const savedAnnotation: Annotation = response.data;
           

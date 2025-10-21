@@ -44,7 +44,7 @@ class AnnotationBase(BaseModel):
     generator: Optional[str] = None
     
     body: Optional[Body] = None
-    target: Optional[List[Union[TextTarget, ObjectTarget]]] = None
+    target: Optional[List[Union[TextTarget, ObjectTarget, List[Union[TextTarget, ObjectTarget]]]]] = None
     
     status: Optional[str] = None
     annotation_type: Optional[str] = None
@@ -74,4 +74,4 @@ class AnnotationPatch(BaseModel):
     motivation: Optional[str] = None
 
 class AnnotationAddTarget(BaseModel):
-    target: Optional[List[Union[TextTarget, ObjectTarget]]] = None
+    target: Union[TextTarget, ObjectTarget, List[Union[TextTarget, ObjectTarget]]] = None

@@ -1,7 +1,11 @@
 // src/features/documentView/utils/linkedTextUtils.ts
 import { RootState } from "@store";
 import { linkingAnnotations } from "@store";
-import { Annotation } from "@documentView/types";
+import { 
+  Annotation,
+  TextTarget,
+  ObjectTarget
+ } from "@documentView/types";
 
 export interface LinkedTextSelection {
   documentId: number;
@@ -58,20 +62,20 @@ export interface HierarchicalLinkedDocuments {
   [documentId: number]: HierarchicalLinkedDocument;
 }
 
-interface AnnotationTarget {
-  id: string;
-  type: string;
-  source: string;
-  selector?: {
-    type: string;
-    value: string;
-    refined_by?: {
-      type: string;
-      start: number;
-      end: number;
-    };
-  };
-}
+// interface AnnotationTarget {
+//   id: string;
+//   type: string;
+//   source: string;
+//   selector?: {
+//     type: string;
+//     value: string;
+//     refined_by?: {
+//       type: string;
+//       start: number;
+//       end: number;
+//     };
+//   };
+// }
 
 // Enhanced document info resolver with better title lookup
 const getDocumentInfoFromElementId = (
@@ -160,9 +164,13 @@ const getAnnotationsForElement = (
   elementSourceURI: string
 ): Annotation[] => {
   return allAnnotations.filter((annotation) =>
-    annotation.target?.some(
-      (target: AnnotationTarget) => target.source === elementSourceURI
-    )
+    annotation.target?.some((target) => {
+      // Handle both single targets and multi-element target arrays
+      const targetGroup = Array.isArray(target) ? target : [target];
+      
+      // Check if any target in the group matches the element source URI
+      return targetGroup.some((t) => t.source === elementSourceURI);
+    })
   );
 };
 
@@ -218,20 +226,43 @@ export const getLinkedDocumentsSimple = (
 
   // Process each annotation to find linked documents
   relevantAnnotations.forEach((annotation) => {
+
+    const targetsNotCurrentSelection: (TextTarget | ObjectTarget)[] = [];
+  
+    annotation.target?.forEach((target) => {
+      // Handle both single targets and multi-element target arrays
+      const targetGroup = Array.isArray(target) ? target : [target];
+      
+      // Add targets that don't match the current selection
+      targetGroup.forEach((t) => {
+        if (t.source !== selection.sourceURI) {
+          targetsNotCurrentSelection.push(t);
+        }
+      });
+    });
+    
+    if (targetsNotCurrentSelection.length === 0) {
+      return;
+    }
+  
+    // Group targets by document ID (not title) to prevent duplicates
+    const targetsByDocumentId: {
+      [docId: number]: { targets: (TextTarget | ObjectTarget)[]; elementIds: number[] };
+    } = {};
     // Find targets that are not our current selection
-    const targetsNotCurrentSelection =
-      annotation.target?.filter(
-        (target: AnnotationTarget) => target.source !== selection.sourceURI
-      ) || [];
+    // const targetsNotCurrentSelection =
+    //   annotation.target?.filter(
+    //     (target: AnnotationTarget) => target.source !== selection.sourceURI
+    //   ) || [];
 
     if (targetsNotCurrentSelection.length === 0) {
       return;
     }
 
     // Group targets by document ID (not title) to prevent duplicates
-    const targetsByDocumentId: {
-      [docId: number]: { targets: AnnotationTarget[]; elementIds: number[] };
-    } = {};
+    // const targetsByDocumentId: {
+    //   [docId: number]: { targets: AnnotationTarget[]; elementIds: number[] };
+    // } = {};
 
     targetsNotCurrentSelection.forEach((target) => {
       const elementIdMatch = target.source.match(/\/DocumentElements\/(\d+)/);
@@ -335,39 +366,86 @@ export const getLinkedDocumentsSimple = (
       const primaryTarget = docTargets[0];
 
       // Get ALL targets from the ENTIRE annotation (including source)
-      const allTargets =
-        annotation.target?.map((target: AnnotationTarget) => ({
-          sourceURI: target.source,
-          start: target.selector?.refined_by?.start || 0,
-          end: target.selector?.refined_by?.end || 0,
-          text: target.selector?.value || "Linked text",
-        })) || [];
+      // const allTargets =
+      //   annotation.target?.map((target: AnnotationTarget) => ({
+      //     sourceURI: target.source,
+      //     start: target.selector?.refined_by?.start || 0,
+      //     end: target.selector?.refined_by?.end || 0,
+      //     text: target.selector?.value || "Linked text",
+      //   })) || [];
 
-      // Use primary target's text for display
-      const linkedText =
-        primaryTarget.selector?.value || annotation.body.value || "Linked text";
+      // // Use primary target's text for display
+      // const linkedText =
+      //   primaryTarget.selector?.value || annotation.body.value || "Linked text";
 
-      // Check for duplicate annotations more carefully
-      const existingOptionIndex = result[
-        linkedDocumentId
-      ].linkedTextOptions.findIndex(
-        (option) => option.linkingAnnotationId === annotation.id
-      );
+      // // Check for duplicate annotations more carefully
+      // const existingOptionIndex = result[
+      //   linkedDocumentId
+      // ].linkedTextOptions.findIndex(
+      //   (option) => option.linkingAnnotationId === annotation.id
+      // );
 
-      if (existingOptionIndex === -1) {
-        const newOption: LinkedTextOption = {
-          linkedText: linkedText,
-          linkingAnnotationId: annotation.id,
-          targetInfo: {
-            sourceURI: primaryTarget.source,
-            start: primaryTarget.selector?.refined_by?.start || 0,
-            end: primaryTarget.selector?.refined_by?.end || 0,
-          },
-          allTargets: allTargets,
-        };
+      // if (existingOptionIndex === -1) {
+      //   const newOption: LinkedTextOption = {
+      //     linkedText: linkedText,
+      //     linkingAnnotationId: annotation.id,
+      //     targetInfo: {
+      //       sourceURI: primaryTarget.source,
+      //       start: primaryTarget.selector?.refined_by?.start || 0,
+      //       end: primaryTarget.selector?.refined_by?.end || 0,
+      //     },
+      //     allTargets: allTargets,
+      //   };
 
-        result[linkedDocumentId].linkedTextOptions.push(newOption);
-      }
+      //   result[linkedDocumentId].linkedTextOptions.push(newOption);
+      // }
+      // Helper function to check if target is a TextTarget with selector
+    const isTextTargetWithSelector = (target: TextTarget | ObjectTarget): target is TextTarget => {
+      return 'selector' in target && target.selector != null;
+    };
+
+    // Helper to safely extract target info
+    const getTargetInfo = (target: TextTarget | ObjectTarget) => ({
+      sourceURI: target.source,
+      start: isTextTargetWithSelector(target) ? (target.selector?.refined_by?.start ?? 0) : 0,
+      end: isTextTargetWithSelector(target) ? (target.selector?.refined_by?.end ?? 0) : 0,
+      text: isTextTargetWithSelector(target) ? (target.selector?.value ?? "Linked text") : "Linked text",
+    });
+
+    // Flatten and map all targets
+    const allTargets = annotation.target?.flatMap((target) => {
+      const targetGroup = Array.isArray(target) ? target : [target];
+      return targetGroup.map(getTargetInfo);
+    }) || [];
+
+    // Use primary target's text for display
+    const linkedText = 
+      isTextTargetWithSelector(primaryTarget) 
+        ? (primaryTarget.selector?.value ?? annotation.body.value ?? "Linked text")
+        : (annotation.body.value ?? "Linked text");
+
+    // Check for duplicate annotations more carefully
+    const existingOptionIndex = result[
+      linkedDocumentId
+    ].linkedTextOptions.findIndex(
+      (option) => option.linkingAnnotationId === annotation.id
+    );
+
+    if (existingOptionIndex === -1) {
+      const primaryTargetInfo = getTargetInfo(primaryTarget);
+      
+      const newOption: LinkedTextOption = {
+        linkedText: linkedText,
+        linkingAnnotationId: annotation.id,
+        targetInfo: {
+          sourceURI: primaryTargetInfo.sourceURI,
+          start: primaryTargetInfo.start,
+          end: primaryTargetInfo.end,
+        },
+        allTargets: allTargets,
+      };
+      result[linkedDocumentId].linkedTextOptions.push(newOption);
+    }
     });
   });
 

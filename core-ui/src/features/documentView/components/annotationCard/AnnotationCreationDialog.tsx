@@ -13,6 +13,7 @@ import { debounce } from 'lodash';
 import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import { linkingAnnotations } from '@store';
 
 interface AnnotationCreationDialogProps {
   onClose: () => void;
@@ -31,8 +32,8 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
   const { user, isAuthenticated, login, isLoading } = useAuth();
   const newAnno = useAppSelector(selectAnnotationCreate);
   const links = useAppSelector(selectAllLinkingAnnotations)
-  const [selectedLink, setSelectedLink] = useState(links ? links[0].id : null)
-  console.log(links)
+  const [selectedLink, setSelectedLink] = useState(links ? Number(links[0].id) : null)
+  // console.log(links)
   const dialogRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -145,44 +146,123 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
     return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
   };
 
-  const onSave = () => {
+  const makeLinkAnnotationBody = () => {
+    return newAnno.target.segments.map((targ) => {
+      return {
+        type: 'Text',
+        source: targ.sourceURI,
+        selector: {
+          type: 'TextQuoteSelector',
+          value: targ.text,
+          refined_by: {
+            type: 'TextPositionSelector',
+            start: targ.start,
+            end: targ.end
+          }
+        }
+      }
+    })
+  }
+  
+  const saveLinkingAnnotation = () => {
+    if (!selectedLink){
+      return
+    }
+    const linkingBody = makeLinkAnnotationBody();
+    
+    dispatch(linkingAnnotations.thunks.addTarget({
+      annotationId: selectedLink,
+      target: linkingBody
+      
+    }));
+};
+
+const saveStandardAnnotation = () => {
+  const annoType = newAnno.motivation;
+  const slice = sliceMap[annoType];
+  
+  if (!slice) {
+    console.error("Bad motivation");
+    return;
+  }
+
     if (!user || !isAuthenticated) {
       console.log("User not authenticated");
       return;
     }
-
-    const annoType: string = newAnno.motivation;
-    const slice = sliceMap[annoType] || {};
-
-    if (!slice) {
-      console.error("Bad motivation");
-      return;
-    }
-    
-    const annoBody = makeTextAnnotationBody(
-      newAnno.target.documentCollectionId,
-      newAnno.target.documentId,
-      parseURI(newAnno.target.segments[0].sourceURI) as unknown as number,
-      user.id,
-      newAnno.motivation,
-      newAnno.content,
-      newAnno.target.segments
-    );
-    
-    // Prepare save parameters with classroom context
-    const saveParams: { annotation: typeof annoBody; classroomId?: string } = {
-      annotation: annoBody
-    };
-    
-    // Only include classroomId if user is in a classroom and hasn't opted out
-    if (activeClassroomValue && isOptedOut !== 'true') {
-      saveParams.classroomId = activeClassroomValue as string;
-    }
-    
-    dispatch(slice.thunks.saveAnnotation(saveParams));
-    dispatch(resetCreateAnnotation());
-    onClose();
+  
+  const annoBody = makeTextAnnotationBody(
+    newAnno.target.documentCollectionId,
+    newAnno.target.documentId,
+    parseURI(newAnno.target.segments[0].sourceURI) as unknown as number,
+    user.id,
+    newAnno.motivation,
+    newAnno.content,
+    newAnno.target.segments
+  );
+  
+  const saveParams = {
+    annotation: annoBody,
+    ...(activeClassroomValue && isOptedOut !== 'true' && { classroomId: activeClassroomValue })
   };
+  
+  dispatch(slice.thunks.saveAnnotation(saveParams));
+};
+
+const onSave = () => {
+  if (!user || !isAuthenticated) {
+    console.log("User not authenticated");
+    return;
+  }
+  
+  if (newAnno.motivation === 'linking') {
+    saveLinkingAnnotation();
+  } else {
+    saveStandardAnnotation();
+  }
+  
+  dispatch(resetCreateAnnotation());
+  onClose();
+};
+
+  // const onSave = () => {
+  //   if (!user || !isAuthenticated) {
+  //     console.log("User not authenticated");
+  //     return;
+  //   }
+
+  //   const annoType: string = newAnno.motivation;
+  //   const slice = sliceMap[annoType] || {};
+
+  //   if (!slice) {
+  //     console.error("Bad motivation");
+  //     return;
+  //   }
+    
+  //   const annoBody = makeTextAnnotationBody(
+  //     newAnno.target.documentCollectionId,
+  //     newAnno.target.documentId,
+  //     parseURI(newAnno.target.segments[0].sourceURI) as unknown as number,
+  //     user.id,
+  //     newAnno.motivation,
+  //     newAnno.content,
+  //     newAnno.target.segments
+  //   );
+    
+  //   // Prepare save parameters with classroom context
+  //   const saveParams: { annotation: typeof annoBody; classroomId?: string } = {
+  //     annotation: annoBody
+  //   };
+    
+  //   // Only include classroomId if user is in a classroom and hasn't opted out
+  //   if (activeClassroomValue && isOptedOut !== 'true') {
+  //     saveParams.classroomId = activeClassroomValue as string;
+  //   }
+    
+  //   dispatch(slice.thunks.saveAnnotation(saveParams));
+  //   dispatch(resetCreateAnnotation());
+  //   onClose();
+  // };
   
   const onCancel = () => {
     dispatch(resetCreateAnnotation());
@@ -507,14 +587,17 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
             </div>
           </div>
         )}
+
 {newAnno.motivation === 'linking' && (
   <div style={{ marginBottom: '12px' }}>
     <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: 500 }}>
-      Select Option:
+      Select Link:
     </label>
     <select
-      value={''}
-      onChange={(e) => setSelectedLink(e.target.value)}
+      value={selectedLink || ''}
+      onChange={(e) => {
+        setSelectedLink(Number(e.target.value))
+      }}
       style={{
         padding: '8px 12px',
         fontSize: '14px',
@@ -530,10 +613,6 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
           {l.body.value}
         </option>
       ))}
-      {/* <option value="">Select an option</option>
-      <option value="A">A</option>
-      <option value="B">B</option>
-      <option value="C">C</option> */}
     </select>
   </div>
 )}
