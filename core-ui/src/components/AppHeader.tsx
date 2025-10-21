@@ -183,7 +183,7 @@ const AppHeader: React.FC = () => {
                 <div
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate('/admin?tab=flags');
+                    navigate('/admin?tab=flags&subtab=1');
                   }}
                   style={{
                     position: 'absolute',
