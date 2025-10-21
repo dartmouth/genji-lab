@@ -226,7 +226,7 @@ const AppHeader: React.FC = () => {
                 <br />
                 {user?.groups && user.groups.length > 0 ? (
                   <div>
-                    <div>Classroom</div>
+                    <div>{isOptedOut === "true" ? "Select Classroom" : "Active Classroom"}</div>
                     <select
                       className="group-selector"
                       value={activeClassroomValue || user.groups[0]?.id || ""}
@@ -254,21 +254,28 @@ const AppHeader: React.FC = () => {
                     <button
                       className="logout-button"
                       onClick={() => {
-                        if (!isOptedOut) {
+                        // Check current opted-out state
+                        const currentOptedOut = isOptedOut === "true";
+                        
+                        if (currentOptedOut) {
+                          // User is clicking "Enter Classroom"
                           setIsOptedOut("false");
+                          setDropdownOpen(false); // Close dropdown after entering
                         } else {
-                          const curVal = JSON.parse(isOptedOut);
-                          if (curVal === false) {
-                            setIsOptedOut("true");
-                          } else {
-                            setIsOptedOut("false");
-                          }
+                          // User is clicking "Exit Classroom"
+                          setIsOptedOut("true");
+                          setDropdownOpen(false); // Close dropdown after exiting
                         }
-
-                        // toggleDropdown()
+                      }}
+                      disabled={!activeClassroomValue && !user.groups[0]?.id}
+                      style={{
+                        backgroundColor: isOptedOut === "true" ? "#00693e" : "#1976d2",
+                        color: "white",
+                        border: "none",
+                        transition: "background-color 0.3s ease"
                       }}
                     >
-                      Toggle Classroom
+                      {isOptedOut === "true" ? "Enter Classroom" : "Exit Classroom"}
                     </button>
                   </div>
                 ) : (
