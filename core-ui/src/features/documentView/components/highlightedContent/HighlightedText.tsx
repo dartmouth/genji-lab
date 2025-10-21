@@ -8,7 +8,7 @@ import { TextFormatting } from "@documentView/types";
 import { useVisibilityWithPrefetch } from "@/hooks/useVisibilityWithPrefetch";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { commentingAnnotations } from "@store";
-
+import ExternalReferenceIconsOverlay from "./ExternalReferenceIconsOverlay";
 import {
   RootState,
   useAppDispatch,
@@ -354,8 +354,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       top: number;
       width: number;
       height: number;
-      annotationStart: number; // 🎯 ADD THIS
-      annotationEnd: number; // 🎯 ADD THIS
+      annotationStart: number;
+      annotationEnd: number;
     }> = [];
 
     linkingAnnotations.forEach((annotation) => {
@@ -578,7 +578,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       resizeObserver.observe(containerRef.current);
     }
 
-    // Clean up
     return () => {
       resizeObserver.disconnect();
       debouncedHandleMouseMove.cancel();
@@ -633,6 +632,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         onMouseMove={debouncedHandleMouseMove}
         style={getTextFormattingStyles()}
       >
+        {/* KEEP PLAIN TEXT - don't use HighlightedTextWithReferences here */}
         {text}
 
         {/* Precise Redux navigation highlights */}
@@ -691,7 +691,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
             {/* Container to prevent opacity stacking */}
             <div className="linked-text-highlights-container">
               {linkedTextPositions.map((position, index) => {
-                // 🎯 NEW: Find which annotation this position belongs to
                 const annotationData = linkingAnnotations.find((annotation) => {
                   const target = annotation.target?.find((t) => {
                     const numericId = parseURI(paragraphId);
@@ -704,7 +703,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
                   if (!target?.selector) return false;
 
-                  // Check if this position matches the annotation's range
                   const { start, end } = target.selector.refined_by;
                   return (
                     position.annotationStart === start &&
@@ -731,9 +729,15 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
             </div>
           </>
         )}
+
+        {/* NEW: Render external reference icons as overlays */}
+        <ExternalReferenceIconsOverlay
+          text={text}
+          paragraphId={paragraphId}
+          containerRef={containerRef}
+        />
       </div>
 
-      {/* Render annotation creation dialog if open - but not during linking mode */}
       {isDialogOpen && !isLinkingModeActive && (
         <AnnotationCreationDialog onClose={handleCloseDialog} />
       )}

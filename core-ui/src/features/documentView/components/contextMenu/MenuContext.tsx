@@ -13,6 +13,7 @@ import {
   selectAnnotationCreate,
   selectAllDocuments,
   fetchAllDocumentElements,
+  RootState,
 } from "@store";
 import {
   createSelectionFromDOMSelection,
@@ -21,7 +22,6 @@ import {
   HierarchicalLinkedDocuments,
   LinkedTextOption,
 } from "@documentView/utils/linkedTextUtils";
-import { RootState } from "@store";
 import {
   selectAllLinkingAnnotations,
   selectAllLoadedElements,
@@ -543,6 +543,19 @@ const MenuContext: React.FC<MenuContextProps> = ({
                 Create Scholarly Annotation
               </ContextButton>
             )}
+
+            <ContextButton
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dispatch(setMotivation("external_reference"));
+              }}
+              style={{
+                borderTop: "1px solid #eee",
+              }}
+            >
+              Add External Reference 🔗
+            </ContextButton>
 
             {hasLinkedDocuments && (
               <ContextButton

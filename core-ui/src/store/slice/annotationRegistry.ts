@@ -1,15 +1,14 @@
 // annotationRegistry.ts
-import { commentingAnnotations } from './annotationSlices';
-import { replyingAnnotations } from './annotationSlices';
-import { scholarlyAnnotations } from './annotationSlices';
+import { commentingAnnotations } from "./annotationSlices";
+import { replyingAnnotations } from "./annotationSlices";
+import { scholarlyAnnotations } from "./annotationSlices";
+import { externalReferenceAnnotations } from "./annotationSlices";
 
-// The registry maps bucket names to their corresponding slice objects
 export const annotationRegistry = {
   commenting: commentingAnnotations,
   replying: replyingAnnotations,
-  scholarly: scholarlyAnnotations
-  // Add more buckets as needed
+  scholarly: scholarlyAnnotations,
+  external_reference: externalReferenceAnnotations,
 };
 
-// Type for the registry to ensure type safety
 export type AnnotationBucketName = keyof typeof annotationRegistry;

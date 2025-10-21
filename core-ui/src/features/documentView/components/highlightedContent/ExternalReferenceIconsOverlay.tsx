@@ -1,0 +1,170 @@
+// src/features/documentView/components/highlightedContent/ExternalReferenceIconsOverlay.tsx
+
+import React, { useState, useEffect, useCallback, RefObject } from "react";
+import { useAppSelector } from "@store/hooks";
+import { RootState } from "@store";
+import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
+import { ExternalReferenceIcon } from "../externalReferences";
+import ExternalReferencePreviewModal from "../externalReferences/ExternalReferencePreviewModal";
+
+interface ExternalReferenceIconsOverlayProps {
+  text: string;
+  paragraphId: string;
+  containerRef: RefObject<HTMLDivElement | null>;
+}
+
+interface IconPosition {
+  index: number;
+  left: number;
+  top: number;
+  metadata: {
+    title: string;
+    description: string;
+    url: string;
+  };
+}
+
+const ExternalReferenceIconsOverlay: React.FC<
+  ExternalReferenceIconsOverlayProps
+> = ({ text, paragraphId, containerRef }) => {
+  const [previewState, setPreviewState] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    url: string;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    url: "",
+  });
+
+  const [iconPositions, setIconPositions] = useState<IconPosition[]>([]);
+
+  const externalReferences = useAppSelector((state: RootState) =>
+    selectExternalReferencesByParagraph(state, paragraphId)
+  );
+
+  const calculatePositions = useCallback(() => {
+    if (externalReferences.length === 0 || !containerRef.current || !text) {
+      setIconPositions([]);
+      return;
+    }
+
+    const textNode = containerRef.current.firstChild;
+    if (!textNode || !(textNode instanceof Text)) {
+      setIconPositions([]);
+      return;
+    }
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const positions: IconPosition[] = [];
+
+    externalReferences.forEach((annotation, index) => {
+      const target = annotation.target.find((t) => t.source === paragraphId);
+      if (!target || !target.selector) return;
+
+      const end = target.selector.refined_by.end;
+      const textLength = textNode.textContent?.length || 0;
+
+      // Validate the end position
+      if (end < 0 || end > textLength) {
+        console.warn(
+          `Invalid end position ${end} for text length ${textLength}`
+        );
+        return;
+      }
+
+      try {
+        const metadata = JSON.parse(annotation.body.value);
+
+        // Create a range to get the position at the end of the selected text
+        const range = document.createRange();
+        const safeEnd = Math.min(end, textLength);
+        range.setStart(textNode, safeEnd);
+        range.setEnd(textNode, safeEnd);
+
+        const rects = range.getClientRects();
+        if (rects.length === 0) {
+          return;
+        }
+
+        const rect = rects[0];
+
+        positions.push({
+          index: index + 1,
+          left: rect.left - containerRect.left,
+          top: rect.top - containerRect.top,
+          metadata,
+        });
+      } catch (error) {
+        console.error("Failed to calculate reference icon position:", error);
+      }
+    });
+
+    setIconPositions(positions);
+  }, [externalReferences, text, paragraphId, containerRef]);
+
+  useEffect(() => {
+    calculatePositions();
+  }, [calculatePositions]);
+
+  // Recalculate on resize
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      calculatePositions();
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [calculatePositions, containerRef]);
+
+  if (iconPositions.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      {iconPositions.map((pos, idx) => (
+        <div
+          key={`ref-icon-${idx}`}
+          style={{
+            position: "absolute",
+            left: `${pos.left}px`,
+            top: `${pos.top}px`,
+            pointerEvents: "auto",
+            zIndex: 10,
+          }}
+        >
+          <ExternalReferenceIcon
+            index={pos.index}
+            url={pos.metadata.url}
+            title={pos.metadata.title}
+            onPreview={() => {
+              setPreviewState({
+                open: true,
+                title: pos.metadata.title,
+                description: pos.metadata.description,
+                url: pos.metadata.url,
+              });
+            }}
+          />
+        </div>
+      ))}
+      <ExternalReferencePreviewModal
+        open={previewState.open}
+        onClose={() => setPreviewState({ ...previewState, open: false })}
+        title={previewState.title}
+        description={previewState.description}
+        url={previewState.url}
+      />
+    </>
+  );
+};
+
+export default ExternalReferenceIconsOverlay;
