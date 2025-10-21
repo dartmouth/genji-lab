@@ -147,6 +147,7 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({ onC
   };
 
   const makeLinkAnnotationBody = () => {
+    console.log(selectedLink)
     return newAnno.target.segments.map((targ) => {
       return {
         type: 'Text',
@@ -609,7 +610,7 @@ const onSave = () => {
       }}
     >
       {links.map((l) => (
-        <option key={l.body.id} value={l.body.id}>
+        <option key={l.id} value={l.id}>
           {l.body.value}
         </option>
       ))}

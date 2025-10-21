@@ -26,7 +26,7 @@ export interface TextTarget {
     selector?: TextQuoteSelector | null;
 }
 
-interface ObjectTarget {
+export interface ObjectTarget {
     id?: number | null;
     type: string;
     source: string;
@@ -119,11 +119,12 @@ interface AnnotationCreate {
         "format": string;
         "language": string;
     };
-    "target": Array<{
-        "type": string;
-        "source": string;
-        "selector"?: Selector;
-    }>
+    "target": (TextTarget | ObjectTarget | (TextTarget | ObjectTarget)[])[];
+    // "target": Array<{
+    //     "type": string;
+    //     "source": string;
+    //     "selector"?: Selector;
+    // }>
 }
 
 interface AnnotationDelete {

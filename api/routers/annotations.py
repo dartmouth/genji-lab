@@ -42,6 +42,15 @@ def generate_target_id(db: Session, schema: str) -> str:
     return id_num
 
 
+def dump_targets(targets: List):
+    result = []
+    for target in targets:
+        if isinstance(target, list):
+            result.append(dump_targets(target))
+        else:
+            result.append(target.model_dump(by_alias=True, exclude_none=True))
+    return result
+        
 @router.post("/", response_model=Annotation, status_code=status.HTTP_201_CREATED)
 def create_annotation(
     annotation: AnnotationCreate,
@@ -55,7 +64,11 @@ def create_annotation(
     annotation.body.id = generate_body_id(db, os.environ.get("DB_SCHEMA"))
 
     for target in annotation.target:
-        target.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
+        if isinstance(target, list):
+            for sub_targ in target:
+                sub_targ.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
+        else:
+            target.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
 
     # Set the creator to current user and classroom
     annotation.creator_id = current_user.id
@@ -72,7 +85,7 @@ def create_annotation(
         generator=annotation.generator,
         generated=datetime.now(),
         body=annotation.body.model_dump(by_alias=True),
-        target=[t.model_dump(by_alias=True) for t in annotation.target],
+        target=dump_targets(annotation.target),
         status=annotation.status,
         annotation_type=annotation.annotation_type,
         context=annotation.context,

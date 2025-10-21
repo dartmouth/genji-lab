@@ -39,7 +39,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   documents,
   onClose,
 }) => {
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeClassroomValue, _setActiveClassroomValue] =
     useLocalStorage("active_classroom");
@@ -465,20 +465,21 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     // Create segments for all elements in both selections
     const segments = [
       // First selection segments
-      ...firstSelection.elements.map((element) => ({
+      firstSelection.elements.map((element) => ({
         sourceURI: element.sourceURI,
         start: element.start,
         end: element.end,
         text: element.text,
       })),
       // Second selection segments
-      ...secondSelection.elements.map((element) => ({
+      secondSelection.elements.map((element) => ({
         sourceURI: element.sourceURI,
         start: element.start,
         end: element.end,
         text: element.text,
       })),
     ];
+    console.log("segments are ", segments)
 
     // Use the first document's collection and element for the main annotation body
     const annoBody = makeTextAnnotationBody(
