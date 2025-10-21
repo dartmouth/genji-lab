@@ -4,6 +4,8 @@ import { useAppDispatch } from "@store/hooks";
 import { useAuth } from "@hooks/useAuthContext";
 import { linkingAnnotations } from "@store";
 import { makeTextAnnotationBody } from "@documentView/utils";
+import useLocalStorage from "@/hooks/useLocalStorage";
+
 import {
   Link as LinkIcon,
   Close as CloseIcon,
@@ -37,6 +39,13 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   documents,
   onClose,
 }) => {
+  
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeClassroomValue, _setActiveClassroomValue] =
+    useLocalStorage("active_classroom");
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAuth();
 
@@ -481,8 +490,9 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       description || "Document link",
       segments
     );
-
-    dispatch(linkingAnnotations.thunks.saveAnnotation(annoBody));
+    const classroomId = activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
+    
+    dispatch(linkingAnnotations.thunks.saveAnnotation({annotation: annoBody, classroomId: classroomId}));
     onClose();
   };
 
