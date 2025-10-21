@@ -14,6 +14,7 @@ interface Annotation {
     "document_element_id": string;
     "document_id": number;
     "document_collection_id": number;
+    "classroom_id"?: number;
     "type": string;
     "creator": {
         "first_name": string,
