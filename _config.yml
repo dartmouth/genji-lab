@@ -1,0 +1,61 @@
+# GitHub Pages Configuration for Genji Documentation
+
+# Theme
+theme: jekyll-theme-cayman
+# Alternatives: minima, slate, architect, midnight, tactile, time-machine
+
+# Site settings
+title: Genji Documentation
+description: Document Annotation Platform - Comprehensive Developer Documentation
+baseurl: "/rc-genji"
+url: "https://dartmouth-itc.github.io"
+
+# Repository information
+github_username: dartmouth-itc
+repository: dartmouth-itc/rc-genji
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Navigation
+plugins:
+  - jekyll-relative-links
+  - jekyll-optional-front-matter
+  - jekyll-readme-index
+  - jekyll-titles-from-headings
+  - jekyll-seo-tag
+
+# Make links work
+relative_links:
+  enabled: true
+  collections: true
+
+# Use README.md as index.html
+readme_index:
+  enabled: true
+  remove_originals: false
+
+# Extract titles from headings
+titles_from_headings:
+  enabled: true
+  strip_title: false
+  collections: false
+
+# Exclude from build
+exclude:
+  - api/__pycache__/
+  - api/env/
+  - api/venv/
+  - api/alembic/__pycache__/
+  - core-ui/node_modules/
+  - core-ui/dist/
+  - "*.pyc"
+  - "*.log"
+  - .git/
+  - .gitignore
+  - docker-compose.yml
+  - Dockerfile
+  - requirements.txt
+  - package.json
+  - package-lock.json
