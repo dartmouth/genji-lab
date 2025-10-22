@@ -81,7 +81,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     return numericId;
   };
 
-  // Function to analyze a DOM selection and extract all involved elements
   const analyzeMultiElementSelection = (
     range: Range
   ): MultiElementSelection | null => {
@@ -149,8 +148,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       return null;
     }
 
-    // Process each DocumentElement to calculate precise text ranges
-    // console.log("documentElements.size:", documentElements.size, "Array:", Array.from(documentElements).map(e => e.id));
     documentElements.forEach((element) => {
       const elementId = element.id;
       // console.log('Processing element: ', element.id)
@@ -419,6 +416,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       document.removeEventListener("mousedown", handleMouseDown, true);
       document.removeEventListener("mouseup", handleSelection, true);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, firstSelection, documents]);
 
   const handleSaveLink = () => {
