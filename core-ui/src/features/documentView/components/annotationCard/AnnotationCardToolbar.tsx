@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import useLocalStorage from '@/hooks/useLocalStorage';
 import { 
     ThumbUp, 
     ChatBubbleOutline, 
@@ -53,6 +54,12 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
 }) => {
     const { user } = useAuth();
     const dispatch = useAppDispatch();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [activeClassroomValue, _setActiveClassroomValue] =
+        useLocalStorage("active_classroom");
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
     const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
     // Get upvotes for this annotation
@@ -88,7 +95,8 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
             segment
         );
             
-        dispatch(upvoteAnnotations.thunks.saveAnnotation(upvote));
+        const classId = activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
+        dispatch(upvoteAnnotations.thunks.saveAnnotation({annotation: upvote, classroomId: classId}));
     };
 
     const toggleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {

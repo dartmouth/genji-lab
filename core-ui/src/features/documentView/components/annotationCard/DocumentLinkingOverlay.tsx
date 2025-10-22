@@ -482,7 +482,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       segments
     );
 
-    dispatch(linkingAnnotations.thunks.saveAnnotation(annoBody));
+    dispatch(linkingAnnotations.thunks.saveAnnotation({annotation: annoBody}));
     onClose();
   };
 

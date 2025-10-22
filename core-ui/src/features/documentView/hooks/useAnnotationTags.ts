@@ -48,7 +48,7 @@ export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
         segment
       );
       
-      dispatch(taggingAnnotations.thunks.saveAnnotation(tagAnno));
+      dispatch(taggingAnnotations.thunks.saveAnnotation({annotation: tagAnno}));
     });
     
     setIsTagging(false);

@@ -11,7 +11,7 @@ export interface AuthContextType {
     netid?: string;
     username?: string;
     email?: string;
-    user_metadata?: Record<string, string|number>;
+    user_metadata?: Record<string, string|number|object>;
     roles?: Array<string>,
     groups: Array<{name: string; id: number}>,
     ttl: string; // ISO format timestamp for expiration
