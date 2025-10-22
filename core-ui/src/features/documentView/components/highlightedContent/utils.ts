@@ -11,6 +11,7 @@ export const flattenTargets = (
 export const getTextTargets = (
   targets: (TextTarget | ObjectTarget | (TextTarget | ObjectTarget)[])[]
 ): TextTarget[] => {
+    // console.log("flattening")
   return flattenTargets(targets).filter((t): t is TextTarget => 'selector' in t);
 };
 

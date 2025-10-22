@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select, text, and_, or_
+from sqlalchemy import select, text, and_, or_, func
 from datetime import datetime
 from collections import defaultdict
 from typing import Dict, List, Any
@@ -272,6 +272,45 @@ def update_annotation(
     response_model=Dict[str, List[Annotation]],
     status_code=status.HTTP_200_OK,
 )
+# def read_annotations_by_motivation(
+#     document_element_id: int,
+#     classroom_id: Optional[int] = Depends(get_classroom_context),
+#     current_user: User = Depends(get_current_user_sync),
+#     db: Session = Depends(get_db),
+# ):
+#     """Get annotations grouped by motivation for a document element."""
+
+#     query = (
+#         db.query(AnnotationModel)
+#         .options(joinedload(AnnotationModel.creator))
+#         .filter(AnnotationModel.document_element_id == document_element_id)
+#     )
+
+#     # Apply classroom filtering
+#     if classroom_id is not None:
+#             query = query.filter(
+#         or_(
+#             and_(AnnotationModel.motivation == 'commenting', 
+#                  AnnotationModel.classroom_id == classroom_id),
+#             AnnotationModel.motivation != 'commenting'
+#         )
+#     )
+#     else:
+#         query = query.filter(AnnotationModel.classroom_id.is_(None))
+
+#     annotations = query.all()
+
+#     # Group by motivation
+#     grouped_annotations = defaultdict(list)
+#     for annotation in annotations:
+#         grouped_annotations[annotation.motivation].append(annotation)
+
+#     return dict(grouped_annotations)
+@router.get(
+    "/by-motivation/{document_element_id}",
+    response_model=Dict[str, List[Annotation]],
+    status_code=status.HTTP_200_OK,
+)
 def read_annotations_by_motivation(
     document_element_id: int,
     classroom_id: Optional[int] = Depends(get_classroom_context),
@@ -279,34 +318,43 @@ def read_annotations_by_motivation(
     db: Session = Depends(get_db),
 ):
     """Get annotations grouped by motivation for a document element."""
-
+    
+    uri = f'DocumentElements/{document_element_id}'
+    
+    # Universal path expression - handles both flat and nested
+    path_expr = f'$[*] ? ((@.source == "{uri}") || (@[*].source == "{uri}"))'
+    
     query = (
         db.query(AnnotationModel)
         .options(joinedload(AnnotationModel.creator))
-        .filter(AnnotationModel.document_element_id == document_element_id)
-    )
-
-    # Apply classroom filtering
-    if classroom_id is not None:
-            query = query.filter(
-        or_(
-            and_(AnnotationModel.motivation == 'commenting', 
-                 AnnotationModel.classroom_id == classroom_id),
-            AnnotationModel.motivation != 'commenting'
+        .filter(
+            func.jsonb_path_exists(
+                AnnotationModel.target,
+                path_expr
+            )
         )
     )
+    
+    # Apply classroom filtering
+    if classroom_id is not None:
+        query = query.filter(
+            or_(
+                and_(AnnotationModel.motivation == 'commenting', 
+                     AnnotationModel.classroom_id == classroom_id),
+                AnnotationModel.motivation != 'commenting'
+            )
+        )
     else:
         query = query.filter(AnnotationModel.classroom_id.is_(None))
-
+    
     annotations = query.all()
-
+    
     # Group by motivation
     grouped_annotations = defaultdict(list)
     for annotation in annotations:
         grouped_annotations[annotation.motivation].append(annotation)
 
     return dict(grouped_annotations)
-
 
 @router.get(
     "/links/{document_element_id}",

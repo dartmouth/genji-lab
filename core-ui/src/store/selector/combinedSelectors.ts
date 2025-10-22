@@ -3,6 +3,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import {
   commentingAnnotations,
   scholarlyAnnotations,
+  // linkingAnnotations,
   RootState,
 } from "../index";
 import { Annotation } from "@documentView/types";
@@ -23,6 +24,11 @@ export const selectAllAnnotationsForParagraph = createSelector(
         state,
         paragraphId
       ),
+    // (state: RootState, paragraphId: string) =>
+    //   linkingAnnotations.selectors.selectAnnotationsByParent(
+    //     state,
+    //     paragraphId
+    //   ),
   ],
   (comments, scholarly) => [...comments, ...scholarly]
 );

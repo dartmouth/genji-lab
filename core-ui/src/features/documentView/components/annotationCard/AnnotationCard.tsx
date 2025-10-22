@@ -248,7 +248,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
       segment
     );
 
-    dispatch(upvoteAnnotations.thunks.saveAnnotation(upvote));
+    dispatch(upvoteAnnotations.thunks.saveAnnotation({annotation: upvote}));
   };
 
   // Dropdown menu component for portal
