@@ -85,10 +85,12 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     range: Range
   ): MultiElementSelection | null => {
     const selectedText = range.toString().trim();
+     console.log("=== analyzeMultiElementSelection called ===", selectedText.substring(0, 30));
     if (selectedText.length === 0) return null;
 
     // Find all document elements that intersect with the selection
     const elementSelections: ElementSelection[] = [];
+    console.log("Starting elementSelections:", elementSelections.length);
 
     // Find all DocumentElement containers that might be involved
     const documentElements = new Set<HTMLElement>();
@@ -120,37 +122,58 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
       textNode = walker.nextNode() as Text;
     }
-
-
-    // If we still haven't found any elements, try a broader search
+    console.log("elements selected: ", documentElements.size)
     if (documentElements.size === 0) {
-      // Get all DocumentElements in the document and check intersection
       const allDocElements = document.querySelectorAll(
         '[id*="DocumentElements"]'
       );
-
+      const seenIds = new Set<string>(); // ← Track by ID instead
+      
       allDocElements.forEach((element) => {
         try {
           if (range.intersectsNode(element)) {
-            documentElements.add(element as HTMLElement);
+            const elementId = (element as HTMLElement).id;
+            if (!seenIds.has(elementId)) { // ← Check if we've seen this ID
+              seenIds.add(elementId);
+              documentElements.add(element as HTMLElement);
+            }
           }
         } catch (error) {
-          console.error(
-            error,
-            "Error checking intersection for element:",
-            element.id
-          );
+          console.error(error, "Error checking intersection for element:", element.id);
         }
       });
     }
-
+    // If we still haven't found any elements, try a broader search
+  //   if (documentElements.size === 0) {
+  //     // Get all DocumentElements in the document and check intersection
+  //     const allDocElements = document.querySelectorAll(
+  //       '[id*="DocumentElements"]'
+  //     );
+  // console.log("querySelectorAll found:", allDocElements.length, "total elements");
+  //     allDocElements.forEach((element) => {
+  //       try {
+  //         if (range.intersectsNode(element)) {
+  //                   console.log("Adding element:", element.id, "Current set size:", documentElements.size);
+  //           documentElements.add(element as HTMLElement);
+  //                   console.log("After add, set size:", documentElements.size);
+  //         }
+  //       } catch (error) {
+  //         console.error(
+  //           error,
+  //           "Error checking intersection for element:",
+  //           element.id
+  //         );
+  //       }
+  //     });
+  //   }
+    console.log("elements selected after global: ", documentElements.size)
     if (documentElements.size === 0) {
       return null;
     }
 
     documentElements.forEach((element) => {
       const elementId = element.id;
-      // console.log('Processing element: ', element.id)
+      console.log('Processing element: ', element.id)
       // Extract numeric ID safely
       const numericId = extractNumericId(elementId);
       if (!numericId) {
@@ -339,7 +362,9 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       console.warn("Document not found in current view:", documentId);
       return null;
     }
-
+  console.log("Final elementSelections count:", elementSelections.length);
+  console.log("elementSelections:", elementSelections.map(e => ({id: e.documentElementId, text: e.text.substring(0, 20)})));
+  
     return {
       documentId: foundDocument.id,
       elements: elementSelections,
