@@ -91,20 +91,9 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     // Find all document elements that intersect with the selection
     const elementSelections: ElementSelection[] = [];
 
-    // Alternative approach: Start from the range boundaries and find DocumentElement ancestors
-    const startElement =
-      range.startContainer.nodeType === Node.ELEMENT_NODE
-        ? (range.startContainer as HTMLElement)
-        : (range.startContainer.parentElement as HTMLElement);
-    const endElement =
-      range.endContainer.nodeType === Node.ELEMENT_NODE
-        ? (range.endContainer as HTMLElement)
-        : (range.endContainer.parentElement as HTMLElement);
-
     // Find all DocumentElement containers that might be involved
     const documentElements = new Set<HTMLElement>();
 
-    // Method 1: Tree walker approach (original)
     const commonAncestor = range.commonAncestorContainer;
     const walker = window.document.createTreeWalker(
       commonAncestor,
@@ -133,32 +122,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       textNode = walker.nextNode() as Text;
     }
 
-    // Method 2: Direct ancestor traversal from start/end points
-    [startElement, endElement].forEach((element) => {
-      if (element) {
-        let current: HTMLElement | null = element;
-        while (current && current !== document.body) {
-          if (current.id?.includes("DocumentElements")) {
-            documentElements.add(current);
-            break;
-          }
-          current = current.parentElement;
-        }
-      }
-    });
-
-    // Method 3: Query selector within the common ancestor
-    if (commonAncestor.nodeType === Node.ELEMENT_NODE) {
-      const ancestorElement = commonAncestor as HTMLElement;
-      const foundElements = ancestorElement.querySelectorAll(
-        '[id*="DocumentElements"]'
-      );
-      foundElements.forEach((el) => {
-        if (range.intersectsNode(el)) {
-          documentElements.add(el as HTMLElement);
-        }
-      });
-    }
 
     // If we still haven't found any elements, try a broader search
     if (documentElements.size === 0) {
@@ -187,9 +150,10 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     }
 
     // Process each DocumentElement to calculate precise text ranges
+    // console.log("documentElements.size:", documentElements.size, "Array:", Array.from(documentElements).map(e => e.id));
     documentElements.forEach((element) => {
       const elementId = element.id;
-
+      // console.log('Processing element: ', element.id)
       // Extract numeric ID safely
       const numericId = extractNumericId(elementId);
       if (!numericId) {
@@ -344,7 +308,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       ) {
         elementSelections.push({
           documentElementId: parseInt(numericId),
-          sourceURI: `/DocumentElements/${numericId}`, // Consistent format with leading slash
+          sourceURI: `DocumentElements/${numericId}`, // Consistent format with leading slash
           text: intersectionText,
           start: elementStart,
           end: elementEnd,
@@ -393,7 +357,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-
+      
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0) {
         return;
@@ -461,7 +425,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     if (!user || !isAuthenticated || !firstSelection || !secondSelection) {
       return;
     }
-
     // Create segments for all elements in both selections
     const segments = [
       // First selection segments
@@ -479,7 +442,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         text: element.text,
       })),
     ];
-    console.log("segments are ", segments)
+    // console.log("segments are ", segments, "length of segments is ", segments.length, "first elem has ", segments[0].length, "second elem has ", segments[1].length)
 
     // Use the first document's collection and element for the main annotation body
     const annoBody = makeTextAnnotationBody(

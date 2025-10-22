@@ -225,45 +225,6 @@ const onSave = () => {
   dispatch(resetCreateAnnotation());
   onClose();
 };
-
-  // const onSave = () => {
-  //   if (!user || !isAuthenticated) {
-  //     console.log("User not authenticated");
-  //     return;
-  //   }
-
-  //   const annoType: string = newAnno.motivation;
-  //   const slice = sliceMap[annoType] || {};
-
-  //   if (!slice) {
-  //     console.error("Bad motivation");
-  //     return;
-  //   }
-    
-  //   const annoBody = makeTextAnnotationBody(
-  //     newAnno.target.documentCollectionId,
-  //     newAnno.target.documentId,
-  //     parseURI(newAnno.target.segments[0].sourceURI) as unknown as number,
-  //     user.id,
-  //     newAnno.motivation,
-  //     newAnno.content,
-  //     newAnno.target.segments
-  //   );
-    
-  //   // Prepare save parameters with classroom context
-  //   const saveParams: { annotation: typeof annoBody; classroomId?: string } = {
-  //     annotation: annoBody
-  //   };
-    
-  //   // Only include classroomId if user is in a classroom and hasn't opted out
-  //   if (activeClassroomValue && isOptedOut !== 'true') {
-  //     saveParams.classroomId = activeClassroomValue as string;
-  //   }
-    
-  //   dispatch(slice.thunks.saveAnnotation(saveParams));
-  //   dispatch(resetCreateAnnotation());
-  //   onClose();
-  // };
   
   const onCancel = () => {
     dispatch(resetCreateAnnotation());

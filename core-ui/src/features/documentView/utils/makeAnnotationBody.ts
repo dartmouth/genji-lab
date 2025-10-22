@@ -178,6 +178,7 @@ export function makeTextAnnotationBody(
         });
     }
     console.log(newAnnotation)
+    console.log("target after makeAnnotationBody: ", newAnnotation.target)
     return newAnnotation;
 }
 
