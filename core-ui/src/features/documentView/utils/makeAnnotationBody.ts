@@ -125,11 +125,6 @@ export function makeTextAnnotationBody(
         ? segments as Segment[][] 
         : [segments as Segment[]];
     
-    if (Array.isArray(segments[0])){
-        console.log('lol')
-    } else {
-        console.log('no lol')
-    }
     if (['commenting', 'scholarly', 'linking'].includes(motivation)) {
         // Process each group of segments
         segmentGroups.forEach(group => {
@@ -177,8 +172,7 @@ export function makeTextAnnotationBody(
             }
         });
     }
-    console.log(newAnnotation)
-    console.log("target after makeAnnotationBody: ", newAnnotation.target)
+
     return newAnnotation;
 }
 

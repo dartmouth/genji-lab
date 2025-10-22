@@ -9,6 +9,8 @@ import { useVisibilityWithPrefetch } from "@/hooks/useVisibilityWithPrefetch";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { commentingAnnotations } from "@store";
 
+import { getTextTargets, findTargetForParagraph } from "./utils";
+
 import {
   RootState,
   useAppDispatch,
@@ -157,24 +159,27 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
     // Use the same logic as linked text highlighting to get precise positions
     linkingAnnotations.forEach((annotation) => {
-      let target = annotation.target?.find((t) => t.source === paragraphId);
+        const textTargets = getTextTargets(annotation.target);
+        const target = findTargetForParagraph(textTargets, paragraphId);
+      // let target = annotation.target?.find((t) => t.source === paragraphId);
 
-      if (!target) {
-        target = annotation.target?.find(
-          (t) => t.source === `DocumentElements/${parseURI(paragraphId)}`
-        );
-      }
+      // if (!target) {
+      //   target = annotation.target?.find(
+      //     (t) => t.source === `DocumentElements/${parseURI(paragraphId)}`
+      //   );
+      // }
 
-      if (!target) {
-        const numericId = parseURI(paragraphId);
-        target = annotation.target?.find(
-          (t) =>
-            t.source === `DocumentElements/${numericId}` ||
-            t.source === `/DocumentElements/${numericId}`
-        );
-      }
+      // if (!target) {
+      //   const numericId = parseURI(paragraphId);
+      //   target = annotation.target?.find(
+      //     (t) =>
+      //       t.source === `DocumentElements/${numericId}` ||
+      //       t.source === `/DocumentElements/${numericId}`
+      //   );
+      // }
 
       if (!target || !target.selector) {
+        console.log("can't find link target")
         return;
       }
 
@@ -295,7 +300,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     });
 
     regularAnnotations.forEach((annotation) => {
-      const target = annotation.target.find((t) => t.source === paragraphId);
+        const textTargets = getTextTargets(annotation.target);
+        const target = findTargetForParagraph(textTargets, paragraphId);
+      // const target = annotation.target.find((t) => t.source === paragraphId);
 
       if (!target) return;
       if (!target.selector) return;
@@ -354,25 +361,27 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       top: number;
       width: number;
       height: number;
-      annotationStart: number; // 🎯 ADD THIS
-      annotationEnd: number; // 🎯 ADD THIS
+      annotationStart: number; 
+      annotationEnd: number; 
     }> = [];
 
     linkingAnnotations.forEach((annotation) => {
-      let target = annotation.target?.find((t) => t.source === paragraphId);
-      if (!target) {
-        target = annotation.target?.find(
-          (t) => t.source === `DocumentElements/${parseURI(paragraphId)}`
-        );
-      }
-      if (!target) {
-        const numericId = parseURI(paragraphId);
-        target = annotation.target?.find(
-          (t) =>
-            t.source === `DocumentElements/${numericId}` ||
-            t.source === `/DocumentElements/${numericId}`
-        );
-      }
+      const textTargets = getTextTargets(annotation.target);
+      const target = findTargetForParagraph(textTargets, paragraphId);
+      // let target = annotation.target?.find((t) => t.source === paragraphId);
+      // if (!target) {
+      //   target = annotation.target?.find(
+      //     (t) => t.source === `DocumentElements/${parseURI(paragraphId)}`
+      //   );
+      // }
+      // if (!target) {
+      //   const numericId = parseURI(paragraphId);
+      //   target = annotation.target?.find(
+      //     (t) =>
+      //       t.source === `DocumentElements/${numericId}` ||
+      //       t.source === `/DocumentElements/${numericId}`
+      //   );
+      // }
 
       if (!target || !target.selector) {
         return;
@@ -397,8 +406,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           top: rect.top - containerRect.top,
           width: rect.width,
           height: rect.height,
-          annotationStart: start, // 🎯 ADD THIS
-          annotationEnd: adjustedEnd, // 🎯 ADD THIS
+          annotationStart: start, 
+          annotationEnd: adjustedEnd,
         }));
 
         allLinkedPositions.push(...positions);
@@ -691,19 +700,15 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
             {/* Container to prevent opacity stacking */}
             <div className="linked-text-highlights-container">
               {linkedTextPositions.map((position, index) => {
-                // 🎯 NEW: Find which annotation this position belongs to
                 const annotationData = linkingAnnotations.find((annotation) => {
-                  const target = annotation.target?.find((t) => {
-                    const numericId = parseURI(paragraphId);
-                    return [
-                      t.source === paragraphId,
-                      t.source === `/DocumentElements/${numericId}`,
-                      t.source === `DocumentElements/${numericId}`,
-                    ].some((match) => match);
-                  });
-
+                  // First, flatten and filter to get only TextTargets
+                  const textTargets = getTextTargets(annotation.target);
+                  
+                  // Find the matching target for this paragraph
+                  const target = findTargetForParagraph(textTargets, paragraphId);
+                  
                   if (!target?.selector) return false;
-
+                  
                   // Check if this position matches the annotation's range
                   const { start, end } = target.selector.refined_by;
                   return (
@@ -711,7 +716,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
                     position.annotationEnd === end
                   );
                 });
-
+                
                 return (
                   <div
                     key={`linked-${index}`}
