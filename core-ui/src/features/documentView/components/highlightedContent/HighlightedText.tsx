@@ -160,7 +160,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     // Use the same logic as linked text highlighting to get precise positions
     linkingAnnotations.forEach((annotation) => {
         const textTargets = getTextTargets(annotation.target);
+        console.log("All targets: ", textTargets)
         const target = findTargetForParagraph(textTargets, paragraphId);
+        console.log("target is ", target)
       // let target = annotation.target?.find((t) => t.source === paragraphId);
 
       // if (!target) {
@@ -366,8 +368,10 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     }> = [];
 
     linkingAnnotations.forEach((annotation) => {
-      const textTargets = getTextTargets(annotation.target);
-      const target = findTargetForParagraph(textTargets, paragraphId);
+        const textTargets = getTextTargets(annotation.target);
+        console.log("All targets: ", textTargets)
+        const target = findTargetForParagraph(textTargets, paragraphId);
+        console.log("target is ", target)
       // let target = annotation.target?.find((t) => t.source === paragraphId);
       // if (!target) {
       //   target = annotation.target?.find(

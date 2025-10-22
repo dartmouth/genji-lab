@@ -85,12 +85,12 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     range: Range
   ): MultiElementSelection | null => {
     const selectedText = range.toString().trim();
-     console.log("=== analyzeMultiElementSelection called ===", selectedText.substring(0, 30));
+    //  console.log("=== analyzeMultiElementSelection called ===", selectedText.substring(0, 30));
     if (selectedText.length === 0) return null;
 
     // Find all document elements that intersect with the selection
     const elementSelections: ElementSelection[] = [];
-    console.log("Starting elementSelections:", elementSelections.length);
+    // console.log("Starting elementSelections:", elementSelections.length);
 
     // Find all DocumentElement containers that might be involved
     const documentElements = new Set<HTMLElement>();
@@ -122,7 +122,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
       textNode = walker.nextNode() as Text;
     }
-    console.log("elements selected: ", documentElements.size)
+    // console.log("elements selected: ", documentElements.size)
     if (documentElements.size === 0) {
       const allDocElements = document.querySelectorAll(
         '[id*="DocumentElements"]'
@@ -166,14 +166,14 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   //       }
   //     });
   //   }
-    console.log("elements selected after global: ", documentElements.size)
+    // console.log("elements selected after global: ", documentElements.size)
     if (documentElements.size === 0) {
       return null;
     }
 
     documentElements.forEach((element) => {
       const elementId = element.id;
-      console.log('Processing element: ', element.id)
+      // console.log('Processing element: ', element.id)
       // Extract numeric ID safely
       const numericId = extractNumericId(elementId);
       if (!numericId) {
@@ -362,8 +362,8 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       console.warn("Document not found in current view:", documentId);
       return null;
     }
-  console.log("Final elementSelections count:", elementSelections.length);
-  console.log("elementSelections:", elementSelections.map(e => ({id: e.documentElementId, text: e.text.substring(0, 20)})));
+  // console.log("Final elementSelections count:", elementSelections.length);
+  // console.log("elementSelections:", elementSelections.map(e => ({id: e.documentElementId, text: e.text.substring(0, 20)})));
   
     return {
       documentId: foundDocument.id,
