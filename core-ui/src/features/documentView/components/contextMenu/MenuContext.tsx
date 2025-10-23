@@ -13,7 +13,6 @@ import {
   selectSegments,
   setMotivation,
   selectAnnotationCreate,
-  // selectAllDocuments,
   fetchAllDocumentElements,
 } from "@store";
 import {
@@ -50,7 +49,6 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
   const { user } = useAuth();
   const text = useAppSelector(selectSegments);
   const annotationCreate = useAppSelector(selectAnnotationCreate);
-  // const allDocuments = useAppSelector(selectAllDocuments);
 
   // Use ref to track if bulk loading has been initiated
   const bulkLoadingInitiated = useRef(false);
@@ -203,13 +201,57 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
         return null;
       }
 
+      // NEW: Check if user clicked on a linked text highlight span
+      // Look for the closest span with data-start and data-end attributes
+      let targetSpan = clickedElement.closest(
+        "[data-start][data-end]"
+      ) as HTMLElement;
+
+      // If not found on clicked element, check if clicked element IS the span
+      if (
+        !targetSpan &&
+        clickedElement.hasAttribute("data-start") &&
+        clickedElement.hasAttribute("data-end")
+      ) {
+        targetSpan = clickedElement;
+      }
+
+      if (targetSpan) {
+        // Extract position from the linked text span
+        const linkStart = parseInt(
+          targetSpan.getAttribute("data-start") || "0"
+        );
+        const linkEnd = parseInt(targetSpan.getAttribute("data-end") || "0");
+        const linkText = targetSpan.textContent || "";
+
+        console.log("🎯 User clicked on linked text span:", {
+          linkStart,
+          linkEnd,
+          linkText: linkText.substring(0, 50) + "...",
+        });
+
+        const preciseSelection: LinkedTextSelection = {
+          documentId: foundDocument.id,
+          documentElementId: elementId,
+          text: linkText,
+          start: linkStart,
+          end: linkEnd,
+          sourceURI: `DocumentElements/${elementId}`,
+          isSyntheticSelection: false, // This is a precise selection based on the span
+        };
+
+        return preciseSelection;
+      }
+
+      // Fallback: Create synthetic selection for the whole element
       const syntheticSelection: LinkedTextSelection = {
         documentId: foundDocument.id,
         documentElementId: elementId,
         text: clickedElement.textContent?.substring(0, 100) || "clicked text",
         start: 0,
         end: Math.min(50, clickedElement.textContent?.length || 50),
-        sourceURI: `/DocumentElements/${elementId}`,
+        sourceURI: `DocumentElements/${elementId}`, // No leading slash
+        isSyntheticSelection: true, // Mark as synthetic so we don't do position overlap checking
       };
 
       return syntheticSelection;
@@ -241,10 +283,59 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
 
     const handleContextMenu = async (e: MouseEvent) => {
       const clickedElement = e.target as HTMLElement;
-      const selection = createSelectionFromClickContext(clickedElement);
+      let selection = createSelectionFromClickContext(clickedElement);
 
       if (!selection) {
         return;
+      }
+
+      console.log("📍 Context menu triggered");
+      console.log("Initial selection:", selection);
+
+      // NEW: Check if user clicked on a linked text highlight overlay
+      // The overlays are absolutely positioned divs with data-start/data-end attributes
+      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+      console.log("Elements at click point:", elementsAtPoint.length);
+      console.log(
+        "First 5 elements:",
+        elementsAtPoint.slice(0, 5).map((el) => ({
+          tag: el.tagName,
+          classes: el.className,
+          hasDataStart: el.hasAttribute("data-start"),
+          hasDataEnd: el.hasAttribute("data-end"),
+        }))
+      );
+
+      const linkOverlay = elementsAtPoint.find(
+        (el) =>
+          el.classList.contains("linked-text-highlight") &&
+          el.hasAttribute("data-start") &&
+          el.hasAttribute("data-end")
+      ) as HTMLElement;
+
+      console.log("Found link overlay:", linkOverlay);
+
+      if (linkOverlay) {
+        const linkStart = parseInt(
+          linkOverlay.getAttribute("data-start") || "0"
+        );
+        const linkEnd = parseInt(linkOverlay.getAttribute("data-end") || "0");
+
+        console.log("🎯 User clicked on linked text overlay:", {
+          linkStart,
+          linkEnd,
+          annotationId: linkOverlay.getAttribute("data-annotation-id"),
+        });
+
+        // Override the selection with precise positions from the overlay
+        selection = {
+          ...selection,
+          start: linkStart,
+          end: linkEnd,
+          isSyntheticSelection: false, // This is precise, not synthetic
+        };
+      } else {
+        console.log("❌ No link overlay found at click point");
       }
 
       e.preventDefault();

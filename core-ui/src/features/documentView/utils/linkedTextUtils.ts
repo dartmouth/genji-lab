@@ -10,6 +10,7 @@ export interface LinkedTextSelection {
   start: number;
   end: number;
   sourceURI: string;
+  isSyntheticSelection?: boolean; // True when right-clicking without text selection
 }
 
 export interface LinkedTextOption {
@@ -183,8 +184,62 @@ const getAnnotationsForElement = (
 };
 
 /**
+ * Normalize URI by removing leading slash for consistent comparison
+ * This ensures 'DocumentElements/1' and '/DocumentElements/1' are treated as equal
+ */
+const normalizeURI = (uri: string): string => {
+  return uri.replace(/^\//, "");
+};
+
+/**
+ * Check if a text position range overlaps with the selection
+ */
+const doesTargetOverlapSelection = (
+  target: TextTarget | ObjectTarget,
+  selection: LinkedTextSelection,
+  isSyntheticSelection: boolean = false
+): boolean => {
+  // Normalize both URIs to remove leading slashes for comparison
+  const normalizedTargetSource = normalizeURI(target.source);
+  const normalizedSelectionSource = normalizeURI(selection.sourceURI);
+
+  // First check if the source URI matches
+  if (normalizedTargetSource !== normalizedSelectionSource) {
+    return false;
+  }
+
+  // If this is a synthetic selection (right-click without text selection),
+  // we can't rely on position overlap, so just match by source URI
+  if (isSyntheticSelection) {
+    return true;
+  }
+
+  // If target doesn't have a selector (ObjectTarget), we can't check position overlap
+  if (!("selector" in target) || !target.selector) {
+    return false;
+  }
+
+  const targetSelector = target.selector;
+  if (!targetSelector.refined_by) {
+    return false;
+  }
+
+  const targetStart = targetSelector.refined_by.start;
+  const targetEnd = targetSelector.refined_by.end;
+  const selectionStart = selection.start;
+  const selectionEnd = selection.end;
+
+  // Check if ranges overlap
+  // Overlap occurs if: targetStart < selectionEnd AND targetEnd > selectionStart
+  const overlaps = targetStart < selectionEnd && targetEnd > selectionStart;
+
+  return overlaps;
+};
+
+/**
  * NEW: Get linked annotations grouped by annotation (not document)
  * This is used for the new context menu that shows annotation titles
+ * Now filters based on text position overlap, not just document element
  */
 export const getLinkedAnnotationsByAnnotation = (
   selection: LinkedTextSelection,
@@ -199,13 +254,13 @@ export const getLinkedAnnotationsByAnnotation = (
   );
 
   if (relevantAnnotations.length === 0) {
-    // Try alternative URI formats
+    // Try alternative URI formats - prioritize without leading slash
     const alternativeURIs = [
       selection.sourceURI,
-      `/${selection.sourceURI}`,
-      selection.sourceURI.replace(/^\//, ""),
-      `/DocumentElements/${selection.documentElementId}`,
+      selection.sourceURI.replace(/^\//, ""), // Remove leading slash
+      `/${selection.sourceURI}`, // Add leading slash
       `DocumentElements/${selection.documentElementId}`,
+      `/DocumentElements/${selection.documentElementId}`,
     ];
 
     alternativeURIs.forEach((uri) => {
@@ -223,12 +278,22 @@ export const getLinkedAnnotationsByAnnotation = (
     }
   }
 
-  // Process each annotation
-  relevantAnnotations.forEach((annotation) => {
+  // NOW: Filter annotations to only those whose targets overlap with the clicked text position
+  const annotationsWithOverlap = relevantAnnotations.filter((annotation) => {
+    return annotation.target?.some((target) => {
+      const targetGroup = Array.isArray(target) ? target : [target];
+      return targetGroup.some((t) =>
+        doesTargetOverlapSelection(t, selection, selection.isSyntheticSelection)
+      );
+    });
+  });
+
+  // Process each annotation that has overlapping targets
+  annotationsWithOverlap.forEach((annotation) => {
     // Get the annotation title from body.value
     const annotationTitle = annotation.body?.value || "Unnamed Link";
 
-    // Find which target was clicked (matches the selection)
+    // Find which target was clicked (matches the selection with position overlap)
     let clickedTargetId: number | null = null;
     const allTargetIds: number[] = [];
 
@@ -239,8 +304,14 @@ export const getLinkedAnnotationsByAnnotation = (
         if (t.id) {
           allTargetIds.push(t.id);
 
-          // Check if this is the target that was clicked
-          if (t.source === selection.sourceURI) {
+          // Check if this is the target that was clicked (overlaps with selection)
+          if (
+            doesTargetOverlapSelection(
+              t,
+              selection,
+              selection.isSyntheticSelection
+            )
+          ) {
             clickedTargetId = t.id;
           }
         }
@@ -583,7 +654,7 @@ export const createSelectionFromDOMSelection = (
     text: selectedText,
     start: startOffset,
     end: endOffset,
-    sourceURI: `/DocumentElements/${elementId}`,
+    sourceURI: `DocumentElements/${elementId}`, // No leading slash
   };
 
   return result;
