@@ -787,7 +787,7 @@ graph TB
 graph LR
     A[React Component] --> B[Redux Action/Thunk]
     B --> C[Axios HTTP Client]
-    C --> D[/api/v1/* endpoint]
+    C --> D[API v1 endpoint]
     
     D --> E[FastAPI Router]
     E --> F[Pydantic Validation]
@@ -946,10 +946,10 @@ graph TB
 
 ## Related Documentation
 
-- **[Frontend Overview](../frontend/OVERVIEW.md)** - React architecture ✅
-- **[API Overview](../api/OVERVIEW.md)** - Backend architecture ✅
-- **[Database Schema](../database/SCHEMA.md)** - Database design ✅
-- **[Deployment Guide](../guides/DEPLOYMENT.md)** - Production deployment *(Coming Soon)*
+- **[Frontend Overview](../frontend/OVERVIEW.md)** - React architecture
+- **[API Overview](../api/OVERVIEW.md)** - Backend architecture
+- **[Database Schema](../database/SCHEMA.md)** - Database design
+- **[Deployment Guide](../guides/DEPLOYMENT.md)** - Production deployment
 
 ---
 
