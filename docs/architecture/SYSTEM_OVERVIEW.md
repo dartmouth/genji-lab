@@ -512,7 +512,7 @@ stateDiagram-v2
     
     Visible --> Editing: User clicks edit
     Editing --> Updating: PATCH /api/v1/annotations/:id
-    Updating --> Stored: Update DB
+    Updating --> Stored: Update in DB
     
     Visible --> Replying: User clicks reply
     Replying --> Creating: Create reply annotation
