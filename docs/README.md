@@ -6,9 +6,6 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 
 ## 📚 Documentation Index
 
-### 📋 Planning & Strategy
-- **[Documentation Plan](DOCUMENTATION_PLAN.md)** - Complete documentation strategy and roadmap
-
 ### 🏗️ Architecture
 - **[System Overview](architecture/SYSTEM_OVERVIEW.md)** - ✅ Complete three-tier architecture, 12+ Mermaid diagrams
 - **[Data Flow](architecture/DATA_FLOW.md)** - Request/response flows *(See SYSTEM_OVERVIEW.md)*
