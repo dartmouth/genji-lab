@@ -507,18 +507,18 @@ stateDiagram-v2
     Persisting --> Stored: Insert to DB
     Stored --> ReduxUpdate: Return annotation with ID
     
-    ReduxUpdate --> Rendering: Update byId & byParent
-    Rendering --> Visible: Render highlight & card
+    ReduxUpdate --> Rendering: Update byId and byParent
+    Rendering --> Visible: Render highlight and card
     
     Visible --> Editing: User clicks edit
-    Editing --> Updating: PATCH /api/v1/annotations/:id
+    Editing --> Updating: PATCH /api/v1/annotations/id
     Updating --> Stored: Update in DB
     
     Visible --> Replying: User clicks reply
     Replying --> Creating: Create reply annotation
     
     Visible --> Deleting: User clicks delete
-    Deleting --> Removing: DELETE /api/v1/annotations/:id
+    Deleting --> Removing: DELETE /api/v1/annotations/id
     Removing --> Removed: Remove from DB
     Removed --> ReduxCleanup: Remove from store
     ReduxCleanup --> [*]
