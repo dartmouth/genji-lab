@@ -15,10 +15,10 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 
 ### 🔌 API Documentation
 - **[API Overview](api/OVERVIEW.md)** - Complete backend architecture, routers, auth, patterns
-- **[Endpoints Reference](api/ENDPOINTS.md)** - Complete API reference *(Coming Soon)*
-- **[Authentication](api/AUTHENTICATION.md)** - Auth system documentation *(Coming Soon)*
-- **[Routers](api/ROUTERS.md)** - Router breakdown *(Coming Soon)*
-- **[Data Models](api/DATA_MODELS.md)** - SQLAlchemy models *(Coming Soon)*
+- **[Endpoints Reference](api/OVERVIEW.md#api-endpoints-summary)** - Complete API endpoint reference
+- **[Authentication](api/OVERVIEW.md#authentication-system)** - Dual auth system (CAS + local password)
+- **[Routers](api/OVERVIEW.md#router-modules)** - Router organization and patterns
+- **[Data Models](api/OVERVIEW.md#database-models)** - SQLAlchemy models and schema
 
 ### ⚛️ Frontend Documentation
 - **[Frontend Overview](frontend/OVERVIEW.md)** - Complete React architecture, tech stack, features
