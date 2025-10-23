@@ -8,9 +8,9 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 
 ### 🏗️ Architecture
 - **[System Overview](architecture/SYSTEM_OVERVIEW.md)** - ✅ Complete three-tier architecture, 12+ Mermaid diagrams
-- **[Data Flow](architecture/DATA_FLOW.md)** - Request/response flows *(See SYSTEM_OVERVIEW.md)*
-- **[Integration](architecture/INTEGRATION.md)** - Frontend-backend integration *(See SYSTEM_OVERVIEW.md)*
-- **[Diagrams](architecture/DIAGRAMS.md)** - All architectural diagrams *(See SYSTEM_OVERVIEW.md)*
+- **[Data Flow Diagrams](architecture/SYSTEM_OVERVIEW.md#data-flows)** - ✅ Document loading, annotation, search flows
+- **[Integration Points](architecture/SYSTEM_OVERVIEW.md#integration-points)** - ✅ Frontend-backend integration patterns
+- **[All Diagrams](architecture/SYSTEM_OVERVIEW.md#architecture-diagrams)** - ✅ Component, deployment, network diagrams
 
 ### 🔌 API Documentation
 - **[API Overview](api/OVERVIEW.md)** - ✅ Complete backend architecture, routers, auth, patterns
