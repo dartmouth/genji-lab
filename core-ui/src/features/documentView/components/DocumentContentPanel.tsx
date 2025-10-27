@@ -7,7 +7,6 @@ import {
   selectElementsByDocumentId,
   selectDocumentStatusById,
   selectDocumentErrorById,
-  externalReferenceThunks,
 } from "@store";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "@store/hooks";
@@ -99,22 +98,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         });
     });
   }, [viewedDocuments, dispatch]);
-
-  // Fetch external references for each document element
-  useEffect(() => {
-    documentElements.forEach((element) => {
-      dispatch(
-        externalReferenceThunks.fetchAnnotations({
-          documentElementId: element.id.toString(),
-        })
-      ).catch((error) => {
-        console.error(
-          `Failed to fetch external references for element ${element.id}:`,
-          error
-        );
-      });
-    });
-  }, [documentElements, dispatch]);
 
   // Enhanced callback wrapper with detailed logging
   const handleOpenLinkedDocumentWrapper = useCallback(
@@ -217,15 +200,5 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     </div>
   );
 };
-
-// const ExternalReferencesDisplay: React.FC<{ paragraphId: string }> = ({
-//   paragraphId,
-// }) => {
-//   const externalReferences = useSelector((state: RootState) =>
-//     selectExternalReferencesByParagraph(state, paragraphId)
-//   );
-
-//   return <ExternalReferencesSection references={externalReferences} />;
-// };
 
 export default DocumentContentPanel;

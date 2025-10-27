@@ -27,21 +27,6 @@ export const selectAllAnnotationsForParagraph = createSelector(
   (comments, scholarly) => [...comments, ...scholarly]
 );
 
-export const selectExternalReferencesByParagraph = createSelector(
-  [
-    (state: RootState) => state.annotations.external_reference,
-    (_state: RootState, paragraphId: string) => paragraphId,
-  ],
-  (externalReferenceState, paragraphId) => {
-    const annotationIds = externalReferenceState.byParent[paragraphId] || [];
-    return annotationIds
-      .map((id) => externalReferenceState.byId[id])
-      .filter(
-        (annotation): annotation is Annotation => annotation !== undefined
-      );
-  }
-);
-
 // ============================================================================
 // MEMOIZED SELECTORS FOR LINKING ANNOTATIONS
 // ============================================================================
