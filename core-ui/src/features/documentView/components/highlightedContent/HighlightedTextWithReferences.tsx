@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { useAppSelector } from "@store/hooks";
 import { RootState } from "@store";
-import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
+// import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
+import { externalReferenceAnnotations } from "@/store/slice/annotationSlices";
 import { ExternalReferenceIcon } from "../externalReferences";
 import { Annotation } from "@documentView/types";
 import ExternalReferencePreviewModal from "../externalReferences/ExternalReferencePreviewModal";
@@ -40,7 +41,8 @@ const HighlightedTextWithReferences: React.FC<
   });
 
   const externalReferences = useAppSelector((state: RootState) =>
-    selectExternalReferencesByParagraph(state, paragraphId)
+    // selectExternalReferencesByParagraph(state, paragraphId)
+    externalReferenceAnnotations.selectors.selectAnnotationsByParent(state, paragraphId)
   );
 
   if (externalReferences.length === 0) {
@@ -50,7 +52,7 @@ const HighlightedTextWithReferences: React.FC<
   // Calculate reference positions
   const referencePositions: ReferencePosition[] = [];
 
-  externalReferences.forEach((annotation, index) => {
+  externalReferences.forEach((annotation: Annotation, index) => {
     const target = annotation.target.find((t) => t.source === paragraphId);
     if (!target || !target.selector) return;
 
