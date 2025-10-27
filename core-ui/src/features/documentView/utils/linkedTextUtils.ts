@@ -1,11 +1,7 @@
 // src/features/documentView/utils/linkedTextUtils.ts
 import { RootState } from "@store";
 import { linkingAnnotations } from "@store";
-import { 
-  Annotation,
-  TextTarget,
-  ObjectTarget
- } from "@documentView/types";
+import { Annotation, TextTarget, ObjectTarget } from "@documentView/types";
 
 export interface LinkedTextSelection {
   documentId: number;
@@ -14,6 +10,7 @@ export interface LinkedTextSelection {
   start: number;
   end: number;
   sourceURI: string;
+  isSyntheticSelection?: boolean; // True when right-clicking without text selection
 }
 
 export interface LinkedTextOption {
@@ -60,6 +57,18 @@ export interface HierarchicalLinkedDocument {
 
 export interface HierarchicalLinkedDocuments {
   [documentId: number]: HierarchicalLinkedDocument;
+}
+
+// NEW: Structure for grouping by annotation instead of document
+export interface LinkedAnnotationOption {
+  annotationId: string;
+  annotationTitle: string; // body.value from the annotation
+  clickedTargetId: number | null; // The target ID that was clicked
+  allTargetIds: number[]; // All target IDs in this annotation
+}
+
+export interface HierarchicalLinkedAnnotations {
+  [annotationId: string]: LinkedAnnotationOption;
 }
 
 // interface AnnotationTarget {
@@ -167,11 +176,160 @@ const getAnnotationsForElement = (
     annotation.target?.some((target) => {
       // Handle both single targets and multi-element target arrays
       const targetGroup = Array.isArray(target) ? target : [target];
-      
+
       // Check if any target in the group matches the element source URI
       return targetGroup.some((t) => t.source === elementSourceURI);
     })
   );
+};
+
+/**
+ * Normalize URI by removing leading slash for consistent comparison
+ * This ensures 'DocumentElements/1' and '/DocumentElements/1' are treated as equal
+ */
+const normalizeURI = (uri: string): string => {
+  return uri.replace(/^\//, "");
+};
+
+/**
+ * Check if a text position range overlaps with the selection
+ */
+const doesTargetOverlapSelection = (
+  target: TextTarget | ObjectTarget,
+  selection: LinkedTextSelection,
+  isSyntheticSelection: boolean = false
+): boolean => {
+  // Normalize both URIs to remove leading slashes for comparison
+  const normalizedTargetSource = normalizeURI(target.source);
+  const normalizedSelectionSource = normalizeURI(selection.sourceURI);
+
+  // First check if the source URI matches
+  if (normalizedTargetSource !== normalizedSelectionSource) {
+    return false;
+  }
+
+  // If this is a synthetic selection (right-click without text selection),
+  // we can't rely on position overlap, so just match by source URI
+  if (isSyntheticSelection) {
+    return true;
+  }
+
+  // If target doesn't have a selector (ObjectTarget), we can't check position overlap
+  if (!("selector" in target) || !target.selector) {
+    return false;
+  }
+
+  const targetSelector = target.selector;
+  if (!targetSelector.refined_by) {
+    return false;
+  }
+
+  const targetStart = targetSelector.refined_by.start;
+  const targetEnd = targetSelector.refined_by.end;
+  const selectionStart = selection.start;
+  const selectionEnd = selection.end;
+
+  // Check if ranges overlap
+  // Overlap occurs if: targetStart < selectionEnd AND targetEnd > selectionStart
+  const overlaps = targetStart < selectionEnd && targetEnd > selectionStart;
+
+  return overlaps;
+};
+
+/**
+ * NEW: Get linked annotations grouped by annotation (not document)
+ * This is used for the new context menu that shows annotation titles
+ * Now filters based on text position overlap, not just document element
+ */
+export const getLinkedAnnotationsByAnnotation = (
+  selection: LinkedTextSelection,
+  allLinkingAnnotations: Annotation[]
+): HierarchicalLinkedAnnotations => {
+  const result: HierarchicalLinkedAnnotations = {};
+
+  // Find all annotations that reference our selected element
+  const relevantAnnotations = getAnnotationsForElement(
+    allLinkingAnnotations,
+    selection.sourceURI
+  );
+
+  if (relevantAnnotations.length === 0) {
+    // Try alternative URI formats - prioritize without leading slash
+    const alternativeURIs = [
+      selection.sourceURI,
+      selection.sourceURI.replace(/^\//, ""), // Remove leading slash
+      `/${selection.sourceURI}`, // Add leading slash
+      `DocumentElements/${selection.documentElementId}`,
+      `/DocumentElements/${selection.documentElementId}`,
+    ];
+
+    alternativeURIs.forEach((uri) => {
+      const altAnnotations = getAnnotationsForElement(
+        allLinkingAnnotations,
+        uri
+      );
+      if (altAnnotations.length > 0) {
+        relevantAnnotations.push(...altAnnotations);
+      }
+    });
+
+    if (relevantAnnotations.length === 0) {
+      return result;
+    }
+  }
+
+  // NOW: Filter annotations to only those whose targets overlap with the clicked text position
+  const annotationsWithOverlap = relevantAnnotations.filter((annotation) => {
+    return annotation.target?.some((target) => {
+      const targetGroup = Array.isArray(target) ? target : [target];
+      return targetGroup.some((t) =>
+        doesTargetOverlapSelection(t, selection, selection.isSyntheticSelection)
+      );
+    });
+  });
+
+  // Process each annotation that has overlapping targets
+  annotationsWithOverlap.forEach((annotation) => {
+    // Get the annotation title from body.value
+    const annotationTitle = annotation.body?.value || "Unnamed Link";
+
+    // Find which target was clicked (matches the selection with position overlap)
+    let clickedTargetId: number | null = null;
+    const allTargetIds: number[] = [];
+
+    annotation.target?.forEach((target) => {
+      const targetGroup = Array.isArray(target) ? target : [target];
+
+      targetGroup.forEach((t) => {
+        if (t.id) {
+          allTargetIds.push(t.id);
+
+          // Check if this is the target that was clicked (overlaps with selection)
+          if (
+            doesTargetOverlapSelection(
+              t,
+              selection,
+              selection.isSyntheticSelection
+            )
+          ) {
+            clickedTargetId = t.id;
+          }
+        }
+      });
+    });
+
+    // Only add if we have target IDs
+    if (allTargetIds.length > 0) {
+      result[annotation.id] = {
+        annotationId: annotation.id,
+        annotationTitle: annotationTitle,
+        clickedTargetId: clickedTargetId,
+        allTargetIds: allTargetIds,
+      };
+    }
+  });
+
+  return result;
 };
 
 /**
@@ -226,13 +384,12 @@ export const getLinkedDocumentsSimple = (
 
   // Process each annotation to find linked documents
   relevantAnnotations.forEach((annotation) => {
-
     const targetsNotCurrentSelection: (TextTarget | ObjectTarget)[] = [];
-  
+
     annotation.target?.forEach((target) => {
       // Handle both single targets and multi-element target arrays
       const targetGroup = Array.isArray(target) ? target : [target];
-      
+
       // Add targets that don't match the current selection
       targetGroup.forEach((t) => {
         if (t.source !== selection.sourceURI) {
@@ -240,29 +397,22 @@ export const getLinkedDocumentsSimple = (
         }
       });
     });
-    
+
     if (targetsNotCurrentSelection.length === 0) {
       return;
     }
-  
+
     // Group targets by document ID (not title) to prevent duplicates
     const targetsByDocumentId: {
-      [docId: number]: { targets: (TextTarget | ObjectTarget)[]; elementIds: number[] };
+      [docId: number]: {
+        targets: (TextTarget | ObjectTarget)[];
+        elementIds: number[];
+      };
     } = {};
-    // Find targets that are not our current selection
-    // const targetsNotCurrentSelection =
-    //   annotation.target?.filter(
-    //     (target: AnnotationTarget) => target.source !== selection.sourceURI
-    //   ) || [];
 
     if (targetsNotCurrentSelection.length === 0) {
       return;
     }
-
-    // Group targets by document ID (not title) to prevent duplicates
-    // const targetsByDocumentId: {
-    //   [docId: number]: { targets: AnnotationTarget[]; elementIds: number[] };
-    // } = {};
 
     targetsNotCurrentSelection.forEach((target) => {
       const elementIdMatch = target.source.match(/\/DocumentElements\/(\d+)/);
@@ -271,8 +421,6 @@ export const getLinkedDocumentsSimple = (
       }
 
       const elementId = parseInt(elementIdMatch[1]);
-
-      // Try to get document info
       const docInfo = getDocumentInfoFromElementId(
         elementId,
         allDocuments,
@@ -281,12 +429,6 @@ export const getLinkedDocumentsSimple = (
       );
 
       if (docInfo) {
-        // Skip same-document links (unless in debug mode)
-        if (docInfo.documentId === selection.documentId) {
-          return;
-        }
-
-        // Group by document ID only
         if (!targetsByDocumentId[docInfo.documentId]) {
           targetsByDocumentId[docInfo.documentId] = {
             targets: [],
@@ -365,87 +507,63 @@ export const getLinkedDocumentsSimple = (
       // Get the primary target and all targets for this annotation
       const primaryTarget = docTargets[0];
 
-      // Get ALL targets from the ENTIRE annotation (including source)
-      // const allTargets =
-      //   annotation.target?.map((target: AnnotationTarget) => ({
-      //     sourceURI: target.source,
-      //     start: target.selector?.refined_by?.start || 0,
-      //     end: target.selector?.refined_by?.end || 0,
-      //     text: target.selector?.value || "Linked text",
-      //   })) || [];
-
-      // // Use primary target's text for display
-      // const linkedText =
-      //   primaryTarget.selector?.value || annotation.body.value || "Linked text";
-
-      // // Check for duplicate annotations more carefully
-      // const existingOptionIndex = result[
-      //   linkedDocumentId
-      // ].linkedTextOptions.findIndex(
-      //   (option) => option.linkingAnnotationId === annotation.id
-      // );
-
-      // if (existingOptionIndex === -1) {
-      //   const newOption: LinkedTextOption = {
-      //     linkedText: linkedText,
-      //     linkingAnnotationId: annotation.id,
-      //     targetInfo: {
-      //       sourceURI: primaryTarget.source,
-      //       start: primaryTarget.selector?.refined_by?.start || 0,
-      //       end: primaryTarget.selector?.refined_by?.end || 0,
-      //     },
-      //     allTargets: allTargets,
-      //   };
-
-      //   result[linkedDocumentId].linkedTextOptions.push(newOption);
-      // }
       // Helper function to check if target is a TextTarget with selector
-    const isTextTargetWithSelector = (target: TextTarget | ObjectTarget): target is TextTarget => {
-      return 'selector' in target && target.selector != null;
-    };
-
-    // Helper to safely extract target info
-    const getTargetInfo = (target: TextTarget | ObjectTarget) => ({
-      sourceURI: target.source,
-      start: isTextTargetWithSelector(target) ? (target.selector?.refined_by?.start ?? 0) : 0,
-      end: isTextTargetWithSelector(target) ? (target.selector?.refined_by?.end ?? 0) : 0,
-      text: isTextTargetWithSelector(target) ? (target.selector?.value ?? "Linked text") : "Linked text",
-    });
-
-    // Flatten and map all targets
-    const allTargets = annotation.target?.flatMap((target) => {
-      const targetGroup = Array.isArray(target) ? target : [target];
-      return targetGroup.map(getTargetInfo);
-    }) || [];
-
-    // Use primary target's text for display
-    const linkedText = 
-      isTextTargetWithSelector(primaryTarget) 
-        ? (primaryTarget.selector?.value ?? annotation.body.value ?? "Linked text")
-        : (annotation.body.value ?? "Linked text");
-
-    // Check for duplicate annotations more carefully
-    const existingOptionIndex = result[
-      linkedDocumentId
-    ].linkedTextOptions.findIndex(
-      (option) => option.linkingAnnotationId === annotation.id
-    );
-
-    if (existingOptionIndex === -1) {
-      const primaryTargetInfo = getTargetInfo(primaryTarget);
-      
-      const newOption: LinkedTextOption = {
-        linkedText: linkedText,
-        linkingAnnotationId: annotation.id,
-        targetInfo: {
-          sourceURI: primaryTargetInfo.sourceURI,
-          start: primaryTargetInfo.start,
-          end: primaryTargetInfo.end,
-        },
-        allTargets: allTargets,
+      const isTextTargetWithSelector = (
+        target: TextTarget | ObjectTarget
+      ): target is TextTarget => {
+        return "selector" in target && target.selector != null;
       };
-      result[linkedDocumentId].linkedTextOptions.push(newOption);
-    }
+
+      // Helper to safely extract target info
+      const getTargetInfo = (target: TextTarget | ObjectTarget) => ({
+        sourceURI: target.source,
+        start: isTextTargetWithSelector(target)
+          ? target.selector?.refined_by?.start ?? 0
+          : 0,
+        end: isTextTargetWithSelector(target)
+          ? target.selector?.refined_by?.end ?? 0
+          : 0,
+        text: isTextTargetWithSelector(target)
+          ? target.selector?.value ?? "Linked text"
+          : "Linked text",
+      });
+
+      // Flatten and map all targets
+      const allTargets =
+        annotation.target?.flatMap((target) => {
+          const targetGroup = Array.isArray(target) ? target : [target];
+          return targetGroup.map(getTargetInfo);
+        }) || [];
+
+      // Use primary target's text for display
+      const linkedText = isTextTargetWithSelector(primaryTarget)
+        ? primaryTarget.selector?.value ??
+          annotation.body.value ??
+          "Linked text"
+        : annotation.body.value ?? "Linked text";
+
+      // Check for duplicate annotations more carefully
+      const existingOptionIndex = result[
+        linkedDocumentId
+      ].linkedTextOptions.findIndex(
+        (option) => option.linkingAnnotationId === annotation.id
+      );
+
+      if (existingOptionIndex === -1) {
+        const primaryTargetInfo = getTargetInfo(primaryTarget);
+
+        const newOption: LinkedTextOption = {
+          linkedText: linkedText,
+          linkingAnnotationId: annotation.id,
+          targetInfo: {
+            sourceURI: primaryTargetInfo.sourceURI,
+            start: primaryTargetInfo.start,
+            end: primaryTargetInfo.end,
+          },
+          allTargets: allTargets,
+        };
+        result[linkedDocumentId].linkedTextOptions.push(newOption);
+      }
     });
   });
 
@@ -536,7 +654,7 @@ export const createSelectionFromDOMSelection = (
     text: selectedText,
     start: startOffset,
     end: endOffset,
-    sourceURI: `/DocumentElements/${elementId}`,
+    sourceURI: `DocumentElements/${elementId}`, // No leading slash
   };
 
   return result;

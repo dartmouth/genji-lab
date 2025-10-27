@@ -52,6 +52,35 @@ export const selectAllLinkingAnnotations = createSelector(
   }
 );
 
+// Helper function to normalize URI to standard format: DocumentElements/1
+const normalizeURI = (uri: string): string => {
+  // Remove leading slash if present
+  return uri.replace(/^\//, "");
+};
+
+// Helper function to flatten nested target arrays
+const flattenTargets = (
+  targets: (unknown | unknown[])[]
+): Array<{ source: string; selector?: unknown }> => {
+  const flattened: Array<{ source: string; selector?: unknown }> = [];
+
+  targets.forEach((target) => {
+    if (Array.isArray(target)) {
+      // Target is an array, so flatten it
+      target.forEach((t) => {
+        if (t && typeof t === "object" && "source" in t) {
+          flattened.push(t);
+        }
+      });
+    } else if (target && typeof target === "object" && "source" in target) {
+      // Target is a single object
+      flattened.push(target);
+    }
+  });
+
+  return flattened;
+};
+
 // Selector to get linking annotations for a specific paragraph (memoized)
 export const selectLinkingAnnotationsByParagraph = createSelector(
   [
@@ -59,29 +88,21 @@ export const selectLinkingAnnotationsByParagraph = createSelector(
     (_state: RootState, paragraphId: string) => paragraphId,
   ],
   (allLinkingAnnotations, paragraphId) => {
-    const parseURI = (uri: string): number | null => {
-      const match = uri.match(/\/DocumentElements\/(\d+)/);
-      return match ? parseInt(match[1], 10) : null;
-    };
-
-    const numericId = parseURI(paragraphId);
+    // Normalize the paragraph ID to standard format
+    const normalizedParagraphId = normalizeURI(paragraphId);
 
     return allLinkingAnnotations.filter((anno) => {
-      if (!anno?.target) return false;
+      if (!anno?.target || !Array.isArray(anno.target)) {
+        return false;
+      }
 
-      return anno.target.some((target) => {
-        const targetSource = target.source;
+      // Flatten the nested target arrays
+      const flattenedTargets = flattenTargets(anno.target);
 
-        const matches = [
-          targetSource === paragraphId,
-          targetSource === `/${paragraphId}`,
-          targetSource === `/DocumentElements/${numericId}`,
-          targetSource === `DocumentElements/${numericId}`,
-          targetSource === String(numericId),
-          targetSource === `/${numericId}`,
-        ];
-
-        return matches.some((match) => match);
+      // Check if any target matches the paragraph ID
+      return flattenedTargets.some((target) => {
+        const normalizedTargetSource = normalizeURI(target.source);
+        return normalizedTargetSource === normalizedParagraphId;
       });
     });
   }
@@ -197,29 +218,21 @@ export const makeSelectLinkingAnnotationsByParagraph = () =>
       (_state: RootState, paragraphId: string) => paragraphId,
     ],
     (allLinkingAnnotations, paragraphId) => {
-      const parseURI = (uri: string): number | null => {
-        const match = uri.match(/\/DocumentElements\/(\d+)/);
-        return match ? parseInt(match[1], 10) : null;
-      };
-
-      const numericId = parseURI(paragraphId);
+      // Normalize the paragraph ID to standard format
+      const normalizedParagraphId = normalizeURI(paragraphId);
 
       return allLinkingAnnotations.filter((anno) => {
-        if (!anno?.target) return false;
+        if (!anno?.target || !Array.isArray(anno.target)) {
+          return false;
+        }
 
-        return anno.target.some((target) => {
-          const targetSource = target.source;
+        // Flatten the nested target arrays
+        const flattenedTargets = flattenTargets(anno.target);
 
-          const matches = [
-            targetSource === paragraphId,
-            targetSource === `/${paragraphId}`,
-            targetSource === `/DocumentElements/${numericId}`,
-            targetSource === `DocumentElements/${numericId}`,
-            targetSource === String(numericId),
-            targetSource === `/${numericId}`,
-          ];
-
-          return matches.some((match) => match);
+        // Check if any target matches the paragraph ID
+        return flattenedTargets.some((target) => {
+          const normalizedTargetSource = normalizeURI(target.source);
+          return normalizedTargetSource === normalizedParagraphId;
         });
       });
     }
