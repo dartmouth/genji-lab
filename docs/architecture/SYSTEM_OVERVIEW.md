@@ -779,9 +779,364 @@ graph TB
 
 ---
 
+## Data Flow Mapping
+
+This section provides detailed mappings of how data flows from frontend components through Redux thunks to backend endpoints and back into the Redux store.
+
+### Document Collection Flow
+
+```mermaid
+graph TB
+    subgraph "Frontend Components"
+        A[CollectionsView.tsx]
+        B[DocumentCollectionGallery.tsx]
+    end
+    
+    subgraph "Redux Layer"
+        C[fetchDocumentCollections thunk]
+        D[documentCollections slice]
+    end
+    
+    subgraph "API Layer"
+        E[GET /api/v1/collections]
+    end
+    
+    subgraph "Backend"
+        F[document_collections.py router]
+        G[DocumentCollection model]
+        H[(PostgreSQL app.document_collections)]
+    end
+    
+    A -->|useEffect| C
+    B -->|dispatch| C
+    C -->|axios.get| E
+    E --> F
+    F -->|SQLAlchemy query| G
+    G -->|SELECT| H
+    H -->|results| G
+    G -->|Pydantic schema| F
+    F -->|JSON response| E
+    E -->|response.data| C
+    C -->|fulfilled action| D
+    D -->|byId, allIds| A
+    D -->|state update| B
+```
+
+### Document Loading Flow
+
+```mermaid
+graph TB
+    subgraph "Frontend"
+        A[DocumentsView.tsx]
+        B[DocumentGallery.tsx]
+    end
+    
+    subgraph "Redux Thunks"
+        C[fetchDocumentsByCollection thunk]
+        D[documents slice]
+    end
+    
+    subgraph "API"
+        E[GET /api/v1/collections/:id/documents]
+    end
+    
+    subgraph "Backend"
+        F[document_collections.py]
+        G[Document model]
+        H[(app.documents table)]
+    end
+    
+    A -->|collectionId from URL| C
+    B -->|dispatch on mount| C
+    C -->|axios.get with collectionId| E
+    E --> F
+    F -->|filter by collection_id| G
+    G -->|SELECT WHERE collection_id| H
+    H -->|document list| G
+    G -->|serialize| F
+    F -->|JSON array| E
+    E -->|response.data| C
+    C -->|normalized data| D
+    D -->|byId map, allIds array| A
+```
+
+### Document Elements Flow
+
+```mermaid
+sequenceDiagram
+    participant DCV as DocumentContentView.tsx
+    participant Hook as useVisibilityWithPrefetch
+    participant Thunk as fetchDocumentElements
+    participant Slice as documentElements slice
+    participant API as GET /api/v1/documents/:id/elements
+    participant Router as document_elements.py
+    participant DB as PostgreSQL
+    
+    DCV->>Hook: documentId from URL
+    Hook->>Hook: Calculate visible paragraphs
+    Hook->>Thunk: dispatch(fetchDocumentElements)
+    Thunk->>API: GET /documents/123/elements
+    API->>Router: Route to handler
+    Router->>DB: SELECT * FROM app.document_elements WHERE document_id=123
+    DB->>Router: Return elements array
+    Router->>API: JSON response with elements
+    API->>Thunk: response.data
+    Thunk->>Slice: Add to byId map
+    Slice->>DCV: Updated state
+    DCV->>DCV: Render HighlightedText components
+```
+
+### Annotation Creation Flow
+
+```mermaid
+graph TB
+    subgraph "UI Components"
+        A[HighlightedText.tsx]
+        B[AnnotationCreationDialog.tsx]
+    end
+    
+    subgraph "Redux"
+        C[createAnnotation slice]
+        D[saveAnnotation thunk]
+        E[annotations.commenting slice]
+    end
+    
+    subgraph "API"
+        F[POST /api/v1/annotations]
+    end
+    
+    subgraph "Backend"
+        G[annotations.py router]
+        H[Annotation model]
+        I[(app.annotations table)]
+    end
+    
+    A -->|Text selection| C
+    C -->|Store target segments| C
+    B -->|User submits form| D
+    D -->|POST annotation payload| F
+    F --> G
+    G -->|Validate motivation| G
+    G -->|Create Annotation| H
+    H -->|INSERT| I
+    I -->|Generated UUID, timestamps| H
+    H -->|Return with creator| G
+    G -->|JSON response| F
+    F -->|response.data| D
+    D -->|Add to byId| E
+    D -->|Add ID to byParent| E
+    E -->|Update store| A
+    A -->|Render Highlight| A
+```
+
+### Annotation Fetching by Motivation Flow
+
+```mermaid
+sequenceDiagram
+    participant TAP as TabbedAnnotationsPanel.tsx
+    participant Tab as AnnotationsList component
+    participant Thunk as fetchAnnotationByMotivation
+    participant API as GET /api/v1/annotations
+    participant Router as annotations.py
+    participant DB as PostgreSQL
+    participant Slice as annotations.commenting slice
+    
+    TAP->>Tab: Render tab for "commenting"
+    Tab->>Tab: useEffect with elementId
+    Tab->>Thunk: dispatch(fetch motivation=commenting)
+    Thunk->>API: GET /annotations?document_element_id=456&motivation=commenting
+    API->>Router: Route handler
+    Router->>DB: SELECT WHERE document_element_id=456 AND motivation=commenting
+    DB->>Router: Annotation records
+    Router->>Router: Join with users table for creator
+    Router->>API: JSON array with full annotation objects
+    API->>Thunk: response.data
+    Thunk->>Slice: byId[annotationId] = annotation
+    Thunk->>Slice: byParent[elementId].push(annotationId)
+    Slice->>Tab: State updated
+    Tab->>Tab: Render AnnotationCard for each
+```
+
+### Admin Document Upload Flow
+
+```mermaid
+graph TB
+    subgraph "Admin UI"
+        A[ManageDocuments.tsx]
+        B[File Upload Form]
+    end
+    
+    subgraph "Redux/Direct API"
+        C[axios.post multipart/form-data]
+    end
+    
+    subgraph "API"
+        D[POST /api/v1/documents]
+    end
+    
+    subgraph "Backend Processing"
+        E[documents.py router]
+        F[python-docx parser]
+        G[Document model]
+        H[DocumentElement model]
+        I[(app.documents table)]
+        J[(app.document_elements table)]
+    end
+    
+    A -->|User selects .docx file| B
+    B -->|FormData with file| C
+    C -->|Upload file| D
+    D --> E
+    E -->|Save to uploads/| E
+    E -->|Parse with python-docx| F
+    F -->|Extract paragraphs| F
+    F -->|Create Document record| G
+    G -->|INSERT| I
+    I -->|Return document_id| G
+    G -->|Create element per paragraph| H
+    H -->|INSERT batch| J
+    J -->|Confirm inserts| H
+    H -->|Return document with elements| E
+    E -->|JSON response| D
+    D -->|Document created| C
+    C -->|Refresh document list| A
+```
+
+### Search Flow
+
+```mermaid
+sequenceDiagram
+    participant SB as SearchBar.tsx
+    participant Thunk as performSearch thunk
+    participant Slice as searchResults slice
+    participant API as POST /api/v1/search
+    participant Router as search.py
+    participant DB as PostgreSQL full-text search
+    
+    SB->>SB: User types query (debounced)
+    SB->>Thunk: dispatch(performSearch query, filters)
+    Thunk->>Slice: Set loading=true
+    Thunk->>API: POST with query params
+    API->>Router: search endpoint
+    Router->>DB: to_tsquery on document_elements.content
+    DB->>DB: Full-text search with ranking
+    DB->>Router: Matching elements with ts_rank
+    Router->>Router: Join with documents, collections
+    Router->>API: JSON results with highlights
+    API->>Thunk: response.data
+    Thunk->>Slice: results array, loading=false
+    Slice->>SB: Trigger re-render
+    SB->>SB: Display SearchResults component
+```
+
+### User Management Flow
+
+```mermaid
+graph LR
+    subgraph "Admin Component"
+        A[ManageUsers.tsx]
+    end
+    
+    subgraph "Redux"
+        B[fetchUsers thunk]
+        C[users slice]
+    end
+    
+    subgraph "API"
+        D[GET /api/v1/users]
+    end
+    
+    subgraph "Backend"
+        E[users.py router]
+        F[User model]
+        G[(app.users table)]
+    end
+    
+    A -->|Component mount| B
+    B -->|axios.get| D
+    D --> E
+    E -->|Admin check| E
+    E -->|Query users| F
+    F -->|SELECT with roles| G
+    G -->|User records| F
+    F -->|Serialize safely| E
+    E -->|JSON array| D
+    D -->|response.data| B
+    B -->|Normalized data| C
+    C -->|byId, allIds| A
+```
+
+### Complete Data Flow Reference Table
+
+| Feature | Component File | Redux Thunk | HTTP Method | API Endpoint | Backend Router | Redux Slice | Database Table |
+|---------|---------------|-------------|-------------|--------------|----------------|-------------|----------------|
+| **Collections** |
+| List collections | `CollectionsView.tsx` | `fetchDocumentCollections` | GET | `/api/v1/collections` | `document_collections.py` | `documentCollections` | `app.document_collections` |
+| **Documents** |
+| List documents | `DocumentsView.tsx` | `fetchDocumentsByCollection` | GET | `/api/v1/collections/:id/documents` | `document_collections.py` | `documents` | `app.documents` |
+| Upload document | `ManageDocuments.tsx` | Direct axios | POST | `/api/v1/documents` | `documents.py` | `documents` | `app.documents` |
+| Delete document | `ManageDocuments.tsx` | Direct axios | DELETE | `/api/v1/documents/:id` | `documents.py` | `documents` | `app.documents` |
+| **Document Elements** |
+| Load paragraphs | `DocumentContentView.tsx` | `fetchDocumentElements` | GET | `/api/v1/documents/:id/elements` | `document_elements.py` | `documentElements` | `app.document_elements` |
+| Bulk load | `DocumentGallery.tsx` | `fetchAllDocumentElements` | GET | `/api/v1/documents/:id/elements` | `document_elements.py` | `documentElements` | `app.document_elements` |
+| **Annotations** |
+| Create comment | `AnnotationCreationDialog.tsx` | `saveAnnotation` | POST | `/api/v1/annotations` | `annotations.py` | `annotations.commenting` | `app.annotations` |
+| Fetch comments | `TabbedAnnotationsPanel.tsx` | `fetchAnnotationByMotivation` | GET | `/api/v1/annotations?motivation=commenting` | `annotations.py` | `annotations.commenting` | `app.annotations` |
+| Update annotation | `AnnotationCard.tsx` | `patchAnnotation` | PATCH | `/api/v1/annotations/:id` | `annotations.py` | `annotations.commenting` | `app.annotations` |
+| Delete annotation | `AnnotationCard.tsx` | `deleteAnnotation` | DELETE | `/api/v1/annotations/:id` | `annotations.py` | `annotations.commenting` | `app.annotations` |
+| Reply to comment | `AnnotationReplyForm.tsx` | `saveAnnotation` | POST | `/api/v1/annotations` | `annotations.py` | `annotations.replying` | `app.annotations` |
+| **Search** |
+| Search content | `SearchBar.tsx` | `performSearch` | POST | `/api/v1/search` | `search.py` | `searchResults` | `app.document_elements` (full-text) |
+| **Users & Auth** |
+| List users | `ManageUsers.tsx` | `fetchUsers` | GET | `/api/v1/users` | `users.py` | `users` | `app.users` |
+| Login | `LoginForm.tsx` | Direct axios | POST | `/api/v1/auth/login` | `auth.py` | Auth context | `app.users`, `app.user_passwords` |
+| Register | `RegisterForm.tsx` | Direct axios | POST | `/api/v1/auth/register` | `auth.py` | Auth context | `app.users`, `app.user_passwords` |
+| CAS login | `useAuth.ts` hook | `useCasAuth` | POST | `/api/v1/validate-cas-ticket` | `cas_auth.py` | Auth context | `app.users` |
+| **Classrooms** |
+| List classrooms | `ManageClassrooms.tsx` | `fetchClassrooms` | GET | `/api/v1/classrooms` | `groups.py` | `classrooms` | `app.groups` (type=classroom) |
+| Create classroom | `ManageClassrooms.tsx` | `createClassroom` | POST | `/api/v1/classrooms` | `groups.py` | `classrooms` | `app.groups` |
+| Join classroom | `JoinClassroomPage.tsx` | Direct axios | POST | `/api/v1/classrooms/:id/join` | `groups.py` | `classrooms` | `app.group_memberships` |
+| List members | `ManageClassrooms.tsx` | `fetchClassroomMembers` | GET | `/api/v1/classrooms/:id/members` | `groups.py` | `classrooms.members` | `app.group_memberships` |
+| **Roles** |
+| Fetch roles | `ManageUsers.tsx` | `fetchRoles` | GET | `/api/v1/roles` | `roles.py` | `roles` | `app.roles` |
+| **Site Settings** |
+| Get settings | `SiteSettings.tsx` | `fetchSiteSettings` | GET | `/api/v1/site-settings` | `site_settings.py` | `siteSettings` | `app.site_settings` |
+| Update setting | `SiteSettings.tsx` | `updateSiteSetting` | PUT | `/api/v1/site-settings/:key` | `site_settings.py` | `siteSettings` | `app.site_settings` |
+
+### Key Observations
+
+#### Data Flow Patterns
+
+1. **Normalized State Pattern**
+   - Most slices use `byId` (object) + `allIds` (array) for O(1) lookups
+   - Annotations use `byId` + `byParent` for filtering by document element
+
+2. **Thunk Usage**
+   - Collections/Documents: Simple fetch thunks
+   - Annotations: Parameterized by motivation type (8 variants)
+   - Bulk loading: `fetchAllDocumentElements` with per-document loading callbacks
+
+3. **Direct Axios vs Thunks**
+   - Admin operations (upload, delete): Often use direct axios
+   - Data fetching/listing: Always use thunks
+   - Authentication: Direct axios (pre-Redux setup)
+
+4. **Backend Router Organization**
+   - 1 router file per resource type
+   - RESTful patterns (GET list, GET by ID, POST, PATCH, DELETE)
+   - Nested routes for relationships (e.g., `/collections/:id/documents`)
+
+5. **Database Joins**
+   - Annotations JOIN users for creator info
+   - Documents JOIN collections for collection metadata
+   - Search results JOIN multiple tables for context
+
+---
+
 ## Integration Points
 
 ### Frontend ↔ Backend Integration
+
 
 ```mermaid
 graph LR
