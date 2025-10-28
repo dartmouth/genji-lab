@@ -712,10 +712,11 @@ app.include_router(resource.router)
 
 ## Next Steps
 
-- **[Authentication Deep Dive](AUTHENTICATION.md)** - Detailed auth flows
-- **[Endpoints Reference](ENDPOINTS.md)** - Complete endpoint documentation
-- **[Data Models](DATA_MODELS.md)** - Model-by-model analysis
-- **[Routers](ROUTERS.md)** - Router-by-router breakdown
+- **[System Architecture](../architecture/SYSTEM_OVERVIEW.md)** - Complete system overview with diagrams
+- **[Database Schema](../database/SCHEMA.md)** - Complete database documentation
+- **[Frontend Architecture](../frontend/OVERVIEW.md)** - React application structure
+- **[Development Setup](../guides/DEVELOPMENT_SETUP.md)** - Get started with local development
+- **[Deployment Guide](../guides/DEPLOYMENT.md)** - Production deployment procedures
 
 ---
 
