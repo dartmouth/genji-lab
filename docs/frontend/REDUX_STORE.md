@@ -819,9 +819,8 @@ const sortedDocs = documents.sort(...);
 
 ## Related Documentation
 
-- **[Frontend Overview](OVERVIEW.md)** - Complete frontend architecture ✅
-- **[Components](COMPONENTS.md)** - Component documentation *(Coming Soon)*
-- **[Frontend Audit](../audits/FRONTEND_AUDIT.md)** - Redux-related issues ✅
+- **[Frontend Overview](OVERVIEW.md)** - Complete frontend architecture
+- **[Frontend Audit](../audits/FRONTEND_AUDIT.md)** - Redux-related issues
 
 ---
 
