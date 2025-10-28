@@ -23,9 +23,6 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 ### ⚛️ Frontend Documentation
 - **[Frontend Overview](frontend/OVERVIEW.md)** - Complete React architecture, tech stack, features
 - **[Redux Store](frontend/REDUX_STORE.md)** - Complete state management documentation
-- **[Components](frontend/COMPONENTS.md)** - Component documentation *(Coming Soon)*
-- **[Routing](frontend/ROUTING.md)** - React Router setup *(See OVERVIEW.md)*
-- **[Features](frontend/FEATURES.md)** - Feature modules *(See OVERVIEW.md)*
 
 ### 🗄️ Database Documentation
 - **[Schema Overview](database/SCHEMA.md)** - Complete ERD diagrams, all tables, JSONB fields, indexes
