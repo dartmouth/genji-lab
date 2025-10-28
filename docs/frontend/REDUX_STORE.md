@@ -481,6 +481,142 @@ selectHighlightType(elementId)
 
 ## Thunks & Async Actions
 
+### Thunk Architecture Overview
+
+```mermaid
+graph TB
+    subgraph "Component Layer"
+        A[React Component]
+    end
+    
+    subgraph "Redux Layer"
+        B[dispatch thunk]
+        C[Thunk Middleware]
+        
+        subgraph "Thunk Lifecycle"
+            D[pending action]
+            E[API Call]
+            F{Success?}
+            G[fulfilled action]
+            H[rejected action]
+        end
+        
+        I[Reducer]
+        J[Store State]
+    end
+    
+    subgraph "API Layer"
+        K[Axios HTTP Client]
+        L[FastAPI Backend]
+    end
+    
+    A -->|useAppDispatch| B
+    B --> C
+    C --> D
+    D -->|loading=true| I
+    D --> E
+    E --> K
+    K --> L
+    L -->|response| K
+    K --> F
+    F -->|success| G
+    F -->|error| H
+    G -->|data| I
+    H -->|error| I
+    I -->|update| J
+    J -->|useAppSelector| A
+```
+
+### Thunk Usage by Feature
+
+```mermaid
+graph LR
+    subgraph "Document Features"
+        DC[Document Collections]
+        D[Documents]
+        DE[Document Elements]
+    end
+    
+    subgraph "Annotation Features"
+        A1[Commenting]
+        A2[Replying]
+        A3[Scholarly]
+        A4[Tagging]
+        A5[Upvoting]
+        A6[Flagging]
+        A7[Linking]
+        A8[External Reference]
+    end
+    
+    subgraph "User Features"
+        U[Users]
+        R[Roles]
+        C[Classrooms]
+    end
+    
+    subgraph "Other Features"
+        S[Search]
+        SS[Site Settings]
+    end
+    
+    DC -->|fetchDocumentCollections| API[API Thunks]
+    D -->|fetchDocumentsByCollection| API
+    D -->|fetchAllDocuments| API
+    DE -->|fetchDocumentElements| API
+    DE -->|fetchAllDocumentElements| API
+    
+    A1 -->|fetchAnnotations| API
+    A2 -->|fetchAnnotations| API
+    A3 -->|fetchAnnotations| API
+    A4 -->|fetchAnnotations| API
+    A5 -->|fetchAnnotations| API
+    A6 -->|fetchAnnotations| API
+    A7 -->|fetchAnnotations| API
+    A8 -->|fetchAnnotations| API
+    
+    A1 -->|saveAnnotation| API
+    A1 -->|patchAnnotation| API
+    A1 -->|deleteAnnotation| API
+    
+    U -->|fetchUsers| API
+    R -->|fetchRoles| API
+    C -->|fetchClassrooms| API
+    C -->|fetchClassroomMembers| API
+    
+    S -->|performSearch| API
+    SS -->|fetchSiteSettings| API
+```
+
+### Thunk Data Flow
+
+```mermaid
+sequenceDiagram
+    participant C as Component
+    participant D as Dispatch
+    participant T as Thunk
+    participant A as Axios
+    participant B as Backend API
+    participant R as Reducer
+    participant S as Store
+    
+    C->>D: dispatch(fetchDocuments())
+    D->>T: Execute thunk
+    T->>R: pending action
+    R->>S: loading = true
+    S->>C: Re-render (loading state)
+    
+    T->>A: GET /api/v1/documents
+    A->>B: HTTP Request
+    B->>A: JSON Response
+    A->>T: Return data
+    
+    T->>R: fulfilled action with data
+    R->>S: loading = false, data updated
+    S->>C: Re-render (with data)
+    
+    Note over C: Display documents
+```
+
 ### Thunk Pattern
 
 All async actions use `createAsyncThunk` from Redux Toolkit:
