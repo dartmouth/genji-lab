@@ -216,13 +216,13 @@ The application uses **React Router v7** with a centralized route configuration 
 ```mermaid
 graph TD
     A[Root /] --> B[CollectionsView]
-    A --> C[/join-classroom]
-    A --> D[/admin - Protected]
-    A --> E[/collections/:collectionId]
-    A --> F[/search]
+    A --> C[Join Classroom]
+    A --> D[Admin Protected]
+    A --> E[Collection View]
+    A --> F[Search]
     
     E --> G[DocumentsView]
-    E --> H[/collections/:collectionId/documents/:documentId]
+    E --> H[Document Content]
     
     H --> I[DocumentContentView]
     
@@ -230,7 +230,7 @@ graph TD
     J -->|Admin/Instructor| K[AdminPanel]
     J -->|Other| B
     
-    A --> L[* Catch-all]
+    A --> L[Catch all]
     L --> M[Navigate to /]
 ```
 
