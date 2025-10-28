@@ -217,7 +217,7 @@ The application uses **React Router v7** with a centralized route configuration 
 graph TD
     A[Root /] --> B[CollectionsView]
     A --> C[Join Classroom]
-    A --> D[Admin Protected]
+    A --> D[Admin Panel]
     A --> E[Collection View]
     A --> F[Search]
     
@@ -1255,9 +1255,7 @@ if (isAdmin || isInstructor) {
 
 ### Related Documentation
 
-- **[Redux Store](REDUX_STORE.md)** - Detailed Redux architecture *(Coming Soon)*
-- **[Components](COMPONENTS.md)** - Component API reference *(Coming Soon)*
-- **[Routing](ROUTING.md)** - Advanced routing patterns *(Coming Soon)*
+- **[Redux Store](REDUX_STORE.md)** - Detailed Redux architecture
 - **[Frontend Audit](../audits/FRONTEND_AUDIT.md)** - Code quality analysis ✅
 
 ### For Developers
