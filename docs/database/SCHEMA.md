@@ -337,13 +337,6 @@ INSERT INTO app.roles (name, description) VALUES
 **Relationships**:
 - Belongs to many `roles` (via role_permissions)
 
-**Status**: ⚠️ **Defined but not fully implemented in application logic**
-
-**Potential Permissions**:
-- `documents.create`, `documents.read`, `documents.update`, `documents.delete`
-- `annotations.create`, `annotations.read`, `annotations.update`, `annotations.delete`
-- `users.manage`, `groups.manage`, `site.configure`
-
 ---
 
 ### 5. groups
@@ -707,8 +700,6 @@ INSERT INTO app.user_roles (user_id, role_id) VALUES (1, 1);
 
 **Composite Primary Key**: (role_id, permission_id)
 
-**Status**: ⚠️ **Permissions system not fully utilized**
-
 ---
 
 ### group_members
@@ -929,13 +920,6 @@ All tables have an `id` column as primary key (auto-incrementing integer).
 - `roles.name` - Unique role names
 - `permissions.name` - Unique permission names
 
-### Check Constraints
-
-⚠️ **TODO**: Consider adding:
-- `object_sharing.access_level IN ('view', 'edit', 'manage')`
-- `object_sharing.shared_with_type IN ('user', 'group')`
-- `annotations.motivation IN (valid_motivations)`
-
 ---
 
 ## Migration Guide
@@ -1121,7 +1105,6 @@ ORDER BY idx_scan DESC;
 ## Related Documentation
 
 - **[API Overview](../api/OVERVIEW.md)** - API endpoint reference
-- **[Data Models](../api/DATA_MODELS.md)** - SQLAlchemy model details
 - **[Migrations Guide](MIGRATIONS.md)** - Detailed migration workflows
 - **[Backend Audit](../audits/BACKEND_AUDIT.md)** - Code quality findings
 

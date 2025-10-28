@@ -27,20 +27,16 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 ### 🗄️ Database Documentation
 - **[Schema Overview](database/SCHEMA.md)** - Complete ERD diagrams, all tables, JSONB fields, indexes
 - **[Tables Reference](database/TABLES.md)** - Quick reference with SQL examples
-- **[Relationships](database/RELATIONSHIPS.md)** - Relational mapping *(See SCHEMA.md)*
 - **[Migrations](database/MIGRATIONS.md)** - Complete Alembic guide
 
 ### 📖 Guides
 - **[Development Setup](guides/DEVELOPMENT_SETUP.md)** - Complete local and Docker setup guide
 - **[Docker Guide](guides/DOCKER_GUIDE.md)** - Complete Docker reference and best practices
 - **[Deployment](guides/DEPLOYMENT.md)** - Complete production deployment guide
-- **[Common Tasks](guides/COMMON_TASKS.md)** - Development workflows *(Coming Soon)*
 
 ### 🔍 Code Audits
 - **[Backend Audit](audits/BACKEND_AUDIT.md)** - Complete analysis: 33 issues identified (0 critical, 6 high, 15 medium, 12 low)
 - **[Frontend Audit](audits/FRONTEND_AUDIT.md)** - Complete analysis: 36 issues identified (0 critical, 8 high, 17 medium, 11 low)
-- **[Performance](audits/PERFORMANCE.md)** - Performance analysis *(Coming Soon)*
-- **[Recommendations](audits/RECOMMENDATIONS.md)** - Improvement suggestions *(See audit docs)*
 
 ---
 
@@ -53,13 +49,13 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 
 ### For Backend Developers
 1. [API Overview](api/OVERVIEW.md) - Understand the FastAPI structure
-2. [Data Models](api/DATA_MODELS.md) - Learn the database models
-3. [Routers](api/ROUTERS.md) - Explore API endpoints
+2. [Database Schema](database/SCHEMA.md) - Learn the database models
+3. [Router Modules](api/OVERVIEW.md#router-modules) - Explore API endpoints
 
 ### For Frontend Developers
 1. [Frontend Overview](frontend/OVERVIEW.md) - React app structure
 2. [Redux Store](frontend/REDUX_STORE.md) - State management patterns
-3. [Components](frontend/COMPONENTS.md) - Component library
+3. [Component Architecture](frontend/OVERVIEW.md#component-architecture) - Component patterns
 
 ### For DevOps
 1. [Docker Guide](guides/DOCKER_GUIDE.md) - Container setup
