@@ -75,10 +75,10 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 
 ### By Task
 - **Setting up locally**: [Development Setup](guides/DEVELOPMENT_SETUP.md)
-- **Adding an API endpoint**: [Common Tasks](guides/COMMON_TASKS.md)
-- **Creating a React component**: [Components](frontend/COMPONENTS.md)
+- **Adding an API endpoint**: [Router Modules](api/OVERVIEW.md#router-modules) and [API Endpoints](api/OVERVIEW.md#api-endpoints-summary)
+- **Creating a React component**: [Component Architecture](frontend/OVERVIEW.md#component-architecture)
 - **Database migration**: [Migrations](database/MIGRATIONS.md)
-- **Understanding auth flow**: [Authentication](api/AUTHENTICATION.md)
+- **Understanding auth flow**: [Authentication System](api/OVERVIEW.md#authentication-system)
 - **Deploying to production**: [Deployment](guides/DEPLOYMENT.md)
 
 ### By Technology
