@@ -1068,40 +1068,79 @@ graph LR
 
 ### Complete Data Flow Reference Table
 
-| Feature | Component File | Redux Thunk | HTTP Method | API Endpoint | Backend Router | Redux Slice | Database Table |
-|---------|---------------|-------------|-------------|--------------|----------------|-------------|----------------|
+#### Part 1: Frontend to Backend Routing
+
+| Feature | Component File | Redux Thunk | HTTP Method | API Endpoint |
+|---------|---------------|-------------|-------------|--------------|
 | **Collections** |
-| List collections | `CollectionsView.tsx` | `fetchDocumentCollections` | GET | `/api/v1/collections` | `document_collections.py` | `documentCollections` | `app.document_collections` |
+| List collections | `CollectionsView.tsx` | `fetchDocumentCollections` | GET | `/api/v1/collections` |
 | **Documents** |
-| List documents | `DocumentsView.tsx` | `fetchDocumentsByCollection` | GET | `/api/v1/collections/:id/documents` | `document_collections.py` | `documents` | `app.documents` |
-| Upload document | `ManageDocuments.tsx` | Direct axios | POST | `/api/v1/documents` | `documents.py` | `documents` | `app.documents` |
-| Delete document | `ManageDocuments.tsx` | Direct axios | DELETE | `/api/v1/documents/:id` | `documents.py` | `documents` | `app.documents` |
+| List documents | `DocumentsView.tsx` | `fetchDocumentsByCollection` | GET | `/api/v1/collections/:id/documents` |
+| Upload document | `ManageDocuments.tsx` | Direct axios | POST | `/api/v1/documents` |
+| Delete document | `ManageDocuments.tsx` | Direct axios | DELETE | `/api/v1/documents/:id` |
 | **Document Elements** |
-| Load paragraphs | `DocumentContentView.tsx` | `fetchDocumentElements` | GET | `/api/v1/documents/:id/elements` | `document_elements.py` | `documentElements` | `app.document_elements` |
-| Bulk load | `DocumentGallery.tsx` | `fetchAllDocumentElements` | GET | `/api/v1/documents/:id/elements` | `document_elements.py` | `documentElements` | `app.document_elements` |
+| Load paragraphs | `DocumentContentView.tsx` | `fetchDocumentElements` | GET | `/api/v1/documents/:id/elements` |
+| Bulk load | `DocumentGallery.tsx` | `fetchAllDocumentElements` | GET | `/api/v1/documents/:id/elements` |
 | **Annotations** |
-| Create comment | `AnnotationCreationDialog.tsx` | `saveAnnotation` | POST | `/api/v1/annotations` | `annotations.py` | `annotations.commenting` | `app.annotations` |
-| Fetch comments | `TabbedAnnotationsPanel.tsx` | `fetchAnnotationByMotivation` | GET | `/api/v1/annotations?motivation=commenting` | `annotations.py` | `annotations.commenting` | `app.annotations` |
-| Update annotation | `AnnotationCard.tsx` | `patchAnnotation` | PATCH | `/api/v1/annotations/:id` | `annotations.py` | `annotations.commenting` | `app.annotations` |
-| Delete annotation | `AnnotationCard.tsx` | `deleteAnnotation` | DELETE | `/api/v1/annotations/:id` | `annotations.py` | `annotations.commenting` | `app.annotations` |
-| Reply to comment | `AnnotationReplyForm.tsx` | `saveAnnotation` | POST | `/api/v1/annotations` | `annotations.py` | `annotations.replying` | `app.annotations` |
+| Create comment | `AnnotationCreationDialog.tsx` | `saveAnnotation` | POST | `/api/v1/annotations` |
+| Fetch comments | `TabbedAnnotationsPanel.tsx` | `fetchAnnotationByMotivation` | GET | `/api/v1/annotations?motivation=commenting` |
+| Update annotation | `AnnotationCard.tsx` | `patchAnnotation` | PATCH | `/api/v1/annotations/:id` |
+| Delete annotation | `AnnotationCard.tsx` | `deleteAnnotation` | DELETE | `/api/v1/annotations/:id` |
+| Reply to comment | `AnnotationReplyForm.tsx` | `saveAnnotation` | POST | `/api/v1/annotations` |
 | **Search** |
-| Search content | `SearchBar.tsx` | `performSearch` | POST | `/api/v1/search` | `search.py` | `searchResults` | `app.document_elements` (full-text) |
+| Search content | `SearchBar.tsx` | `performSearch` | POST | `/api/v1/search` |
 | **Users & Auth** |
-| List users | `ManageUsers.tsx` | `fetchUsers` | GET | `/api/v1/users` | `users.py` | `users` | `app.users` |
-| Login | `LoginForm.tsx` | Direct axios | POST | `/api/v1/auth/login` | `auth.py` | Auth context | `app.users`, `app.user_passwords` |
-| Register | `RegisterForm.tsx` | Direct axios | POST | `/api/v1/auth/register` | `auth.py` | Auth context | `app.users`, `app.user_passwords` |
-| CAS login | `useAuth.ts` hook | `useCasAuth` | POST | `/api/v1/validate-cas-ticket` | `cas_auth.py` | Auth context | `app.users` |
+| List users | `ManageUsers.tsx` | `fetchUsers` | GET | `/api/v1/users` |
+| Login | `LoginForm.tsx` | Direct axios | POST | `/api/v1/auth/login` |
+| Register | `RegisterForm.tsx` | Direct axios | POST | `/api/v1/auth/register` |
+| CAS login | `useAuth.ts` hook | `useCasAuth` | POST | `/api/v1/validate-cas-ticket` |
 | **Classrooms** |
-| List classrooms | `ManageClassrooms.tsx` | `fetchClassrooms` | GET | `/api/v1/classrooms` | `groups.py` | `classrooms` | `app.groups` (type=classroom) |
-| Create classroom | `ManageClassrooms.tsx` | `createClassroom` | POST | `/api/v1/classrooms` | `groups.py` | `classrooms` | `app.groups` |
-| Join classroom | `JoinClassroomPage.tsx` | Direct axios | POST | `/api/v1/classrooms/:id/join` | `groups.py` | `classrooms` | `app.group_memberships` |
-| List members | `ManageClassrooms.tsx` | `fetchClassroomMembers` | GET | `/api/v1/classrooms/:id/members` | `groups.py` | `classrooms.members` | `app.group_memberships` |
+| List classrooms | `ManageClassrooms.tsx` | `fetchClassrooms` | GET | `/api/v1/classrooms` |
+| Create classroom | `ManageClassrooms.tsx` | `createClassroom` | POST | `/api/v1/classrooms` |
+| Join classroom | `JoinClassroomPage.tsx` | Direct axios | POST | `/api/v1/classrooms/:id/join` |
+| List members | `ManageClassrooms.tsx` | `fetchClassroomMembers` | GET | `/api/v1/classrooms/:id/members` |
 | **Roles** |
-| Fetch roles | `ManageUsers.tsx` | `fetchRoles` | GET | `/api/v1/roles` | `roles.py` | `roles` | `app.roles` |
+| Fetch roles | `ManageUsers.tsx` | `fetchRoles` | GET | `/api/v1/roles` |
 | **Site Settings** |
-| Get settings | `SiteSettings.tsx` | `fetchSiteSettings` | GET | `/api/v1/site-settings` | `site_settings.py` | `siteSettings` | `app.site_settings` |
-| Update setting | `SiteSettings.tsx` | `updateSiteSetting` | PUT | `/api/v1/site-settings/:key` | `site_settings.py` | `siteSettings` | `app.site_settings` |
+| Get settings | `SiteSettings.tsx` | `fetchSiteSettings` | GET | `/api/v1/site-settings` |
+| Update setting | `SiteSettings.tsx` | `updateSiteSetting` | PUT | `/api/v1/site-settings/:key` |
+
+#### Part 2: Backend to Redux Store Mapping
+
+| Feature | Backend Router | Redux Slice | Database Table |
+|---------|----------------|-------------|----------------|
+| **Collections** |
+| List collections | `document_collections.py` | `documentCollections` | `app.document_collections` |
+| **Documents** |
+| List documents | `document_collections.py` | `documents` | `app.documents` |
+| Upload document | `documents.py` | `documents` | `app.documents` |
+| Delete document | `documents.py` | `documents` | `app.documents` |
+| **Document Elements** |
+| Load paragraphs | `document_elements.py` | `documentElements` | `app.document_elements` |
+| Bulk load | `document_elements.py` | `documentElements` | `app.document_elements` |
+| **Annotations** |
+| Create comment | `annotations.py` | `annotations.commenting` | `app.annotations` |
+| Fetch comments | `annotations.py` | `annotations.commenting` | `app.annotations` |
+| Update annotation | `annotations.py` | `annotations.commenting` | `app.annotations` |
+| Delete annotation | `annotations.py` | `annotations.commenting` | `app.annotations` |
+| Reply to comment | `annotations.py` | `annotations.replying` | `app.annotations` |
+| **Search** |
+| Search content | `search.py` | `searchResults` | `app.document_elements` (full-text) |
+| **Users & Auth** |
+| List users | `users.py` | `users` | `app.users` |
+| Login | `auth.py` | Auth context | `app.users`, `app.user_passwords` |
+| Register | `auth.py` | Auth context | `app.users`, `app.user_passwords` |
+| CAS login | `cas_auth.py` | Auth context | `app.users` |
+| **Classrooms** |
+| List classrooms | `groups.py` | `classrooms` | `app.groups` (type=classroom) |
+| Create classroom | `groups.py` | `classrooms` | `app.groups` |
+| Join classroom | `groups.py` | `classrooms` | `app.group_memberships` |
+| List members | `groups.py` | `classrooms.members` | `app.group_memberships` |
+| **Roles** |
+| Fetch roles | `roles.py` | `roles` | `app.roles` |
+| **Site Settings** |
+| Get settings | `site_settings.py` | `siteSettings` | `app.site_settings` |
+| Update setting | `site_settings.py` | `siteSettings` | `app.site_settings` |
 
 ### Key Observations
 
