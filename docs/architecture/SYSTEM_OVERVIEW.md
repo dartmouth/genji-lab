@@ -16,8 +16,10 @@
 6. [Annotation Lifecycle](#annotation-lifecycle)
 7. [Deployment Architecture](#deployment-architecture)
 8. [Network Architecture](#network-architecture)
-9. [Integration Points](#integration-points)
-10. [Scalability Considerations](#scalability-considerations)
+9. [Data Flow Mapping](#data-flow-mapping)
+   - [Complete Data Flow Reference Table](#complete-data-flow-reference-table) ⭐
+10. [Integration Points](#integration-points)
+11. [Scalability Considerations](#scalability-considerations)
 
 ---
 
