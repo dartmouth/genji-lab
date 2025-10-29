@@ -279,18 +279,18 @@ Comprehensive documentation is available in the `/docs` directory with 17 detail
 ### Quick Links
 - **[Documentation Hub](docs/README.md)** - Complete navigation by role, task, and technology
 - **[System Architecture](docs/architecture/SYSTEM_OVERVIEW.md)** - Three-tier architecture with 12+ Mermaid diagrams
-- **[API Documentation](docs/api/OVERVIEW.md)** - Complete backend API reference (15,000+ words)
-- **[Frontend Documentation](docs/frontend/OVERVIEW.md)** - React architecture guide (15,000+ words)
-- **[Redux Store](docs/frontend/REDUX_STORE.md)** - State management documentation (8,000+ words)
+- **[API Documentation](docs/api/OVERVIEW.md)** - Complete backend API reference
+- **[Frontend Documentation](docs/frontend/OVERVIEW.md)** - React architecture guide
+- **[Redux Store](docs/frontend/REDUX_STORE.md)** - State management documentation
 - **[Database Schema](docs/database/SCHEMA.md)** - Complete ERD diagrams and table reference
 - **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Step-by-step local and Docker setup
 - **[Docker Guide](docs/guides/DOCKER_GUIDE.md)** - Complete Docker reference
 - **[Deployment Guide](docs/guides/DEPLOYMENT.md)** - Production deployment procedures
 
 ### Code Quality
-- **[Backend Audit](docs/audits/BACKEND_AUDIT.md)** - 33 issues analyzed (0 critical)
-- **[Frontend Audit](docs/audits/FRONTEND_AUDIT.md)** - 36 issues analyzed (0 critical)
-- **[Deprecated Code Audit](docs/audits/DEPRECATED_CODE_AUDIT.md)** - Pre-open-source cleanup checklist
+- **[Backend Audit](docs/audits/BACKEND_AUDIT.md)** - 33 issues analyzed
+- **[Frontend Audit](docs/audits/FRONTEND_AUDIT.md)** - 36 issues analyzed
+- **[Deprecated Code Audit](docs/audits/DEPRECATED_CODE_AUDIT.md)** - Deprecated code cleanup checklist
 
 > 💡 **New to the project?** Start with the [Documentation Hub](docs/README.md) for role-based navigation.
 
@@ -390,12 +390,6 @@ npm run test
 
 ## 📡 API Documentation
 
-The API is fully documented with **OpenAPI/Swagger**:
-
-- **Interactive Docs**: http://localhost:8000/docs
-- **Alternative Docs**: http://localhost:8000/redoc
-- **OpenAPI Schema**: http://localhost:8000/openapi.json
-
 ### API Endpoints Overview
 
 #### Authentication
@@ -492,59 +486,6 @@ React Router manages client-side routing with routes for:
 
 ---
 
-## 🧪 Testing
-
-### Backend Testing
-```bash
-cd api
-pytest tests/
-```
-
-### Frontend Testing
-```bash
-cd core-ui
-npm run test
-```
-
----
-
-## 🚢 Deployment
-
-### Production Build
-
-#### Backend
-```bash
-cd api
-docker build -t genji-api:latest .
-```
-
-#### Frontend
-```bash
-cd core-ui
-npm run build
-docker build -t genji-ui:latest .
-```
-
-### Environment Configuration
-
-Ensure all production environment variables are set:
-- Strong `SESSION_SECRET_KEY`
-- Strong `SECRET_KEY` for JWT
-- Production database credentials
-- CORS origins restricted to your domain
-- CAS configuration (if using)
-
-### Database Initialization
-
-```bash
-# Run migrations
-docker compose run migrations upgrade head
-
-# Create admin user (SQL or API endpoint)
-```
-
----
-
 ## 📊 Database Schema
 
 The application uses PostgreSQL with an `app` schema containing:
@@ -612,19 +553,6 @@ We welcome contributions! Please see our [Contributing Guidelines](docs/CONTRIBU
 
 - **Documentation**: [/docs](./docs/)
 - **Issues**: [GitHub Issues](https://github.com/dartmouth-itc/rc-genji/issues)
-- **API Docs**: http://localhost:8000/docs (when running)
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Complete comprehensive documentation
-- [ ] Code audit and cleanup
-- [ ] Performance optimization
-- [ ] Expanded test coverage
-- [ ] Enhanced search capabilities
-- [ ] Real-time collaboration features
-- [ ] Mobile responsive improvements
 
 ---
 
