@@ -6,7 +6,7 @@ import { externalReferenceAnnotations } from "@store/slice/annotationSlices";
 import { RootState } from "@store";
 import { ExternalReferenceIcon } from "../externalReferences";
 import ExternalReferencePreviewModal from "../externalReferences/ExternalReferencePreviewModal";
-
+import { getTextTargets } from "./utils";
 interface ExternalReferenceIconsOverlayProps {
   text: string;
   paragraphId: string;
@@ -64,7 +64,8 @@ const ExternalReferenceIconsOverlay: React.FC<
     const positions: IconPosition[] = [];
 
     externalReferences.forEach((annotation, index) => {
-      const target = annotation.target.find((t) => t.source === paragraphId);
+      const flatTargets = getTextTargets(annotation.target)
+      const target = flatTargets.find((t) => t.source === paragraphId);
       if (!target || !target.selector) return;
 
       const end = target.selector.refined_by.end;

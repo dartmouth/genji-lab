@@ -11,7 +11,6 @@ import { commentingAnnotations, linkingAnnotations as linkAnnotations } from "@s
 
 import { getTextTargets, findTargetForParagraph } from "./utils";
 
-import { commentingAnnotations } from "@store";
 import ExternalReferenceIconsOverlay from "./ExternalReferenceIconsOverlay";
 import {
   RootState,

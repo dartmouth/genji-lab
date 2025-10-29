@@ -13,6 +13,7 @@ import { makeTextAnnotationBody, parseURI } from "@documentView/utils";
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { linkingAnnotations } from '@store';
+import { selectAllLinkingAnnotations } from "@store";
 import ExternalReferenceDialog from "./ExternalReferenceDialog";
 
 interface AnnotationCreationDialogProps {
