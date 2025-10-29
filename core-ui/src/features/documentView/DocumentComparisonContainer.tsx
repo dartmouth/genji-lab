@@ -24,21 +24,21 @@ interface DocumentComparisonContainerProps {
   showLinkedTextHighlights?: boolean;
   isAnnotationsPanelCollapsed?: boolean;
   onToggleAnnotationsPanel?: () => void;
-  onOpenLinkedDocument?: (
-    documentId: number,
-    collectionId: number,
-    targetInfo: {
-      sourceURI: string;
-      start: number;
-      end: number;
-    },
-    allTargets?: Array<{
-      sourceURI: string;
-      start: number;
-      end: number;
-      text: string;
-    }>
-  ) => void;
+  // onOpenLinkedDocument?: (
+  //   documentId: number,
+  //   collectionId: number,
+  //   targetInfo: {
+  //     sourceURI: string;
+  //     start: number;
+  //     end: number;
+  //   },
+  //   allTargets?: Array<{
+  //     sourceURI: string;
+  //     start: number;
+  //     end: number;
+  //     text: string;
+  //   }>
+  // ) => void;
 }
 
 const DocumentComparisonContainer: React.FC<
@@ -50,7 +50,7 @@ const DocumentComparisonContainer: React.FC<
   showLinkedTextHighlights = false,
   isAnnotationsPanelCollapsed = true, // Default to collapsed
   onToggleAnnotationsPanel,
-  onOpenLinkedDocument,
+  // onOpenLinkedDocument,
 }) => {
   // State for active document (for highlight tracking)
   const [activeDocumentId, setActiveDocumentId] = useState<number | undefined>(
@@ -362,7 +362,7 @@ const DocumentComparisonContainer: React.FC<
                   documentCollectionId={doc.collectionId}
                   viewedDocuments={documents}
                   viewMode={viewMode}
-                  onOpenLinkedDocument={onOpenLinkedDocument}
+                  // onOpenLinkedDocument={onOpenLinkedDocument}
                   isLinkingModeActive={isLinkingModeActive}
                   showLinkedTextHighlights={showLinkedTextHighlights}
                 />

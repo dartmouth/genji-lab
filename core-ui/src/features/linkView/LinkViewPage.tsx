@@ -135,7 +135,7 @@ export const LinkViewPage: React.FC = () => {
     }
   }, [searchParams, targetToGroupMap]);
 
-  const getGroupId = useCallback((group: TargetGroup, index: number): string => {
+  const getGroupId = useCallback((_group: TargetGroup, index: number): string => {
     return groupIdMap.get(index) || `group-${index}`;
   }, [groupIdMap]);
 

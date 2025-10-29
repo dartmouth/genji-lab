@@ -1,25 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import axios, { AxiosInstance } from "axios";
 import useLocalStorage from "./useLocalStorage";
-
+import { AuthUser } from "@/contexts/contextDefinition";
 const api: AxiosInstance = axios.create({
   baseURL: "/api/v1",
   timeout: 10000,
 });
-
-interface AuthUser {
-  id: number;
-  first_name: string;
-  last_name: string;
-  username: string; // This is netid for CAS users, username for basic auth
-  email?: string;
-  user_metadata?: Record<string, string | number | object>;
-  roles?: Array<string>;
-  ttl: string;
-  groups: Array<{ name: string; id: number }>;
-  is_active: boolean;
-  [key: string]: unknown;
-}
 
 interface AuthState {
   isAuthenticated: boolean;

@@ -1,5 +1,5 @@
 // src/features/documentGallery/DocumentViewerContainer.tsx
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import {
@@ -10,12 +10,12 @@ import {
   selectAllDocuments,
   selectAllDocumentCollections,
   setHoveredHighlights,
-  fetchDocumentElements,
+  // fetchDocumentElements,
 } from "@store";
-import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollToTextUtils";
-import { selectAllElementsForViewing } from "@store/selector/combinedSelectors";
+// import { scrollToAndHighlightText } from "@/features/documentView/utils/scrollToTextUtils";
+// import { selectAllElementsForViewing } from "@store/selector/combinedSelectors";
 import HighlightingHelpIcon from "@/features/documentView/components/highlightedContent/HighlightingHelpIcon";
-import { RootState } from "@store";
+// import { RootState } from "@store";
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
 import { DocumentComparisonContainer } from "@documentView";
@@ -117,7 +117,7 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [location.hash, dispatch, documentId]);
 
-  const isUpdatingDocuments = useRef(false);
+  // const isUpdatingDocuments = useRef(false);
 
   const [viewedDocuments, setViewedDocuments] = useState<
     Array<{
@@ -128,9 +128,9 @@ export const DocumentContentView: React.FC = () => {
   >([]);
 
   // Properly typed elements selector
-  const allElements = useAppSelector((state: RootState) =>
-    selectAllElementsForViewing(state, viewedDocuments)
-  );
+  // const allElements = useAppSelector((state: RootState) =>
+  //   selectAllElementsForViewing(state, viewedDocuments)
+  // );
 
   const [documentsByCollection, setDocumentsByCollection] = useState<{
     [collectionId: number]: Array<{ id: number; title: string }>;
@@ -346,396 +346,396 @@ export const DocumentContentView: React.FC = () => {
     }
   }, [pendingScrollTarget, viewedDocuments]);
 
-  const getElementBasedDocumentTitle = useCallback(
-    (documentId: number): string | null => {
-      const document = documents.find((doc) => doc.id === documentId);
-      if (document && document.title && !document.title.includes("Document ")) {
-        return document.title;
-      }
+  // const getElementBasedDocumentTitle = useCallback(
+  //   (documentId: number): string | null => {
+  //     const document = documents.find((doc) => doc.id === documentId);
+  //     if (document && document.title && !document.title.includes("Document ")) {
+  //       return document.title;
+  //     }
 
-      for (const collectionId in documentsByCollection) {
-        const doc = documentsByCollection[collectionId].find(
-          (d) => d.id === documentId
-        );
-        if (doc && doc.title && !doc.title.includes("Document ")) {
-          return doc.title;
-        }
-      }
+  //     for (const collectionId in documentsByCollection) {
+  //       const doc = documentsByCollection[collectionId].find(
+  //         (d) => d.id === documentId
+  //       );
+  //       if (doc && doc.title && !doc.title.includes("Document ")) {
+  //         return doc.title;
+  //       }
+  //     }
 
-      const viewedDoc = viewedDocuments.find((doc) => doc.id === documentId);
-      if (
-        viewedDoc &&
-        viewedDoc.title &&
-        !viewedDoc.title.includes("Document ")
-      ) {
-        return viewedDoc.title;
-      }
+  //     const viewedDoc = viewedDocuments.find((doc) => doc.id === documentId);
+  //     if (
+  //       viewedDoc &&
+  //       viewedDoc.title &&
+  //       !viewedDoc.title.includes("Document ")
+  //     ) {
+  //       return viewedDoc.title;
+  //     }
 
-      return null;
-    },
-    [documents, documentsByCollection, viewedDocuments]
-  );
+  //     return null;
+  //   },
+  //   [documents, documentsByCollection, viewedDocuments]
+  // );
 
-  const replaceSecondaryDocument = useCallback(
-    async (
-      linkedDocumentId: number,
-      linkedCollectionId: number,
-      targetInfo: {
-        sourceURI: string;
-        start: number;
-        end: number;
-      },
-      allTargets?: Array<{
-        sourceURI: string;
-        start: number;
-        end: number;
-        text: string;
-      }>
-    ) => {
-      if (isUpdatingDocuments.current) {
-        return;
-      }
+  // const replaceSecondaryDocument = useCallback(
+  //   async (
+  //     linkedDocumentId: number,
+  //     linkedCollectionId: number,
+  //     targetInfo: {
+  //       sourceURI: string;
+  //       start: number;
+  //       end: number;
+  //     },
+  //     allTargets?: Array<{
+  //       sourceURI: string;
+  //       start: number;
+  //       end: number;
+  //       text: string;
+  //     }>
+  //   ) => {
+  //     if (isUpdatingDocuments.current) {
+  //       return;
+  //     }
 
-      isUpdatingDocuments.current = true;
+  //     isUpdatingDocuments.current = true;
 
-      try {
-        let linkedDocTitle = getDocumentTitle(
-          linkedDocumentId,
-          linkedCollectionId
-        );
+  //     try {
+  //       let linkedDocTitle = getDocumentTitle(
+  //         linkedDocumentId,
+  //         linkedCollectionId
+  //       );
 
-        if (
-          linkedDocTitle.includes("Document ") &&
-          !documentsByCollection[linkedCollectionId]
-        ) {
-          setIsLoadingDocuments(true);
+  //       if (
+  //         linkedDocTitle.includes("Document ") &&
+  //         !documentsByCollection[linkedCollectionId]
+  //       ) {
+  //         setIsLoadingDocuments(true);
 
-          try {
-            const payload = await dispatch(
-              fetchDocumentsByCollection(linkedCollectionId)
-            ).unwrap();
-            setDocumentsByCollection((prev) => ({
-              ...prev,
-              [linkedCollectionId]: payload.documents.map((doc) => ({
-                id: doc.id,
-                title: doc.title,
-              })),
-            }));
+  //         try {
+  //           const payload = await dispatch(
+  //             fetchDocumentsByCollection(linkedCollectionId)
+  //           ).unwrap();
+  //           setDocumentsByCollection((prev) => ({
+  //             ...prev,
+  //             [linkedCollectionId]: payload.documents.map((doc) => ({
+  //               id: doc.id,
+  //               title: doc.title,
+  //             })),
+  //           }));
 
-            const elementBasedTitle =
-              getElementBasedDocumentTitle(linkedDocumentId);
-            linkedDocTitle =
-              elementBasedTitle ||
-              getDocumentTitle(linkedDocumentId, linkedCollectionId);
-          } catch (error) {
-            linkedDocTitle = `Document ${linkedDocumentId}`;
-            console.error("Error fetching linked document:", error);
-          } finally {
-            setIsLoadingDocuments(false);
-          }
-        } else {
-          const elementBasedTitle =
-            getElementBasedDocumentTitle(linkedDocumentId);
-          if (elementBasedTitle) {
-            linkedDocTitle = elementBasedTitle;
-          }
-        }
+  //           const elementBasedTitle =
+  //             getElementBasedDocumentTitle(linkedDocumentId);
+  //           linkedDocTitle =
+  //             elementBasedTitle ||
+  //             getDocumentTitle(linkedDocumentId, linkedCollectionId);
+  //         } catch (error) {
+  //           linkedDocTitle = `Document ${linkedDocumentId}`;
+  //           console.error("Error fetching linked document:", error);
+  //         } finally {
+  //           setIsLoadingDocuments(false);
+  //         }
+  //       } else {
+  //         const elementBasedTitle =
+  //           getElementBasedDocumentTitle(linkedDocumentId);
+  //         if (elementBasedTitle) {
+  //           linkedDocTitle = elementBasedTitle;
+  //         }
+  //       }
 
-        const primaryDocument = viewedDocuments[0];
+  //       const primaryDocument = viewedDocuments[0];
 
-        setViewedDocuments([
-          primaryDocument,
-          {
-            id: linkedDocumentId,
-            collectionId: linkedCollectionId,
-            title: linkedDocTitle,
-          },
-        ]);
+  //       setViewedDocuments([
+  //         primaryDocument,
+  //         {
+  //           id: linkedDocumentId,
+  //           collectionId: linkedCollectionId,
+  //           title: linkedDocTitle,
+  //         },
+  //       ]);
 
-        if (pendingScrollTarget && viewedDocuments.length > 1) {
-          const oldSecondaryId = viewedDocuments[1].id;
-          if (pendingScrollTarget.documentId === oldSecondaryId) {
-            setPendingScrollTarget(null);
-          }
-        }
+  //       if (pendingScrollTarget && viewedDocuments.length > 1) {
+  //         const oldSecondaryId = viewedDocuments[1].id;
+  //         if (pendingScrollTarget.documentId === oldSecondaryId) {
+  //           setPendingScrollTarget(null);
+  //         }
+  //       }
 
-        setPendingScrollTarget({
-          documentId: linkedDocumentId,
-          targetInfo,
-          allTargets,
-        });
-      } finally {
-        isUpdatingDocuments.current = false;
-      }
-    },
-    [
-      dispatch,
-      documentsByCollection,
-      getDocumentTitle,
-      getElementBasedDocumentTitle,
-      viewedDocuments,
-      pendingScrollTarget,
-    ]
-  );
+  //       setPendingScrollTarget({
+  //         documentId: linkedDocumentId,
+  //         targetInfo,
+  //         allTargets,
+  //       });
+  //     } finally {
+  //       isUpdatingDocuments.current = false;
+  //     }
+  //   },
+  //   [
+  //     dispatch,
+  //     documentsByCollection,
+  //     getDocumentTitle,
+  //     getElementBasedDocumentTitle,
+  //     viewedDocuments,
+  //     pendingScrollTarget,
+  //   ]
+  // );
 
-  const replacePrimaryDocument = useCallback(
-    async (
-      linkedDocumentId: number,
-      linkedCollectionId: number,
-      targetInfo: {
-        sourceURI: string;
-        start: number;
-        end: number;
-      },
-      allTargets?: Array<{
-        sourceURI: string;
-        start: number;
-        end: number;
-        text: string;
-      }>
-    ) => {
-      if (isUpdatingDocuments.current) {
-        return;
-      }
+  // const replacePrimaryDocument = useCallback(
+  //   async (
+  //     linkedDocumentId: number,
+  //     linkedCollectionId: number,
+  //     targetInfo: {
+  //       sourceURI: string;
+  //       start: number;
+  //       end: number;
+  //     },
+  //     allTargets?: Array<{
+  //       sourceURI: string;
+  //       start: number;
+  //       end: number;
+  //       text: string;
+  //     }>
+  //   ) => {
+  //     if (isUpdatingDocuments.current) {
+  //       return;
+  //     }
 
-      isUpdatingDocuments.current = true;
+  //     isUpdatingDocuments.current = true;
 
-      try {
-        let linkedDocTitle = getDocumentTitle(
-          linkedDocumentId,
-          linkedCollectionId
-        );
+  //     try {
+  //       let linkedDocTitle = getDocumentTitle(
+  //         linkedDocumentId,
+  //         linkedCollectionId
+  //       );
 
-        if (
-          linkedDocTitle.includes("Document ") &&
-          !documentsByCollection[linkedCollectionId]
-        ) {
-          setIsLoadingDocuments(true);
+  //       if (
+  //         linkedDocTitle.includes("Document ") &&
+  //         !documentsByCollection[linkedCollectionId]
+  //       ) {
+  //         setIsLoadingDocuments(true);
 
-          try {
-            const payload = await dispatch(
-              fetchDocumentsByCollection(linkedCollectionId)
-            ).unwrap();
-            setDocumentsByCollection((prev) => ({
-              ...prev,
-              [linkedCollectionId]: payload.documents.map((doc) => ({
-                id: doc.id,
-                title: doc.title,
-              })),
-            }));
+  //         try {
+  //           const payload = await dispatch(
+  //             fetchDocumentsByCollection(linkedCollectionId)
+  //           ).unwrap();
+  //           setDocumentsByCollection((prev) => ({
+  //             ...prev,
+  //             [linkedCollectionId]: payload.documents.map((doc) => ({
+  //               id: doc.id,
+  //               title: doc.title,
+  //             })),
+  //           }));
 
-            const elementBasedTitle =
-              getElementBasedDocumentTitle(linkedDocumentId);
-            linkedDocTitle =
-              elementBasedTitle ||
-              getDocumentTitle(linkedDocumentId, linkedCollectionId);
-          } catch (error) {
-            linkedDocTitle = `Document ${linkedDocumentId}`;
-            console.error("Error fetching linked document:", error);
-          } finally {
-            setIsLoadingDocuments(false);
-          }
-        } else {
-          const elementBasedTitle =
-            getElementBasedDocumentTitle(linkedDocumentId);
-          if (elementBasedTitle) {
-            linkedDocTitle = elementBasedTitle;
-          }
-        }
+  //           const elementBasedTitle =
+  //             getElementBasedDocumentTitle(linkedDocumentId);
+  //           linkedDocTitle =
+  //             elementBasedTitle ||
+  //             getDocumentTitle(linkedDocumentId, linkedCollectionId);
+  //         } catch (error) {
+  //           linkedDocTitle = `Document ${linkedDocumentId}`;
+  //           console.error("Error fetching linked document:", error);
+  //         } finally {
+  //           setIsLoadingDocuments(false);
+  //         }
+  //       } else {
+  //         const elementBasedTitle =
+  //           getElementBasedDocumentTitle(linkedDocumentId);
+  //         if (elementBasedTitle) {
+  //           linkedDocTitle = elementBasedTitle;
+  //         }
+  //       }
 
-        const secondaryDocument = viewedDocuments[1];
+  //       const secondaryDocument = viewedDocuments[1];
 
-        setViewedDocuments([
-          {
-            id: linkedDocumentId,
-            collectionId: linkedCollectionId,
-            title: linkedDocTitle,
-          },
-          secondaryDocument,
-        ]);
+  //       setViewedDocuments([
+  //         {
+  //           id: linkedDocumentId,
+  //           collectionId: linkedCollectionId,
+  //           title: linkedDocTitle,
+  //         },
+  //         secondaryDocument,
+  //       ]);
 
-        if (pendingScrollTarget && viewedDocuments.length > 0) {
-          const oldPrimaryId = viewedDocuments[0].id;
-          if (pendingScrollTarget.documentId === oldPrimaryId) {
-            setPendingScrollTarget(null);
-          }
-        }
+  //       if (pendingScrollTarget && viewedDocuments.length > 0) {
+  //         const oldPrimaryId = viewedDocuments[0].id;
+  //         if (pendingScrollTarget.documentId === oldPrimaryId) {
+  //           setPendingScrollTarget(null);
+  //         }
+  //       }
 
-        setPendingScrollTarget({
-          documentId: linkedDocumentId,
-          targetInfo,
-          allTargets,
-        });
-      } finally {
-        isUpdatingDocuments.current = false;
-      }
-    },
-    [
-      dispatch,
-      documentsByCollection,
-      getDocumentTitle,
-      getElementBasedDocumentTitle,
-      viewedDocuments,
-      pendingScrollTarget,
-    ]
-  );
+  //       setPendingScrollTarget({
+  //         documentId: linkedDocumentId,
+  //         targetInfo,
+  //         allTargets,
+  //       });
+  //     } finally {
+  //       isUpdatingDocuments.current = false;
+  //     }
+  //   },
+  //   [
+  //     dispatch,
+  //     documentsByCollection,
+  //     getDocumentTitle,
+  //     getElementBasedDocumentTitle,
+  //     viewedDocuments,
+  //     pendingScrollTarget,
+  //   ]
+  // );
 
-  const addLinkedDocumentAsSecondary = useCallback(
-    async (
-      linkedDocumentId: number,
-      linkedCollectionId: number,
-      targetInfo: {
-        sourceURI: string;
-        start: number;
-        end: number;
-      },
-      allTargets?: Array<{
-        sourceURI: string;
-        start: number;
-        end: number;
-        text: string;
-      }>
-    ) => {
-      if (isUpdatingDocuments.current) {
-        return;
-      }
+  // const addLinkedDocumentAsSecondary = useCallback(
+  //   async (
+  //     linkedDocumentId: number,
+  //     linkedCollectionId: number,
+  //     targetInfo: {
+  //       sourceURI: string;
+  //       start: number;
+  //       end: number;
+  //     },
+  //     allTargets?: Array<{
+  //       sourceURI: string;
+  //       start: number;
+  //       end: number;
+  //       text: string;
+  //     }>
+  //   ) => {
+  //     if (isUpdatingDocuments.current) {
+  //       return;
+  //     }
 
-      isUpdatingDocuments.current = true;
+  //     isUpdatingDocuments.current = true;
 
-      try {
-        try {
-          await dispatch(fetchDocumentElements(linkedDocumentId)).unwrap();
-        } catch (error) {
-          console.error("Error fetching linked document elements:", error);
-        }
+  //     try {
+  //       try {
+  //         await dispatch(fetchDocumentElements(linkedDocumentId)).unwrap();
+  //       } catch (error) {
+  //         console.error("Error fetching linked document elements:", error);
+  //       }
 
-        const linkedDocTitle = getDocumentTitle(
-          linkedDocumentId,
-          linkedCollectionId
-        );
+  //       const linkedDocTitle = getDocumentTitle(
+  //         linkedDocumentId,
+  //         linkedCollectionId
+  //       );
 
-        setViewedDocuments(
-          (
-            prev: Array<{ id: number; collectionId: number; title: string }>
-          ) => {
-            const newDoc = {
-              id: linkedDocumentId,
-              collectionId: linkedCollectionId,
-              title: linkedDocTitle,
-            };
-            return [...prev, newDoc];
-          }
-        );
+  //       setViewedDocuments(
+  //         (
+  //           prev: Array<{ id: number; collectionId: number; title: string }>
+  //         ) => {
+  //           const newDoc = {
+  //             id: linkedDocumentId,
+  //             collectionId: linkedCollectionId,
+  //             title: linkedDocTitle,
+  //           };
+  //           return [...prev, newDoc];
+  //         }
+  //       );
 
-        setPendingScrollTarget({
-          documentId: linkedDocumentId,
-          targetInfo,
-          allTargets,
-        });
-      } finally {
-        isUpdatingDocuments.current = false;
-      }
-    },
-    [dispatch, getDocumentTitle]
-  );
+  //       setPendingScrollTarget({
+  //         documentId: linkedDocumentId,
+  //         targetInfo,
+  //         allTargets,
+  //       });
+  //     } finally {
+  //       isUpdatingDocuments.current = false;
+  //     }
+  //   },
+  //   [dispatch, getDocumentTitle]
+  // );
 
-  const handleOpenLinkedDocument = useCallback(
-    async (
-      linkedDocumentId: number,
-      linkedCollectionId: number,
-      targetInfo: {
-        sourceURI: string;
-        start: number;
-        end: number;
-      },
-      allTargets?: Array<{
-        sourceURI: string;
-        start: number;
-        end: number;
-        text: string;
-      }>
-    ) => {
-      const targetDocumentId = linkedDocumentId;
+  // const handleOpenLinkedDocument = useCallback(
+  //   async (
+  //     linkedDocumentId: number,
+  //     linkedCollectionId: number,
+  //     targetInfo: {
+  //       sourceURI: string;
+  //       start: number;
+  //       end: number;
+  //     },
+  //     allTargets?: Array<{
+  //       sourceURI: string;
+  //       start: number;
+  //       end: number;
+  //       text: string;
+  //     }>
+  //   ) => {
+  //     const targetDocumentId = linkedDocumentId;
 
-      let sourceDocumentId: number | null = null;
-      if (allTargets && allTargets.length > 1) {
-        for (const target of allTargets) {
-          const elementIdMatch = target.sourceURI.match(
-            /\/DocumentElements\/(\d+)/
-          );
-          if (elementIdMatch) {
-            const elementId = parseInt(elementIdMatch[1]);
-            const element = allElements.find((el) => el.id === elementId);
-            if (element && element.document_id !== targetDocumentId) {
-              sourceDocumentId = element.document_id;
-              break;
-            }
-          }
-        }
-      }
+  //     let sourceDocumentId: number | null = null;
+  //     if (allTargets && allTargets.length > 1) {
+  //       for (const target of allTargets) {
+  //         const elementIdMatch = target.sourceURI.match(
+  //           /\/DocumentElements\/(\d+)/
+  //         );
+  //         if (elementIdMatch) {
+  //           const elementId = parseInt(elementIdMatch[1]);
+  //           const element = allElements.find((el) => el.id === elementId);
+  //           if (element && element.document_id !== targetDocumentId) {
+  //             sourceDocumentId = element.document_id;
+  //             break;
+  //           }
+  //         }
+  //       }
+  //     }
 
-      if (isUpdatingDocuments.current) return;
+  //     if (isUpdatingDocuments.current) return;
 
-      const sourceDocumentIndex = sourceDocumentId
-        ? viewedDocuments.findIndex((doc) => doc.id === sourceDocumentId)
-        : -1;
+  //     const sourceDocumentIndex = sourceDocumentId
+  //       ? viewedDocuments.findIndex((doc) => doc.id === sourceDocumentId)
+  //       : -1;
 
-      if (sourceDocumentIndex === -1) return;
+  //     if (sourceDocumentIndex === -1) return;
 
-      const highlightTargets = () => {
-        setTimeout(() => {
-          scrollToAndHighlightText(targetInfo, allTargets);
-        }, 2000);
-      };
+  //     const highlightTargets = () => {
+  //       setTimeout(() => {
+  //         scrollToAndHighlightText(targetInfo, allTargets);
+  //       }, 2000);
+  //     };
 
-      try {
-        if (viewedDocuments.length === 1) {
-          await addLinkedDocumentAsSecondary(
-            targetDocumentId,
-            linkedCollectionId,
-            targetInfo,
-            allTargets
-          );
-          highlightTargets();
-        } else if (viewedDocuments.length === 2) {
-          const targetAlreadyViewed = viewedDocuments.some(
-            (doc) => doc.id === targetDocumentId
-          );
-          if (targetAlreadyViewed) {
-            highlightTargets();
-            return;
-          }
+  //     try {
+  //       if (viewedDocuments.length === 1) {
+  //         await addLinkedDocumentAsSecondary(
+  //           targetDocumentId,
+  //           linkedCollectionId,
+  //           targetInfo,
+  //           allTargets
+  //         );
+  //         highlightTargets();
+  //       } else if (viewedDocuments.length === 2) {
+  //         const targetAlreadyViewed = viewedDocuments.some(
+  //           (doc) => doc.id === targetDocumentId
+  //         );
+  //         if (targetAlreadyViewed) {
+  //           highlightTargets();
+  //           return;
+  //         }
 
-          if (sourceDocumentIndex === 0) {
-            await replaceSecondaryDocument(
-              targetDocumentId,
-              linkedCollectionId,
-              targetInfo,
-              allTargets
-            );
-            highlightTargets();
-          } else if (sourceDocumentIndex === 1) {
-            await replacePrimaryDocument(
-              targetDocumentId,
-              linkedCollectionId,
-              targetInfo,
-              allTargets
-            );
-            highlightTargets();
-          }
-        }
-      } catch (error) {
-        console.error("Navigation error:", error);
-      }
-    },
-    [
-      viewedDocuments,
-      allElements,
-      addLinkedDocumentAsSecondary,
-      replaceSecondaryDocument,
-      replacePrimaryDocument,
-    ]
-  );
+  //         if (sourceDocumentIndex === 0) {
+  //           await replaceSecondaryDocument(
+  //             targetDocumentId,
+  //             linkedCollectionId,
+  //             targetInfo,
+  //             allTargets
+  //           );
+  //           highlightTargets();
+  //         } else if (sourceDocumentIndex === 1) {
+  //           await replacePrimaryDocument(
+  //             targetDocumentId,
+  //             linkedCollectionId,
+  //             targetInfo,
+  //             allTargets
+  //           );
+  //           highlightTargets();
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Navigation error:", error);
+  //     }
+  //   },
+  //   [
+  //     viewedDocuments,
+  //     allElements,
+  //     addLinkedDocumentAsSecondary,
+  //     replaceSecondaryDocument,
+  //     replacePrimaryDocument,
+  //   ]
+  // );
 
   const handleComparisonDocumentChange = useCallback(
     async (newComparisonDocumentId: number | null) => {
@@ -1117,7 +1117,7 @@ export const DocumentContentView: React.FC = () => {
           viewMode={viewMode}
           handleViewModeChange={handleViewModeChange}
           isLinkingModeActive={isLinkingModeActive}
-          onOpenLinkedDocument={handleOpenLinkedDocument}
+          // onOpenLinkedDocument={handleOpenLinkedDocument}
           showLinkedTextHighlights={showLinkedTextHighlights}
           isAnnotationsPanelCollapsed={isAnnotationsPanelCollapsed}
           onToggleAnnotationsPanel={handleToggleAnnotationsPanel}

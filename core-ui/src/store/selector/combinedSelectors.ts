@@ -74,7 +74,7 @@ const flattenTargets = (
       });
     } else if (target && typeof target === "object" && "source" in target) {
       // Target is a single object
-      flattened.push(target);
+      flattened.push(target as { source: string; selector?: unknown });
     }
   });
 
