@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useAppSelector } from "@store/hooks";
 import { RootState } from "@store";
 // import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
+import { getTextTargets } from "./utils";
 import { externalReferenceAnnotations } from "@/store/slice/annotationSlices";
 import { ExternalReferenceIcon } from "../externalReferences";
 import { Annotation } from "@documentView/types";
@@ -53,7 +54,8 @@ const HighlightedTextWithReferences: React.FC<
   const referencePositions: ReferencePosition[] = [];
 
   externalReferences.forEach((annotation: Annotation, index) => {
-    const target = annotation.target.find((t) => t.source === paragraphId);
+    const flatTargets = getTextTargets(annotation.target)
+    const target = flatTargets.find((t) => t.source === paragraphId);
     if (!target || !target.selector) return;
 
     const end = target.selector.refined_by.end;

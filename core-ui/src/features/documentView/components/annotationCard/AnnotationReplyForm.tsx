@@ -7,7 +7,7 @@ import '../../styles/AnnotationCardStyles.css'
 import { Annotation } from '@documentView/types';
 import Snackbar from '@mui/material/Snackbar';
 import { Link as LinkIcon } from "@mui/icons-material";
-import useLocalStorage from '@/hooks/useLocalStorage';
+
 
 interface ReplyFormProps {
     annotation: Annotation;
@@ -34,9 +34,6 @@ const ReplyForm: React.FC<ReplyFormProps> = ({ annotation, motivation, onSave })
     const [openSnackBar, setOpenSnackbar] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     
-    // Get classroom context from localStorage (same pattern as AnnotationCreationDialog)
-    const [activeClassroomValue] = useLocalStorage('active_classroom');
-    const [isOptedOut] = useLocalStorage('classroom_opted_out');
     
     // Link dialog state
     const [linkDialog, setLinkDialog] = useState<LinkDialogState>({

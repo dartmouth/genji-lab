@@ -550,7 +550,7 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
               Add External Reference 🔗
             </ContextButton>
 
-            {hasLinkedDocuments && (
+            {hasLinkedAnnotations && (
               <ContextButton
                 onClick={handleViewLinkedText}
                 style={{
