@@ -34,9 +34,10 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 - **[Docker Guide](guides/DOCKER_GUIDE.md)** - Complete Docker reference and best practices
 - **[Deployment](guides/DEPLOYMENT.md)** - Complete production deployment guide
 
-### 🔍 Code Audits
+### 🔍 Code Quality & Audits
 - **[Backend Audit](audits/BACKEND_AUDIT.md)** - Complete analysis: 33 issues identified (0 critical, 6 high, 15 medium, 12 low)
 - **[Frontend Audit](audits/FRONTEND_AUDIT.md)** - Complete analysis: 36 issues identified (0 critical, 8 high, 17 medium, 11 low)
+- **[Deprecated Code Audit](audits/DEPRECATED_CODE_AUDIT.md)** - Pre-open-source cleanup: 18 items requiring action
 
 ---
 
