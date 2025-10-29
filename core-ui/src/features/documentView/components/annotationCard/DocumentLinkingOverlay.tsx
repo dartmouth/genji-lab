@@ -4,6 +4,8 @@ import { useAppDispatch } from "@store/hooks";
 import { useAuth } from "@hooks/useAuthContext";
 import { linkingAnnotations } from "@store";
 import { makeTextAnnotationBody } from "@documentView/utils";
+import useLocalStorage from "@/hooks/useLocalStorage";
+
 import {
   Link as LinkIcon,
   Close as CloseIcon,
@@ -37,6 +39,13 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   documents,
   onClose,
 }) => {
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeClassroomValue, _setActiveClassroomValue] =
+    useLocalStorage("active_classroom");
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAuth();
 
@@ -72,30 +81,20 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     return numericId;
   };
 
-  // Function to analyze a DOM selection and extract all involved elements
   const analyzeMultiElementSelection = (
     range: Range
   ): MultiElementSelection | null => {
     const selectedText = range.toString().trim();
+    //  console.log("=== analyzeMultiElementSelection called ===", selectedText.substring(0, 30));
     if (selectedText.length === 0) return null;
 
     // Find all document elements that intersect with the selection
     const elementSelections: ElementSelection[] = [];
-
-    // Alternative approach: Start from the range boundaries and find DocumentElement ancestors
-    const startElement =
-      range.startContainer.nodeType === Node.ELEMENT_NODE
-        ? (range.startContainer as HTMLElement)
-        : (range.startContainer.parentElement as HTMLElement);
-    const endElement =
-      range.endContainer.nodeType === Node.ELEMENT_NODE
-        ? (range.endContainer as HTMLElement)
-        : (range.endContainer.parentElement as HTMLElement);
+    // console.log("Starting elementSelections:", elementSelections.length);
 
     // Find all DocumentElement containers that might be involved
     const documentElements = new Set<HTMLElement>();
 
-    // Method 1: Tree walker approach (original)
     const commonAncestor = range.commonAncestorContainer;
     const walker = window.document.createTreeWalker(
       commonAncestor,
@@ -123,64 +122,58 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
       textNode = walker.nextNode() as Text;
     }
-
-    // Method 2: Direct ancestor traversal from start/end points
-    [startElement, endElement].forEach((element) => {
-      if (element) {
-        let current: HTMLElement | null = element;
-        while (current && current !== document.body) {
-          if (current.id?.includes("DocumentElements")) {
-            documentElements.add(current);
-            break;
-          }
-          current = current.parentElement;
-        }
-      }
-    });
-
-    // Method 3: Query selector within the common ancestor
-    if (commonAncestor.nodeType === Node.ELEMENT_NODE) {
-      const ancestorElement = commonAncestor as HTMLElement;
-      const foundElements = ancestorElement.querySelectorAll(
-        '[id*="DocumentElements"]'
-      );
-      foundElements.forEach((el) => {
-        if (range.intersectsNode(el)) {
-          documentElements.add(el as HTMLElement);
-        }
-      });
-    }
-
-    // If we still haven't found any elements, try a broader search
+    // console.log("elements selected: ", documentElements.size)
     if (documentElements.size === 0) {
-      // Get all DocumentElements in the document and check intersection
       const allDocElements = document.querySelectorAll(
         '[id*="DocumentElements"]'
       );
-
+      const seenIds = new Set<string>(); // ← Track by ID instead
+      
       allDocElements.forEach((element) => {
         try {
           if (range.intersectsNode(element)) {
-            documentElements.add(element as HTMLElement);
+            const elementId = (element as HTMLElement).id;
+            if (!seenIds.has(elementId)) { // ← Check if we've seen this ID
+              seenIds.add(elementId);
+              documentElements.add(element as HTMLElement);
+            }
           }
         } catch (error) {
-          console.error(
-            error,
-            "Error checking intersection for element:",
-            element.id
-          );
+          console.error(error, "Error checking intersection for element:", element.id);
         }
       });
     }
-
+    // If we still haven't found any elements, try a broader search
+  //   if (documentElements.size === 0) {
+  //     // Get all DocumentElements in the document and check intersection
+  //     const allDocElements = document.querySelectorAll(
+  //       '[id*="DocumentElements"]'
+  //     );
+  // console.log("querySelectorAll found:", allDocElements.length, "total elements");
+  //     allDocElements.forEach((element) => {
+  //       try {
+  //         if (range.intersectsNode(element)) {
+  //                   console.log("Adding element:", element.id, "Current set size:", documentElements.size);
+  //           documentElements.add(element as HTMLElement);
+  //                   console.log("After add, set size:", documentElements.size);
+  //         }
+  //       } catch (error) {
+  //         console.error(
+  //           error,
+  //           "Error checking intersection for element:",
+  //           element.id
+  //         );
+  //       }
+  //     });
+  //   }
+    // console.log("elements selected after global: ", documentElements.size)
     if (documentElements.size === 0) {
       return null;
     }
 
-    // Process each DocumentElement to calculate precise text ranges
     documentElements.forEach((element) => {
       const elementId = element.id;
-
+      // console.log('Processing element: ', element.id)
       // Extract numeric ID safely
       const numericId = extractNumericId(elementId);
       if (!numericId) {
@@ -335,7 +328,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       ) {
         elementSelections.push({
           documentElementId: parseInt(numericId),
-          sourceURI: `/DocumentElements/${numericId}`, // Consistent format with leading slash
+          sourceURI: `DocumentElements/${numericId}`, // Consistent format with leading slash
           text: intersectionText,
           start: elementStart,
           end: elementEnd,
@@ -369,7 +362,9 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       console.warn("Document not found in current view:", documentId);
       return null;
     }
-
+  // console.log("Final elementSelections count:", elementSelections.length);
+  // console.log("elementSelections:", elementSelections.map(e => ({id: e.documentElementId, text: e.text.substring(0, 20)})));
+  
     return {
       documentId: foundDocument.id,
       elements: elementSelections,
@@ -384,7 +379,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-
+      
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0) {
         return;
@@ -446,30 +441,31 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       document.removeEventListener("mousedown", handleMouseDown, true);
       document.removeEventListener("mouseup", handleSelection, true);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, firstSelection, documents]);
 
   const handleSaveLink = () => {
     if (!user || !isAuthenticated || !firstSelection || !secondSelection) {
       return;
     }
-
     // Create segments for all elements in both selections
     const segments = [
       // First selection segments
-      ...firstSelection.elements.map((element) => ({
+      firstSelection.elements.map((element) => ({
         sourceURI: element.sourceURI,
         start: element.start,
         end: element.end,
         text: element.text,
       })),
       // Second selection segments
-      ...secondSelection.elements.map((element) => ({
+      secondSelection.elements.map((element) => ({
         sourceURI: element.sourceURI,
         start: element.start,
         end: element.end,
         text: element.text,
       })),
     ];
+    // console.log("segments are ", segments, "length of segments is ", segments.length, "first elem has ", segments[0].length, "second elem has ", segments[1].length)
 
     // Use the first document's collection and element for the main annotation body
     const annoBody = makeTextAnnotationBody(
@@ -481,8 +477,9 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       description || "Document link",
       segments
     );
-
-    dispatch(linkingAnnotations.thunks.saveAnnotation(annoBody));
+    const classroomId = activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
+    
+    dispatch(linkingAnnotations.thunks.saveAnnotation({annotation: annoBody, classroomId: classroomId}));
     onClose();
   };
 

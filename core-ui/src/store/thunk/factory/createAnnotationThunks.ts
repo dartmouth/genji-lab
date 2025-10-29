@@ -4,7 +4,8 @@ import {
   Annotation, 
   AnnotationCreate, 
   AnnotationDelete, 
-  AnnotationPatch
+  AnnotationPatch,
+  AnnotationAddTarget
 } from '@documentView/types';
 import { RootState } from '@store';
 import axios, { AxiosInstance } from 'axios';
@@ -118,7 +119,6 @@ export function createSaveAnnotationThunk(
       thunkName,
       async (patch: AnnotationPatch, { dispatch, rejectWithValue }) => {
         try {
-
           // Use your API client
           const response = await api.patch(`/annotations/${patch.annotationId}`, patch.payload);
           
@@ -133,8 +133,37 @@ export function createSaveAnnotationThunk(
       }
     );
   }
-
-
+//FINDME
+  export function createAddTargetThunk(
+    bucketName: string,
+    sliceActions: AnnotationSliceActions
+  ) {
+    const thunkName = `annotations/${bucketName}/addTarget`;
+    
+    return createAsyncThunk<
+      Annotation,
+      AnnotationAddTarget,
+      { state: RootState }
+    >(
+      thunkName,
+      async (patch: AnnotationAddTarget, { dispatch, rejectWithValue }) => {
+        try {
+          const newTarg = {target: patch.target}
+          console.log(newTarg)
+          // Use your API client
+          const response = await api.patch(`/annotations/add-target/${patch.annotationId}`, newTarg);
+          
+          const savedAnnotation: Annotation = response.data;
+          
+          dispatch(sliceActions.addAnnotation(savedAnnotation));
+          
+          return savedAnnotation;
+        } catch (error) {
+          return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+        }
+      }
+    );
+  }
 
   export function createDeleteAnnotationThunk(
     bucketName: string,

@@ -1,22 +1,24 @@
 // authContextDefinition.ts
 import { createContext } from 'react';
 
+export interface AuthUser {
+  id: number;
+  first_name: string;
+  last_name: string;
+  username: string; // This is netid for CAS users, username for basic auth
+  email?: string;
+  user_metadata?: Record<string, string | number | object>;
+  roles?: Array<string>;
+  ttl: string;
+  groups: Array<{ name: string; id: number }>;
+  is_active: boolean;
+  [key: string]: unknown;
+}
+
 // Define the shape of our auth context
 export interface AuthContextType {
   // User information
-  user: {
-    id: number;
-    first_name: string;
-    last_name: string;
-    netid?: string;
-    username?: string;
-    email?: string;
-    user_metadata?: Record<string, string|number>;
-    roles?: Array<string>,
-    groups: Array<{name: string; id: number}>,
-    ttl: string; // ISO format timestamp for expiration
-    [key: string]: unknown;
-  } | null;
+  user: AuthUser | null;
   
   // Authentication state
   isAuthenticated: boolean;

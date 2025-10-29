@@ -26,6 +26,7 @@ import AnnotationCardToolbar from "./AnnotationCardToolbar";
 import AnnotationCardContent from "./AnnotationCardContent";
 import AnnotationCardReplies from "./AnnotationCardReplies";
 import { AnnotationEditor, ReplyForm } from "./";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 interface AnnotationCardProps {
   id: string;
@@ -50,6 +51,13 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
 }) => {
   const { user, isAuthenticated } = useAuth();
   const dispatch = useAppDispatch();
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeClassroomValue, _setActiveClassroomValue] =
+    useLocalStorage("active_classroom");
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
 
   // Component state
   const [isReplying, setIsReplying] = useState(false);
@@ -247,8 +255,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
       "Upvote",
       segment
     );
-
-    dispatch(upvoteAnnotations.thunks.saveAnnotation(upvote));
+    const classId = activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
+    dispatch(upvoteAnnotations.thunks.saveAnnotation({annotation: upvote, classroomId: classId}));
   };
 
   // Dropdown menu component for portal

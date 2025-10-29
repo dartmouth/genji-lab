@@ -12,6 +12,7 @@ import { debounce } from "lodash";
 import { makeTextAnnotationBody, parseURI } from "@documentView/utils";
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import { linkingAnnotations } from '@store';
 import ExternalReferenceDialog from "./ExternalReferenceDialog";
 
 interface AnnotationCreationDialogProps {
@@ -32,6 +33,9 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
   const dispatch = useAppDispatch();
   const { user, isAuthenticated, login, isLoading } = useAuth();
   const newAnno = useAppSelector(selectAnnotationCreate);
+  const links = useAppSelector(selectAllLinkingAnnotations)
+  const [selectedLink, setSelectedLink] = useState(links ? Number(links[0].id) : null)
+  // console.log(links)
   const annotationCreate = useAppSelector(selectAnnotationCreate);
   const dialogRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -156,45 +160,86 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
     );
   };
 
-  const onSave = () => {
+  const makeLinkAnnotationBody = () => {
+    console.log(selectedLink)
+    return newAnno.target.segments.map((targ) => {
+      return {
+        type: 'Text',
+        source: targ.sourceURI,
+        selector: {
+          type: 'TextQuoteSelector',
+          value: targ.text,
+          refined_by: {
+            type: 'TextPositionSelector',
+            start: targ.start,
+            end: targ.end
+          }
+        }
+      }
+    })
+  }
+  
+  const saveLinkingAnnotation = () => {
+    if (!selectedLink){
+      return
+    }
+    const linkingBody = makeLinkAnnotationBody();
+    
+    dispatch(linkingAnnotations.thunks.addTarget({
+      annotationId: selectedLink,
+      target: linkingBody
+      
+    }));
+};
+
+const saveStandardAnnotation = () => {
+  const annoType = newAnno.motivation;
+  const slice = sliceMap[annoType];
+  
+  if (!slice) {
+    console.error("Bad motivation");
+    return;
+  }
+
     if (!user || !isAuthenticated) {
       console.log("User not authenticated");
       return;
     }
-
-    const annoType: string = newAnno.motivation;
-    const slice = sliceMap[annoType] || {};
-
-    if (!slice) {
-      console.error("Bad motivation");
-      return;
-    }
-
-    const annoBody = makeTextAnnotationBody(
-      newAnno.target.documentCollectionId,
-      newAnno.target.documentId,
-      parseURI(newAnno.target.segments[0].sourceURI) as unknown as number,
-      user.id,
-      newAnno.motivation,
-      newAnno.content,
-      newAnno.target.segments
-    );
-
-    // Prepare save parameters with classroom context
-    const saveParams: { annotation: typeof annoBody; classroomId?: string } = {
-      annotation: annoBody,
-    };
-
-    // Only include classroomId if user is in a classroom and hasn't opted out
-    if (activeClassroomValue && isOptedOut !== "true") {
-      saveParams.classroomId = activeClassroomValue as string;
-    }
-
-    dispatch(slice.thunks.saveAnnotation(saveParams));
-    dispatch(resetCreateAnnotation());
-    onClose();
+  
+  const annoBody = makeTextAnnotationBody(
+    newAnno.target.documentCollectionId,
+    newAnno.target.documentId,
+    parseURI(newAnno.target.segments[0].sourceURI) as unknown as number,
+    user.id,
+    newAnno.motivation,
+    newAnno.content,
+    newAnno.target.segments
+  );
+  
+  const saveParams = {
+    annotation: annoBody,
+    ...(activeClassroomValue && isOptedOut !== 'true' && { classroomId: activeClassroomValue })
   };
+  
+  dispatch(slice.thunks.saveAnnotation(saveParams));
+};
 
+const onSave = () => {
+  if (!user || !isAuthenticated) {
+    console.log("User not authenticated");
+    return;
+  }
+  
+  if (newAnno.motivation === 'linking') {
+    saveLinkingAnnotation();
+  } else {
+    saveStandardAnnotation();
+  }
+  
+  dispatch(resetCreateAnnotation());
+  onClose();
+};
+  
   const onCancel = () => {
     dispatch(resetCreateAnnotation());
     onClose();
@@ -241,26 +286,24 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
           overflow: "auto",
         }}
       >
-        <div
-          className="dialog-header"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "16px",
-          }}
-        >
-          <h3
-            style={{
-              margin: 0,
-              fontSize: "16px",
-              fontWeight: 600,
-              color: "#333",
-            }}
-          >
-            {newAnno.motivation === "commenting"
-              ? "Add Comment"
-              : "Add Scholarly Annotation"}
+        <div className="dialog-header" style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <h3 style={{ 
+            margin: 0, 
+            fontSize: '16px', 
+            fontWeight: 600, 
+            color: '#333'
+          }}>
+            {/* {newAnno.motivation === 'commenting' ? "Add Comment" : "Add Scholarly Annotation"} */}
+            {newAnno.motivation === 'commenting' 
+              ? "Add Comment" 
+              : newAnno.motivation === 'scholarly'
+              ? "Add Scholarly Annotation"
+              : "Add Content to Link"}
           </h3>
           <button
             onClick={onCancel}
@@ -341,6 +384,67 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
         ) : (
           // Show annotation form for authenticated users
           <>
+              {newAnno.motivation === 'linking' ? (<div></div>) : (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '8px',
+                  padding: '6px 8px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '4px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  <button
+                    type="button"
+                    onClick={handleAddLink}
+                    title="Add external link (select text first)"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#1976d2',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e3f2fd'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <LinkIcon sx={{ fontSize: '16px' }} />
+                    Add Link
+                  </button>
+                  <span style={{ fontSize: '11px', color: '#666' }}>
+                    Select text and click "Add Link" to embed external URLs
+                  </span>
+                </div>
+            )}
+            {newAnno.motivation === 'linking' ? (<div></div>) : (
+                <textarea
+                ref={textareaRef}
+                value={newAnno.content}
+                onChange={(e) => onTextChangeDebounce(e.target.value)}
+                placeholder={newAnno.motivation === 'commenting' 
+                  ? "Enter your comment here..." 
+                  : "Enter your scholarly annotation here..."}
+                style={{ 
+                  width: '100%', 
+                  minHeight: '120px',
+                  padding: '12px',
+                  marginBottom: '8px',
+                  borderRadius: '6px',
+                  border: '1px solid #ddd',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box',
+                  resize: 'vertical'
+                }}
+              />
+            )}
             {/* Link Toolbar - only show for authenticated users */}
             <div
               style={{
@@ -566,9 +670,37 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
           </div>
         )}
 
-        <div
-          style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}
-        >
+{newAnno.motivation === 'linking' && (
+  <div style={{ marginBottom: '12px' }}>
+    <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: 500 }}>
+      Select Link:
+    </label>
+    <select
+      value={selectedLink || ''}
+      onChange={(e) => {
+        setSelectedLink(Number(e.target.value))
+      }}
+      style={{
+        padding: '8px 12px',
+        fontSize: '14px',
+        borderRadius: '6px',
+        border: '1px solid #ddd',
+        width: '100%',
+        cursor: 'pointer',
+        backgroundColor: 'white'
+      }}
+    >
+      {links.map((l) => (
+        <option key={l.id} value={l.id}>
+          {l.body.value}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
           <button
             onClick={onCancel}
             style={{
@@ -584,23 +716,29 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
             Cancel
           </button>
           {isAuthenticated && (
-            <button
-              onClick={onSave}
-              disabled={!newAnno.content.trim()}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: newAnno.content.trim() ? "#4285f4" : "#cccccc",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: newAnno.content.trim() ? "pointer" : "not-allowed",
-                fontSize: "14px",
-                fontWeight: 500,
-              }}
-            >
-              Save
-            </button>
-          )}
+          (() => {
+            const isEnabled = newAnno.content.trim() || newAnno.motivation === 'linking';
+            
+            return (
+              <button
+                onClick={onSave}
+                disabled={!isEnabled}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: isEnabled ? '#4285f4' : '#cccccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: isEnabled ? 'pointer' : 'not-allowed',
+                  fontSize: '14px',
+                  fontWeight: 500
+                }}
+              >
+                Save
+              </button>
+            );
+          })()
+        )}
         </div>
       </div>
     </div>

@@ -105,6 +105,7 @@ const AppHeader: React.FC = () => {
       const interval = setInterval(fetchFlagCount, 14400000);
       
       // Expose function globally so other components can trigger refresh
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).refreshFlagCount = fetchFlagCount;
       
       // Listen for custom event to refresh flag count
@@ -113,6 +114,7 @@ const AppHeader: React.FC = () => {
       
       return () => {
         clearInterval(interval);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (window as any).refreshFlagCount;
         window.removeEventListener('refreshFlagCount', handleRefresh);
       };

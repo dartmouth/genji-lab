@@ -38,15 +38,15 @@ export const fetchAnnotationByMotivation = createAsyncThunk(
       const annotationsByMotivation: AnnotationsByMotivation =
         await response.data;
 
-      // SPECIAL CASE: Fetch linking annotations using the new endpoint
-      const linkingResponse = await api.get(
-        `/annotations/links/${documentElementId}`
-      );
-      const linkingAnnotations = await linkingResponse.data;
+      // // SPECIAL CASE: Fetch linking annotations using the new endpoint
+      // const linkingResponse = await api.get(
+      //   `/annotations/links/${documentElementId}`
+      // );
+      // const linkingAnnotations = await linkingResponse.data;
 
-      if (linkingAnnotations.length > 0) {
-        annotationsByMotivation.linking = linkingAnnotations;
-      }
+      // if (linkingAnnotations.length > 0) {
+      //   annotationsByMotivation.linking = linkingAnnotations;
+      // }
 
       // Dispatch to Redux slices
       Object.entries(annotationsByMotivation).forEach(

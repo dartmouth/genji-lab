@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback, RefObject } from "react";
 import { useAppSelector } from "@store/hooks";
+import { externalReferenceAnnotations } from "@store/slice/annotationSlices";
 import { RootState } from "@store";
-import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
 import { ExternalReferenceIcon } from "../externalReferences";
 import ExternalReferencePreviewModal from "../externalReferences/ExternalReferencePreviewModal";
 
@@ -42,7 +42,10 @@ const ExternalReferenceIconsOverlay: React.FC<
   const [iconPositions, setIconPositions] = useState<IconPosition[]>([]);
 
   const externalReferences = useAppSelector((state: RootState) =>
-    selectExternalReferencesByParagraph(state, paragraphId)
+    externalReferenceAnnotations.selectors.selectAnnotationsByParent(
+      state,
+      paragraphId
+    )
   );
 
   const calculatePositions = useCallback(() => {
