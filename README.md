@@ -34,7 +34,7 @@ Genji is a comprehensive document annotation platform designed for educational e
 - **🔍 Search**: Powerful search across documents, annotations, and collections
 - **👥 User Management**: Role-based permissions (admin, instructor, student)
 - **🔐 Authentication**: Dual authentication system (CAS + local auth)
-- **🏷️ Flags**: Tag and categorize content for easy filtering
+- **🏷️ Flags**: Flag a concerning comment to be reviewed by an Administrator
 - **⚙️ Site Settings**: Configurable platform settings
 
 ### User Roles
@@ -157,12 +157,6 @@ cp .env_sample .env
 # Edit .env with your database credentials and secrets
 ```
 
-**Required Environment Variables:**
-- `DATABASE_URL` - PostgreSQL connection string
-- `SESSION_SECRET_KEY` - Secret key for session management
-- `CAS_SERVER_URL` - CAS authentication server URL (if using CAS)
-- `SECRET_KEY` - JWT signing key
-
 ### 3. Start with Docker Compose
 
 ```bash
@@ -173,7 +167,6 @@ docker compose up
 This will start:
 - **React UI** on http://localhost:5173
 - **FastAPI** on http://localhost:8000
-- **API Docs** on http://localhost:8000/docs (Swagger UI)
 
 ### 4. Run Database Migrations
 
@@ -185,8 +178,6 @@ docker compose run --remove-orphans migrations upgrade head
 
 - **Frontend**: http://localhost:5173
 - **API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
-- **API Alternative Docs**: http://localhost:8000/redoc
 
 ### First Login
 
@@ -204,10 +195,10 @@ VALUES ('admin', 'admin@example.com', 'Admin', 'User', true);
 
 ```
 rc-genji/
-├── api/                          # Backend FastAPI application
-│   ├── main.py                   # FastAPI app entry point
-│   ├── database.py               # Database configuration
-│   ├── requirements.txt          # Python dependencies
+├── api/                         # Backend FastAPI application
+│   ├── main.py                  # FastAPI app entry point
+│   ├── database.py              # Database configuration
+│   ├── requirements.txt         # Python dependencies
 │   ├── alembic.ini              # Alembic configuration
 │   ├── Dockerfile               # API production Docker image
 │   ├── Dockerfile.migrations    # Migrations Docker image
@@ -266,7 +257,6 @@ rc-genji/
 │   └── nginx.conf               # Nginx configuration
 │
 ├── docs/                        # Project documentation
-│   ├── DOCUMENTATION_PLAN.md    # Documentation strategy
 │   ├── api/                     # API documentation
 │   ├── frontend/                # Frontend documentation
 │   ├── database/                # Database documentation
