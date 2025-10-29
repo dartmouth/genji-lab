@@ -20,6 +20,7 @@ import {
   upvoteAnnotations,
   flaggingAnnotations,
   linkingAnnotations,
+  externalReferenceAnnotations,
 } from "./slice/annotationSlices";
 
 import documentsReducer from "./slice/documentSlice";
@@ -45,6 +46,7 @@ const annotationReducersMap: AnnotationReducers = {
   [upvoteAnnotations.name]: upvoteAnnotations.reducer,
   [flaggingAnnotations.name]: flaggingAnnotations.reducer,
   [linkingAnnotations.name]: linkingAnnotations.reducer,
+  [externalReferenceAnnotations.name]: externalReferenceAnnotations.reducer, // ADD THIS LINE
 };
 
 // Combine the reducers
@@ -70,11 +72,10 @@ const rootReducer = {
 // Create the store
 export const store = configureStore({
   reducer: rootReducer,
-  // Removed the incorrectly placed navigationHighlight line
   devTools: true,
 });
 
-// Define types AFTER store creation to avoid circular references
+// Define types after store creation to avoid circular references
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
@@ -84,3 +85,9 @@ export * from "./hooks";
 export { fetchAnnotationByMotivation } from "./thunk";
 export * from "./selector";
 export { fetchAllDocumentElements } from "./slice/documentElementsSlice";
+
+export const {
+  actions: externalReferenceActions,
+  thunks: externalReferenceThunks,
+  selectors: externalReferenceSelectors,
+} = externalReferenceAnnotations;

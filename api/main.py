@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings, search, groups
+from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings, search, groups, flags
 
 from starlette.middleware.sessions import SessionMiddleware
 import os
@@ -59,6 +59,7 @@ app.include_router(site_settings.router)
 app.include_router(cas_router) 
 app.include_router(auth_router)
 app.include_router(search.router)
+app.include_router(flags.router)
 
 @app.get("/api/v1")
 def read_root():

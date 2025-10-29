@@ -12,6 +12,8 @@ import { useSelector } from "react-redux";
 import { useAppDispatch } from "@store/hooks";
 import "../styles/DocumentContentStyles.css";
 import { DocumentElement } from "@documentView/types";
+// import { ExternalReferencesSection } from "./externalReferences";
+// import { selectExternalReferencesByParagraph } from "@store/selector/combinedSelectors";
 
 interface DocumentContentPanelProps {
   documentId: number;
@@ -112,25 +114,28 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         {documentElements.map((content) => {
           const paragraphId = `DocumentElements/${content.id}`;
           return (
-            <div
-              key={content.id}
-              className="document-content"
-              id={paragraphId}
-              data-element-id={content.id}
-              data-document-id={documentId}
-              data-source-uri={`/DocumentElements/${content.id}`}
-            >
-              <HighlightedText
-                text={content.content.text}
-                paragraphId={paragraphId}
-                format={content.content.formatting}
-                documentCollectionId={documentCollectionId}
-                documentId={documentId}
-                isLinkingModeActive={isLinkingModeActive}
-                viewMode={viewMode}
-                showLinkedTextHighlights={showLinkedTextHighlights}
-                viewedDocuments={viewedDocuments}
-              />
+            <div key={content.id} className="document-element-wrapper">
+              <div
+                className="document-content"
+                id={paragraphId}
+                data-element-id={content.id}
+                data-document-id={documentId}
+                data-source-uri={`/DocumentElements/${content.id}`}
+              >
+                <HighlightedText
+                  text={content.content.text}
+                  paragraphId={paragraphId}
+                  format={content.content.formatting}
+                  documentCollectionId={documentCollectionId}
+                  documentId={documentId}
+                  isLinkingModeActive={isLinkingModeActive}
+                  viewMode={viewMode}
+                  showLinkedTextHighlights={showLinkedTextHighlights}
+                  viewedDocuments={viewedDocuments}
+                />
+              </div>
+
+              {/* <ExternalReferencesDisplay paragraphId={paragraphId} /> */}
             </div>
           );
         })}

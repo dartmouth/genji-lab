@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAppDispatch, sliceMap } from '@store';
 import { useAuth } from '@hooks/useAuthContext';
+import useLocalStorage from '@hooks/useLocalStorage';
 import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
 import '../../styles/AnnotationCardStyles.css'
 import { Annotation } from '@documentView/types';
@@ -32,6 +33,10 @@ const ReplyForm: React.FC<ReplyFormProps> = ({ annotation, motivation, onSave })
     const [replyText, setReplyText] = useState('');
     const [openSnackBar, setOpenSnackbar] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    
+    // Get classroom context from localStorage (same pattern as AnnotationCreationDialog)
+    const [activeClassroomValue] = useLocalStorage('active_classroom');
+    const [isOptedOut] = useLocalStorage('classroom_opted_out');
     
     // Link dialog state
     const [linkDialog, setLinkDialog] = useState<LinkDialogState>({

@@ -16,7 +16,7 @@ interface AuthState {
     last_name: string;
     netid: string;
     email?: string;
-    user_metadata?: Record<string, string|number>;
+    user_metadata?: Record<string, string|number|object>;
     groups: Array<{name: string; id: number}>,
     roles?: Array<string>,
     ttl: string; // ISO format timestamp for expiration

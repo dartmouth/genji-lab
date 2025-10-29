@@ -1,10 +1,14 @@
+// src/store/thunk/annotationsByMotivation.ts
+
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { sliceMap } from "@store";
 import { Annotation } from "@documentView/types";
 import axios, { AxiosInstance } from "axios";
+
 interface AnnotationsByMotivation {
   [motivation: string]: Annotation[];
 }
+
 const api: AxiosInstance = axios.create({
   baseURL: "/api/v1",
   timeout: 10000,
@@ -15,14 +19,15 @@ interface FetchAnnotationParams {
   classroomID?: number;
 }
 
-// In annotationsByMotivation.ts, modify fetchAnnotationByMotivation:
 export const fetchAnnotationByMotivation = createAsyncThunk(
   "annotations/fetchByDocumentElement",
-  async ({documentElementId, classroomID}: FetchAnnotationParams, { dispatch }) => {
-    const params: Record<string, number> = {
-    }
+  async (
+    { documentElementId, classroomID }: FetchAnnotationParams,
+    { dispatch }
+  ) => {
+    const params: Record<string, number> = {};
     if (classroomID !== undefined) {
-          params.classroom_id = classroomID;
+      params.classroom_id = classroomID;
     }
     try {
       // Regular endpoint for most annotations
@@ -48,7 +53,8 @@ export const fetchAnnotationByMotivation = createAsyncThunk(
         ([motivation, annotations]) => {
           if (sliceMap[motivation]) {
             dispatch(sliceMap[motivation].actions.addAnnotations(annotations));
-          } else {
+          } else if (motivation !== "external_reference") {
+            // Skip warning for external_reference since we fetch those separately
             console.warn(`No slice defined for motivation: ${motivation}`);
           }
         }

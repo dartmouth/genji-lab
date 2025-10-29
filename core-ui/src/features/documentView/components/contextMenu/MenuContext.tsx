@@ -14,6 +14,7 @@ import {
   setMotivation,
   selectAnnotationCreate,
   fetchAllDocumentElements,
+  RootState,
 } from "@store";
 import {
   createSelectionFromDOMSelection,
@@ -21,7 +22,6 @@ import {
   getLinkedAnnotationsByAnnotation,
   HierarchicalLinkedAnnotations,
 } from "@documentView/utils/linkedTextUtils";
-import { RootState } from "@store";
 import {
   selectAllLinkingAnnotations,
   selectAllLoadedElements,
@@ -537,7 +537,20 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
               </ContextButton>
             )}
 
-            {hasLinkedAnnotations && (
+            <ContextButton
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dispatch(setMotivation("external_reference"));
+              }}
+              style={{
+                borderTop: "1px solid #eee",
+              }}
+            >
+              Add External Reference 🔗
+            </ContextButton>
+
+            {hasLinkedDocuments && (
               <ContextButton
                 onClick={handleViewLinkedText}
                 style={{

@@ -4,13 +4,14 @@ import {
   TableHead, TableRow, Paper, Button, TextField, 
   CircularProgress, Alert, IconButton, InputAdornment, Select, MenuItem, FormControl, InputLabel 
 } from '@mui/material';
-import { ContentCopy, PersonAdd, Link } from '@mui/icons-material';
+import { ContentCopy, PersonAdd, Link, Delete } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { 
   fetchClassrooms, 
   createClassroom,
   fetchClassroomById,
+  removeUserFromClassroom,
   selectClassroomsStatus,
   selectClassroomsError,
   selectCreateClassroomStatus,
@@ -23,6 +24,7 @@ import {
 import { User } from '../../../store/slice/usersSlice';
 import { useAuth } from '../../../hooks/useAuthContext';
 import AddStudentModal from './AddStudentModal';
+import RemoveStudentDialog from './RemoveStudentDialog';
 
 // Utility function to format dates
 const formatDate = (dateString: string): string => {
@@ -125,6 +127,8 @@ const ManageClassrooms: React.FC = () => {
   const [createdClassroomId, setCreatedClassroomId] = useState<number | null>(null);
   const [selectedClassroomId, setSelectedClassroomId] = useState<string>('');
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [isRemoveStudentDialogOpen, setIsRemoveStudentDialogOpen] = useState(false);
+  const [studentToRemove, setStudentToRemove] = useState<{ id: number; name: string; email: string } | null>(null);
   const [newlyAddedStudentId, setNewlyAddedStudentId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
@@ -265,6 +269,51 @@ const ManageClassrooms: React.FC = () => {
       setNewlyAddedStudentId(null);
       setSuccessMessage(null);
     }, 3000);
+  };
+
+  const handleOpenRemoveDialog = (member: any) => {
+    setStudentToRemove({
+      id: member.id,
+      name: formatMemberName(member),
+      email: member.email || ''
+    });
+    setIsRemoveStudentDialogOpen(true);
+  };
+
+  const handleCloseRemoveDialog = () => {
+    setIsRemoveStudentDialogOpen(false);
+    setStudentToRemove(null);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!studentToRemove || !selectedClassroomId) return;
+
+    try {
+      await dispatch(removeUserFromClassroom({
+        classroomId: parseInt(selectedClassroomId),
+        userId: studentToRemove.id
+      })).unwrap();
+
+      // Show success message
+      setSuccessMessage(`${studentToRemove.name} has been removed from the classroom.`);
+
+      // Refresh classroom data
+      setTimeout(() => {
+        if (selectedClassroomId) {
+          dispatch(fetchClassroomById(parseInt(selectedClassroomId)));
+        }
+      }, 100);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (error) {
+      setSuccessMessage(`Failed to remove student: ${error}`);
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+    }
   };
 
   const isCreateFormValid = formData.name.trim().length > 0 && 
@@ -622,6 +671,7 @@ const ManageClassrooms: React.FC = () => {
                             <TableCell><strong>Student Name</strong></TableCell>
                             <TableCell><strong>Email</strong></TableCell>
                             <TableCell><strong>Joined Date</strong></TableCell>
+                            <TableCell align="right"><strong>Actions</strong></TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -652,6 +702,22 @@ const ManageClassrooms: React.FC = () => {
                               </TableCell>
                               <TableCell>
                                 {member.joined_at ? formatDate(member.joined_at) : '-'}
+                              </TableCell>
+                              <TableCell align="right">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleOpenRemoveDialog(member)}
+                                  sx={{ 
+                                    color: 'error.main',
+                                    '&:hover': {
+                                      backgroundColor: 'error.light',
+                                      color: 'white'
+                                    }
+                                  }}
+                                  title="Remove student from classroom"
+                                >
+                                  <Delete fontSize="small" />
+                                </IconButton>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -688,6 +754,20 @@ const ManageClassrooms: React.FC = () => {
           classroomName={currentClassroom?.name || ''}
           existingMemberIds={existingMemberIds}
           onStudentAdded={handleStudentAdded}
+        />
+      )}
+
+      {/* Remove Student Dialog */}
+      {selectedClassroomId && studentToRemove && (
+        <RemoveStudentDialog
+          open={isRemoveStudentDialogOpen}
+          onClose={handleCloseRemoveDialog}
+          onConfirm={handleConfirmRemove}
+          studentName={studentToRemove.name}
+          studentEmail={studentToRemove.email}
+          classroomId={parseInt(selectedClassroomId)}
+          studentId={studentToRemove.id}
+          classroomName={currentClassroom?.name || ''}
         />
       )}
     </Box>

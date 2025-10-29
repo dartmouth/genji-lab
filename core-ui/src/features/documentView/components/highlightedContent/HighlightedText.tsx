@@ -11,6 +11,8 @@ import { commentingAnnotations, linkingAnnotations as linkAnnotations } from "@s
 
 import { getTextTargets, findTargetForParagraph } from "./utils";
 
+import { commentingAnnotations } from "@store";
+import ExternalReferenceIconsOverlay from "./ExternalReferenceIconsOverlay";
 import {
   RootState,
   useAppDispatch,
@@ -607,7 +609,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       resizeObserver.observe(containerRef.current);
     }
 
-    // Clean up
     return () => {
       resizeObserver.disconnect();
       debouncedHandleMouseMove.cancel();
@@ -662,6 +663,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         onMouseMove={debouncedHandleMouseMove}
         style={getTextFormattingStyles()}
       >
+        {/* KEEP PLAIN TEXT - don't use HighlightedTextWithReferences here */}
         {text}
 
         {/* Precise Redux navigation highlights */}
@@ -756,9 +758,15 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
             </div>
           </>
         )}
+
+        {/* NEW: Render external reference icons as overlays */}
+        <ExternalReferenceIconsOverlay
+          text={text}
+          paragraphId={paragraphId}
+          containerRef={containerRef}
+        />
       </div>
 
-      {/* Render annotation creation dialog if open - but not during linking mode */}
       {isDialogOpen && !isLinkingModeActive && (
         <AnnotationCreationDialog onClose={handleCloseDialog} />
       )}

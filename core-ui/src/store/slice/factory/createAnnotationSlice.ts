@@ -26,7 +26,7 @@ import {
   createAddTargetThunk
 } from "@store/thunk/factory/createAnnotationThunks";
 
-// Import RootState type - but we'll use a type import to avoid circular references
+// Import RootState type
 import type { RootState } from "@store/index";
 
 // The state structure for a single annotation bucket
@@ -268,7 +268,7 @@ export function createAnnotationSlice(bucketName: string) {
 
   const selectAnnotationsById = (state: RootState, ids: string[]) => {
     const bucketState = getBucketState(state);
-    // FIX: Filter out undefined values to prevent crashes
+    // Filter out undefined values to prevent crashes
     return ids
       .map((key) => bucketState.byId?.[key])
       .filter(
@@ -279,7 +279,7 @@ export function createAnnotationSlice(bucketName: string) {
   const selectAllAnnotations = (state: RootState) => {
     const bucketState = getBucketState(state);
     const ids = Object.keys(bucketState.byId);
-    // FIX: Filter out undefined values
+    // Filter out undefined values
     return ids
       .map((key) => bucketState.byId[key])
       .filter(
@@ -295,7 +295,7 @@ export function createAnnotationSlice(bucketName: string) {
       ],
       (bucketState, documentElementId) => {
         const annotationIds = bucketState.byParent[documentElementId] || [];
-        // FIX: Filter out undefined annotations to prevent crashes
+        // Filter out undefined annotations to prevent crashes
         return annotationIds
           .map((id) => bucketState.byId[id])
           .filter(

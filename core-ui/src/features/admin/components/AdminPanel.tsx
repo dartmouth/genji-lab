@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, Tab, Box, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuthContext';
@@ -6,6 +6,7 @@ import ManageCollections from './ManageCollections';
 import ManageDocuments from './ManageDocuments';
 import ManageUsers from './ManageUsers';
 import ManageClassrooms from './ManageClassrooms';
+import ManageFlags from './ManageFlags';
 import SiteSettings from './SiteSettings';
 import "../../documentGallery/styles/CollectionGalleryStyles.css";
 
@@ -53,6 +54,9 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
   const [activeTab, setActiveTab] = useState<number>(0);
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Get tab from URL params
+  const [searchParams] = React.useState(() => new URLSearchParams(window.location.search));
 
   // Check user roles
   const userRoles = user?.roles || [];
@@ -64,6 +68,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
     { label: "Manage Documents", component: "documents", roles: ['admin'] }, // Admin only
     { label: "Manage Users", component: "users", roles: ['admin'] }, // Admin only
     { label: "Manage Classrooms", component: "classrooms", roles: ['admin', 'instructor'] },
+    { label: "Manage Flags", component: "flags", roles: ['admin'] }, // Admin only
     { label: "Site Settings", component: "settings", roles: ['admin'] } // Admin only
   ];
 
@@ -76,6 +81,17 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
   const getTabIndex = (componentName: string) => {
     return visibleTabs.findIndex(tab => tab.component === componentName);
   };
+
+  // Set initial tab based on URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      const tabIndex = getTabIndex(tabParam);
+      if (tabIndex !== -1) {
+        setActiveTab(tabIndex);
+      }
+    }
+  }, [searchParams]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -313,7 +329,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
                   </Typography>
                   <Box sx={{ 
                     display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                    gridTemplateColumns: 'repeat(3, 1fr)', 
                     gap: 2,
                     mt: 2 
                   }}>
@@ -345,6 +361,13 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
                         icon: '🏫',
                         component: 'classrooms',
                         color: 'secondary'
+                      },
+                      { 
+                        title: 'Flags', 
+                        description: 'Review and moderate flagged content',
+                        icon: '🚩',
+                        component: 'flags',
+                        color: 'error'
                       },
                       { 
                         title: 'Site Settings', 
@@ -396,38 +419,13 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
                     ))}
                   </Box>
                 </Box>
-
-                {/* Tips Section */}
-                <Box
-                  sx={{
-                    p: 3,
-                    backgroundColor: 'grey.50',
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'grey.200'
-                  }}
-                >
-                  <Typography variant="h6" component="h3" gutterBottom sx={{ color: 'warning.main' }}>
-                    💡 Pro Tips
-                  </Typography>
-                  <Box component="ul" sx={{ pl: 2, m: 0 }}>
-                    <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                      <strong>Batch operations:</strong> Select multiple documents for bulk delete operations
-                    </Typography>
-                    <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-                      <strong>Document titles:</strong> Use descriptive names when importing Word documents
-                    </Typography>
-                    <Typography component="li" variant="body2">
-                      <strong>Collections:</strong> Organize documents by topic, course, or project for easier management
-                    </Typography>
-                  </Box>
-                </Box>
               </>
             )}
             {tab.component === 'collections' && <ManageCollections />}
             {tab.component === 'documents' && <ManageDocuments />}
             {tab.component === 'users' && <ManageUsers />}
             {tab.component === 'classrooms' && <ManageClassrooms />}
+            {tab.component === 'flags' && <ManageFlags />}
             {tab.component === 'settings' && <SiteSettings />}
           </TabPanel>
         ))}

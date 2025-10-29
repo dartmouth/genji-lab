@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@hooks/useLocalStorage";
+import { Flag } from '@mui/icons-material';
+import axios from 'axios';
 
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import {
@@ -77,10 +79,47 @@ const AppHeader: React.FC = () => {
 
   const [showLoginForm, setShowLoginForm] = React.useState(false);
   const [showRegisterForm, setShowRegisterForm] = React.useState(false);
+  const [flagCount, setFlagCount] = React.useState(0);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
+
+  // Fetch flag count for admins
+  const fetchFlagCount = async () => {
+    try {
+      const response = await axios.get('/api/v1/flags/count', {
+        withCredentials: true,
+      });
+      setFlagCount(response.data.count);
+    } catch (error) {
+      console.error('Failed to fetch flag count:', error);
+    }
+  };
+
+  // Fetch flag count on mount and every 4 hours if user is admin
+  useEffect(() => {
+    if (isAuthenticated && user?.roles?.includes('admin')) {
+      fetchFlagCount(); // Fetch immediately on mount/login
+      // Refresh every 4 hours (14400000 ms)
+      const interval = setInterval(fetchFlagCount, 14400000);
+      
+      // Expose function globally so other components can trigger refresh
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).refreshFlagCount = fetchFlagCount;
+      
+      // Listen for custom event to refresh flag count
+      const handleRefresh = () => fetchFlagCount();
+      window.addEventListener('refreshFlagCount', handleRefresh);
+      
+      return () => {
+        clearInterval(interval);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (window as any).refreshFlagCount;
+        window.removeEventListener('refreshFlagCount', handleRefresh);
+      };
+    }
+  }, [isAuthenticated, user]);
 
   // Site title
   const { isLoading: settingsLoading } = useAppSelector(
@@ -134,12 +173,39 @@ const AppHeader: React.FC = () => {
         {isAuthenticated && user ? (
           // Authenticated user - show avatar and dropdown
           <div className="user-avatar-container">
-            <div className="user-avatar" onClick={toggleDropdown}>
+            <div className="user-avatar" onClick={toggleDropdown} style={{ position: 'relative' }}>
               <span>
                 {`${user.first_name.charAt(0)}${user.last_name.charAt(
                   0
                 )}`.toUpperCase()}
               </span>
+              
+              {/* Flag notification badge - admin only, positioned at bottom-left */}
+              {user?.roles?.includes('admin') && flagCount > 0 && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/admin?tab=flags&subtab=1');
+                  }}
+                  style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: '-2px',
+                    cursor: 'pointer',
+                    backgroundColor: '#fff',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                  }}
+                  title={`${flagCount} flagged comment${flagCount !== 1 ? 's' : ''}`}
+                >
+                  <Flag sx={{ fontSize: '14px', color: '#d32f2f' }} />
+                </div>
+              )}
             </div>
             {dropdownOpen && (
               <div className="dropdown-menu">
@@ -162,7 +228,7 @@ const AppHeader: React.FC = () => {
                 <br />
                 {user?.groups && user.groups.length > 0 ? (
                   <div>
-                    <div>Classroom</div>
+                    <div>{isOptedOut === "true" ? "Select Classroom" : "Active Classroom"}</div>
                     <select
                       className="group-selector"
                       value={activeClassroomValue || user.groups[0]?.id || ""}
@@ -190,21 +256,28 @@ const AppHeader: React.FC = () => {
                     <button
                       className="logout-button"
                       onClick={() => {
-                        if (!isOptedOut) {
+                        // Check current opted-out state
+                        const currentOptedOut = isOptedOut === "true";
+                        
+                        if (currentOptedOut) {
+                          // User is clicking "Enter Classroom"
                           setIsOptedOut("false");
+                          setDropdownOpen(false); // Close dropdown after entering
                         } else {
-                          const curVal = JSON.parse(isOptedOut);
-                          if (curVal === false) {
-                            setIsOptedOut("true");
-                          } else {
-                            setIsOptedOut("false");
-                          }
+                          // User is clicking "Exit Classroom"
+                          setIsOptedOut("true");
+                          setDropdownOpen(false); // Close dropdown after exiting
                         }
-
-                        // toggleDropdown()
+                      }}
+                      disabled={!activeClassroomValue && !user.groups[0]?.id}
+                      style={{
+                        backgroundColor: isOptedOut === "true" ? "#00693e" : "#1976d2",
+                        color: "white",
+                        border: "none",
+                        transition: "background-color 0.3s ease"
                       }}
                     >
-                      Toggle Classroom
+                      {isOptedOut === "true" ? "Enter Classroom" : "Exit Classroom"}
                     </button>
                   </div>
                 ) : (

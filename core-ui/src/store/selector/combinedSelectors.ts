@@ -10,7 +10,7 @@ import { Annotation } from "@documentView/types";
 import { DocumentElement } from "@/types";
 
 // ============================================================================
-// EXISTING SELECTOR
+// SELECTORS
 // ============================================================================
 export const selectAllAnnotationsForParagraph = createSelector(
   [
@@ -34,7 +34,7 @@ export const selectAllAnnotationsForParagraph = createSelector(
 );
 
 // ============================================================================
-// NEW MEMOIZED SELECTORS FOR LINKING ANNOTATIONS
+// MEMOIZED SELECTORS FOR LINKING ANNOTATIONS
 // ============================================================================
 
 // Selector to get all linking annotations (memoized)
