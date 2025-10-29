@@ -1,5 +1,5 @@
 // src/features/documentView/components/DocumentContentPanel.tsx
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import { HighlightedText, MenuContext } from ".";
 import {
   RootState,
@@ -24,21 +24,6 @@ interface DocumentContentPanelProps {
     collectionId: number;
     title: string;
   }>;
-  onOpenLinkedDocument?: (
-    documentId: number,
-    collectionId: number,
-    targetInfo: {
-      sourceURI: string;
-      start: number;
-      end: number;
-    },
-    allTargets?: Array<{
-      sourceURI: string;
-      start: number;
-      end: number;
-      text: string;
-    }>
-  ) => void;
   isLinkingModeActive?: boolean;
   showLinkedTextHighlights?: boolean;
 }
@@ -47,7 +32,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   documentId,
   documentCollectionId,
   viewedDocuments = [],
-  onOpenLinkedDocument,
   viewMode = "annotations",
   isLinkingModeActive = false,
   showLinkedTextHighlights = false,
@@ -98,41 +82,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         });
     });
   }, [viewedDocuments, dispatch]);
-
-  // Enhanced callback wrapper with detailed logging
-  const handleOpenLinkedDocumentWrapper = useCallback(
-    (
-      linkedDocumentId: number,
-      collectionId: number,
-      targetInfo: {
-        sourceURI: string;
-        start: number;
-        end: number;
-      },
-      allTargets?: Array<{
-        sourceURI: string;
-        start: number;
-        end: number;
-        text: string;
-      }>
-    ) => {
-      if (onOpenLinkedDocument) {
-        try {
-          onOpenLinkedDocument(
-            linkedDocumentId,
-            collectionId,
-            targetInfo,
-            allTargets
-          );
-        } catch (error) {
-          console.error("Error in parent callback:", error);
-        }
-      } else {
-        console.error("No parent callback provided to DocumentContentPanel");
-      }
-    },
-    [onOpenLinkedDocument]
-  );
 
   // Loading/Error states
   if (documentStatus === "loading" && documentElements.length === 0) {
@@ -191,11 +140,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
           );
         })}
 
-        {/* Pass the enhanced wrapper callback */}
-        <MenuContext
-          viewedDocuments={viewedDocuments}
-          onOpenLinkedDocument={handleOpenLinkedDocumentWrapper}
-        />
+        {/* MenuContext now handles navigation internally via react-router */}
+        <MenuContext viewedDocuments={viewedDocuments} />
       </div>
     </div>
   );

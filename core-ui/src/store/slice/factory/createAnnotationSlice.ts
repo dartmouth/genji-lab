@@ -13,6 +13,9 @@ import {
   AnnotationDelete,
   AnnotationCreate,
   AnnotationPatch,
+  AnnotationAddTarget,
+  TextTarget,
+  ObjectTarget
 } from "@documentView/types";
 
 import {
@@ -20,6 +23,7 @@ import {
   createSaveAnnotationThunk,
   createPatchAnnotationThunk,
   createDeleteAnnotationThunk,
+  createAddTargetThunk
 } from "@store/thunk/factory/createAnnotationThunks";
 
 // Import RootState type
@@ -101,6 +105,15 @@ export interface AnnotationsState {
   [bucketName: string]: AnnotationState;
 }
 
+const flattenTargets = (
+  targets: (TextTarget | ObjectTarget | (TextTarget | ObjectTarget)[])[] | null | undefined
+): (TextTarget | ObjectTarget)[] => {
+  if (!targets) return [];
+  
+  return targets.flatMap(target => 
+    Array.isArray(target) ? target : [target]
+  );
+};
 // Factory function that creates a slice for a specific bucket
 export function createAnnotationSlice(bucketName: string) {
   const initialState: AnnotationState = {
@@ -120,7 +133,7 @@ export function createAnnotationSlice(bucketName: string) {
           state.byId[annotation.id] = annotation;
 
           // Extract document element ID from target
-          annotation.target.forEach((target) => {
+          flattenTargets(annotation.target).forEach((target) => {
             const sourceId = target.source;
             if (sourceId) {
               // Initialize array if needed
@@ -143,7 +156,7 @@ export function createAnnotationSlice(bucketName: string) {
         state.byId[annotation.id] = annotation;
 
         // Extract document element ID from target
-        annotation.target.forEach((target) => {
+        flattenTargets(annotation.target).forEach((target) => {
           const sourceId = target.source;
           if (sourceId) {
             // Initialize array if needed
@@ -170,7 +183,7 @@ export function createAnnotationSlice(bucketName: string) {
           delete state.byId[stringId];
 
           // Remove from byParent indexes
-          annotation.target.forEach((target) => {
+          flattenTargets(annotation.target).forEach((target) => {
             const sourceId = target.source;
             if (sourceId && state.byParent[sourceId]) {
               // Filter out the annotation ID from the array
@@ -202,6 +215,36 @@ export function createAnnotationSlice(bucketName: string) {
         state.byParent = {};
         state.error = null;
       },
+      addTargetToAnnotation(state, action: PayloadAction<AnnotationAddTarget>) {
+        const { annotationId, target } = action.payload;
+        const stringId = String(annotationId);
+        const annotation = state.byId[stringId];
+        
+        if (!annotation) {
+          console.error(`Annotation ${annotationId} not found`);
+          return;
+        }
+
+        // Add new targets to the annotation
+        annotation.target.push(...target);
+
+        // Update byParent index for each new target
+        target.forEach((newTarget) => {
+          const sourceId = String(newTarget.source);
+          
+          if (sourceId) {
+            // Initialize array if needed
+            if (!state.byParent[sourceId]) {
+              state.byParent[sourceId] = [];
+            }
+            
+            // Add reference to annotation ID (avoid duplicates)
+            if (!state.byParent[sourceId].includes(stringId)) {
+              state.byParent[sourceId].push(stringId);
+            }
+          }
+        });
+      }
     },
   });
 
@@ -210,6 +253,7 @@ export function createAnnotationSlice(bucketName: string) {
     saveAnnotation: createSaveAnnotationThunk(bucketName, slice.actions),
     patchAnnotation: createPatchAnnotationThunk(bucketName, slice.actions),
     deleteAnnotation: createDeleteAnnotationThunk(bucketName, slice.actions),
+    addTarget: createAddTargetThunk(bucketName, slice.actions)
   };
 
   const getBucketState = (state: RootState): AnnotationState => {
@@ -267,7 +311,7 @@ export function createAnnotationSlice(bucketName: string) {
     ],
     (bucketState, documentElementId) => {
       const annotationIds = bucketState.byParent[documentElementId] || [];
-      // Filter out undefined annotations to prevent crashes
+
       return annotationIds
         .map((id) => bucketState.byId[id])
         .filter(
@@ -285,7 +329,6 @@ export function createAnnotationSlice(bucketName: string) {
       (byId, ids) => {
         if (!byId || !ids || ids.length === 0) return [];
 
-        // Filter out undefined values and ensure type safety
         const results = ids
           .map((key) => byId[key])
           .filter(

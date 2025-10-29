@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import select, text, and_, or_
+from sqlalchemy import select, text, and_, or_, func
 from datetime import datetime
 from collections import defaultdict
 from typing import Dict, List, Any
@@ -10,8 +10,8 @@ import os
 import json
 
 from database import get_db
-from models.models import Annotation as AnnotationModel, User, Group
-from schemas.annotations import Annotation, AnnotationCreate, AnnotationPatch
+from models.models import Annotation as AnnotationModel, User
+from schemas.annotations import Annotation, AnnotationCreate, AnnotationPatch, AnnotationAddTarget
 from dependencies.classroom import (
     get_classroom_context,
     get_current_user_sync,
@@ -42,6 +42,15 @@ def generate_target_id(db: Session, schema: str) -> str:
     return id_num
 
 
+def dump_targets(targets: List):
+    result = []
+    for target in targets:
+        if isinstance(target, list):
+            result.append(dump_targets(target))
+        else:
+            result.append(target.model_dump(by_alias=True, exclude_none=True))
+    return result
+        
 @router.post("/", response_model=Annotation, status_code=status.HTTP_201_CREATED)
 def create_annotation(
     annotation: AnnotationCreate,
@@ -55,7 +64,11 @@ def create_annotation(
     annotation.body.id = generate_body_id(db, os.environ.get("DB_SCHEMA"))
 
     for target in annotation.target:
-        target.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
+        if isinstance(target, list):
+            for sub_targ in target:
+                sub_targ.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
+        else:
+            target.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
 
     # Set the creator to current user and classroom
     annotation.creator_id = current_user.id
@@ -72,7 +85,7 @@ def create_annotation(
         generator=annotation.generator,
         generated=datetime.now(),
         body=annotation.body.model_dump(by_alias=True),
-        target=[t.model_dump(by_alias=True) for t in annotation.target],
+        target=dump_targets(annotation.target),
         status=annotation.status,
         annotation_type=annotation.annotation_type,
         context=annotation.context,
@@ -224,7 +237,81 @@ def update_annotation(
 
     return db_annotation
 
+@router.patch(
+    "/add-target/{annotation_id}", response_model=Annotation, status_code=status.HTTP_200_OK
+)
+def update_annotation(
+    annotation_id: int,
+    payload: AnnotationAddTarget,
+    current_user: User = Depends(get_current_user_sync),
+    db: Session = Depends(get_db),
+):
 
+    query = db.query(AnnotationModel).filter(AnnotationModel.id == annotation_id)
+
+    db_annotation = query.first()
+
+    if not db_annotation:
+        raise HTTPException(status_code=404, detail="Annotation not found")
+    
+    new_targ = payload.model_dump(exclude_none=True, mode='json')['target'] 
+    # print(new_targ)
+    if isinstance(new_targ, list):
+        targets_to_add = [t.model_dump(exclude_none=True) if hasattr(t, 'model_dump') else t for t in new_targ]
+    else:
+        targets_to_add = [new_targ.model_dump(exclude_none=True)]
+    # print(targets_to_add)
+    
+    for target in targets_to_add:
+        target['id'] = generate_target_id(db, os.environ.get("DB_SCHEMA"))
+    
+    db_annotation.target = [*db_annotation.target, targets_to_add]
+    db_annotation.modified = datetime.now()
+
+    db.commit()
+    db.refresh(db_annotation)
+
+    return db_annotation
+
+@router.get(
+    "/by-motivation/{document_element_id}",
+    response_model=Dict[str, List[Annotation]],
+    status_code=status.HTTP_200_OK,
+)
+# def read_annotations_by_motivation(
+#     document_element_id: int,
+#     classroom_id: Optional[int] = Depends(get_classroom_context),
+#     current_user: User = Depends(get_current_user_sync),
+#     db: Session = Depends(get_db),
+# ):
+#     """Get annotations grouped by motivation for a document element."""
+
+#     query = (
+#         db.query(AnnotationModel)
+#         .options(joinedload(AnnotationModel.creator))
+#         .filter(AnnotationModel.document_element_id == document_element_id)
+#     )
+
+#     # Apply classroom filtering
+#     if classroom_id is not None:
+#             query = query.filter(
+#         or_(
+#             and_(AnnotationModel.motivation == 'commenting', 
+#                  AnnotationModel.classroom_id == classroom_id),
+#             AnnotationModel.motivation != 'commenting'
+#         )
+#     )
+#     else:
+#         query = query.filter(AnnotationModel.classroom_id.is_(None))
+
+#     annotations = query.all()
+
+#     # Group by motivation
+#     grouped_annotations = defaultdict(list)
+#     for annotation in annotations:
+#         grouped_annotations[annotation.motivation].append(annotation)
+
+#     return dict(grouped_annotations)
 @router.get(
     "/by-motivation/{document_element_id}",
     response_model=Dict[str, List[Annotation]],
@@ -237,13 +324,23 @@ def read_annotations_by_motivation(
     db: Session = Depends(get_db),
 ):
     """Get annotations grouped by motivation for a document element."""
-
+    
+    uri = f'DocumentElements/{document_element_id}'
+    
+    # Universal path expression - handles both flat and nested
+    path_expr = f'$[*] ? ((@.source == "{uri}") || (@[*].source == "{uri}"))'
+    
     query = (
         db.query(AnnotationModel)
         .options(joinedload(AnnotationModel.creator))
-        .filter(AnnotationModel.document_element_id == document_element_id)
+        .filter(
+            func.jsonb_path_exists(
+                AnnotationModel.target,
+                path_expr
+            )
+        )
     )
-
+    
     # Apply classroom filtering
     if classroom_id is not None:
         query = query.filter(
@@ -253,24 +350,17 @@ def read_annotations_by_motivation(
                 AnnotationModel.motivation != 'commenting'
             )
         )
-        
-        # Only show annotations from current classroom members
-        classroom = db.query(Group).filter(Group.id == classroom_id).first()
-        if classroom:
-            member_ids = [member.id for member in classroom.members]
-            query = query.filter(AnnotationModel.creator_id.in_(member_ids))
     else:
         query = query.filter(AnnotationModel.classroom_id.is_(None))
-
+    
     annotations = query.all()
-
+    
     # Group by motivation
     grouped_annotations = defaultdict(list)
     for annotation in annotations:
         grouped_annotations[annotation.motivation].append(annotation)
 
     return dict(grouped_annotations)
-
 
 @router.get(
     "/links/{document_element_id}",
@@ -284,36 +374,78 @@ def fetch_links(
     db: Session = Depends(get_db),
 ):
     """Get linking annotations that reference a specific document element."""
-
+    
+    uri = f'DocumentElements/{document_element_id}'
+    
+    # Path expression: checks both flat targets and nested (one level deep)
+    # $[*] - any element in the top-level array
+    # @.source - if it's a target object with source field
+    # @[*].source - if it's a nested array, check sources within it
+    path_expr = f'$[*] ? ((@.source == "{uri}") || (@[*].source == "{uri}"))'
+    
     query = (
         db.query(AnnotationModel)
         .options(joinedload(AnnotationModel.creator))
         .filter(AnnotationModel.motivation == "linking")
     )
-
+    
     # Apply classroom filtering
     if classroom_id is not None:
         query = query.filter(AnnotationModel.classroom_id == classroom_id)
     else:
         query = query.filter(AnnotationModel.classroom_id.is_(None))
+    
+    # Apply JSONB path filter
+    query = query.filter(
+        func.jsonb_path_exists(
+            AnnotationModel.target,
+            path_expr
+        )
+    )
+    
+    return query.all()
+# def fetch_links(
+#     document_element_id: int,
+#     classroom_id: Optional[int] = Depends(get_classroom_context),
+#     current_user: User = Depends(get_current_user_sync),
+#     db: Session = Depends(get_db),
+# ):
+#     """Get linking annotations that reference a specific document element."""
 
-    all_linking_annotations = query.all()
+#     query = (
+#         db.query(AnnotationModel)
+#         .options(joinedload(AnnotationModel.creator))
+#         .filter(AnnotationModel.motivation == "linking")
+#     )
 
-    # Filter annotations that have our document_element_id in their target sources
-    target_sources = [
-        f"DocumentElements/{document_element_id}",
-        f"DocumentElements/DocumentElements/{document_element_id}",  # Handle both formats
-    ]
+#     # Apply classroom filtering
+#     if classroom_id is not None:
+#         query = query.filter(AnnotationModel.classroom_id == classroom_id)
+#     else:
+#         query = query.filter(AnnotationModel.classroom_id.is_(None))
 
-    matching_annotations = []
-    for annotation in all_linking_annotations:
-        if annotation.target:  # target is stored as JSON
-            for target in annotation.target:
-                if target.get("source") in target_sources:
-                    matching_annotations.append(annotation)
-                    break  # Found a match, no need to check other targets
+#     all_linking_annotations = query.all()
 
-    return matching_annotations
+#     # Filter annotations that have our document_element_id in their target sources
+#     target_sources = [
+#         f"DocumentElements/{document_element_id}"
+#     ]
+
+#     matching_annotations = []
+#     for annotation in all_linking_annotations:
+#         if annotation.target:  # target is stored as JSON
+#             for target in annotation.target:
+#                 if isinstance(target, list):
+#                     for sub_targ in target:
+#                         if sub_targ.get("source") in target_sources:
+#                             matching_annotations.append(annotation)
+#                             break
+#                 else:
+#                     if target.get("source") in target_sources:
+#                         matching_annotations.append(annotation)
+#                         break  # Found a match, no need to check other targets
+
+#     return matching_annotations
 
 
 @router.get("/classrooms", response_model=List[dict], status_code=status.HTTP_200_OK)
@@ -339,6 +471,11 @@ def get_my_classrooms(
     response_model=Dict[str, Any],
     status_code=status.HTTP_200_OK,
 )
+@router.get(
+    "/linked-text-info/{document_element_id}",
+    response_model=Dict[str, Any],
+    status_code=status.HTTP_200_OK,
+)
 def get_linked_text_info(
     document_element_id: int,
     current_user: User = Depends(get_current_user_sync),
@@ -349,35 +486,24 @@ def get_linked_text_info(
     """
     from models.models import DocumentElement as DocumentElementModel, Document
 
-    # Get all linking annotations that reference this element
+    # Build the JSONB path query to find matching annotations
+    uri = f'DocumentElements/{document_element_id}'
+    path_expr = f'$[*] ? ((@.source == "{uri}") || (@[*].source == "{uri}"))'
+    
+    # Query for linking annotations that reference this element - PUSHED TO DATABASE
     query = (
         db.query(AnnotationModel)
         .options(joinedload(AnnotationModel.creator))
         .filter(AnnotationModel.motivation == "linking")
+        .filter(
+            func.jsonb_path_exists(
+                AnnotationModel.target,
+                path_expr
+            )
+        )
     )
 
-    # SELECT * FROM annotations WHERE motivation = 'linking' AND (target->>'source') LIKE '%/DocumentElements/{document_element_id}';
-    # Index on JSONB
-    # 1 or more targets, how to do a SQL query over JSONB array?
-
-    all_linking_annotations = query.all()
-
-    # Find annotations that reference our document_element_id
-    source_uri = f"/DocumentElements/{document_element_id}"
-    matching_annotations = []
-
-    for annotation in all_linking_annotations:
-        if annotation.target:
-            for target in annotation.target:
-                target_source = target.get("source", "")
-                # Handle various URI formats
-                if (
-                    target_source == source_uri
-                    or target_source == f"DocumentElements/{document_element_id}"
-                    or target_source.endswith(f"/{document_element_id}")
-                ):
-                    matching_annotations.append(annotation)
-                    break
+    matching_annotations = query.all()
 
     if not matching_annotations:
         return {
@@ -391,15 +517,16 @@ def get_linked_text_info(
     for annotation in matching_annotations:
         if annotation.target:
             for target in annotation.target:
-                source = target.get("source", "")
-                match = source.split("/")[-1]
-                try:
-                    element_id = int(match)
-                    # Don't include the source element itself
-                    if element_id != document_element_id:
+                # Handle nested lists (cross-element selections)
+                if isinstance(target, list):
+                    for sub_target in target:
+                        element_id = _extract_element_id_from_source(sub_target.get("source", ""))
+                        if element_id and element_id != document_element_id:
+                            element_ids.add(element_id)
+                else:
+                    element_id = _extract_element_id_from_source(target.get("source", ""))
+                    if element_id and element_id != document_element_id:
                         element_ids.add(element_id)
-                except (ValueError, IndexError):
-                    continue
 
     # Fetch only the specific elements we need
     elements_query = (
@@ -431,11 +558,16 @@ def get_linked_text_info(
         processed_documents = set()
 
         for target in annotation.target:
-            source = target.get("source", "")
-            match = source.split("/")[-1]
-
-            try:
-                target_element_id = int(match)
+            # Handle nested lists (cross-element selections)
+            targets_to_process = target if isinstance(target, list) else [target]
+            
+            for single_target in targets_to_process:
+                source = single_target.get("source", "")
+                target_element_id = _extract_element_id_from_source(source)
+                
+                if not target_element_id:
+                    continue
+                    
                 # Skip source element
                 if target_element_id == document_element_id:
                     continue
@@ -457,7 +589,7 @@ def get_linked_text_info(
                 processed_documents.add(doc_id)
 
                 # Get selector info
-                selector = target.get("selector", {})
+                selector = single_target.get("selector", {})
                 text_value = selector.get("value", "Linked text")
                 refined_by = selector.get("refined_by", {})
 
@@ -478,31 +610,32 @@ def get_linked_text_info(
                         "linkedTextOptions": [],
                     }
 
-                # Add this as a linked text option (only once per annotation per document)
+                # Build all targets info for this annotation
+                all_targets = []
+                for t in annotation.target:
+                    # Handle nested targets
+                    targets_list = t if isinstance(t, list) else [t]
+                    for single_t in targets_list:
+                        t_source = single_t.get("source", "")
+                        t_selector = single_t.get("selector", {})
+                        t_refined = t_selector.get("refined_by", {})
+                        
+                        all_targets.append({
+                            "sourceURI": t_source,
+                            "start": t_refined.get("start", 0),
+                            "end": t_refined.get("end", 0),
+                            "text": t_selector.get("value", ""),
+                        })
+
+                # Add this as a linked text option
                 linked_documents[doc_id]["linkedTextOptions"].append(
                     {
                         "linkedText": text_value,
                         "linkingAnnotationId": annotation.id,
                         "targetInfo": target_info,
-                        "allTargets": [
-                            {
-                                "sourceURI": t.get("source", ""),
-                                "start": t.get("selector", {})
-                                .get("refined_by", {})
-                                .get("start", 0),
-                                "end": t.get("selector", {})
-                                .get("refined_by", {})
-                                .get("end", 0),
-                                "text": t.get("selector", {}).get("value", ""),
-                            }
-                            for t in annotation.target
-                            if t.get("source")
-                        ],
+                        "allTargets": all_targets,
                     }
                 )
-
-            except (ValueError, IndexError, AttributeError):
-                continue
 
     response = {
         "source_element_id": document_element_id,
@@ -511,3 +644,21 @@ def get_linked_text_info(
     }
 
     return response
+
+
+def _extract_element_id_from_source(source: str) -> Optional[int]:
+    """
+    Extract element ID from source URI.
+    Expected format: 'DocumentElements/{id}'
+    
+    Returns None if extraction fails.
+    """
+    if not source:
+        return None
+    
+    try:
+        # Handle 'DocumentElements/123' format
+        match = source.split("/")[-1]
+        return int(match)
+    except (ValueError, IndexError, AttributeError):
+        return None

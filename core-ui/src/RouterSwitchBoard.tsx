@@ -5,7 +5,7 @@ import { SearchResultsApp } from '@features/search'
 import { AdminPanel } from "./features/admin";
 import { JoinClassroomPage } from "./features/admin/components";
 import { useAuth } from "@/hooks/useAuthContext";
-
+import { LinkViewPage} from '@features/linkView'
 
 
 // Main Routes component
@@ -23,6 +23,7 @@ const RouterSwitchBoard: React.FC = () => {
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route path="/collections/:collectionId" element={<DocumentsView />} />
       <Route path="/search" element={<SearchResultsApp />} />
+      <Route path="/links/:annotationId" element={<LinkViewPage />} />
     </Routes>
   );
 };

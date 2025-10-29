@@ -8,10 +8,15 @@ import {
 } from '@store';
 import { makeTextAnnotationBody, parseURI } from '@documentView/utils';
 import { Annotation } from '@documentView/types';
+// import useLocalStorage from '@/hooks/useLocalStorage';
 
 export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
   const dispatch = useAppDispatch();
   const [isTagging, setIsTagging] = useState(false);
+    //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // const [activeClassroomValue, _setActiveClassroomValue] = useLocalStorage("active_classroom");
+    // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
   
   const tags = useAppSelector(
     (state: RootState) => taggingAnnotations.selectors.selectAnnotationsByParent(state, `Annotation/${annotation.id}`)
@@ -47,8 +52,8 @@ export const useAnnotationTags = (annotation: Annotation, userId?: number) => {
         tag,
         segment
       );
-      
-      dispatch(taggingAnnotations.thunks.saveAnnotation({annotation: tagAnno}));
+      // const classId = activeClassroomValue && !(isOptedOut === 'true') ? activeClassroomValue : undefined
+      dispatch(taggingAnnotations.thunks.saveAnnotation({annotation: tagAnno, classroomId: undefined}));
     });
     
     setIsTagging(false);

@@ -5,22 +5,22 @@ import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
 import { createPortal } from "react-dom";
 import { useAuth } from "@hooks/useAuthContext";
+import { useNavigate } from "react-router-dom";
+
 import {
   useAppDispatch,
   useAppSelector,
   selectSegments,
   setMotivation,
   selectAnnotationCreate,
-  selectAllDocuments,
   fetchAllDocumentElements,
   RootState,
 } from "@store";
 import {
   createSelectionFromDOMSelection,
   LinkedTextSelection,
-  getLinkedDocumentsSimple,
-  HierarchicalLinkedDocuments,
-  LinkedTextOption,
+  getLinkedAnnotationsByAnnotation,
+  HierarchicalLinkedAnnotations,
 } from "@documentView/utils/linkedTextUtils";
 import {
   selectAllLinkingAnnotations,
@@ -33,40 +33,22 @@ interface MenuContextProps {
     collectionId: number;
     title: string;
   }>;
-  onOpenLinkedDocument?: (
-    linkedDocumentId: number,
-    linkedCollectionId: number,
-    targetInfo: {
-      sourceURI: string;
-      start: number;
-      end: number;
-    },
-    allTargets?: Array<{
-      sourceURI: string;
-      start: number;
-      end: number;
-      text: string;
-    }>
-  ) => void;
 }
 
 interface ContextMenuState {
   isVisible: boolean;
   position: { x: number; y: number };
   selection: LinkedTextSelection | null;
-  hierarchicalDocuments: HierarchicalLinkedDocuments;
+  hierarchicalAnnotations: HierarchicalLinkedAnnotations;
   showHierarchicalMenu: boolean;
 }
 
-const MenuContext: React.FC<MenuContextProps> = ({
-  viewedDocuments = [],
-  onOpenLinkedDocument,
-}) => {
+const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const text = useAppSelector(selectSegments);
   const annotationCreate = useAppSelector(selectAnnotationCreate);
-  const allDocuments = useAppSelector(selectAllDocuments);
 
   // Use ref to track if bulk loading has been initiated
   const bulkLoadingInitiated = useRef(false);
@@ -84,7 +66,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
     isVisible: false,
     position: { x: 0, y: 0 },
     selection: null,
-    hierarchicalDocuments: {},
+    hierarchicalAnnotations: {},
     showHierarchicalMenu: false,
   });
 
@@ -219,13 +201,57 @@ const MenuContext: React.FC<MenuContextProps> = ({
         return null;
       }
 
+      // NEW: Check if user clicked on a linked text highlight span
+      // Look for the closest span with data-start and data-end attributes
+      let targetSpan = clickedElement.closest(
+        "[data-start][data-end]"
+      ) as HTMLElement;
+
+      // If not found on clicked element, check if clicked element IS the span
+      if (
+        !targetSpan &&
+        clickedElement.hasAttribute("data-start") &&
+        clickedElement.hasAttribute("data-end")
+      ) {
+        targetSpan = clickedElement;
+      }
+
+      if (targetSpan) {
+        // Extract position from the linked text span
+        const linkStart = parseInt(
+          targetSpan.getAttribute("data-start") || "0"
+        );
+        const linkEnd = parseInt(targetSpan.getAttribute("data-end") || "0");
+        const linkText = targetSpan.textContent || "";
+
+        console.log("🎯 User clicked on linked text span:", {
+          linkStart,
+          linkEnd,
+          linkText: linkText.substring(0, 50) + "...",
+        });
+
+        const preciseSelection: LinkedTextSelection = {
+          documentId: foundDocument.id,
+          documentElementId: elementId,
+          text: linkText,
+          start: linkStart,
+          end: linkEnd,
+          sourceURI: `DocumentElements/${elementId}`,
+          isSyntheticSelection: false, // This is a precise selection based on the span
+        };
+
+        return preciseSelection;
+      }
+
+      // Fallback: Create synthetic selection for the whole element
       const syntheticSelection: LinkedTextSelection = {
         documentId: foundDocument.id,
         documentElementId: elementId,
         text: clickedElement.textContent?.substring(0, 100) || "clicked text",
         start: 0,
         end: Math.min(50, clickedElement.textContent?.length || 50),
-        sourceURI: `/DocumentElements/${elementId}`,
+        sourceURI: `DocumentElements/${elementId}`, // No leading slash
+        isSyntheticSelection: true, // Mark as synthetic so we don't do position overlap checking
       };
 
       return syntheticSelection;
@@ -233,106 +259,85 @@ const MenuContext: React.FC<MenuContextProps> = ({
     [viewedDocuments, allElements]
   );
 
-  // Simple linked document discovery (no on-demand loading needed since everything is bulk loaded)
-  const findLinkedDocuments = useCallback(
-    (selection: LinkedTextSelection): HierarchicalLinkedDocuments => {
+  // NEW: Find linked annotations (grouped by annotation, not document)
+  const findLinkedAnnotations = useCallback(
+    (selection: LinkedTextSelection): HierarchicalLinkedAnnotations => {
       try {
-        const currentDocument =
-          viewedDocuments.find((d) => d.id === selection.documentId) ||
-          allDocuments.find((d) => d.id === selection.documentId);
-        const currentDocumentTitle =
-          currentDocument?.title || `Document ${selection.documentId}`;
-
-        const interdocumentAnnotations = allLinkingAnnotations.filter((ann) => {
-          return ann.target?.some((target) => {
-            const elementIdMatch = target.source.match(
-              /\/DocumentElements\/(\d+)/
-            );
-            if (elementIdMatch) {
-              const elementId = parseInt(elementIdMatch[1]);
-              const targetElement = allElements.find(
-                (el) => el.id === elementId
-              );
-
-              if (targetElement) {
-                const targetDocument =
-                  allDocuments.find(
-                    (d) => d.id === targetElement.document_id
-                  ) ||
-                  viewedDocuments.find(
-                    (d) => d.id === targetElement.document_id
-                  );
-                const targetDocumentTitle =
-                  targetDocument?.title ||
-                  `Document ${targetElement.document_id}`;
-
-                // Only include if titles are different
-                return targetDocumentTitle !== currentDocumentTitle;
-              }
-            }
-            return false;
-          });
-        });
-
-        const result = getLinkedDocumentsSimple(
+        return getLinkedAnnotationsByAnnotation(
           selection,
-          interdocumentAnnotations,
-          allDocuments,
-          viewedDocuments,
-          allElements
+          allLinkingAnnotations
         );
-
-        return result;
       } catch (error) {
-        console.error("Error in linked document discovery:", error);
+        console.error("Error finding linked annotations:", error);
         return {};
       }
     },
-    [allElements, allDocuments, allLinkingAnnotations, viewedDocuments]
+    [allLinkingAnnotations]
   );
 
   // Context menu event handler
   useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => {
-      // Don't show context menu if bulk loading hasn't completed
-      if (bulkLoadingStatus !== "succeeded") {
-        return;
-      }
+    if (bulkLoadingStatus !== "succeeded") {
+      return;
+    }
 
+    const handleContextMenu = async (e: MouseEvent) => {
       const clickedElement = e.target as HTMLElement;
+      let selection = createSelectionFromClickContext(clickedElement);
 
-      // Find document panel
-      let documentPanel = clickedElement.closest(
-        "[data-document-id]"
-      ) as HTMLElement;
-
-      if (!documentPanel) {
-        documentPanel = clickedElement.closest(
-          ".document-content-panel"
-        ) as HTMLElement;
-      }
-
-      if (!documentPanel) {
-        return;
-      }
-
-      const documentId = parseInt(
-        documentPanel.getAttribute("data-document-id") || "0"
-      );
-
-      const isValidDocument = viewedDocuments.some((d) => d.id === documentId);
-
-      if (!isValidDocument) {
-        return;
-      }
-
-      // Create selection from click context
-      const selection = createSelectionFromClickContext(clickedElement);
       if (!selection) {
         return;
       }
 
-      // Prevent default and calculate position
+      console.log("📍 Context menu triggered");
+      console.log("Initial selection:", selection);
+
+      // NEW: Check if user clicked on a linked text highlight overlay
+      // The overlays are absolutely positioned divs with data-start/data-end attributes
+      const elementsAtPoint = document.elementsFromPoint(e.clientX, e.clientY);
+      console.log("Elements at click point:", elementsAtPoint.length);
+      console.log(
+        "First 5 elements:",
+        elementsAtPoint.slice(0, 5).map((el) => ({
+          tag: el.tagName,
+          classes: el.className,
+          hasDataStart: el.hasAttribute("data-start"),
+          hasDataEnd: el.hasAttribute("data-end"),
+        }))
+      );
+
+      const linkOverlay = elementsAtPoint.find(
+        (el) =>
+          el.classList.contains("linked-text-highlight") &&
+          el.hasAttribute("data-start") &&
+          el.hasAttribute("data-end")
+      ) as HTMLElement;
+
+      console.log("Found link overlay:", linkOverlay);
+
+      if (linkOverlay) {
+        const linkStart = parseInt(
+          linkOverlay.getAttribute("data-start") || "0"
+        );
+        const linkEnd = parseInt(linkOverlay.getAttribute("data-end") || "0");
+
+        console.log("🎯 User clicked on linked text overlay:", {
+          linkStart,
+          linkEnd,
+          annotationId: linkOverlay.getAttribute("data-annotation-id"),
+        });
+
+        // Override the selection with precise positions from the overlay
+        selection = {
+          ...selection,
+          start: linkStart,
+          end: linkEnd,
+          isSyntheticSelection: false, // This is precise, not synthetic
+        };
+      } else {
+        console.log("❌ No link overlay found at click point");
+      }
+
       e.preventDefault();
       e.stopPropagation();
 
@@ -341,15 +346,15 @@ const MenuContext: React.FC<MenuContextProps> = ({
         y: Math.min(e.clientY, window.innerHeight - 200),
       };
 
-      // Find linked documents (now simple since all elements are loaded)
-      const hierarchicalDocuments = findLinkedDocuments(selection);
+      // Find linked annotations (now grouped by annotation, not document)
+      const hierarchicalAnnotations = findLinkedAnnotations(selection);
 
       // Update menu state
       setMenuState({
         isVisible: true,
         position,
         selection,
-        hierarchicalDocuments,
+        hierarchicalAnnotations,
         showHierarchicalMenu: false,
       });
     };
@@ -359,8 +364,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
 
       const isOutsideMenus =
         !target.closest(".context-menu") &&
-        !target.closest(".hierarchical-linked-text-menu") &&
-        !target.closest(".linked-text-options-submenu");
+        !target.closest(".hierarchical-linked-text-menu");
 
       if (isOutsideMenus) {
         setMenuState((prev) => ({
@@ -398,7 +402,7 @@ const MenuContext: React.FC<MenuContextProps> = ({
   }, [
     viewedDocuments,
     createSelectionFromClickContext,
-    findLinkedDocuments,
+    findLinkedAnnotations,
     bulkLoadingStatus,
   ]);
 
@@ -413,63 +417,41 @@ const MenuContext: React.FC<MenuContextProps> = ({
     }
   }, [annotationCreate?.motivation, menuState.isVisible]);
 
-  const handleLinkedTextSelection = useCallback(
-    (documentId: number, collectionId: number, option: LinkedTextOption) => {
-      setMenuState((prev) => ({
-        ...prev,
-        isVisible: false,
-        showHierarchicalMenu: false,
-      }));
-
-      if (!onOpenLinkedDocument) {
-        console.error("onOpenLinkedDocument callback not provided");
-        return;
-      }
-      try {
-        setTimeout(() => {
-          onOpenLinkedDocument(
-            documentId,
-            collectionId,
-            option.targetInfo,
-            option.allTargets
-          );
-        }, 50);
-      } catch (error) {
-        console.error("Error executing navigation callback:", error);
-      }
-    },
-    [onOpenLinkedDocument]
-  );
-
   const handleViewLinkedText = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      const linkedDocumentIds = Object.keys(
-        menuState.hierarchicalDocuments
-      ).map(Number);
+      const annotationIds = Object.keys(menuState.hierarchicalAnnotations);
 
-      // Direct selection for single document with single option
-      if (linkedDocumentIds.length === 1) {
-        const singleDoc = menuState.hierarchicalDocuments[linkedDocumentIds[0]];
-        if (singleDoc.linkedTextOptions.length === 1) {
-          handleLinkedTextSelection(
-            singleDoc.documentId,
-            singleDoc.collectionId,
-            singleDoc.linkedTextOptions[0]
-          );
-          return;
+      // Direct navigation for single annotation
+      if (annotationIds.length === 1) {
+        const singleAnnotation =
+          menuState.hierarchicalAnnotations[annotationIds[0]];
+
+        // Close menus
+        setMenuState((prev) => ({
+          ...prev,
+          isVisible: false,
+          showHierarchicalMenu: false,
+        }));
+
+        // Navigate to LinkView page
+        let url = `/links/${singleAnnotation.annotationId}`;
+        if (singleAnnotation.clickedTargetId !== null) {
+          url += `?pinned=${singleAnnotation.clickedTargetId}`;
         }
+        navigate(url);
+        return;
       }
 
-      // Show hierarchical menu for multiple options
+      // Show hierarchical menu for multiple annotations
       setMenuState((prev) => ({
         ...prev,
         showHierarchicalMenu: true,
       }));
     },
-    [menuState.hierarchicalDocuments, handleLinkedTextSelection]
+    [menuState.hierarchicalAnnotations, navigate]
   );
 
   const calculateHierarchicalMenuPosition = useCallback(() => {
@@ -495,20 +477,20 @@ const MenuContext: React.FC<MenuContextProps> = ({
 
     const estimatedMenuHeight = Math.min(
       400,
-      Object.keys(menuState.hierarchicalDocuments).length * 60 + 100
+      Object.keys(menuState.hierarchicalAnnotations).length * 60 + 100
     );
     if (menuY + estimatedMenuHeight > windowHeight - 10) {
       menuY = Math.max(10, windowHeight - estimatedMenuHeight - 10);
     }
 
     return { x: menuX, y: menuY };
-  }, [menuState.position, menuState.hierarchicalDocuments]);
+  }, [menuState.position, menuState.hierarchicalAnnotations]);
 
   // Render logic
-  const hasLinkedDocuments =
-    Object.keys(menuState.hierarchicalDocuments).length > 0;
-  const totalLinkedDocuments = Object.keys(
-    menuState.hierarchicalDocuments
+  const hasLinkedAnnotations =
+    Object.keys(menuState.hierarchicalAnnotations).length > 0;
+  const totalLinkedAnnotations = Object.keys(
+    menuState.hierarchicalAnnotations
   ).length;
 
   if (!menuState.isVisible && !menuState.showHierarchicalMenu) {
@@ -543,6 +525,17 @@ const MenuContext: React.FC<MenuContextProps> = ({
                 Create Scholarly Annotation
               </ContextButton>
             )}
+            {user?.roles?.includes("admin") && (
+              <ContextButton
+                onClick={(e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch(setMotivation("linking"));
+                }}
+              >
+                Add Content to Link
+              </ContextButton>
+            )}
 
             <ContextButton
               onClick={(e: React.MouseEvent) => {
@@ -567,8 +560,8 @@ const MenuContext: React.FC<MenuContextProps> = ({
                   position: "relative",
                 }}
               >
-                View Linked Text ({totalLinkedDocuments} document
-                {totalLinkedDocuments !== 1 ? "s" : ""})
+                View Linked Text ({totalLinkedAnnotations} link
+                {totalLinkedAnnotations !== 1 ? "s" : ""})
                 <span
                   style={{
                     marginLeft: "8px",
@@ -584,12 +577,11 @@ const MenuContext: React.FC<MenuContextProps> = ({
           document.body
         )}
 
-      {hasLinkedDocuments &&
+      {hasLinkedAnnotations &&
         menuState.showHierarchicalMenu &&
         createPortal(
           <HierarchicalLinkedTextMenu
-            hierarchicalDocuments={menuState.hierarchicalDocuments}
-            onLinkedTextSelect={handleLinkedTextSelection}
+            hierarchicalAnnotations={menuState.hierarchicalAnnotations}
             onClose={() =>
               setMenuState((prev) => ({ ...prev, showHierarchicalMenu: false }))
             }

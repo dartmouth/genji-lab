@@ -7,6 +7,7 @@ import '../../styles/AnnotationCardStyles.css'
 import { Annotation } from '@documentView/types';
 import Snackbar from '@mui/material/Snackbar';
 import { Link as LinkIcon } from "@mui/icons-material";
+import useLocalStorage from '@/hooks/useLocalStorage';
 
 interface ReplyFormProps {
     annotation: Annotation;
@@ -23,6 +24,10 @@ interface LinkDialogState {
 }
 
 const ReplyForm: React.FC<ReplyFormProps> = ({ annotation, motivation, onSave }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [activeClassroomValue, _setActiveClassroomValue] = useLocalStorage("active_classroom");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
     const { user } = useAuth();
     const dispatch = useAppDispatch();
     const [replyText, setReplyText] = useState('');
@@ -134,18 +139,9 @@ const ReplyForm: React.FC<ReplyFormProps> = ({ annotation, motivation, onSave })
             segment
         )
         const slice = sliceMap[motivation]
-        
-        // Prepare save parameters with classroom context (same pattern as AnnotationCreationDialog)
-        const saveParams: { annotation: typeof payload; classroomId?: string } = {
-            annotation: payload
-        };
-        
-        // Only include classroomId if user is in a classroom and hasn't opted out
-        if (activeClassroomValue && isOptedOut !== 'true') {
-            saveParams.classroomId = activeClassroomValue as string;
-        }
-        
-        dispatch(slice.thunks.saveAnnotation(saveParams));
+        // useClassroom
+        const classId = activeClassroomValue && !(isOptedOut === 'true') ? activeClassroomValue : undefined
+        dispatch(slice.thunks.saveAnnotation({annotation: payload, classroomId: classId}));
         setReplyText('');
         if (motivation === 'flagging'){
             setOpenSnackbar(true)
