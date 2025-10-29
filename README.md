@@ -282,22 +282,27 @@ rc-genji/
 
 ## 📖 Documentation
 
-Comprehensive documentation is available in the `/docs` directory:
+**📚 [Complete Documentation Index →](docs/README.md)**
 
-### For Developers
-- **[Documentation Plan](docs/DOCUMENTATION_PLAN.md)** - Overall documentation strategy
-- **[API Documentation](docs/api/)** - Backend API reference
-- **[Frontend Documentation](docs/frontend/)** - React architecture
-- **[Database Documentation](docs/database/)** - Schema and models
-- **[Architecture Documentation](docs/architecture/)** - System design
+Comprehensive documentation is available in the `/docs` directory with 17 detailed documents covering every aspect of the system:
 
-### Guides
-- **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Local environment setup
-- **[Docker Guide](docs/guides/DOCKER_GUIDE.md)** - Docker usage
-- **[Common Tasks](docs/guides/COMMON_TASKS.md)** - Frequent operations
+### Quick Links
+- **[Documentation Hub](docs/README.md)** - Complete navigation by role, task, and technology
+- **[System Architecture](docs/architecture/SYSTEM_OVERVIEW.md)** - Three-tier architecture with 12+ Mermaid diagrams
+- **[API Documentation](docs/api/OVERVIEW.md)** - Complete backend API reference (15,000+ words)
+- **[Frontend Documentation](docs/frontend/OVERVIEW.md)** - React architecture guide (15,000+ words)
+- **[Redux Store](docs/frontend/REDUX_STORE.md)** - State management documentation (8,000+ words)
+- **[Database Schema](docs/database/SCHEMA.md)** - Complete ERD diagrams and table reference
+- **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Step-by-step local and Docker setup
+- **[Docker Guide](docs/guides/DOCKER_GUIDE.md)** - Complete Docker reference
+- **[Deployment Guide](docs/guides/DEPLOYMENT.md)** - Production deployment procedures
 
 ### Code Quality
-- **[Code Audits](docs/audits/)** - Code analysis and recommendations
+- **[Backend Audit](docs/audits/BACKEND_AUDIT.md)** - 33 issues analyzed (0 critical)
+- **[Frontend Audit](docs/audits/FRONTEND_AUDIT.md)** - 36 issues analyzed (0 critical)
+- **[Deprecated Code Audit](docs/audits/DEPRECATED_CODE_AUDIT.md)** - Pre-open-source cleanup checklist
+
+> 💡 **New to the project?** Start with the [Documentation Hub](docs/README.md) for role-based navigation.
 
 ---
 
