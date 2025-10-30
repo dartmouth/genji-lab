@@ -256,20 +256,31 @@ rc-genji/
 
 **📚 [Complete Documentation Index →](docs/README.md)**
 
+> **🚀 New here?** Start with the [Quick Start Guide](docs/QUICK_START.md) to get running in minutes!
+
 Comprehensive documentation is available in the `/docs` directory with detailed documents covering every aspect of the system:
 
-### Quick Links
+### Quick Links (Developers)
+- **[⚡ Quick Start (10 min)](docs/QUICK_START.md#-developer-quick-start)** - Run locally with Docker
 - **[Documentation Hub](docs/README.md)** - Complete navigation by role, task, and technology
 - **[System Architecture](docs/architecture/SYSTEM_OVERVIEW.md)** - Three-tier architecture with diagrams
 - **[API Documentation](docs/api/OVERVIEW.md)** - Complete backend API reference
 - **[Frontend Documentation](docs/frontend/OVERVIEW.md)** - React architecture guide
 - **[Redux Store](docs/frontend/REDUX_STORE.md)** - State management documentation
 - **[Database Schema](docs/database/SCHEMA.md)** - Complete ERD diagrams and table reference
-- **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Step-by-step local and Docker setup
-- **[Docker Guide](docs/guides/DOCKER_GUIDE.md)** - Complete Docker reference
-- **[Deployment Guide](docs/guides/DEPLOYMENT.md)** - Production deployment procedures
+- **[Development Setup](docs/DEVELOPMENT_SETUP.md)** - Step-by-step local and Docker setup
+- **[Docker Guide](docs/DOCKER_GUIDE.md)** - Complete Docker reference
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment procedures
 
-> 💡 **New to the project?** Start with the [Documentation Hub](docs/README.md) for role-based navigation.
+### Quick Links (Users)
+- **[⚡ Quick Start Guide](docs/QUICK_START.md)** - Get started in 5-10 minutes (all roles)
+- **[User Guide](docs/guides/USER_GUIDE.md)** - Platform overview for all users
+- **[Student Guide](docs/guides/STUDENT_GUIDE.md)** - For students in classrooms
+- **[Instructor Guide](docs/guides/INSTRUCTOR_GUIDE.md)** - Classroom and document management
+- **[Administrator Guide](docs/guides/ADMIN_GUIDE.md)** - System administration
+- **[Annotations Guide](docs/guides/ANNOTATIONS_GUIDE.md)** - Comprehensive annotation features and best practices
+
+> 💡 **New to the project?** Start with the [Quick Start Guide](docs/QUICK_START.md), then explore the [Documentation Hub](docs/README.md) for role-based navigation.
 
 ---
 
