@@ -50,45 +50,33 @@ Genji follows a modern three-tier architecture:
 
 ```mermaid
 graph TB
-    subgraph "Frontend Layer"
-        UI[React SPA<br/>TypeScript + Redux]
-        Router[React Router]
-        Store[Redux Store]
+    subgraph "Presentation Layer"
+        User[User Browser]
+        UI[React 19.0 SPA<br/>TypeScript + Redux Toolkit<br/>Material-UI Components]
+        Router[React Router 7.6]
     end
     
-    subgraph "Backend Layer"
-        API[FastAPI REST API<br/>Python 3.12]
-        Auth[Authentication<br/>CAS + Local]
+    subgraph "Application Layer"
+        Nginx[Nginx Reverse Proxy<br/>Port 5173]
+        API[FastAPI REST API<br/>Python 3.12<br/>Port 8000]
+        Auth[Authentication<br/>CAS + Local Auth<br/>JWT Sessions]
     end
     
     subgraph "Data Layer"
-        DB[(PostgreSQL<br/>Database)]
+        DB[(PostgreSQL 15+<br/>SQLAlchemy ORM<br/>Alembic Migrations)]
     end
     
+    User -->|HTTPS| Nginx
+    Nginx --> UI
     UI --> Router
-    UI --> Store
-    Router --> API
-    Store --> API
+    Router -->|REST API<br/>Axios| API
     API --> Auth
-    API --> DB
+    API -->|CRUD Operations| DB
     
     style UI fill:#61dafb
     style API fill:#009688
     style DB fill:#336791
-```
-
-### System Overview
-
-```mermaid
-flowchart LR
-    User[User Browser] -->|HTTPS| Nginx[Nginx<br/>Port 5173]
-    Nginx -->|Proxy| React[React UI<br/>Vite Dev Server]
-    React -->|REST API| FastAPI[FastAPI<br/>Port 8000]
-    FastAPI -->|SQLAlchemy| PostgreSQL[(PostgreSQL<br/>Database)]
-    
-    style React fill:#61dafb
-    style FastAPI fill:#009688
-    style PostgreSQL fill:#336791
+    style Nginx fill:#269539
 ```
 
 ---
