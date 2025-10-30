@@ -1,8 +1,7 @@
 # System Architecture
 
 **Project:** Genji Document Annotation Platform  
-**Architecture:** Three-Tier Web Application  
-**Last Updated:** October 22, 2025
+**Architecture:** Three-Tier Web Application
 
 ---
 
@@ -1349,6 +1348,4 @@ graph TB
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** October 22, 2025  
 **Maintainers:** Dartmouth ITC Genji Team

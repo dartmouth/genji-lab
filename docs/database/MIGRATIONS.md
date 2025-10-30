@@ -1,8 +1,7 @@
 # Database Migrations Guide
 
 **Project**: Genji Document Annotation Platform  
-**Migration Tool**: Alembic  
-**Last Updated**: October 22, 2025
+**Migration Tool**: Alembic
 
 ---
 
@@ -757,5 +756,4 @@ def upgrade():
 
 ---
 
-**Last Updated**: October 22, 2025  
 **Alembic Version**: Latest

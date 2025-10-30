@@ -1,8 +1,7 @@
 # Database Tables Quick Reference
 
 **Project**: Genji Document Annotation Platform  
-**Quick reference for all database tables**  
-**Last Updated**: October 22, 2025
+**Quick reference for all database tables**
 
 ---
 
@@ -468,6 +467,3 @@ JSONB fields compressed by PostgreSQL but can grow large:
 - **[API Data Models](../api/DATA_MODELS.md)** - SQLAlchemy models
 
 ---
-
-**Quick Reference Version**: 1.0  
-**Last Updated**: October 22, 2025

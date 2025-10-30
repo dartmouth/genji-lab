@@ -1,8 +1,7 @@
 # Redux Store Architecture
 
 **Project:** Genji Document Annotation Platform  
-**State Management:** Redux Toolkit 2.6.1  
-**Last Updated:** October 22, 2025
+**State Management:** Redux Toolkit 2.6.1
 
 ---
 
@@ -960,6 +959,4 @@ const sortedDocs = documents.sort(...);
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** October 22, 2025  
 **Maintainers:** Dartmouth ITC Genji Team

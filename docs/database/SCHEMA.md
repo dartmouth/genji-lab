@@ -3,8 +3,7 @@
 **Project**: Genji Document Annotation Platform  
 **Database**: PostgreSQL 15+  
 **ORM**: SQLAlchemy 2.0  
-**Schema**: `app`  
-**Last Updated**: October 22, 2025
+**Schema**: `app`
 
 ---
 
@@ -1110,5 +1109,4 @@ ORDER BY idx_scan DESC;
 
 ---
 
-**Last Updated**: October 22, 2025  
 **Schema Version**: See latest Alembic migration

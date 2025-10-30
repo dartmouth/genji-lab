@@ -1,8 +1,7 @@
 # Frontend Architecture Overview
 
 **Project:** Genji Document Annotation Platform  
-**Framework:** React 19.0 with TypeScript 5.7  
-**Last Updated:** October 22, 2025
+**Framework:** React 19.0 with TypeScript 5.7
 
 ---
 
@@ -1268,6 +1267,4 @@ if (isAdmin || isInstructor) {
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** October 22, 2025  
 **Maintainers:** Dartmouth ITC Genji Team

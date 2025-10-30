@@ -1,7 +1,6 @@
 # Development Setup Guide
 
-**Project:** Genji Document Annotation Platform  
-**Last Updated:** October 22, 2025
+**Project:** Genji Document Annotation Platform
 
 ---
 
@@ -761,6 +760,4 @@ After successful setup:
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** October 22, 2025  
 **Maintainers:** Dartmouth ITC Genji Team

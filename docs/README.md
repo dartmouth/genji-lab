@@ -7,37 +7,37 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 ## 📚 Documentation Index
 
 ### 🏗️ Architecture
-- **[System Overview](architecture/SYSTEM_OVERVIEW.md)** - Complete three-tier architecture, 12+ Mermaid diagrams
+- **[System Overview](architecture/SYSTEM_OVERVIEW.md)** - Three-tier architecture review
 - **[Data Flow Diagrams](architecture/SYSTEM_OVERVIEW.md#data-flow)** - Document loading, annotation, search flows
 - **[Integration Points](architecture/SYSTEM_OVERVIEW.md#integration-points)** - Frontend-backend integration patterns
 - **[Deployment Architecture](architecture/SYSTEM_OVERVIEW.md#deployment-architecture)** - Docker, production deployment diagrams
 - **[Network Architecture](architecture/SYSTEM_OVERVIEW.md#network-architecture)** - Network topology and communication
 
 ### 🔌 API Documentation
-- **[API Overview](api/OVERVIEW.md)** - Complete backend architecture, routers, auth, patterns
-- **[Endpoints Reference](api/OVERVIEW.md#api-endpoints-summary)** - Complete API endpoint reference
+- **[API Overview](api/OVERVIEW.md)** - Backend architecture, routers, auth, patterns
+- **[Endpoints Reference](api/OVERVIEW.md#api-endpoints-summary)** - API endpoint reference
 - **[Authentication](api/OVERVIEW.md#authentication-system)** - Dual auth system (CAS + local password)
 - **[Routers](api/OVERVIEW.md#router-modules)** - Router organization and patterns
 - **[Data Models](api/OVERVIEW.md#database-models)** - SQLAlchemy models and schema
 
 ### ⚛️ Frontend Documentation
-- **[Frontend Overview](frontend/OVERVIEW.md)** - Complete React architecture, tech stack, features
-- **[Redux Store](frontend/REDUX_STORE.md)** - Complete state management documentation
+- **[Frontend Overview](frontend/OVERVIEW.md)** - React architecture, tech stack, features
+- **[Redux Store](frontend/REDUX_STORE.md)** - State management documentation
 
 ### 🗄️ Database Documentation
-- **[Schema Overview](database/SCHEMA.md)** - Complete ERD diagrams, all tables, JSONB fields, indexes
+- **[Schema Overview](database/SCHEMA.md)** - ERD diagrams, all tables, JSONB fields, indexes
 - **[Tables Reference](database/TABLES.md)** - Quick reference with SQL examples
-- **[Migrations](database/MIGRATIONS.md)** - Complete Alembic guide
+- **[Migrations](database/MIGRATIONS.md)** - Alembic guide
 
 ### 📖 Guides
-- **[Development Setup](guides/DEVELOPMENT_SETUP.md)** - Complete local and Docker setup guide
-- **[Docker Guide](guides/DOCKER_GUIDE.md)** - Complete Docker reference and best practices
-- **[Deployment](guides/DEPLOYMENT.md)** - Complete production deployment guide
+- **[Development Setup](guides/DEVELOPMENT_SETUP.md)** - Local and Docker setup guide
+- **[Docker Guide](guides/DOCKER_GUIDE.md)** - Docker reference and best practices
+- **[Deployment](guides/DEPLOYMENT.md)** - Production deployment guide
 
 ### 🔍 Code Quality & Audits
-- **[Backend Audit](audits/BACKEND_AUDIT.md)** - Complete analysis: 33 issues identified (0 critical, 6 high, 15 medium, 12 low)
-- **[Frontend Audit](audits/FRONTEND_AUDIT.md)** - Complete analysis: 36 issues identified (0 critical, 8 high, 17 medium, 11 low)
-- **[Deprecated Code Audit](audits/DEPRECATED_CODE_AUDIT.md)** - Pre-open-source cleanup: 18 items requiring action
+- **[Backend Audit](audits/BACKEND_AUDIT.md)** - Backend code analysis: 33 issues identified (0 critical, 6 high, 15 medium, 12 low)
+- **[Frontend Audit](audits/FRONTEND_AUDIT.md)** - Frontend code analysis: 36 issues identified (0 critical, 8 high, 17 medium, 11 low)
+- **[Deprecated Code Audit](audits/DEPRECATED_CODE_AUDIT.md)** - Code cleanup analysis: 18 items requiring action
 
 ---
 
@@ -91,5 +91,4 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 
 ---
 
-**Documentation maintained by**: Dartmouth ITC Team  
-**Last Updated**: October 22, 2025
+**Documentation maintained by**: Dartmouth ITC Team

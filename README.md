@@ -555,6 +555,3 @@ We welcome contributions! Please see our [Contributing Guidelines](docs/CONTRIBU
 - **Issues**: [GitHub Issues](https://github.com/dartmouth-itc/rc-genji/issues)
 
 ---
-
-**Last Updated**: October 22, 2025  
-**Version**: 1.0.0
