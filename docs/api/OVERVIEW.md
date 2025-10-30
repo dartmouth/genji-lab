@@ -138,8 +138,6 @@ api/
 │   ├── annotations/            # Annotation data
 │   ├── content/                # Document content
 │   └── text_collections/       # Text collection data
-│
-└── uploads/                     # User-uploaded files (runtime)
 ```
 
 ---
