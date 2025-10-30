@@ -193,8 +193,8 @@ rc-genji/
 │   │   ├── annotations.py       # Annotation endpoints
 │   │   ├── auth.py              # Local authentication
 │   │   ├── cas_auth.py          # CAS authentication
-│   │   ├── documents.py         # Document management
-│   │   ├── document_collections.py  # Collections
+│   │   ├── documents.py         # Documents management
+│   │   ├── document_collections.py  # Document Collections
 │   │   ├── document_elements.py # Document elements
 │   │   ├── flags.py             # Content flags
 │   │   ├── groups.py            # Classroom/group management
@@ -206,8 +206,7 @@ rc-genji/
 │   │   └── classroom.py         # Classroom context & auth
 │   ├── alembic/                 # Database migrations
 │   │   └── versions/            # Migration files
-│   ├── data/                    # Data files and notebooks
-│   └── uploads/                 # User uploaded files
+│   ├── data/                    # Data files
 │
 ├── core-ui/                     # Frontend React application
 │   ├── src/
@@ -261,7 +260,7 @@ Comprehensive documentation is available in the `/docs` directory with detailed 
 
 ### Quick Links
 - **[Documentation Hub](docs/README.md)** - Complete navigation by role, task, and technology
-- **[System Architecture](docs/architecture/SYSTEM_OVERVIEW.md)** - Three-tier architecture with 12+ Mermaid diagrams
+- **[System Architecture](docs/architecture/SYSTEM_OVERVIEW.md)** - Three-tier architecture with diagrams
 - **[API Documentation](docs/api/OVERVIEW.md)** - Complete backend API reference
 - **[Frontend Documentation](docs/frontend/OVERVIEW.md)** - React architecture guide
 - **[Redux Store](docs/frontend/REDUX_STORE.md)** - State management documentation
