@@ -73,7 +73,7 @@ graph TB
     API --> Auth
     API -->|CRUD Operations| DB
     
-    style UI fill:#61dafb
+    style UI fill:#61dafb,color:#000
     style API fill:#009688
     style DB fill:#336791
     style Nginx fill:#269539
