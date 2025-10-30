@@ -5,7 +5,6 @@ import { ContextMenu, ContextButton } from "./ContextMenuComponents";
 import HierarchicalLinkedTextMenu from "./HierarchicalLinkedTextMenu";
 import { createPortal } from "react-dom";
 import { useAuth } from "@hooks/useAuthContext";
-import { useNavigate } from "react-router-dom";
 
 import {
   useAppDispatch,
@@ -45,7 +44,6 @@ interface ContextMenuState {
 
 const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const text = useAppSelector(selectSegments);
   const annotationCreate = useAppSelector(selectAnnotationCreate);
@@ -417,42 +415,16 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
     }
   }, [annotationCreate?.motivation, menuState.isVisible]);
 
-  const handleViewLinkedText = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+  const handleViewLinkedText = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-      const annotationIds = Object.keys(menuState.hierarchicalAnnotations);
-
-      // Direct navigation for single annotation
-      if (annotationIds.length === 1) {
-        const singleAnnotation =
-          menuState.hierarchicalAnnotations[annotationIds[0]];
-
-        // Close menus
-        setMenuState((prev) => ({
-          ...prev,
-          isVisible: false,
-          showHierarchicalMenu: false,
-        }));
-
-        // Navigate to LinkView page
-        let url = `/links/${singleAnnotation.annotationId}`;
-        if (singleAnnotation.clickedTargetId !== null) {
-          url += `?pinned=${singleAnnotation.clickedTargetId}`;
-        }
-        navigate(url);
-        return;
-      }
-
-      // Show hierarchical menu for multiple annotations
-      setMenuState((prev) => ({
-        ...prev,
-        showHierarchicalMenu: true,
-      }));
-    },
-    [menuState.hierarchicalAnnotations, navigate]
-  );
+    // Always show hierarchical menu, regardless of annotation count
+    setMenuState((prev) => ({
+      ...prev,
+      showHierarchicalMenu: true,
+    }));
+  }, []);
 
   const calculateHierarchicalMenuPosition = useCallback(() => {
     const mainMenuWidth = 200;
