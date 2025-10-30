@@ -59,12 +59,10 @@ graph TB
     subgraph "Backend Layer"
         API[FastAPI REST API<br/>Python 3.12]
         Auth[Authentication<br/>CAS + Local]
-        Upload[File Upload Service]
     end
     
     subgraph "Data Layer"
         DB[(PostgreSQL<br/>Database)]
-        Files[File Storage<br/>/uploads]
     end
     
     UI --> Router
@@ -72,9 +70,7 @@ graph TB
     Router --> API
     Store --> API
     API --> Auth
-    API --> Upload
     API --> DB
-    Upload --> Files
     
     style UI fill:#61dafb
     style API fill:#009688
@@ -89,7 +85,6 @@ flowchart LR
     Nginx -->|Proxy| React[React UI<br/>Vite Dev Server]
     React -->|REST API| FastAPI[FastAPI<br/>Port 8000]
     FastAPI -->|SQLAlchemy| PostgreSQL[(PostgreSQL<br/>Database)]
-    FastAPI -->|Read/Write| Files[File System<br/>/uploads]
     
     style React fill:#61dafb
     style FastAPI fill:#009688
@@ -161,7 +156,7 @@ cp .env_sample .env
 
 ```bash
 # From project root
-docker compose up
+docker compose up --build
 ```
 
 This will start:
@@ -274,7 +269,7 @@ rc-genji/
 
 **📚 [Complete Documentation Index →](docs/README.md)**
 
-Comprehensive documentation is available in the `/docs` directory with 17 detailed documents covering every aspect of the system:
+Comprehensive documentation is available in the `/docs` directory with detailed documents covering every aspect of the system:
 
 ### Quick Links
 - **[Documentation Hub](docs/README.md)** - Complete navigation by role, task, and technology
@@ -286,11 +281,6 @@ Comprehensive documentation is available in the `/docs` directory with 17 detail
 - **[Development Setup](docs/guides/DEVELOPMENT_SETUP.md)** - Step-by-step local and Docker setup
 - **[Docker Guide](docs/guides/DOCKER_GUIDE.md)** - Complete Docker reference
 - **[Deployment Guide](docs/guides/DEPLOYMENT.md)** - Production deployment procedures
-
-### Code Quality
-- **[Backend Audit](docs/audits/BACKEND_AUDIT.md)** - 33 issues analyzed
-- **[Frontend Audit](docs/audits/FRONTEND_AUDIT.md)** - 36 issues analyzed
-- **[Deprecated Code Audit](docs/audits/DEPRECATED_CODE_AUDIT.md)** - Deprecated code cleanup checklist
 
 > 💡 **New to the project?** Start with the [Documentation Hub](docs/README.md) for role-based navigation.
 
