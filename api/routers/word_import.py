@@ -39,7 +39,6 @@ def extract_links(paragraph_text):
             }
             
             links.append(link_info)
-            # print(f"Found link in {para_id}: Section {link_info['section']}, Paragraph {link_info['paragraph']}")
         except Exception as e:
             print(f"Error parsing link: {e}")
     
@@ -100,10 +99,8 @@ def get_text_format(paragraph):
     }
 
 def process_indent(value):
-    # print(f"   value is {value}")
     if value is None:
         return 0
-    # print(f"      return value is {value/914400}")
     return value / 914400
 
 
@@ -119,7 +116,6 @@ def get_paragraph_format(paragraph):
     right_indent = paragraph.paragraph_format.right_indent
     first_line_indent = paragraph.paragraph_format.first_line_indent
     alignment = paragraph.paragraph_format.alignment
-    # print(f"First line indent is {first_line_indent}")
 
     text_styles = get_text_format(paragraph)
 
@@ -136,7 +132,7 @@ def extract_paragraphs(doc, text_collection_id, document_number):
     json_results = []
     element_counter = 1
     
-    for i, paragraph in enumerate(doc.paragraphs):
+    for paragraph in enumerate(doc.paragraphs):
         if paragraph.text.strip(): 
             clean_text, links = extract_links(paragraph.text)
             paragraph_json = {
