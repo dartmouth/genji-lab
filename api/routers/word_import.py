@@ -1,5 +1,6 @@
+import docx
 import re
-import datetime
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 def extract_links(paragraph_text):
     """
@@ -7,7 +8,6 @@ def extract_links(paragraph_text):
     """
 
     number_pattern = re.compile(r"(\d+\.\d+)")
-    
 
     links = []
     
@@ -47,7 +47,6 @@ def extract_links(paragraph_text):
     
     return paragraph_text, links
 
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 def get_text_format(paragraph):
     # Initialize formatting details
@@ -132,7 +131,6 @@ def get_paragraph_format(paragraph):
         "text_styles": text_styles
     }
 
-import docx
 def extract_paragraphs(doc, text_collection_id, document_number):
 
     json_results = []
