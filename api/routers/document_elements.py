@@ -19,6 +19,13 @@ from schemas.document_elements import (
 
 from schemas.annotations import Annotation, DocumentElementAnnotationsResponse
 
+from fastapi import UploadFile, File
+from fastapi.responses import JSONResponse
+from io import BytesIO
+import docx
+from routers.word_import import extract_paragraphs
+
+
 router = APIRouter(
     prefix="/api/v1/elements",
     tags=["document elements"],
@@ -435,11 +442,6 @@ def get_elements_by_document(
     return elements
 
 
-from fastapi import UploadFile, File
-from fastapi.responses import JSONResponse
-from io import BytesIO
-import docx
-from routers.test import extract_paragraphs
 
 
 @router.post("/upload-word-doc", status_code=status.HTTP_201_CREATED)

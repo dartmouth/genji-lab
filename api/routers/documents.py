@@ -36,6 +36,8 @@ from schemas.documents import (
 
 from schemas.document_elements import DocumentElement as DocumentElementSchema
 
+from routers.word_import import extract_paragraphs
+
 
 # Add this new schema for bulk delete
 class BulkDeleteRequest(BaseModel):
@@ -527,9 +529,6 @@ def import_word_document(
     """
     Create a new document and import Word document content in one operation
     """
-    # Import the extract_paragraphs function
-    from routers.test import extract_paragraphs
-
     # Validate file type
     if not file.filename.endswith(".docx"):
         raise HTTPException(
