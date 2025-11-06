@@ -43,7 +43,7 @@ This guide provides the fastest path to your first success with Genji. Follow th
    - Click **"Save"**
    - ✅ Your first annotation is live!
 
-**See your annotation:** The text you selected will now be highlighted indicating the annotation. Click Show Annotations at the bottom of the screen then hover the cursor over the annotation to view it.
+**See your annotation:** The text you selected will now be highlighted indicating the annotation. Click Show Annotations at the bottom of the screen then hover the cursor over the highlighted annotation to view it.
 
 ### 🎉 Success! What's Next?
 
