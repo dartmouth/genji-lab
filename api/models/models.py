@@ -247,6 +247,56 @@ class SiteSettings(Base):
     # Relationships
     updated_by = relationship("User")
 
+
+class CASConfiguration(Base):
+    __tablename__ = "cas_configuration"
+    __table_args__ = {'schema': 'app'}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    enabled = Column(Boolean, default=False)
+    
+    # Core CAS settings
+    server_url = Column(String(255), nullable=False)  # e.g., "https://login.dartmouth.edu/cas"
+    validation_endpoint = Column(String(100), default="/serviceValidate")
+    protocol_version = Column(String(10), default="2.0")  # "2.0" or "3.0"
+    
+    # XML parsing configuration
+    xml_namespace = Column(String(255), default="http://www.yale.edu/tp/cas")
+    
+    # Attribute mapping (stored as JSONB for flexibility)
+    attribute_mapping = Column(JSONB, default={
+        "username": "netid",
+        "email": "email",
+        "first_name": "givenName",
+        "last_name": "sn",
+        "full_name": "name"
+    })
+    
+    # Username extraction patterns (try in order)
+    username_patterns = Column(JSONB, default=[
+        '<cas:attribute name="{attr}" value="([^"]+)"',
+        '<cas:{attr}>([^<]+)</cas:{attr}>',
+        '<cas:user>([^<]+)</cas:user>'
+    ])
+    
+    # Additional metadata fields to extract
+    metadata_attributes = Column(JSONB, default=["uid", "netid", "did", "affil"])
+    
+    # Email handling
+    email_domain = Column(String(255), nullable=True)  # e.g., "dartmouth.edu"
+    email_format = Column(String(50), default="from_cas")  # "from_cas" or "construct"
+    
+    # Display settings
+    display_name = Column(String(100), default="CAS Login")  # What to show on login button
+    
+    # Audit fields
+    created_at = Column(DateTime, default=func.current_timestamp())
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+    updated_by_id = Column(Integer, ForeignKey(f"{'app'}.users.id"))
+    
+    # Relationships
+    updated_by = relationship("User")
+
 # Indices
 # Foreign key indices
 Index('idx_user_passwords_user_id', UserPassword.user_id)
