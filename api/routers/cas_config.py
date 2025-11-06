@@ -240,3 +240,22 @@ async def update_cas_config(
         updated_at=cas_config.updated_at.isoformat() if cas_config.updated_at else None,
         updated_by_id=cas_config.updated_by_id
     )
+
+@router.get("/cas-config/public", response_model=dict)
+async def get_public_cas_config(db: Session = Depends(get_db)):
+    """
+    Get public CAS configuration (no authentication required).
+    Returns only enabled status and display name.
+    """
+    cas_config = db.query(models.CASConfiguration).first()
+    
+    if not cas_config:
+        return {
+            "enabled": False,
+            "display_name": "CAS Login"
+        }
+    
+    return {
+        "enabled": cas_config.enabled,
+        "display_name": cas_config.display_name
+    }
