@@ -99,15 +99,15 @@ const DocumentComparisonContainer: React.FC<
     [documents, documentColors]
   );
 
-  // Get ALL highlight IDs for our documents
+  // Get all highlight IDs for our documents
   const allHighlightIds = useAppSelector(
     (state) => {
       // Collect all highlight IDs across all documents
       const ids: string[] = [];
       documents.forEach((doc) => {
         const docHighlights = state.highlightRegistry.highlights[doc.id] || {};
-        Object.values(docHighlights).forEach((docIds) => {
-          ids.push(...docIds);
+        Object.keys(docHighlights).forEach((highlightId) => {
+          ids.push(highlightId);
         });
       });
       return ids;
@@ -125,12 +125,13 @@ const DocumentComparisonContainer: React.FC<
   // Get HOVERED highlight IDs from your highlightRegistry
   const hoveredHighlightIds = useAppSelector(
     (state) => {
-      // Collect all hovered highlight IDs across all documents
       const ids: string[] = [];
       documents.forEach((doc) => {
         const docHoveredIds =
-          state.highlightRegistry.hoveredHighlightIds[doc.id] || [];
-        ids.push(...docHoveredIds);
+          state.highlightRegistry?.hoveredHighlightIds?.[doc.id];
+        if (Array.isArray(docHoveredIds)) {
+          ids.push(...docHoveredIds);
+        }
       });
       return ids;
     },
@@ -170,7 +171,7 @@ const DocumentComparisonContainer: React.FC<
   // Filter annotations to include only those for our documents
   const documentIds = useMemo(() => documents.map((d) => d.id), [documents]);
 
-  // All annotations for these documents
+  // Annotations for these documents
   const allAnnotations = useMemo(
     () => [
       ...allCommentingAnnotations.filter((anno) =>
@@ -362,7 +363,6 @@ const DocumentComparisonContainer: React.FC<
                   documentCollectionId={doc.collectionId}
                   viewedDocuments={documents}
                   viewMode={viewMode}
-                  // onOpenLinkedDocument={onOpenLinkedDocument}
                   isLinkingModeActive={isLinkingModeActive}
                   showLinkedTextHighlights={showLinkedTextHighlights}
                 />
