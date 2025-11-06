@@ -34,11 +34,6 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 - **[Tables Reference](database/TABLES.md)** - Quick reference with SQL examples
 - **[Migrations](database/MIGRATIONS.md)** - Alembic guide
 
-### 📖 Setup & Deployment Guides
-- **[Development Setup](DEVELOPMENT_SETUP.md)** - Local and Docker setup guide
-- **[Docker Guide](DOCKER_GUIDE.md)** - Docker reference and best practices
-- **[Deployment](DEPLOYMENT.md)** - Production deployment guide
-
 ### 🔍 Code Quality & Audits
 - **[Backend Audit](audits/BACKEND_AUDIT.md)** - Backend code analysis: 33 issues identified (0 critical, 6 high, 15 medium, 12 low)
 - **[Frontend Audit](audits/FRONTEND_AUDIT.md)** - Frontend code analysis: 36 issues identified (0 critical, 8 high, 17 medium, 11 low)
