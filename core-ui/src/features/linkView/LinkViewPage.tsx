@@ -1,10 +1,14 @@
 // src/pages/LinkViewPage.tsx
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@store/hooks';
-import { linkingAnnotations } from '@store';
-import { fetchAnnotationById } from '@store/thunk/fetchAnnotationById';
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "@store/hooks";
+import { linkingAnnotations } from "@store";
+import { fetchAnnotationById } from "@store/thunk/fetchAnnotationById";
+import { fetchDocumentElements } from "@store/slice/documentElementsSlice";
+import { fetchAllDocuments } from "@store/slice/documentSlice";
+import { fetchDocumentCollections } from "@store/slice/documentCollectionSlice";
+import { selectAllLoadedElements } from "@store/selector/combinedSelectors";
 import {
   Box,
   Container,
@@ -14,11 +18,12 @@ import {
   Alert,
   Paper,
   Pagination,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { TextTarget } from '@documentView/types';
-import { LinkCard } from './LinkCard';
-import { PinnedTargetsPanel } from './PinnedTargetsPanel';
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { TextTarget } from "@documentView/types";
+import { LinkCard } from "./LinkCard";
+import { PinnedTargetsPanel } from "./PinnedTargetsPanel";
+import { extractElementIdFromSource } from "./linkTargetUtils";
 
 const TARGETS_PER_PAGE = 10;
 
@@ -35,6 +40,7 @@ export const LinkViewPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pinnedGroupIds, setPinnedGroupIds] = useState<Set<string>>(new Set());
   const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
 
   const annotation = useAppSelector((state) =>
     annotationId
@@ -42,9 +48,16 @@ export const LinkViewPage: React.FC = () => {
       : undefined
   );
 
+  const allLoadedElements = useAppSelector(selectAllLoadedElements);
+  const allDocuments = useAppSelector((state) => state.documents.allDocuments);
+  const allCollections = useAppSelector(
+    (state) => state.documentCollections.collections
+  );
+
+  // Fetch annotation if not loaded
   useEffect(() => {
     if (!annotationId) {
-      setError('No annotation ID provided');
+      setError("No annotation ID provided");
       return;
     }
 
@@ -59,11 +72,100 @@ export const LinkViewPage: React.FC = () => {
           setLoading(false);
         })
         .catch((err) => {
-          setError(err || 'Failed to fetch annotation');
+          setError(err || "Failed to fetch annotation");
           setLoading(false);
         });
     }
   }, [annotationId, annotation, loading, dispatch]);
+
+  // Load all necessary data for metadata resolution
+  useEffect(() => {
+    if (!annotation) return;
+
+    const loadData = async () => {
+      setDataLoading(true);
+
+      try {
+        // 1. Extract all unique element IDs from annotation targets
+        const elementIds = new Set<number>();
+        annotation.target.forEach((targetGroup) => {
+          const targets = Array.isArray(targetGroup)
+            ? targetGroup
+            : [targetGroup];
+          targets.forEach((target) => {
+            if (target.type !== "Object" && "source" in target) {
+              const elementId = extractElementIdFromSource(target.source);
+              if (elementId) {
+                elementIds.add(elementId);
+              }
+            }
+          });
+        });
+
+        // 2. Check which elements are not loaded yet
+        const loadedElementIds = new Set(allLoadedElements.map((el) => el.id));
+        const missingElementIds = Array.from(elementIds).filter(
+          (id) => !loadedElementIds.has(id)
+        );
+
+        if (missingElementIds.length === 0) {
+          // All elements already loaded, but make sure documents/collections are loaded too
+          if (allDocuments.length === 0) {
+            await dispatch(fetchAllDocuments()).unwrap();
+          }
+          if (allCollections.length === 0) {
+            await dispatch(fetchDocumentCollections({})).unwrap();
+          }
+          setDataLoading(false);
+          return;
+        }
+
+        // 3. Fetch missing elements by ID
+        const documentIdsNeeded = new Set<number>();
+
+        for (const elementId of missingElementIds) {
+          try {
+            // Fetch individual element - the endpoint returns element with document info
+            const response = await fetch(`/api/v1/elements/${elementId}`);
+            if (response.ok) {
+              const elementData = await response.json();
+              // Track which document this element belongs to
+              if (elementData.document_id) {
+                documentIdsNeeded.add(elementData.document_id);
+              }
+            }
+          } catch (err) {
+            console.warn(`Failed to fetch element ${elementId}:`, err);
+          }
+        }
+
+        // 4. Fetch elements for all needed documents
+        for (const docId of documentIdsNeeded) {
+          try {
+            await dispatch(fetchDocumentElements(docId)).unwrap();
+          } catch (err) {
+            console.warn(`Failed to load elements for document ${docId}:`, err);
+          }
+        }
+
+        // 5. Fetch documents if not loaded (we need full document list for document_collection_id lookup)
+        if (allDocuments.length === 0) {
+          await dispatch(fetchAllDocuments()).unwrap();
+        }
+
+        // 6. Fetch collections if not loaded (these are typically small datasets)
+        if (allCollections.length === 0) {
+          await dispatch(fetchDocumentCollections({})).unwrap();
+        }
+      } catch (err) {
+        console.error("Failed to load metadata:", err);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    loadData();
+  }, [annotation, dispatch, allDocuments, allCollections, allLoadedElements]);
 
   const targetGroups = useMemo((): TargetGroup[] => {
     if (!annotation?.target) return [];
@@ -72,10 +174,10 @@ export const LinkViewPage: React.FC = () => {
       .map((target): TargetGroup | null => {
         if (Array.isArray(target)) {
           const textTargets = target.filter(
-            (t): t is TextTarget => t.type !== 'Object'
+            (t): t is TextTarget => t.type !== "Object"
           );
           return textTargets.length > 0 ? textTargets : null;
-        } else if (target.type !== 'Object') {
+        } else if (target.type !== "Object") {
           return target as TextTarget;
         }
         return null;
@@ -90,21 +192,20 @@ export const LinkViewPage: React.FC = () => {
 
     targetGroups.forEach((group, groupIndex) => {
       const targets = Array.isArray(group) ? group : [group];
-      
+
       // Create stable group ID from all target IDs (sorted for consistency)
       const targetIds = targets
-        .map(t => String(t.id))
-        .filter(id => id !== 'null' && id !== 'undefined')
+        .map((t) => String(t.id))
+        .filter((id) => id !== "null" && id !== "undefined")
         .sort();
-      
-      const groupId = targetIds.length > 0 
-        ? targetIds.join('-') 
-        : `group-${groupIndex}`;
-      
+
+      const groupId =
+        targetIds.length > 0 ? targetIds.join("-") : `group-${groupIndex}`;
+
       groupIds.set(groupIndex, groupId);
-      
+
       // Map each individual target ID to this group ID
-      targets.forEach(target => {
+      targets.forEach((target) => {
         if (target.id) {
           targetToGroup.set(String(target.id), groupId);
         }
@@ -116,28 +217,31 @@ export const LinkViewPage: React.FC = () => {
 
   // Initialize pinned groups from URL parameters
   useEffect(() => {
-    const pinnedParam = searchParams.get('pinned');
+    const pinnedParam = searchParams.get("pinned");
     if (pinnedParam && targetToGroupMap.size > 0) {
-      const targetIdsFromUrl = pinnedParam.split(',').filter(Boolean);
-      
+      const targetIdsFromUrl = pinnedParam.split(",").filter(Boolean);
+
       // Find which groups contain these target IDs
       const groupIdsToPin = new Set<string>();
-      targetIdsFromUrl.forEach(targetId => {
+      targetIdsFromUrl.forEach((targetId) => {
         const groupId = targetToGroupMap.get(targetId);
         if (groupId) {
           groupIdsToPin.add(groupId);
         }
       });
-      
+
       if (groupIdsToPin.size > 0) {
         setPinnedGroupIds(groupIdsToPin);
       }
     }
   }, [searchParams, targetToGroupMap]);
 
-  const getGroupId = useCallback((_group: TargetGroup, index: number): string => {
-    return groupIdMap.get(index) || `group-${index}`;
-  }, [groupIdMap]);
+  const getGroupId = useCallback(
+    (_group: TargetGroup, index: number): string => {
+      return groupIdMap.get(index) || `group-${index}`;
+    },
+    [groupIdMap]
+  );
 
   const { pinnedGroups, unpinnedGroups } = useMemo(() => {
     const pinned: { group: TargetGroup; id: string }[] = [];
@@ -146,7 +250,7 @@ export const LinkViewPage: React.FC = () => {
     targetGroups.forEach((group, index) => {
       const groupId = getGroupId(group, index);
       const groupData = { group, id: groupId };
-      
+
       if (pinnedGroupIds.has(groupId)) {
         pinned.push(groupData);
       } else {
@@ -157,76 +261,84 @@ export const LinkViewPage: React.FC = () => {
     return { pinnedGroups: pinned, unpinnedGroups: unpinned };
   }, [targetGroups, pinnedGroupIds, getGroupId]);
 
-  const totalTargetCount = useMemo(() => {
-    return targetGroups.reduce((count, group) => {
-      return count + (Array.isArray(group) ? group.length : 1);
-    }, 0);
-  }, [targetGroups]);
+  // const totalTargetCount = useMemo(() => {
+  //   return targetGroups.reduce((count, group) => {
+  //     return count + (Array.isArray(group) ? group.length : 1);
+  //   }, 0);
+  // }, [targetGroups]);
 
   const totalPages = Math.ceil(unpinnedGroups.length / TARGETS_PER_PAGE);
   const startIndex = (currentPage - 1) * TARGETS_PER_PAGE;
   const endIndex = startIndex + TARGETS_PER_PAGE;
   const paginatedGroups = unpinnedGroups.slice(startIndex, endIndex);
 
-  const handlePageChange = useCallback((_event: React.ChangeEvent<unknown>, page: number) => {
-    setCurrentPage(page);
-    const scrollContainer = document.getElementById('unpinned-content-scroll');
-    if (scrollContainer) {
-      scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, []);
+  const handlePageChange = useCallback(
+    (_event: React.ChangeEvent<unknown>, page: number) => {
+      setCurrentPage(page);
+      const scrollContainer = document.getElementById(
+        "unpinned-content-scroll"
+      );
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    },
+    []
+  );
 
   // Handle pin toggle - works with ANY target ID from a group
-  const handleTogglePin = useCallback((targetId: string) => {
-    const groupId = targetToGroupMap.get(targetId);
-    
-    if (!groupId) {
-      console.warn(`Target ID ${targetId} not found in any group`);
-      return;
-    }
+  const handleTogglePin = useCallback(
+    (targetId: string) => {
+      const groupId = targetToGroupMap.get(targetId);
 
-    setPinnedGroupIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(groupId)) {
-        newSet.delete(groupId);
-      } else {
-        newSet.add(groupId);
+      if (!groupId) {
+        console.warn(`Target ID ${targetId} not found in any group`);
+        return;
       }
 
-      // Update URL with representative target IDs
-      setTimeout(() => {
-        if (newSet.size > 0) {
-          const targetIdsForUrl: string[] = [];
-          newSet.forEach(gId => {
-            for (const [tId, gIdMap] of targetToGroupMap.entries()) {
-              if (gIdMap === gId) {
-                targetIdsForUrl.push(tId);
-                return;
-              }
-            }
-          });
-          setSearchParams({ pinned: targetIdsForUrl.join(',') });
+      setPinnedGroupIds((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(groupId)) {
+          newSet.delete(groupId);
         } else {
-          setSearchParams({});
+          newSet.add(groupId);
         }
-      }, 0);
 
-      return newSet;
-    });
+        // Update URL with representative target IDs
+        setTimeout(() => {
+          if (newSet.size > 0) {
+            const targetIdsForUrl: string[] = [];
+            newSet.forEach((gId) => {
+              for (const [tId, gIdMap] of targetToGroupMap.entries()) {
+                if (gIdMap === gId) {
+                  targetIdsForUrl.push(tId);
+                  return;
+                }
+              }
+            });
+            setSearchParams({ pinned: targetIdsForUrl.join(",") });
+          } else {
+            setSearchParams({});
+          }
+        }, 0);
 
-    setCurrentPage(1);
-  }, [targetToGroupMap, setSearchParams]);
+        return newSet;
+      });
+
+      setCurrentPage(1);
+    },
+    [targetToGroupMap, setSearchParams]
+  );
 
   const handleBack = useCallback(() => {
     navigate(-1);
   }, [navigate]);
 
-  if (loading) {
+  if (loading || dataLoading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, textAlign: 'center' }}>
+      <Container maxWidth="lg" sx={{ mt: 4, textAlign: "center" }}>
         <CircularProgress size={60} />
         <Typography variant="h6" sx={{ mt: 2 }}>
-          Loading annotation...
+          {loading ? "Loading annotation..." : "Loading metadata..."}
         </Typography>
       </Container>
     );
@@ -236,57 +348,67 @@ export const LinkViewPage: React.FC = () => {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error || 'Annotation not found'}
+          {error || "Annotation not found"}
         </Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleBack} variant="outlined">
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={handleBack}
+          variant="outlined"
+        >
           Go Back
         </Button>
       </Container>
     );
   }
 
-  const linkName = annotation.body?.value || 'Unnamed Link';
+  const linkName = annotation.body?.value || "Unnamed Link";
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 3 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleBack} sx={{ mb: 2 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={handleBack}
+          sx={{ mb: 2 }}
+        >
           Back
         </Button>
         <Typography variant="h3" component="h1" gutterBottom>
           {linkName}
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          {totalTargetCount} {totalTargetCount === 1 ? 'target' : 'targets'}
-          {' '}in {targetGroups.length} {targetGroups.length === 1 ? 'group' : 'groups'}
-          {pinnedGroups.length > 0 && ` (${pinnedGroups.length} pinned)`}
-        </Typography>
       </Box>
 
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          gap: 2, 
-          alignItems: 'stretch',
-          height: 'calc(100vh - 250px)',
-          minHeight: '600px',
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          alignItems: "stretch",
+          height: "calc(100vh - 250px)",
+          minHeight: "600px",
         }}
       >
         <PinnedTargetsPanel
-          pinnedTargets={pinnedGroups.map(pg => pg.group)}
+          pinnedTargets={pinnedGroups.map((pg) => pg.group)}
           onTogglePin={handleTogglePin}
           isOpen={isPanelOpen}
           onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
         />
 
-        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          <Paper 
-            sx={{ 
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Paper
+            sx={{
               p: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-              overflow: 'hidden',
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              overflow: "hidden",
             }}
           >
             {totalPages > 1 && (
@@ -299,7 +421,7 @@ export const LinkViewPage: React.FC = () => {
                   size="large"
                   showFirstButton
                   showLastButton
-                  sx={{ display: 'flex', justifyContent: 'center' }}
+                  sx={{ display: "flex", justifyContent: "center" }}
                 />
               </Box>
             )}
@@ -308,22 +430,22 @@ export const LinkViewPage: React.FC = () => {
               id="unpinned-content-scroll"
               sx={{
                 flex: 1,
-                overflowY: 'auto',
-                overflowX: 'hidden',
+                overflowY: "auto",
+                overflowX: "hidden",
                 pr: 1,
                 minHeight: 0,
-                '&::-webkit-scrollbar': {
-                  width: '10px',
+                "&::-webkit-scrollbar": {
+                  width: "10px",
                 },
-                '&::-webkit-scrollbar-track': {
-                  backgroundColor: 'background.default',
-                  borderRadius: '5px',
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "background.default",
+                  borderRadius: "5px",
                 },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: 'primary.main',
-                  borderRadius: '5px',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "primary.main",
+                  borderRadius: "5px",
+                  "&:hover": {
+                    backgroundColor: "primary.dark",
                   },
                 },
               }}
@@ -342,8 +464,8 @@ export const LinkViewPage: React.FC = () => {
               ) : (
                 <Alert severity="info">
                   {unpinnedGroups.length === 0 && pinnedGroups.length > 0
-                    ? 'All target groups are pinned'
-                    : 'No targets available'}
+                    ? "All target groups are pinned"
+                    : "No targets available"}
                 </Alert>
               )}
             </Box>
@@ -358,7 +480,7 @@ export const LinkViewPage: React.FC = () => {
                   size="large"
                   showFirstButton
                   showLastButton
-                  sx={{ display: 'flex', justifyContent: 'center' }}
+                  sx={{ display: "flex", justifyContent: "center" }}
                 />
               </Box>
             )}
@@ -367,10 +489,17 @@ export const LinkViewPage: React.FC = () => {
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ display: 'block', textAlign: 'center', mt: 1, flexShrink: 0 }}
+                sx={{
+                  display: "block",
+                  textAlign: "center",
+                  mt: 1,
+                  flexShrink: 0,
+                }}
               >
-                Showing {startIndex + 1}-{Math.min(endIndex, unpinnedGroups.length)} of{' '}
-                {unpinnedGroups.length} unpinned {unpinnedGroups.length === 1 ? 'group' : 'groups'}
+                Showing {startIndex + 1}-
+                {Math.min(endIndex, unpinnedGroups.length)} of{" "}
+                {unpinnedGroups.length} unpinned{" "}
+                {unpinnedGroups.length === 1 ? "group" : "groups"}
               </Typography>
             )}
           </Paper>
