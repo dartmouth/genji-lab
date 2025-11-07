@@ -1,4 +1,5 @@
 // src/features/documentView/components/highlightedContent/HighlightedText.tsx
+
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import Highlight from "./Highlight";
 import AnnotationCreationDialog from "../annotationCard/AnnotationCreationDialog";
@@ -7,7 +8,7 @@ import { debounce } from "lodash";
 import { TextFormatting } from "@documentView/types";
 import { useVisibilityWithPrefetch } from "@/hooks/useVisibilityWithPrefetch";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import { commentingAnnotations, linkingAnnotations as linkAnnotations } from "@store";
+import { linkingAnnotations as linkAnnotations } from "@store";
 
 import { getTextTargets, findTargetForParagraph } from "./utils";
 
@@ -18,6 +19,7 @@ import {
   useAppSelector,
   updateHighlightPosition,
   setHoveredHighlights,
+  registerHighlight,
   selectAllAnnotationsForParagraph,
   initSelection as initRedux,
   addSelectionSegment,
@@ -34,7 +36,6 @@ import {
   calculateSegmentForParagraph,
 } from "../../utils/selectionUtils";
 import "@documentView/styles/DocumentLinkingStyles.css";
-// import { selectLinkingAnnotationsByParagraph } from "@store/selector/combinedSelectors";
 
 interface HighlightedTextProps {
   text: string;
@@ -72,10 +73,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
 
-  // State for dialog visibility
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Get the current annotation creation state to check if we need to show the dialog
   const annotationCreate = useAppSelector(selectAnnotationCreate);
   const { isVisible, shouldPrefetch } = useVisibilityWithPrefetch(containerRef);
 
@@ -84,7 +83,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   );
   const highlightType = useAppSelector(selectHighlightType(paragraphId));
 
-  // Local state for highlight positions and linked text
   const [highlightPositions, setHighlightPositions] = useState<
     Map<
       string,
@@ -107,14 +105,13 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     height: number;
     annotationStart: number;
     annotationEnd: number;
+    annotationId: string;
   }
 
-  // State for linked text positions when showLinkedTextHighlights is active
   const [linkedTextPositions, setLinkedTextPositions] = useState<
     LinkedTextPosition[]
   >([]);
 
-  // State for precise Redux navigation highlights
   const [reduxNavigationPositions, setReduxNavigationPositions] = useState<
     Array<{
       left: number;
@@ -125,31 +122,17 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   >([]);
 
   const [isSelectionStart, setIsSelectionStart] = useState(false);
-  // const debugState = useAppSelector((state: RootState) => {
-  //   const bucket = state.annotations['linking']; // Use your actual bucket name
-  //   return {
-  //     paragraph_id: paragraphId,
-  //     allAnnotationIds: Object.keys(bucket?.byId || {}),
-  //     byParentKeys: Object.keys(bucket?.byParent || {}),
-  //     paragraphAnnotations: bucket?.byParent?.[paragraphId] || []
-  //   };
-  // });
 
-  // console.log("Debug state:", debugState);
-  // Get regular annotations for this paragraph
   const allAnnotations = useAppSelector((state: RootState) =>
     selectAllAnnotationsForParagraph(state, paragraphId)
   );
 
-  // Use memoized selector instead of inline selector
   const linkingAnnotations = useAppSelector((state: RootState) =>
     linkAnnotations.selectors.selectAnnotationsByParent(state, paragraphId)
-    // selectLinkingAnnotationsByParagraph(state, paragraphId)
   );
 
   const hasLinkedText = linkingAnnotations.length > 0;
 
-  // Calculate precise Redux navigation highlight positions with useCallback
   const calculateReduxNavigationPositions = useCallback(() => {
     if (!containerRef.current || !isNavigationHighlighted || !hasLinkedText) {
       setReduxNavigationPositions([]);
@@ -169,31 +152,11 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       height: number;
     }> = [];
 
-    // Use the same logic as linked text highlighting to get precise positions
     linkingAnnotations.forEach((annotation) => {
-        const textTargets = getTextTargets(annotation.target);
-        // console.log("All targets: ", textTargets)
-        const target = findTargetForParagraph(textTargets, paragraphId);
-        // console.log("target is ", target)
-      // let target = annotation.target?.find((t) => t.source === paragraphId);
-
-      // if (!target) {
-      //   target = annotation.target?.find(
-      //     (t) => t.source === `DocumentElements/${parseURI(paragraphId)}`
-      //   );
-      // }
-
-      // if (!target) {
-      //   const numericId = parseURI(paragraphId);
-      //   target = annotation.target?.find(
-      //     (t) =>
-      //       t.source === `DocumentElements/${numericId}` ||
-      //       t.source === `/DocumentElements/${numericId}`
-      //   );
-      // }
+      const textTargets = getTextTargets(annotation.target);
+      const target = findTargetForParagraph(textTargets, paragraphId);
 
       if (!target || !target.selector) {
-        console.log("can't find link target")
         return;
       }
 
@@ -226,21 +189,15 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
     setReduxNavigationPositions(navigationPositions);
   }, [isNavigationHighlighted, hasLinkedText, linkingAnnotations, paragraphId]);
-  // useEffect(() =>{
-  //   console.log(paragraphId)
-  // })
 
   useEffect(() => {
     if (isNavigationHighlighted) {
-      // Calculate precise positions when Redux highlighting activates
       calculateReduxNavigationPositions();
     } else {
-      // Clear positions when highlighting deactivates
       setReduxNavigationPositions([]);
     }
   }, [isNavigationHighlighted, calculateReduxNavigationPositions]);
 
-  // Check if we need to show the dialog when annotation creation state changes
   useEffect(() => {
     if (
       annotationCreate &&
@@ -255,10 +212,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
   useEffect(() => {
     notFetched.current = true;
-    dispatch(commentingAnnotations.actions.clearAnnotations());
   }, [dispatch, activeClassroomValue, isOptedOut]);
 
-  // Fetch annotations when component becomes visible
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
@@ -282,11 +237,12 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     shouldPrefetch,
   ]);
 
-  // Calculate highlight positions for existing annotations
   const calculateHighlightPositions = () => {
     if (!containerRef.current) return;
+
     const textNode = containerRef.current.firstChild;
     if (!textNode || !(textNode instanceof Text)) return;
+
     const containerRect = containerRef.current.getBoundingClientRect();
 
     const newPositions = new Map<
@@ -302,24 +258,19 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
       }
     >();
 
-    // Calculate positions for regular annotations (non-linking)
     const regularAnnotations = allAnnotations.filter((anno) => {
       if (!anno || !anno.target || anno.motivation === "linking") {
         return false;
       }
-      // In reading mode, hide scholarly annotations and comments
       if (viewMode === "reading") {
-        return false; // Hide all annotation highlights in reading mode
+        return false;
       }
-
-      // In annotations mode, show all non-linking annotations
       return true;
     });
 
     regularAnnotations.forEach((annotation) => {
-        const textTargets = getTextTargets(annotation.target);
-        const target = findTargetForParagraph(textTargets, paragraphId);
-      // const target = annotation.target.find((t) => t.source === paragraphId);
+      const textTargets = getTextTargets(annotation.target);
+      const target = findTargetForParagraph(textTargets, paragraphId);
 
       if (!target) return;
       if (!target.selector) return;
@@ -346,6 +297,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
         dispatch(
           updateHighlightPosition({
+            documentId: documentId,
             id: `highlight-${annotation.id}`,
             boundingBoxes: positions,
           })
@@ -358,10 +310,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     setHighlightPositions(newPositions);
   };
 
-  // Calculate linked text positions when showLinkedTextHighlights is true
+  // Now registers linking highlights in Redux
   const calculateLinkedTextPositions = () => {
-    console.log(hasLinkedText)
-    console.log(linkingAnnotations)
     if (!containerRef.current || !showLinkedTextHighlights || !hasLinkedText) {
       setLinkedTextPositions([]);
       return;
@@ -374,35 +324,19 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
 
     const containerRect = containerRef.current.getBoundingClientRect();
 
-    // Store annotation range with each position
     const allLinkedPositions: Array<{
       left: number;
       top: number;
       width: number;
       height: number;
-      annotationStart: number; 
-      annotationEnd: number; 
+      annotationStart: number;
+      annotationEnd: number;
+      annotationId: string;
     }> = [];
 
     linkingAnnotations.forEach((annotation) => {
-        const textTargets = getTextTargets(annotation.target);
-        console.log("All targets: ", textTargets)
-        const target = findTargetForParagraph(textTargets, paragraphId);
-        console.log("target is ", target)
-      // let target = annotation.target?.find((t) => t.source === paragraphId);
-      // if (!target) {
-      //   target = annotation.target?.find(
-      //     (t) => t.source === `DocumentElements/${parseURI(paragraphId)}`
-      //   );
-      // }
-      // if (!target) {
-      //   const numericId = parseURI(paragraphId);
-      //   target = annotation.target?.find(
-      //     (t) =>
-      //       t.source === `DocumentElements/${numericId}` ||
-      //       t.source === `/DocumentElements/${numericId}`
-      //   );
-      // }
+      const textTargets = getTextTargets(annotation.target);
+      const target = findTargetForParagraph(textTargets, paragraphId);
 
       if (!target || !target.selector) {
         return;
@@ -427,11 +361,31 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           top: rect.top - containerRect.top,
           width: rect.width,
           height: rect.height,
-          annotationStart: start, 
+          annotationStart: start,
           annotationEnd: adjustedEnd,
+          annotationId: annotation.id.toString(),
         }));
 
         allLinkedPositions.push(...positions);
+
+        // Register this linking highlight in Redux
+        const highlightId = `linking-${annotation.id}-${paragraphId}`;
+
+        dispatch(
+          registerHighlight({
+            documentId: documentId,
+            id: highlightId,
+            motivation: "linking",
+            paragraphId: paragraphId,
+            boundingBoxes: positions.map((p) => ({
+              left: p.left,
+              top: p.top,
+              width: p.width,
+              height: p.height,
+            })),
+            annotationId: annotation.id.toString(),
+          })
+        );
       } catch (error) {
         console.error("Error calculating linked text positions:", error);
       }
@@ -440,7 +394,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     setLinkedTextPositions(allLinkedPositions);
   };
 
-  // Handle selection start - skip during linking mode
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isLinkingModeActive) {
       return;
@@ -456,7 +409,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     }
   };
 
-  // Handle selection changes - skip during linking mode
   const handleSelectionChange = () => {
     if (isLinkingModeActive) {
       return;
@@ -473,7 +425,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     updateSelectionSegment(selection);
   };
 
-  // Helper to update the current paragraph's segment in a multi-paragraph selection
   const updateSelectionSegment = (selection: Selection) => {
     if (!containerRef.current) return;
 
@@ -503,7 +454,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     }
   };
 
-  // Handle selection end - skip during linking mode
   const handleMouseUp = () => {
     if (isLinkingModeActive) {
       return;
@@ -520,7 +470,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     setIsSelectionStart(false);
   };
 
-  // Container-level detection function for existing highlights
   const detectHighlightsAtPoint = (x: number, y: number) => {
     const highlightsAtPoint: string[] = [];
 
@@ -541,7 +490,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     return highlightsAtPoint;
   };
 
-  // Handle mouse move within this container
+  // Detects linking highlights
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
 
@@ -549,29 +498,51 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    // Detect regular annotation highlights
     const hoveredHighlights = detectHighlightsAtPoint(x, y);
 
-    // Update global state with the hovered highlights from this container
-    if (hoveredHighlights.length > 0) {
+    // Also detect linking highlights
+    const hoveredLinkingHighlights: string[] = [];
+
+    if (showLinkedTextHighlights && hasLinkedText) {
+      linkedTextPositions.forEach((position) => {
+        const isHovered =
+          x >= position.left &&
+          x <= position.left + position.width &&
+          y >= position.top &&
+          y <= position.top + position.height;
+
+        if (isHovered) {
+          // Create the same highlight ID format we used when registering
+          const highlightId = `linking-${position.annotationId}-${paragraphId}`;
+          hoveredLinkingHighlights.push(highlightId);
+        }
+      });
+    }
+
+    // Combine all hovered highlights
+    const allHoveredHighlights = [
+      ...hoveredHighlights,
+      ...hoveredLinkingHighlights,
+    ];
+
+    if (allHoveredHighlights.length > 0) {
       dispatch(
         setHoveredHighlights({
           documentId: documentId,
-          highlightIds: hoveredHighlights,
+          highlightIds: allHoveredHighlights,
         })
       );
     }
   };
 
-  // Debounce the mouse move handler for better performance
   const debouncedHandleMouseMove = debounce(handleMouseMove, 50);
 
-  // Add selection change event listener - skip during linking mode
   useEffect(() => {
     const handleGlobalSelectionChange = () => {
       handleSelectionChange();
     };
 
-    // Only add listener if not in linking mode
     if (!isLinkingModeActive) {
       document.addEventListener("selectionchange", handleGlobalSelectionChange);
     }
@@ -585,17 +556,14 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSelectionStart, isLinkingModeActive]);
 
-  // Recalculate on component mount and when annotations or text changes
   useEffect(() => {
     calculateHighlightPositions();
     calculateLinkedTextPositions();
 
-    // Also calculate Redux navigation positions
     if (isNavigationHighlighted) {
       calculateReduxNavigationPositions();
     }
 
-    // Set up resize observer
     const resizeObserver = new ResizeObserver(() => {
       calculateHighlightPositions();
       calculateLinkedTextPositions();
@@ -618,14 +586,13 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     showLinkedTextHighlights,
     isNavigationHighlighted,
     viewMode,
+    documentId,
   ]);
 
-  // Handler to close the dialog
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
   };
 
-  // Calculate dynamic styles for text formatting
   const getTextFormattingStyles = (): React.CSSProperties => {
     return {
       textIndent: format?.first_line_indent
@@ -662,10 +629,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         onMouseMove={debouncedHandleMouseMove}
         style={getTextFormattingStyles()}
       >
-        {/* KEEP PLAIN TEXT - don't use HighlightedTextWithReferences here */}
         {text}
 
-        {/* Precise Redux navigation highlights */}
         {isNavigationHighlighted && reduxNavigationPositions.length > 0 && (
           <div className="redux-navigation-highlights-container">
             {reduxNavigationPositions.map((position, index) => (
@@ -687,7 +652,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           </div>
         )}
 
-        {/* Render highlight containers for regular annotations */}
         {Array.from(highlightPositions.entries()).map(
           ([annotationId, position_elems]) => (
             <div
@@ -707,10 +671,8 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           )
         )}
 
-        {/* Render linked text highlights when showLinkedTextHighlights is active */}
         {showLinkedTextHighlights && hasLinkedText && (
           <>
-            {/* Link icon indicator - positioned to not interfere with text */}
             <div
               className="linked-text-icon"
               title="This paragraph contains linked text"
@@ -718,33 +680,15 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
               🔗
             </div>
 
-            {/* Container to prevent opacity stacking */}
             <div className="linked-text-highlights-container">
               {linkedTextPositions.map((position, index) => {
-                const annotationData = linkingAnnotations.find((annotation) => {
-                  // First, flatten and filter to get only TextTargets
-                  const textTargets = getTextTargets(annotation.target);
-                  
-                  // Find the matching target for this paragraph
-                  const target = findTargetForParagraph(textTargets, paragraphId);
-                  
-                  if (!target?.selector) return false;
-                  
-                  // Check if this position matches the annotation's range
-                  const { start, end } = target.selector.refined_by;
-                  return (
-                    position.annotationStart === start &&
-                    position.annotationEnd === end
-                  );
-                });
-                
                 return (
                   <div
                     key={`linked-${index}`}
                     className="linked-text-highlight"
                     data-start={position.annotationStart}
                     data-end={position.annotationEnd}
-                    data-annotation-id={annotationData?.id}
+                    data-annotation-id={position.annotationId}
                     style={{
                       left: position.left,
                       top: position.top,
@@ -758,7 +702,6 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
           </>
         )}
 
-        {/* NEW: Render external reference icons as overlays */}
         <ExternalReferenceIconsOverlay
           text={text}
           paragraphId={paragraphId}
