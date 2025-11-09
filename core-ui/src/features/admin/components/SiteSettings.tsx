@@ -19,6 +19,7 @@ import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { fetchSiteSettings, updateSiteSettings, uploadSiteLogo, removeSiteLogo, uploadSiteFavicon, removeSiteFavicon, clearError } from '@store/slice/siteSettingsSlice';
 import { useAuth } from '@hooks/useAuthContext';
 import { updateFavicon, loadFaviconFromAPI } from '../../../utils/favicon';
+import CASAuthSettings from './CASAuthSettings';
 
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
@@ -61,7 +62,8 @@ interface SiteSettings {
   updated_by_id: number;
   updated_at: string;
 }
-
+//FIXME: what's right here?
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface SiteSettingsProps {}
 
 const SiteSettings: React.FC<SiteSettingsProps> = () => {
@@ -117,7 +119,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
     if (title.length > 50) {
       return 'Site title must be 50 characters or less';
     }
-    if (!/^[a-zA-Z0-9\s\-\.'":]+$/.test(title)) {
+    if (!/^[a-zA-Z0-9\s\-\\.'":]+$/.test(title)) {
       return 'Site title contains invalid characters. Only letters, numbers, spaces, and basic punctuation (-, ., \', ", :) are allowed';
     }
     return null;
@@ -214,6 +216,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Failed to upload logo:', err);
       setLogoValidationError(err);
@@ -238,6 +241,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Failed to remove logo:', err);
       setLogoValidationError(err);
@@ -310,6 +314,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Failed to upload favicon:', err);
       setFaviconValidationError(err);
@@ -337,6 +342,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Failed to remove favicon:', err);
       setFaviconValidationError(err);
@@ -382,6 +388,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Failed to update site settings:', err);
     } finally {
@@ -428,28 +435,29 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
 
       <Box sx={{ display: 'flex', height: 'auto' }}>
         {/* Sub-tabs for Site Settings */}
-        <Tabs
-          orientation="vertical"
-          variant="scrollable"
-          value={activeSubTab}
-          onChange={handleSubTabChange}
-          aria-label="Site settings sub-tabs"
-          sx={{ 
-            borderRight: 1, 
-            borderColor: 'divider',
-            minWidth: '180px',
-            '& .MuiTab-root': {
-              alignItems: 'flex-start',
-              textAlign: 'left',
-              paddingLeft: 2
-            }
-          }}
-        >
-          <Tab label="Overview" {...a11yPropsSubTab(0)} />
-          <Tab label="Site Title" {...a11yPropsSubTab(1)} />
-          <Tab label="Site Logo" {...a11yPropsSubTab(2)} />
-          <Tab label="Site Favicon" {...a11yPropsSubTab(3)} />
-        </Tabs>
+      <Tabs
+        orientation="vertical"
+        variant="scrollable"
+        value={activeSubTab}
+        onChange={handleSubTabChange}
+        aria-label="Site settings sub-tabs"
+        sx={{ 
+          borderRight: 1, 
+          borderColor: 'divider',
+          minWidth: '180px',
+          '& .MuiTab-root': {
+            alignItems: 'flex-start',
+            textAlign: 'left',
+            paddingLeft: 2
+          }
+        }}
+      >
+        <Tab label="Overview" {...a11yPropsSubTab(0)} />
+        <Tab label="Site Title" {...a11yPropsSubTab(1)} />
+        <Tab label="Site Logo" {...a11yPropsSubTab(2)} />
+        <Tab label="Site Favicon" {...a11yPropsSubTab(3)} />
+        <Tab label="CAS Authentication" {...a11yPropsSubTab(4)} />
+      </Tabs>
         
         {/* Sub-tab content */}
         <SubTabPanel value={activeSubTab} index={0}>
@@ -741,6 +749,9 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
               </Button>
             </Box>
           </Box>
+        </SubTabPanel>
+        <SubTabPanel value={activeSubTab} index={4}>
+          <CASAuthSettings />
         </SubTabPanel>
       </Box>
     </Box>

@@ -1,4 +1,6 @@
-import React, { useEffect } from "react";
+// Frontend: src/components/layout/AppHeader.tsx
+
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@hooks/useLocalStorage";
@@ -15,6 +17,11 @@ import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 import "../features/documentView/styles/AuthStyles.css";
 
+interface CASPublicConfig {
+  enabled: boolean;
+  display_name: string;
+}
+
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -28,10 +35,30 @@ const AppHeader: React.FC = () => {
   const dispatch = useAppDispatch();
   const { settings } = useAppSelector((state) => state.siteSettings);
 
+  // CAS public config state
+  const [casConfig, setCasConfig] = useState<CASPublicConfig>({
+    enabled: false,
+    display_name: "CAS Login"
+  });
+
   // Load site settings on component mount
   useEffect(() => {
     dispatch(fetchSiteSettings());
   }, [dispatch]);
+
+  // Load CAS public config on component mount
+  useEffect(() => {
+    const fetchCASConfig = async () => {
+      try {
+        const response = await axios.get('/api/v1/cas-config/public');
+        setCasConfig(response.data);
+      } catch (error) {
+        console.error('Failed to load CAS config:', error);
+      }
+    };
+
+    fetchCASConfig();
+  }, []);
 
   useEffect(() => {
     if (typeof isOptedOut !== "string") {
@@ -101,14 +128,11 @@ const AppHeader: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && user?.roles?.includes('admin')) {
       fetchFlagCount(); // Fetch immediately on mount/login
-      // Refresh every 4 hours (14400000 ms)
       const interval = setInterval(fetchFlagCount, 14400000);
       
-      // Expose function globally so other components can trigger refresh
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).refreshFlagCount = fetchFlagCount;
       
-      // Listen for custom event to refresh flag count
       const handleRefresh = () => fetchFlagCount();
       window.addEventListener('refreshFlagCount', handleRefresh);
       
@@ -300,13 +324,15 @@ const AppHeader: React.FC = () => {
         ) : (
           // Anonymous user - show auth buttons
           <div className="auth-controls">
-            <button
-              onClick={handleCasLogin}
-              className="login-button cas-login"
-              disabled={isLoading}
-            >
-              {isLoading ? "Authenticating..." : "Login with Dartmouth SSO"}
-            </button>
+            {casConfig.enabled && (
+              <button
+                onClick={handleCasLogin}
+                className="login-button cas-login"
+                disabled={isLoading}
+              >
+                {isLoading ? "Authenticating..." : casConfig.display_name}
+              </button>
+            )}
             <button
               onClick={handleBasicAuthClick}
               className="login-button basic-login"
