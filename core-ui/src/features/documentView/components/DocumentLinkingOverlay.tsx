@@ -39,7 +39,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   documents,
   onClose,
 }) => {
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeClassroomValue, _setActiveClassroomValue] =
     useLocalStorage("active_classroom");
@@ -128,44 +127,49 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         '[id*="DocumentElements"]'
       );
       const seenIds = new Set<string>(); // ← Track by ID instead
-      
+
       allDocElements.forEach((element) => {
         try {
           if (range.intersectsNode(element)) {
             const elementId = (element as HTMLElement).id;
-            if (!seenIds.has(elementId)) { // ← Check if we've seen this ID
+            if (!seenIds.has(elementId)) {
+              // ← Check if we've seen this ID
               seenIds.add(elementId);
               documentElements.add(element as HTMLElement);
             }
           }
         } catch (error) {
-          console.error(error, "Error checking intersection for element:", element.id);
+          console.error(
+            error,
+            "Error checking intersection for element:",
+            element.id
+          );
         }
       });
     }
     // If we still haven't found any elements, try a broader search
-  //   if (documentElements.size === 0) {
-  //     // Get all DocumentElements in the document and check intersection
-  //     const allDocElements = document.querySelectorAll(
-  //       '[id*="DocumentElements"]'
-  //     );
-  // console.log("querySelectorAll found:", allDocElements.length, "total elements");
-  //     allDocElements.forEach((element) => {
-  //       try {
-  //         if (range.intersectsNode(element)) {
-  //                   console.log("Adding element:", element.id, "Current set size:", documentElements.size);
-  //           documentElements.add(element as HTMLElement);
-  //                   console.log("After add, set size:", documentElements.size);
-  //         }
-  //       } catch (error) {
-  //         console.error(
-  //           error,
-  //           "Error checking intersection for element:",
-  //           element.id
-  //         );
-  //       }
-  //     });
-  //   }
+    //   if (documentElements.size === 0) {
+    //     // Get all DocumentElements in the document and check intersection
+    //     const allDocElements = document.querySelectorAll(
+    //       '[id*="DocumentElements"]'
+    //     );
+    // console.log("querySelectorAll found:", allDocElements.length, "total elements");
+    //     allDocElements.forEach((element) => {
+    //       try {
+    //         if (range.intersectsNode(element)) {
+    //                   console.log("Adding element:", element.id, "Current set size:", documentElements.size);
+    //           documentElements.add(element as HTMLElement);
+    //                   console.log("After add, set size:", documentElements.size);
+    //         }
+    //       } catch (error) {
+    //         console.error(
+    //           error,
+    //           "Error checking intersection for element:",
+    //           element.id
+    //         );
+    //       }
+    //     });
+    //   }
     // console.log("elements selected after global: ", documentElements.size)
     if (documentElements.size === 0) {
       return null;
@@ -362,9 +366,9 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       console.warn("Document not found in current view:", documentId);
       return null;
     }
-  // console.log("Final elementSelections count:", elementSelections.length);
-  // console.log("elementSelections:", elementSelections.map(e => ({id: e.documentElementId, text: e.text.substring(0, 20)})));
-  
+    // console.log("Final elementSelections count:", elementSelections.length);
+    // console.log("elementSelections:", elementSelections.map(e => ({id: e.documentElementId, text: e.text.substring(0, 20)})));
+
     return {
       documentId: foundDocument.id,
       elements: elementSelections,
@@ -379,7 +383,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-      
+
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0) {
         return;
@@ -441,7 +445,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       document.removeEventListener("mousedown", handleMouseDown, true);
       document.removeEventListener("mouseup", handleSelection, true);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, firstSelection, documents]);
 
   const handleSaveLink = () => {
@@ -477,9 +481,15 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       description || "Document link",
       segments
     );
-    const classroomId = activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
-    
-    dispatch(linkingAnnotations.thunks.saveAnnotation({annotation: annoBody, classroomId: classroomId}));
+    const classroomId =
+      activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
+
+    dispatch(
+      linkingAnnotations.thunks.saveAnnotation({
+        annotation: annoBody,
+        classroomId: classroomId,
+      })
+    );
     onClose();
   };
 

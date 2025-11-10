@@ -1,15 +1,15 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface DocumentNavigationState {
   activeParagraphId: string | null;
 }
 
 const initialState: DocumentNavigationState = {
-  activeParagraphId: null
+  activeParagraphId: null,
 };
 
 const documentNavigationSlice = createSlice({
-  name: 'documentNavigation',
+  name: "documentNavigation",
   initialState,
   reducers: {
     setActiveParagraph: (state, action: PayloadAction<string>) => {
@@ -17,14 +17,16 @@ const documentNavigationSlice = createSlice({
     },
     clearActiveParagraph: (state) => {
       state.activeParagraphId = null;
-    }
-  }
+    },
+  },
 });
 
-export const { setActiveParagraph, clearActiveParagraph } = documentNavigationSlice.actions;
+export const { setActiveParagraph, clearActiveParagraph } =
+  documentNavigationSlice.actions;
 
 // Selectors
-export const selectActiveParagraphId = (state: { documentNavigation: DocumentNavigationState }) => 
-  state.documentNavigation.activeParagraphId;
+export const selectActiveParagraphId = (state: {
+  documentNavigation: DocumentNavigationState;
+}) => state.documentNavigation.activeParagraphId;
 
 export default documentNavigationSlice.reducer;
