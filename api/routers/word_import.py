@@ -132,7 +132,7 @@ def extract_paragraphs(doc, text_collection_id, document_number):
     json_results = []
     element_counter = 1
     
-    for paragraph in enumerate(doc.paragraphs):
+    for paragraph in doc.paragraphs:
         if paragraph.text.strip(): 
             clean_text, links = extract_links(paragraph.text)
             paragraph_json = {

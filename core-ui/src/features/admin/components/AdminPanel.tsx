@@ -98,7 +98,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
   };
 
   const handleBackToCollections = () => {
-    navigate('/');
+    navigate('/collections');
   };
 
   return (
