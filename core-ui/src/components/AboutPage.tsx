@@ -20,19 +20,7 @@ const AboutPage: React.FC = () => {
         </Typography>
         
         <Typography variant="body1" color="text.secondary" paragraph>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod 
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, 
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore 
-          eu fugiat nulla pariatur.
-        </Typography>
-
-        <Typography variant="body1" color="text.secondary" paragraph>
-          Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia 
-          deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus 
-          error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, 
-          eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae 
-          dicta sunt explicabo.
+Genji Lab is a customizable digital workspace designed to facilitate research on and teaching of The Tale of Genji. It is an interactive application that, as it develops, will enable users to access any passage from the original text alongside commentary, annotations, translations in various languages, and versions of that passage in different media: picture scrolls, picture books, decorative screens, woodblock prints, literary parodies, drama, films, anime, and manga. The aim of Genji Lab is to provide scholars, students, and readers worldwide with access to a large, robust archive on Murasaki Shikibu’s masterpiece. 
         </Typography>
 
         <Divider sx={{ my: 4 }} />
@@ -43,18 +31,7 @@ const AboutPage: React.FC = () => {
         </Typography>
         
         <Typography variant="body1" color="text.secondary" paragraph>
-          Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, 
-          sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. 
-          Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, 
-          adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et 
-          dolore magnam aliquam quaerat voluptatem.
-        </Typography>
-
-        <Typography variant="body1" color="text.secondary">
-          Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit 
-          laboriosam, nisi ut aliquid ex ea commodi consequatur. Quis autem vel eum iure 
-          reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, 
-          vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.
+          The development of Genji Lab was made possible by a generous gift from Patricia Washburn, in whose memory this site is dedicated. Matt Rogers, Amanda Emerson, and Tim Meehan are the engineers who designed and built this application, and I am grateful for the creativity, energy, and dedication to this project. I’m also grateful to Keith Vincent and Christopher Ellars and to my students [names to follow] for their expertise, design suggestion, and assistance in setting up the initial version of this application.
         </Typography>
       </Paper>
     </Box>

@@ -10,6 +10,8 @@ import ManageFlags from './ManageFlags';
 import SiteSettings from './SiteSettings';
 import "../../documentGallery/styles/CollectionGalleryStyles.css";
 
+// FIXME, is the empty props correct? Why?
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface AdminPanelProps {}
 
 // Define TabPanel props interface
@@ -91,6 +93,7 @@ const AdminPanel: React.FC<AdminPanelProps> = () => {
         setActiveTab(tabIndex);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
