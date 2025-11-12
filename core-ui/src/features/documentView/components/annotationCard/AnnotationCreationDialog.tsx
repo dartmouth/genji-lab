@@ -445,7 +445,7 @@ const onSave = () => {
                   resize: 'vertical'
                 }}
               />
-            )}
+            )} 
 
             {/* Preview of rendered links */}
             {newAnno.content.includes("[") &&

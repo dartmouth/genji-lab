@@ -663,6 +663,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
                   key={`${annotationId}-${index}`}
                   motivation={position_elems.motivation}
                   id={`highlight-${annotationId}`}
+                  documentId={documentId}
                   annotationId={`${annotationId}`}
                   position={position}
                 />
