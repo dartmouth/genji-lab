@@ -71,7 +71,7 @@ export const DocumentsView: React.FC = () => {
   };
 
   const handleBackToCollections = () => {
-    navigate("/");
+    navigate("/collections");
   };
 
   return (
