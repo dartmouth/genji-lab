@@ -11,6 +11,7 @@ import documentNavigationReducer from "./slice/documentNavigationSlice";
 import documentElementsReducer from "./slice/documentElementsSlice";
 import searchResultReducer from "./slice/searchResultsSlice";
 import navigationHighlightReducer from "./slice/navigationHighlightSlice";
+import casConfigReducer from './slice/casConfigSlice';
 
 import {
   commentingAnnotations,
@@ -67,6 +68,7 @@ const rootReducer = {
   classrooms: classroomsReducer,
   searchResults: searchResultReducer,
   navigationHighlight: navigationHighlightReducer,
+  casConfig: casConfigReducer
 };
 
 // Create the store

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
-from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings, search, groups, flags
+from routers import users, documents, document_collections, document_elements, annotations, roles, site_settings, search, groups, flags, cas_config
 
 from starlette.middleware.sessions import SessionMiddleware
 import os
@@ -42,11 +42,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Create uploads directory and mount static files
-uploads_dir = Path("/app/uploads")
-uploads_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
-
 # Include routers
 app.include_router(users.router)
 app.include_router(documents.router)
@@ -60,6 +55,7 @@ app.include_router(cas_router)
 app.include_router(auth_router)
 app.include_router(search.router)
 app.include_router(flags.router)
+app.include_router(cas_config.router)
 
 @app.get("/api/v1")
 def read_root():
