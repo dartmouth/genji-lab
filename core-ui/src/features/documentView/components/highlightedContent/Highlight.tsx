@@ -4,6 +4,7 @@ import { registerHighlight, removeHighlight } from "@store";
 
 interface HighlightProps {
   id: string;
+  documentId: number;
   motivation: string;
   position: {
     left: number;
@@ -17,6 +18,7 @@ interface HighlightProps {
 
 const Highlight: React.FC<HighlightProps> = ({
   id,
+  documentId,
   position,
   annotationId,
   motivation,
@@ -28,6 +30,7 @@ const Highlight: React.FC<HighlightProps> = ({
     dispatch(
       registerHighlight({
         id,
+        documentId,
         motivation: motivation,
         boundingBoxes: [position],
         annotationId,
@@ -36,9 +39,9 @@ const Highlight: React.FC<HighlightProps> = ({
     );
 
     return () => {
-      dispatch(removeHighlight(id));
+      dispatch(removeHighlight({ documentId: documentId, highlightId: id }));
     };
-  }, [dispatch, id, annotationId, motivation, position]);
+  }, [dispatch, id, documentId, annotationId, motivation, position]);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

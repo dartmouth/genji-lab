@@ -1,16 +1,29 @@
 // src/features/linkView/LinkCard.tsx
 
 import React, { useMemo } from "react";
-import { Card, CardContent, Typography, IconButton, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  Typography,
+  IconButton,
+  Box,
+  Tooltip,
+} from "@mui/material";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import CollectionsBookmarkIcon from "@mui/icons-material/CollectionsBookmark";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { TextTarget } from "@documentView/types";
-import { useAppSelector } from "@store/hooks";
+import { useAppSelector, useAppDispatch } from "@store/hooks";
 import { selectAllLoadedElements } from "@store/selector/combinedSelectors";
 import { selectAllDocuments } from "@store/slice/documentSlice";
 import { selectAllDocumentCollections } from "@store/slice/documentCollectionSlice";
+import {
+  startNavigationSession,
+  addNavigationHighlight,
+} from "@store/slice/navigationHighlightSlice";
 import {
   resolveTargetGroupMetadata,
   type ResolvedTargetMetadata,
@@ -33,6 +46,8 @@ export const LinkCard: React.FC<LinkCardProps> = ({
   const allElements = useAppSelector(selectAllLoadedElements);
   const allDocuments = useAppSelector(selectAllDocuments);
   const allCollections = useAppSelector(selectAllDocumentCollections);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   // Normalize to array for consistent handling (memoized to avoid dependency issues)
   const targets = useMemo(() => {
@@ -75,6 +90,43 @@ export const LinkCard: React.FC<LinkCardProps> = ({
     if (cardId) {
       onTogglePin(cardId);
     }
+  };
+
+  const handleViewInDocument = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Get the first resolved target to find document and collection IDs
+    const firstResolved = resolvedTargets[0];
+    if (
+      !firstResolved ||
+      !firstResolved.documentId ||
+      !firstResolved.documentCollectionId
+    ) {
+      console.error("Cannot navigate: missing document or collection ID");
+      return;
+    }
+
+    // Create a navigation session
+    const sessionId = `link-nav-${Date.now()}`;
+    dispatch(startNavigationSession({ sessionId }));
+
+    // Add navigation highlights for all targets in this card
+    targets.forEach((target) => {
+      if ("source" in target) {
+        dispatch(
+          addNavigationHighlight({
+            elementURI: target.source,
+            type: "target",
+            sessionId,
+          })
+        );
+      }
+    });
+
+    // Navigate to the document
+    navigate(
+      `/collections/${firstResolved.documentCollectionId}/documents/${firstResolved.documentId}`
+    );
   };
 
   return (
@@ -139,24 +191,46 @@ export const LinkCard: React.FC<LinkCardProps> = ({
               )}
           </Box>
 
-          {/* Pin button */}
-          {showPinButton && cardId && (
-            <IconButton
-              onClick={handlePinClick}
-              size="small"
-              color={isPinned ? "primary" : "default"}
-              aria-label={isPinned ? "Unpin target" : "Pin target"}
-              sx={{
-                ml: 1,
-                flexShrink: 0,
-                "&:hover": {
-                  backgroundColor: isPinned ? "primary.light" : "action.hover",
-                },
-              }}
-            >
-              {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
-            </IconButton>
-          )}
+          {/* Action buttons */}
+          <Box sx={{ display: "flex", gap: 0.5, flexShrink: 0, ml: 1 }}>
+            {/* View in Document button */}
+            <Tooltip title="View in Document" arrow>
+              <IconButton
+                onClick={handleViewInDocument}
+                size="small"
+                color="primary"
+                aria-label="View in document"
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "primary.light",
+                  },
+                }}
+              >
+                <OpenInNewIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            {/* Pin button */}
+            {showPinButton && cardId && (
+              <Tooltip title={isPinned ? "Unpin" : "Pin"} arrow>
+                <IconButton
+                  onClick={handlePinClick}
+                  size="small"
+                  color={isPinned ? "primary" : "default"}
+                  aria-label={isPinned ? "Unpin target" : "Pin target"}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: isPinned
+                        ? "primary.light"
+                        : "action.hover",
+                    },
+                  }}
+                >
+                  {isPinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         </Box>
 
         {/* Display each target's text */}
