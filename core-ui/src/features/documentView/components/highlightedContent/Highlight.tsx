@@ -39,7 +39,7 @@ const Highlight: React.FC<HighlightProps> = ({
     );
 
     return () => {
-      dispatch(removeHighlight({documentId: documentId, highlightId: id}));
+      dispatch(removeHighlight({ documentId: documentId, highlightId: id }));
     };
   }, [dispatch, id, documentId, annotationId, motivation, position]);
 

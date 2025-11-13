@@ -10,6 +10,11 @@ import {
 } from "@store";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "@store/hooks";
+import {
+  selectNavigationHighlights,
+  clearAllNavigationHighlights,
+} from "@store/slice/navigationHighlightSlice";
+import { scrollToAndHighlightText } from "@documentView/utils/scrollToTextUtils";
 import "../styles/DocumentContentStyles.css";
 import { DocumentElement } from "@documentView/types";
 // import { ExternalReferencesSection } from "./externalReferences";
@@ -51,6 +56,8 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
     selectDocumentErrorById(state, documentId)
   );
 
+  const navigationHighlights = useSelector(selectNavigationHighlights);
+
   // Enhanced element loading for cross-document navigation
   useEffect(() => {
     if (documentId) {
@@ -82,6 +89,43 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         });
     });
   }, [viewedDocuments, dispatch]);
+
+  // Handle navigation highlights when document loads
+  useEffect(() => {
+    // Check if there are navigation highlights and if elements are loaded
+    if (
+      Object.keys(navigationHighlights).length > 0 &&
+      documentElements.length > 0 &&
+      documentStatus === "succeeded"
+    ) {
+      // Wait for DOM to be fully ready
+      const timer = setTimeout(() => {
+        // Convert navigation highlights to target format
+        const targets = Object.keys(navigationHighlights).map((elementURI) => ({
+          sourceURI: elementURI,
+          start: 0, // We don't have start/end in navigation highlights, so highlight whole element
+          end: 0,
+          text: "",
+        }));
+
+        if (targets.length > 0) {
+          // Scroll to and highlight the first target
+          scrollToAndHighlightText(
+            targets[0],
+            targets,
+            false // Don't highlight source immediately since we're coming from link view
+          ).then(() => {
+            // Clear navigation highlights after showing them
+            setTimeout(() => {
+              dispatch(clearAllNavigationHighlights());
+            }, 3000); // Clear after 3 seconds (after animation completes)
+          });
+        }
+      }, 500); // Wait 500ms for DOM to stabilize
+
+      return () => clearTimeout(timer);
+    }
+  }, [navigationHighlights, documentElements, documentStatus, dispatch]);
 
   // Loading/Error states
   if (documentStatus === "loading" && documentElements.length === 0) {
