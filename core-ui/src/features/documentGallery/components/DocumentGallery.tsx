@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Pagination, Typography, Box } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchDocumentsByCollection,
@@ -8,6 +9,7 @@ import {
   selectSelectedCollectionId,
   selectAllDocumentCollections,
 } from "@/store/slice";
+import { usePagination } from "@/hooks/usePagination";
 import "../styles/CollectionGalleryStyles.css";
 
 interface DocumentGalleryProps {
@@ -15,6 +17,8 @@ interface DocumentGalleryProps {
   onDocumentSelect?: (documentId: number) => void;
   onBackToCollections?: () => void;
 }
+
+const ITEMS_PER_PAGE = 9; // 3 columns × 3 rows
 
 const DocumentGallery: React.FC<DocumentGalleryProps> = ({
   collectionId,
@@ -45,6 +49,23 @@ const DocumentGallery: React.FC<DocumentGalleryProps> = ({
       dispatch(fetchDocumentsByCollection(effectiveCollectionId));
     }
   }, [effectiveCollectionId, dispatch]);
+
+  // Sort documents by ID before pagination
+  const sortedDocuments = React.useMemo(() => {
+    return [...documents].sort((a, b) => a.id - b.id);
+  }, [documents]);
+
+  // Use pagination hook
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedDocuments,
+    startIndex,
+    handlePageChange,
+  } = usePagination({
+    items: sortedDocuments,
+    itemsPerPage: ITEMS_PER_PAGE,
+  });
 
   const handleDocumentClick = (documentId: number) => {
     if (onDocumentSelect) {
@@ -95,22 +116,48 @@ const DocumentGallery: React.FC<DocumentGalleryProps> = ({
           No documents found in this collection.
         </div>
       ) : (
-        <div className="collection-grid">
-          {documents.map((document) => (
-            <div
-              key={document.id}
-              className="collection-card"
-              onClick={() => handleDocumentClick(document.id)}
-              style={{ cursor: "pointer" }}
-            >
-              <div className="card-content">
-                <h2 className="collection-title">{document.title}</h2>
-                <p className="collection-description">{document.description}</p>
-                <div className="document-metadata"></div>
+        <>
+          <div className="collection-grid">
+            {paginatedDocuments.map((document) => (
+              <div
+                key={document.id}
+                className="collection-card"
+                onClick={() => handleDocumentClick(document.id)}
+                style={{ cursor: "pointer" }}
+              >
+                <div className="card-content">
+                  <h2 className="collection-title">{document.title}</h2>
+                  <p className="collection-description">
+                    {document.description}
+                  </p>
+                  <div className="document-metadata"></div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <Box className="pagination-container">
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+                siblingCount={1}
+                boundaryCount={1}
+              />
+              <Typography variant="caption" className="pagination-info">
+                Showing {startIndex + 1}-
+                {Math.min(startIndex + ITEMS_PER_PAGE, documents.length)} of{" "}
+                {documents.length} documents
+              </Typography>
+            </Box>
+          )}
+        </>
       )}
     </div>
   );
