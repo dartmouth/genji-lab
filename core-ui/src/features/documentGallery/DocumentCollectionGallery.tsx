@@ -15,7 +15,7 @@ interface DocumentCollectionGalleryProps {
   onCollectionSelect?: (collectionId: number) => void;
 }
 
-const ITEMS_PER_PAGE = 9; // 3 columns × 3 rows
+const ITEMS_PER_PAGE = 6; // 2 rows × 3 columns
 
 const DocumentCollectionGallery: React.FC<DocumentCollectionGalleryProps> = ({
   onCollectionSelect,

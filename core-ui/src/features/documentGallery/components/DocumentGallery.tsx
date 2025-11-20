@@ -18,7 +18,7 @@ interface DocumentGalleryProps {
   onBackToCollections?: () => void;
 }
 
-const ITEMS_PER_PAGE = 9; // 3 columns × 3 rows
+const ITEMS_PER_PAGE = 6; // 2 rows × 3 columns
 
 const DocumentGallery: React.FC<DocumentGalleryProps> = ({
   collectionId,
@@ -55,7 +55,7 @@ const DocumentGallery: React.FC<DocumentGalleryProps> = ({
     return [...documents].sort((a, b) => a.id - b.id);
   }, [documents]);
 
-  // Use pagination hook
+  // Use pagination hook with sorted documents
   const {
     currentPage,
     totalPages,

@@ -25,10 +25,22 @@ import {
   FormControlLabel,
   Box,
   Tooltip,
+  Chip,
+  IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Divider,
+  Button,
 } from "@mui/material";
 import {
   MenuBook as ReadingIcon,
   Comment as AnnotationIcon,
+  Close as CloseIcon,
+  Add as AddIcon,
+  Link as LinkIcon,
+  CompareArrows as CompareIcon,
 } from "@mui/icons-material";
 
 import { useLocation } from "react-router-dom";
@@ -155,8 +167,6 @@ export const DocumentContentView: React.FC = () => {
   const [selectedCollectionId, setSelectedCollectionId] = useState<number>(
     Number(collectionId)
   );
-  const [isManagementPanelCollapsed, setIsManagementPanelCollapsed] =
-    useState(true);
   const [viewMode, setViewMode] = useState<"reading" | "annotations">(
     "annotations"
   );
@@ -173,6 +183,9 @@ export const DocumentContentView: React.FC = () => {
   const [comparisonDocumentId, setComparisonDocumentId] = useState<
     number | null
   >(null);
+
+  // State for showing document selector
+  const [showDocumentSelector, setShowDocumentSelector] = useState(false);
 
   useEffect(() => {
     if (
@@ -300,7 +313,6 @@ export const DocumentContentView: React.FC = () => {
             `[data-document-id="${pendingScrollTarget.documentId}"]`
           );
           if (documentPanel) {
-            // Just scroll, don't highlight - Redux will handle highlighting
             const element = document.getElementById(
               pendingScrollTarget.targetInfo.sourceURI.replace("/", "")
             );
@@ -337,6 +349,13 @@ export const DocumentContentView: React.FC = () => {
 
   const handleComparisonDocumentChange = useCallback(
     async (newComparisonDocumentId: number | null) => {
+      console.log(
+        "handleComparisonDocumentChange called with:",
+        newComparisonDocumentId
+      );
+      console.log("Current viewedDocuments:", viewedDocuments);
+      console.log("Selected collection ID:", selectedCollectionId);
+
       if (newComparisonDocumentId === null) {
         setViewedDocuments((prev) => prev.slice(0, 1));
         setComparisonDocumentId(null);
@@ -347,16 +366,21 @@ export const DocumentContentView: React.FC = () => {
           selectedCollectionId
         );
 
-        setViewedDocuments([
+        const newDocumentsList = [
           primaryDocument,
           {
             id: newComparisonDocumentId,
             collectionId: selectedCollectionId,
             title: comparisonDocTitle,
           },
-        ]);
+        ];
 
+        console.log("Setting viewedDocuments to:", newDocumentsList);
+
+        // Add document to viewed documents
+        setViewedDocuments(newDocumentsList);
         setComparisonDocumentId(newComparisonDocumentId);
+        setShowDocumentSelector(false);
       }
     },
     [viewedDocuments, selectedCollectionId, getDocumentTitle]
@@ -398,17 +422,9 @@ export const DocumentContentView: React.FC = () => {
     navigate(`/collections/${collectionId}`);
   }, [navigate, collectionId]);
 
-  const handleCollectionChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const newCollectionId = Number(e.target.value);
-      setSelectedCollectionId(newCollectionId);
-    },
-    []
-  );
-
-  const toggleManagementPanel = useCallback(() => {
-    setIsManagementPanelCollapsed(!isManagementPanelCollapsed);
-  }, [isManagementPanelCollapsed]);
+  const handleCollectionChange = useCallback((newCollectionId: number) => {
+    setSelectedCollectionId(newCollectionId);
+  }, []);
 
   const handleViewModeChange = useCallback(
     (mode: "reading" | "annotations") => {
@@ -425,290 +441,301 @@ export const DocumentContentView: React.FC = () => {
 
   return (
     <div className="document-content-view">
-      <div className="document-view-header">
-        <div className="header-row">
-          <button onClick={handleBackToDocuments} className="back-button">
-            ← Back to Documents
-          </button>
-
-          <div className="view-controls">
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: { xs: 1, sm: 2 },
-                backgroundColor: "background.paper",
-                padding: { xs: 1, sm: 1.5 },
-                borderRadius: 2,
-                boxShadow: 1,
-                width: "fit-content",
-                minWidth: 0,
-              }}
-            >
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(_event, newMode) => {
-                  if (newMode !== null) {
-                    handleViewModeChange(newMode);
-                  }
-                }}
-                size="small"
-                sx={{
-                  "& .MuiToggleButton-root": {
-                    px: { xs: 1, sm: 2 },
-                    py: { xs: 0.5, sm: 1 },
-                    fontWeight: 500,
-                    textTransform: "none",
-                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                    border: "1px solid",
-                    borderColor: "divider",
-                    "&.Mui-selected": {
-                      backgroundColor: "primary.main",
-                      color: "primary.contrastText",
-                      "&:hover": {
-                        backgroundColor: "primary.dark",
-                      },
-                    },
-                    "&:hover": {
-                      backgroundColor: "action.hover",
-                    },
-                    "& .MuiSvgIcon-root": {
-                      fontSize: { xs: 16, sm: 18 },
-                      mr: { xs: 0, sm: 1 },
-                    },
-                    "& span:not(.MuiSvgIcon-root)": {
-                      display: { xs: "none", sm: "inline" },
-                    },
-                  },
-                }}
-              >
-                <ToggleButton value="reading" aria-label="reading mode">
-                  <ReadingIcon />
-                  <span>Reading</span>
-                </ToggleButton>
-                <ToggleButton value="annotations" aria-label="annotations mode">
-                  <AnnotationIcon />
-                  <span>Annotations</span>
-                </ToggleButton>
-              </ToggleButtonGroup>
-
-              <Tooltip title="Highlight linked text between documents">
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={showLinkedTextHighlights}
-                      onChange={(event) =>
-                        setShowLinkedTextHighlights(event.target.checked)
-                      }
-                      color="primary"
-                      size="small"
-                    />
-                  }
-                  label={
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        "& > span:first-of-type": {
-                          display: { xs: "none", sm: "inline" },
-                        },
-                      }}
-                    >
-                      <span>Show Links</span>
-                    </Box>
-                  }
-                  sx={{
-                    margin: 0,
-                    "& .MuiFormControlLabel-label": {
-                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                      fontWeight: 500,
-                    },
-                  }}
-                />
-              </Tooltip>
-            </Box>
-          </div>
-
-          <div
-            className={`document-comparison-panel ${
-              isManagementPanelCollapsed ? "collapsed" : ""
-            }`}
+      {/* New Streamlined Header */}
+      <Box
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1100,
+          backgroundColor: "background.paper",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          boxShadow: 1,
+        }}
+      >
+        {/* Main Toolbar Row */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            padding: 2,
+            flexWrap: "wrap",
+          }}
+        >
+          {/* Back Button */}
+          <Button
+            onClick={handleBackToDocuments}
+            startIcon={<span>←</span>}
+            variant="outlined"
+            size="small"
+            sx={{ flexShrink: 0 }}
           >
-            <div className="panel-header" onClick={toggleManagementPanel}>
-              <h3>Document Comparison</h3>
-              <button className="collapse-toggle" aria-label="Toggle panel">
-                {isManagementPanelCollapsed ? "▼" : "▲"}
-              </button>
-            </div>
-          </div>
+            Back to Documents
+          </Button>
 
-          <div className="help-icon-container">
-            <HighlightingHelpIcon />
-          </div>
-        </div>
+          <Divider orientation="vertical" flexItem />
 
-        {!isManagementPanelCollapsed && (
-          <div className="panel-content">
-            {viewedDocuments.length === 2 && (
-              <div className="document-linking-controls">
-                <button
-                  onClick={() => setIsLinkingModeActive(true)}
-                  className="link-documents-btn"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    width: "100%",
-                    padding: "8px 12px",
-                    backgroundColor: isLinkingModeActive
-                      ? "#1976d2"
-                      : "#e3f2fd",
-                    border: "1px solid #1976d2",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: 500,
-                    color: isLinkingModeActive ? "white" : "#1976d2",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <span className="icon">🔗</span>
-                  {isLinkingModeActive
-                    ? "Linking Mode Active"
-                    : "Link Documents"}
-                </button>
+          {/* View Mode Toggles */}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_event, newMode) => {
+              if (newMode !== null) {
+                handleViewModeChange(newMode);
+              }
+            }}
+            size="small"
+            sx={{ flexShrink: 0 }}
+          >
+            <ToggleButton value="reading">
+              <ReadingIcon sx={{ mr: 1 }} />
+              Reading
+            </ToggleButton>
+            <ToggleButton value="annotations">
+              <AnnotationIcon sx={{ mr: 1 }} />
+              Annotations
+            </ToggleButton>
+          </ToggleButtonGroup>
 
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#666",
-                    fontStyle: "italic",
-                    padding: "8px",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "4px",
-                    marginBottom: "12px",
-                  }}
-                >
-                  💡 Right-click on linked text to navigate between documents
-                </div>
-              </div>
-            )}
+          {/* Show Links Toggle */}
+          <Tooltip title="Highlight linked text between documents">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showLinkedTextHighlights}
+                  onChange={(event) =>
+                    setShowLinkedTextHighlights(event.target.checked)
+                  }
+                  color="primary"
+                  size="small"
+                />
+              }
+              label="Show Cross References"
+              sx={{ margin: 0, flexShrink: 0 }}
+            />
+          </Tooltip>
 
-            <div className="viewed-documents">
-              <h4>Currently Viewing:</h4>
-              <ul className="document-list">
-                {viewedDocuments.map((doc, index) => (
-                  <li key={doc.id} className="document-item">
-                    <span className="document-indicator">
-                      {index === 0 ? "📄" : "📋"}
-                    </span>
-                    <span className="document-title">{doc.title}</span>
+          <Divider orientation="vertical" flexItem />
+
+          {/* Document Chips - Always Visible */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <Tooltip title="Documents currently open for viewing">
+              <CompareIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
+            </Tooltip>
+
+            {viewedDocuments.map((doc, index) => (
+              <Chip
+                key={doc.id}
+                label={
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <span>{doc.title}</span>
                     {index === 0 && (
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: "#666",
-                          marginLeft: "6px",
-                        }}
-                      >
+                      <span style={{ fontSize: "10px", opacity: 0.7 }}>
                         (primary)
                       </span>
                     )}
-                    <button
-                      onClick={() => handleRemoveDocument(doc.id)}
-                      className="remove-document-btn"
-                      aria-label="Remove document"
-                      disabled={index === 0 && viewedDocuments.length === 1}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  </Box>
+                }
+                onDelete={
+                  index === 0 && viewedDocuments.length === 1
+                    ? undefined
+                    : () => handleRemoveDocument(doc.id)
+                }
+                deleteIcon={<CloseIcon />}
+                color={index === 0 ? "primary" : "default"}
+                variant={index === 0 ? "filled" : "outlined"}
+                sx={{
+                  maxWidth: "250px",
+                  "& .MuiChip-label": {
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  },
+                }}
+              />
+            ))}
 
+            {/* Add Document Button */}
             {viewedDocuments.length < 2 && (
-              <div className="add-document-controls">
-                <h4>Add Document for Comparison:</h4>
-
-                <div className="collection-selector">
-                  <label htmlFor="collection-select">Collection:</label>
-                  <select
-                    id="collection-select"
-                    value={selectedCollectionId}
-                    onChange={handleCollectionChange}
-                    className="collection-select"
-                  >
-                    {documentCollections.map((collection) => (
-                      <option key={collection.id} value={collection.id}>
-                        {collection.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="document-selector">
-                  <label htmlFor="document-select">Document:</label>
-                  <select
-                    id="document-select"
-                    onChange={(e) => {
-                      const selectedId = Number(e.target.value);
-                      if (selectedId) {
-                        handleAddComparisonDocument(selectedId);
-                      }
-                    }}
-                    value={comparisonDocumentId || ""}
-                    className="document-select"
-                    disabled={
-                      isLoadingDocuments ||
-                      availableInSelectedCollection.length === 0
-                    }
-                  >
-                    {isLoadingDocuments ? (
-                      <option value="">Loading...</option>
-                    ) : (
-                      <>
-                        <option value="">
-                          {availableInSelectedCollection.length === 0
-                            ? "No other documents available"
-                            : "Select a document"}
-                        </option>
-                        {availableInSelectedCollection.map((doc) => (
-                          <option key={doc.id} value={doc.id}>
-                            {doc.title || `Document ${doc.id}`}
-                          </option>
-                        ))}
-                      </>
-                    )}
-                  </select>
-                </div>
-              </div>
+              <Tooltip title="Add a document for side-by-side comparison">
+                <IconButton
+                  size="small"
+                  onClick={() => setShowDocumentSelector(!showDocumentSelector)}
+                  color={showDocumentSelector ? "primary" : "default"}
+                  sx={{
+                    border: "1px dashed",
+                    borderColor: "divider",
+                    flexShrink: 0,
+                  }}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Tooltip>
             )}
-          </div>
-        )}
 
-        {isLoadingDocuments && (
-          <div
-            style={{
-              position: "fixed",
-              top: "70px",
-              right: "20px",
-              zIndex: 1000,
-              backgroundColor: "#1976d2",
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              fontSize: "14px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            {/* Link Documents Button - Only when 2 docs */}
+            {viewedDocuments.length === 2 && (
+              <Tooltip title="Create links between passages in these documents">
+                <Button
+                  onClick={() => setIsLinkingModeActive(true)}
+                  variant={isLinkingModeActive ? "contained" : "outlined"}
+                  size="small"
+                  startIcon={<LinkIcon />}
+                  sx={{ flexShrink: 0 }}
+                >
+                  {isLinkingModeActive
+                    ? "Linking Active"
+                    : "Create Intertext Link"}
+                </Button>
+              </Tooltip>
+            )}
+          </Box>
+
+          {/* Help Icon */}
+          <Tooltip title="Learn about document comparison and annotation features">
+            <Box sx={{ flexShrink: 0 }}>
+              <HighlightingHelpIcon />
+            </Box>
+          </Tooltip>
+        </Box>
+
+        {/* Document Selector Dropdown - Conditional */}
+        {showDocumentSelector && viewedDocuments.length < 2 && (
+          <Box
+            sx={{
+              padding: 2,
+              paddingTop: 0,
+              borderTop: "1px solid",
+              borderColor: "divider",
+              backgroundColor: "grey.50",
+              display: "flex",
+              gap: 2,
+              alignItems: "center",
+              flexWrap: "wrap",
             }}
           >
-            Loading document...
-          </div>
-        )}
-      </div>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel>Collection</InputLabel>
+              <Select
+                value={selectedCollectionId}
+                onChange={(e) => handleCollectionChange(Number(e.target.value))}
+                label="Collection"
+              >
+                {documentCollections.map((collection) => (
+                  <MenuItem key={collection.id} value={collection.id}>
+                    {collection.title}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
+            <FormControl
+              size="small"
+              sx={{ minWidth: 300, flex: 1 }}
+              disabled={
+                isLoadingDocuments || availableInSelectedCollection.length === 0
+              }
+            >
+              <InputLabel>Document</InputLabel>
+              <Select
+                value={comparisonDocumentId || ""}
+                onChange={(e) => {
+                  const selectedId = Number(e.target.value);
+                  if (selectedId) {
+                    handleAddComparisonDocument(selectedId);
+                  }
+                }}
+                label="Document"
+              >
+                {isLoadingDocuments ? (
+                  <MenuItem value="">Loading...</MenuItem>
+                ) : (
+                  [
+                    <MenuItem key="placeholder" value="">
+                      {availableInSelectedCollection.length === 0
+                        ? "No other documents available"
+                        : "Select a document"}
+                    </MenuItem>,
+                    ...availableInSelectedCollection.map((doc) => (
+                      <MenuItem key={doc.id} value={doc.id}>
+                        {doc.title || `Document ${doc.id}`}
+                      </MenuItem>
+                    )),
+                  ]
+                )}
+              </Select>
+            </FormControl>
+
+            <Button
+              size="small"
+              onClick={() => setShowDocumentSelector(false)}
+              variant="text"
+            >
+              Cancel
+            </Button>
+          </Box>
+        )}
+
+        {/* Linking Mode Hint */}
+        {isLinkingModeActive && (
+          <Box
+            sx={{
+              padding: 1.5,
+              backgroundColor: "info.light",
+              color: "info.contrastText",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              fontSize: "0.875rem",
+            }}
+          >
+            <LinkIcon fontSize="small" />
+            <span>
+              💡 <strong>Linking Mode Active:</strong> Select text in one
+              document, then select text in the other document to create a link.
+              Right-click linked text to navigate.
+            </span>
+            <Button
+              size="small"
+              onClick={() => setIsLinkingModeActive(false)}
+              sx={{ marginLeft: "auto", color: "inherit" }}
+            >
+              Exit Linking Mode
+            </Button>
+          </Box>
+        )}
+      </Box>
+
+      {/* Loading Indicator */}
+      {isLoadingDocuments && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: "80px",
+            right: "20px",
+            zIndex: 1000,
+            backgroundColor: "primary.main",
+            color: "primary.contrastText",
+            padding: "8px 16px",
+            borderRadius: 1,
+            fontSize: "0.875rem",
+            boxShadow: 2,
+          }}
+        >
+          Loading document...
+        </Box>
+      )}
+
+      {/* Document Content */}
       {viewedDocuments.length > 0 ? (
         <DocumentComparisonContainer
           documents={viewedDocuments}
@@ -720,11 +747,20 @@ export const DocumentContentView: React.FC = () => {
           onToggleAnnotationsPanel={handleToggleAnnotationsPanel}
         />
       ) : (
-        <div className="no-documents-message">
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "calc(100vh - 150px)",
+            color: "text.secondary",
+          }}
+        >
           No documents selected for viewing
-        </div>
+        </Box>
       )}
 
+      {/* Linking Overlay */}
       {isLinkingModeActive && (
         <DocumentLinkingOverlay
           documents={viewedDocuments}
