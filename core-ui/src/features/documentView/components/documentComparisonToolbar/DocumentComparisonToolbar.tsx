@@ -203,9 +203,15 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
             </Tooltip>
           )}
 
-          {/* Link Documents Button - Only when 2 docs */}
-          {viewedDocuments.length === 2 && (
-            <Tooltip title="Create links between passages in these documents">
+          {/* Link Documents Button - Show in both single and multi-document views */}
+          {viewedDocuments.length >= 1 && (
+            <Tooltip
+              title={
+                viewedDocuments.length === 1
+                  ? "Create links between passages in this document or start a partial link"
+                  : "Create links between passages in these documents"
+              }
+            >
               <Button
                 onClick={() => setIsLinkingModeActive(true)}
                 variant={isLinkingModeActive ? "contained" : "outlined"}
@@ -319,8 +325,9 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
         >
           <LinkIcon fontSize="small" />
           <span>
-            💡 <strong>Linking Mode Active:</strong> Select text in one
-            document, then select text in the other document to create a link.
+            💡 <strong>Linking Mode Active:</strong> Select text to create a
+            link. You can link text within the same document, between documents,
+            or save a partial link with just one selection to complete later.
             Right-click linked text to navigate.
           </span>
           <Button

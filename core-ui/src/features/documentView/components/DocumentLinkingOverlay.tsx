@@ -10,6 +10,7 @@ import {
   Link as LinkIcon,
   Close as CloseIcon,
   Check as CheckIcon,
+  Add as AddIcon,
 } from "@mui/icons-material";
 
 interface ElementSelection {
@@ -84,12 +85,10 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     range: Range
   ): MultiElementSelection | null => {
     const selectedText = range.toString().trim();
-    //  console.log("=== analyzeMultiElementSelection called ===", selectedText.substring(0, 30));
     if (selectedText.length === 0) return null;
 
     // Find all document elements that intersect with the selection
     const elementSelections: ElementSelection[] = [];
-    // console.log("Starting elementSelections:", elementSelections.length);
 
     // Find all DocumentElement containers that might be involved
     const documentElements = new Set<HTMLElement>();
@@ -121,19 +120,18 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
       textNode = walker.nextNode() as Text;
     }
-    // console.log("elements selected: ", documentElements.size)
+
     if (documentElements.size === 0) {
       const allDocElements = document.querySelectorAll(
         '[id*="DocumentElements"]'
       );
-      const seenIds = new Set<string>(); // ← Track by ID instead
+      const seenIds = new Set<string>();
 
       allDocElements.forEach((element) => {
         try {
           if (range.intersectsNode(element)) {
             const elementId = (element as HTMLElement).id;
             if (!seenIds.has(elementId)) {
-              // ← Check if we've seen this ID
               seenIds.add(elementId);
               documentElements.add(element as HTMLElement);
             }
@@ -147,70 +145,39 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         }
       });
     }
-    // If we still haven't found any elements, try a broader search
-    //   if (documentElements.size === 0) {
-    //     // Get all DocumentElements in the document and check intersection
-    //     const allDocElements = document.querySelectorAll(
-    //       '[id*="DocumentElements"]'
-    //     );
-    // console.log("querySelectorAll found:", allDocElements.length, "total elements");
-    //     allDocElements.forEach((element) => {
-    //       try {
-    //         if (range.intersectsNode(element)) {
-    //                   console.log("Adding element:", element.id, "Current set size:", documentElements.size);
-    //           documentElements.add(element as HTMLElement);
-    //                   console.log("After add, set size:", documentElements.size);
-    //         }
-    //       } catch (error) {
-    //         console.error(
-    //           error,
-    //           "Error checking intersection for element:",
-    //           element.id
-    //         );
-    //       }
-    //     });
-    //   }
-    // console.log("elements selected after global: ", documentElements.size)
+
     if (documentElements.size === 0) {
       return null;
     }
 
     documentElements.forEach((element) => {
       const elementId = element.id;
-      // console.log('Processing element: ', element.id)
-      // Extract numeric ID safely
       const numericId = extractNumericId(elementId);
       if (!numericId) {
         console.warn("Skipping element with invalid ID:", elementId);
         return;
       }
 
-      // Get the element's text content
       const elementText = element.textContent || "";
 
       if (elementText.length === 0) {
         return;
       }
 
-      // Find where the selected text intersects with this element's text
       let intersectionText = "";
       let elementStart = -1;
       let elementEnd = -1;
 
       try {
-        // Create intersection range for this specific element
         const elementRange = window.document.createRange();
         elementRange.selectNodeContents(element);
 
-        // Check if there's actually an intersection
         if (!range.intersectsNode(element)) {
           return;
         }
 
-        // Calculate the intersection between the selection and this element
         const intersectionRange = window.document.createRange();
 
-        // Set intersection start
         if (
           range.compareBoundaryPoints(Range.START_TO_START, elementRange) >= 0
         ) {
@@ -222,7 +189,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           );
         }
 
-        // Set intersection end
         if (range.compareBoundaryPoints(Range.END_TO_END, elementRange) <= 0) {
           intersectionRange.setEnd(range.endContainer, range.endOffset);
         } else {
@@ -235,12 +201,10 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         intersectionText = intersectionRange.toString().trim();
 
         if (intersectionText.length > 0) {
-          // Find the position of this text within the element
           elementStart = elementText.indexOf(intersectionText);
           if (elementStart !== -1) {
             elementEnd = elementStart + intersectionText.length;
           } else {
-            // Enhanced fallback with multiple search strategies
             const searchTexts = [
               intersectionText.trim(),
               intersectionText.length > 50
@@ -249,7 +213,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
               intersectionText.length > 20
                 ? intersectionText.substring(0, 20)
                 : intersectionText,
-              // Try the last part of the text too
               intersectionText.length > 50
                 ? intersectionText.substring(intersectionText.length - 50)
                 : null,
@@ -260,7 +223,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
               elementStart = elementText.indexOf(searchText);
               if (elementStart !== -1) {
-                // Use the length of the original intersection text, not the search text
                 elementEnd =
                   elementStart +
                   Math.min(
@@ -275,15 +237,12 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
               }
             }
 
-            // If still not found, try a character-by-character approach for Unicode text
             if (elementStart === -1 && intersectionText.length > 10) {
-              // For non-ASCII text, try finding any substantial substring
               for (let i = 0; i < intersectionText.length - 10; i += 5) {
                 const substring = intersectionText.substring(i, i + 10);
                 const foundIndex = elementText.indexOf(substring);
                 if (foundIndex !== -1) {
                   elementStart = foundIndex;
-                  // Extend the range to include more context
                   elementEnd = Math.min(
                     foundIndex + intersectionText.length,
                     elementText.length
@@ -305,7 +264,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           elementId
         );
 
-        // Ultimate fallback: try simple text search
         const searchOptions = [
           selectedText,
           selectedText.trim(),
@@ -332,7 +290,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       ) {
         elementSelections.push({
           documentElementId: parseInt(numericId),
-          sourceURI: `DocumentElements/${numericId}`, // Consistent format with leading slash
+          sourceURI: `DocumentElements/${numericId}`,
           text: intersectionText,
           start: elementStart,
           end: elementEnd,
@@ -346,7 +304,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       return null;
     }
 
-    // Find which document this belongs to - use the first element found
     const firstElement = Array.from(documentElements)[0];
     if (!firstElement) return null;
 
@@ -366,8 +323,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       console.warn("Document not found in current view:", documentId);
       return null;
     }
-    // console.log("Final elementSelections count:", elementSelections.length);
-    // console.log("elementSelections:", elementSelections.map(e => ({id: e.documentElementId, text: e.text.substring(0, 20)})));
 
     return {
       documentId: foundDocument.id,
@@ -379,7 +334,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   // Listen for text selections
   useEffect(() => {
     const handleSelection = (e: MouseEvent) => {
-      // Prevent event from being handled by other components
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -394,13 +348,11 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
       if (selectedText.length === 0) return;
 
-      // Prevent double processing of the same text
       if (selectedText === lastProcessedText.current) {
         return;
       }
       lastProcessedText.current = selectedText;
 
-      // Analyze the selection for multiple elements
       const multiElementSelection = analyzeMultiElementSelection(range);
 
       if (!multiElementSelection) {
@@ -411,33 +363,24 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         setFirstSelection(multiElementSelection);
         setCurrentStep("second");
       } else if (currentStep === "second") {
-        // Ensure we're not linking within the same document
-        if (
-          firstSelection &&
-          multiElementSelection.documentId === firstSelection.documentId
-        ) {
-          return;
-        }
+        // REMOVED: Check preventing same-document linking
+        // Now allows linking within the same document
         setSecondSelection(multiElementSelection);
         setCurrentStep("confirm");
       }
 
-      // Clear the selection
       selection.removeAllRanges();
 
-      // Reset the duplicate prevention after a short delay
       setTimeout(() => {
         lastProcessedText.current = "";
       }, 500);
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      // Prevent HighlightedText from handling this
       e.stopPropagation();
       e.stopImmediatePropagation();
     };
 
-    // Use capture phase to intercept before HighlightedText
     document.addEventListener("mousedown", handleMouseDown, true);
     document.addEventListener("mouseup", handleSelection, true);
 
@@ -449,27 +392,37 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   }, [currentStep, firstSelection, documents]);
 
   const handleSaveLink = () => {
-    if (!user || !isAuthenticated || !firstSelection || !secondSelection) {
+    if (!user || !isAuthenticated || !firstSelection) {
       return;
     }
-    // Create segments for all elements in both selections
-    const segments = [
-      // First selection segments
-      firstSelection.elements.map((element) => ({
-        sourceURI: element.sourceURI,
-        start: element.start,
-        end: element.end,
-        text: element.text,
-      })),
-      // Second selection segments
-      secondSelection.elements.map((element) => ({
-        sourceURI: element.sourceURI,
-        start: element.start,
-        end: element.end,
-        text: element.text,
-      })),
-    ];
-    // console.log("segments are ", segments, "length of segments is ", segments.length, "first elem has ", segments[0].length, "second elem has ", segments[1].length)
+
+    // Support saving with just one selection or two selections
+    const segments = secondSelection
+      ? [
+          // First selection segments
+          firstSelection.elements.map((element) => ({
+            sourceURI: element.sourceURI,
+            start: element.start,
+            end: element.end,
+            text: element.text,
+          })),
+          // Second selection segments
+          secondSelection.elements.map((element) => ({
+            sourceURI: element.sourceURI,
+            start: element.start,
+            end: element.end,
+            text: element.text,
+          })),
+        ]
+      : [
+          // Only first selection
+          firstSelection.elements.map((element) => ({
+            sourceURI: element.sourceURI,
+            start: element.start,
+            end: element.end,
+            text: element.text,
+          })),
+        ];
 
     // Use the first document's collection and element for the main annotation body
     const annoBody = makeTextAnnotationBody(
@@ -501,6 +454,42 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     lastProcessedText.current = "";
   };
 
+  // NEW: Handle saving with just first selection
+  const handleSavePartialLink = () => {
+    if (!user || !isAuthenticated || !firstSelection) {
+      return;
+    }
+
+    const segments = [
+      firstSelection.elements.map((element) => ({
+        sourceURI: element.sourceURI,
+        start: element.start,
+        end: element.end,
+        text: element.text,
+      })),
+    ];
+
+    const annoBody = makeTextAnnotationBody(
+      documents[0].collectionId,
+      firstSelection.documentId,
+      firstSelection.elements[0].documentElementId,
+      user.id,
+      "linking",
+      description || "Partial link (to be completed)",
+      segments
+    );
+    const classroomId =
+      activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
+
+    dispatch(
+      linkingAnnotations.thunks.saveAnnotation({
+        annotation: annoBody,
+        classroomId: classroomId,
+      })
+    );
+    onClose();
+  };
+
   const getDocumentTitle = (docId: number) => {
     return documents.find((d) => d.id === docId)?.title || `Document ${docId}`;
   };
@@ -508,9 +497,11 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   const getStepInstruction = () => {
     switch (currentStep) {
       case "first":
-        return "Select text in the first document";
+        return "Select text to start a link";
       case "second":
-        return "Select corresponding text in the second document";
+        return documents.length > 1
+          ? "Select corresponding text (same or different document)"
+          : "Select another text snippet to link";
       case "confirm":
         return "Review your selections and save the link";
       default:
@@ -518,7 +509,6 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     }
   };
 
-  // Helper to get a preview of multi-element selection
   const getSelectionPreview = (selection: MultiElementSelection) => {
     return (
       selection.fullText.substring(0, 100) +
@@ -528,7 +518,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
 
   return (
     <>
-      {/* Document highlighting overlay - shows which areas can be selected */}
+      {/* Document highlighting overlay */}
       <div className="document-linking-overlay" />
 
       {/* Floating control panel */}
@@ -612,15 +602,17 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
           </div>
         )}
 
-        {/* Same document warning */}
+        {/* Info message for second step */}
         {currentStep === "second" && (
-          <div className="document-linking-panel__warning">
-            Select text from the other document to create a link
+          <div className="document-linking-panel__info">
+            💡 You can select text from{" "}
+            {documents.length > 1 ? "any document" : "the same document"} or
+            save this as a partial link
           </div>
         )}
 
-        {/* Description input for confirmation step */}
-        {currentStep === "confirm" && (
+        {/* Description input for confirmation step or second step (for partial saves) */}
+        {(currentStep === "confirm" || currentStep === "second") && (
           <div className="document-linking-panel__description">
             <label className="document-linking-panel__description-label">
               Description (optional):
@@ -643,6 +635,18 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
             >
               <CheckIcon sx={{ fontSize: "16px" }} />
               Save Link
+            </button>
+          )}
+
+          {/* NEW: Partial save button */}
+          {currentStep === "second" && isAuthenticated && firstSelection && (
+            <button
+              onClick={handleSavePartialLink}
+              className="document-linking-panel__save-button"
+              style={{ backgroundColor: "#16A085" }}
+            >
+              <AddIcon sx={{ fontSize: "16px" }} />
+              Save as Partial Link
             </button>
           )}
 
