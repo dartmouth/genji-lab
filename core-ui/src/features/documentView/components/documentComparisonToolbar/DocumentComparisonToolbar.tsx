@@ -12,6 +12,8 @@ import {
   Select,
   Switch,
   Tooltip,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -80,6 +82,12 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
   handleCollectionChange,
   handleAddComparisonDocument,
 }) => {
+  const theme = useTheme();
+  // Responsive breakpoints
+  const isExtraSmall = useMediaQuery(theme.breakpoints.down("sm")); // < 600px
+  const isSmall = useMediaQuery(theme.breakpoints.down("md")); // < 900px
+  const isMedium = useMediaQuery(theme.breakpoints.down("lg")); // < 1200px
+
   return (
     <Box
       className="document-viewer-header"
@@ -101,54 +109,73 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
           gap: 2,
           padding: 2,
           flexWrap: "wrap",
+          rowGap: 1.5, // Gap between rows when wrapped
         }}
       >
-        <Button
-          onClick={handleBackToDocuments}
-          startIcon={<span>←</span>}
-          variant="outlined"
-          size="small"
-          sx={{ flexShrink: 0 }}
+        {/* Navigation Group - always stays together */}
+        <Box
+          sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}
         >
-          Back to Documents
-        </Button>
+          <Tooltip title="Back to Documents">
+            <Button
+              onClick={handleBackToDocuments}
+              startIcon={<span>←</span>}
+              variant="outlined"
+              size="small"
+              sx={{ minWidth: isExtraSmall ? "40px" : "auto" }}
+            >
+              {!isExtraSmall && "Back to Documents"}
+            </Button>
+          </Tooltip>
 
-        <Divider orientation="vertical" flexItem />
+          {!isExtraSmall && <Divider orientation="vertical" flexItem />}
+        </Box>
 
-        {/* View Mode Toggle */}
-        <ViewToggleButton
-          viewModeChange={handleViewModeChange}
-          viewMode={viewMode}
-        />
-
-        {/* Show Links Toggle */}
-        <Tooltip title="Highlight linked text between documents">
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showLinkedTextHighlights}
-                onChange={(event) =>
-                  setShowLinkedTextHighlights(event.target.checked)
-                }
-                color="primary"
-                size="small"
-              />
-            }
-            label="Show Intertext Links"
-            sx={{ margin: 0, flexShrink: 0 }}
+        {/* View Controls Group - stays together */}
+        <Box
+          sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}
+        >
+          {/* View Mode Toggle */}
+          <ViewToggleButton
+            viewModeChange={handleViewModeChange}
+            viewMode={viewMode}
           />
-        </Tooltip>
 
-        <Divider orientation="vertical" flexItem />
+          {/* Show Links Toggle */}
+          <Tooltip title="Highlight linked text between documents">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showLinkedTextHighlights}
+                  onChange={(event) =>
+                    setShowLinkedTextHighlights(event.target.checked)
+                  }
+                  color="primary"
+                  size="small"
+                />
+              }
+              label={
+                isExtraSmall
+                  ? "Links"
+                  : isSmall
+                  ? "Show Links"
+                  : "Show Intertext Links"
+              }
+              sx={{ margin: 0 }}
+            />
+          </Tooltip>
 
-        {/* Document Chips - Always Visible */}
+          {!isExtraSmall && <Divider orientation="vertical" flexItem />}
+        </Box>
+
+        {/* Document Management Group - wraps as a unit */}
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
             gap: 1,
             flex: 1,
-            minWidth: 0,
+            minWidth: isSmall ? "100%" : "300px", // Force wrap on small screens
           }}
         >
           <Tooltip title="Documents currently open for viewing">
@@ -161,7 +188,7 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
               label={
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <span>{doc.title}</span>
-                  {index === 0 && (
+                  {index === 0 && !isSmall && (
                     <span style={{ fontSize: "10px", opacity: 0.7 }}>
                       (primary)
                     </span>
@@ -175,7 +202,7 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
               color={index === 0 ? "primary" : "default"}
               variant={index === 0 ? "filled" : "outlined"}
               sx={{
-                maxWidth: "250px",
+                maxWidth: isExtraSmall ? "150px" : isSmall ? "200px" : "250px",
                 "& .MuiChip-label": {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -212,22 +239,42 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
                   : "Create links between passages in these documents"
               }
             >
-              <Button
-                onClick={() => setIsLinkingModeActive(true)}
-                variant={isLinkingModeActive ? "contained" : "outlined"}
-                size="small"
-                startIcon={<LinkIcon />}
-                sx={{ flexShrink: 0 }}
-              >
-                {isLinkingModeActive
-                  ? "Linking Active"
-                  : "Create Intertext Link"}
-              </Button>
+              {isSmall ? (
+                // Icon-only button for small screens
+                <IconButton
+                  onClick={() => setIsLinkingModeActive(true)}
+                  color={isLinkingModeActive ? "primary" : "default"}
+                  size="small"
+                  sx={{
+                    flexShrink: 0,
+                    ...(isLinkingModeActive && {
+                      backgroundColor: "primary.main",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "primary.dark",
+                      },
+                    }),
+                  }}
+                >
+                  <LinkIcon />
+                </IconButton>
+              ) : (
+                // Full button for larger screens
+                <Button
+                  onClick={() => setIsLinkingModeActive(true)}
+                  variant={isLinkingModeActive ? "contained" : "outlined"}
+                  size="small"
+                  startIcon={<LinkIcon />}
+                  sx={{ flexShrink: 0 }}
+                >
+                  {isMedium ? "Link" : "Create Intertext Link"}
+                </Button>
+              )}
             </Tooltip>
           )}
         </Box>
 
-        {/* Help Icon */}
+        {/* Help Icon - stays at end */}
         <Tooltip title="Learn about document comparison and annotation features">
           <Box sx={{ flexShrink: 0 }}>
             <HighlightingHelpIcon />
@@ -250,7 +297,13 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
             flexWrap: "wrap",
           }}
         >
-          <FormControl size="small" sx={{ minWidth: 200 }}>
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: isExtraSmall ? 120 : 200,
+              maxWidth: isSmall ? 180 : 250,
+            }}
+          >
             <InputLabel>Collection</InputLabel>
             <Select
               value={selectedCollectionId}
@@ -267,7 +320,11 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
 
           <FormControl
             size="small"
-            sx={{ minWidth: 300, flex: 1 }}
+            sx={{
+              minWidth: isExtraSmall ? 150 : isSmall ? 200 : 300,
+              flex: isExtraSmall ? "1 1 100%" : 1,
+              maxWidth: isSmall ? "100%" : 400,
+            }}
             disabled={isLoadingDocuments || availableDocuments.length === 0}
           >
             <InputLabel>Document</InputLabel>
@@ -304,6 +361,7 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
             size="small"
             onClick={() => setShowDocumentSelector(false)}
             variant="text"
+            sx={{ flexShrink: 0 }}
           >
             Cancel
           </Button>
@@ -321,21 +379,35 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
             alignItems: "center",
             gap: 1,
             fontSize: "0.875rem",
+            flexWrap: isExtraSmall ? "wrap" : "nowrap",
           }}
         >
           <LinkIcon fontSize="small" />
           <span>
-            💡 <strong>Linking Mode Active:</strong> Select text to create a
-            link. You can link text within the same document, between documents,
-            or save a partial link with just one selection to complete later.
-            Right-click linked text to navigate.
+            {isExtraSmall ? (
+              <>
+                💡 <strong>Linking Mode:</strong> Select text to create links
+              </>
+            ) : isSmall ? (
+              <>
+                💡 <strong>Linking Mode:</strong> Select text to link passages.
+                Save with one or two selections.
+              </>
+            ) : (
+              <>
+                💡 <strong>Linking Mode Active:</strong> Select text to create a
+                link. You can link text within the same document, between
+                documents, or save a partial link with just one selection to
+                complete later. Right-click linked text to navigate.
+              </>
+            )}
           </span>
           <Button
             size="small"
             onClick={() => setIsLinkingModeActive(false)}
-            sx={{ marginLeft: "auto", color: "inherit" }}
+            sx={{ marginLeft: "auto", color: "inherit", flexShrink: 0 }}
           >
-            Exit Linking Mode
+            {isExtraSmall ? "Exit" : "Exit Linking Mode"}
           </Button>
         </Box>
       )}
