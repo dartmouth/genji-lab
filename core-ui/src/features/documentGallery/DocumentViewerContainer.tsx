@@ -1,6 +1,6 @@
 // src/features/documentGallery/DocumentViewerContainer.tsx
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import {
   setSelectedCollectionId as setReduxSelectedCollectionId,
@@ -11,39 +11,14 @@ import {
   selectAllDocumentCollections,
   setHoveredHighlights,
 } from "@store";
-import HighlightingHelpIcon from "@/features/documentView/components/highlightedContent/HighlightingHelpIcon";
 import DocumentCollectionGallery from "@documentGallery/DocumentCollectionGallery";
 import DocumentGallery from "@documentGallery/components/DocumentGallery";
 import { DocumentComparisonContainer } from "@documentView";
 import DocumentLinkingOverlay from "@/features/documentView/components/DocumentLinkingOverlay";
+import DocumentComparisonToolbar from "@/features/documentView/components/documentComparisonToolbar/DocumentComparisonToolbar";
 import RouterSwitchBoard from "@/RouterSwitchBoard";
 import "./styles/DocumentViewerStyles.css";
-import {
-  ToggleButton,
-  ToggleButtonGroup,
-  Switch,
-  FormControlLabel,
-  Box,
-  Tooltip,
-  Chip,
-  IconButton,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Divider,
-  Button,
-} from "@mui/material";
-import {
-  MenuBook as ReadingIcon,
-  Comment as AnnotationIcon,
-  Close as CloseIcon,
-  Add as AddIcon,
-  Link as LinkIcon,
-  CompareArrows as CompareIcon,
-} from "@mui/icons-material";
-
-import { useLocation } from "react-router-dom";
+import { Box } from "@mui/material";
 
 const DocumentViewerContainer: React.FC = () => {
   return <RouterSwitchBoard />;
@@ -105,6 +80,7 @@ export const DocumentContentView: React.FC = () => {
   const dispatch = useAppDispatch();
   const location = useLocation();
 
+  // Use effect to handle URL hash changes for highlighting
   useEffect(() => {
     const getAnnotationIdFromHash = (): string | null => {
       const hash = location.hash;
@@ -187,6 +163,7 @@ export const DocumentContentView: React.FC = () => {
   // State for showing document selector
   const [showDocumentSelector, setShowDocumentSelector] = useState(false);
 
+  // useEffect to load documents when selectedCollectionId changes
   useEffect(() => {
     if (
       selectedCollectionId &&
@@ -221,6 +198,7 @@ export const DocumentContentView: React.FC = () => {
     dispatch(fetchDocumentCollections({ includeUsers: false }));
   }, [dispatch]);
 
+  // useEffect to load documents for the current collectionId from URL
   useEffect(() => {
     if (collectionId) {
       setIsLoadingDocuments(true);
@@ -263,45 +241,48 @@ export const DocumentContentView: React.FC = () => {
   );
 
   useEffect(() => {
-    if (documentId && collectionId) {
-      const docId = Number(documentId);
-      const colId = Number(collectionId);
-
-      let initialTitle = `Document ${docId}`;
-
-      const docInCache = documentsByCollection[colId]?.find(
-        (d) => d.id === docId
-      );
-      if (docInCache) {
-        initialTitle = docInCache.title;
-      } else {
-        const docInRedux = documents.find((d) => d.id === docId);
-        if (docInRedux) {
-          initialTitle = docInRedux.title;
-        }
-      }
-
-      setViewedDocuments([
-        {
-          id: docId,
-          collectionId: colId,
-          title: initialTitle,
-        },
-      ]);
-
-      setComparisonDocumentId(null);
+    if (!documentId && !collectionId) {
+      return;
     }
+    const docId = Number(documentId);
+    const colId = Number(collectionId);
+
+    let initialTitle = `Document ${docId}`;
+
+    const docInCache = documentsByCollection[colId]?.find(
+      (d) => d.id === docId
+    );
+    if (docInCache) {
+      initialTitle = docInCache.title;
+    } else {
+      const docInRedux = documents.find((d) => d.id === docId);
+      if (docInRedux) {
+        initialTitle = docInRedux.title;
+      }
+    }
+
+    setViewedDocuments([
+      {
+        id: docId,
+        collectionId: colId,
+        title: initialTitle,
+      },
+    ]);
+
+    setComparisonDocumentId(null);
   }, [documentId, collectionId, documentsByCollection, documents]);
 
   useEffect(() => {
-    if (viewedDocuments.length === 2) {
-      const comparisonDoc = viewedDocuments[1];
-      setComparisonDocumentId(comparisonDoc.id);
-    } else if (viewedDocuments.length === 1) {
-      setComparisonDocumentId(null);
+    switch (viewedDocuments.length) {
+      case 2:
+        setComparisonDocumentId(viewedDocuments[1].id);
+        break;
+      default:
+        setComparisonDocumentId(null);
     }
   }, [viewedDocuments]);
 
+  // useEffect to handle scrolling to pending targets
   useEffect(() => {
     if (
       pendingScrollTarget &&
@@ -349,13 +330,6 @@ export const DocumentContentView: React.FC = () => {
 
   const handleComparisonDocumentChange = useCallback(
     async (newComparisonDocumentId: number | null) => {
-      console.log(
-        "handleComparisonDocumentChange called with:",
-        newComparisonDocumentId
-      );
-      console.log("Current viewedDocuments:", viewedDocuments);
-      console.log("Selected collection ID:", selectedCollectionId);
-
       if (newComparisonDocumentId === null) {
         setViewedDocuments((prev) => prev.slice(0, 1));
         setComparisonDocumentId(null);
@@ -374,8 +348,6 @@ export const DocumentContentView: React.FC = () => {
             title: comparisonDocTitle,
           },
         ];
-
-        console.log("Setting viewedDocuments to:", newDocumentsList);
 
         // Add document to viewed documents
         setViewedDocuments(newDocumentsList);
@@ -396,7 +368,7 @@ export const DocumentContentView: React.FC = () => {
   const handleRemoveDocument = useCallback(
     (docId: number) => {
       setViewedDocuments((prev) => prev.filter((doc) => doc.id !== docId));
-
+      // Comment to explain why we clear pending scroll target
       if (pendingScrollTarget && pendingScrollTarget.documentId === docId) {
         setPendingScrollTarget(null);
       }
@@ -435,285 +407,37 @@ export const DocumentContentView: React.FC = () => {
 
   const availableInSelectedCollection = (
     documentsByCollection[selectedCollectionId] || []
-  ).filter(
-    (doc) => !viewedDocuments.some((viewedDoc) => viewedDoc.id === doc.id)
-  );
+  )
+    .filter(
+      (doc) => !viewedDocuments.some((viewedDoc) => viewedDoc.id === doc.id)
+    )
+    .sort((a, b) => a.id - b.id);
+
+  console.log("View Mode DocumentViewerContainer", viewMode);
 
   return (
     <div className="document-content-view">
-      {/* New Streamlined Header */}
-      <Box
-        sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 1100,
-          backgroundColor: "background.paper",
-          borderBottom: "1px solid",
-          borderColor: "divider",
-          boxShadow: 1,
-        }}
-      >
-        {/* Main Toolbar Row */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            padding: 2,
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Back Button */}
-          <Button
-            onClick={handleBackToDocuments}
-            startIcon={<span>←</span>}
-            variant="outlined"
-            size="small"
-            sx={{ flexShrink: 0 }}
-          >
-            Back to Documents
-          </Button>
-
-          <Divider orientation="vertical" flexItem />
-
-          {/* View Mode Toggles */}
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={(_event, newMode) => {
-              if (newMode !== null) {
-                handleViewModeChange(newMode);
-              }
-            }}
-            size="small"
-            sx={{ flexShrink: 0 }}
-          >
-            <ToggleButton value="reading">
-              <ReadingIcon sx={{ mr: 1 }} />
-              Reading
-            </ToggleButton>
-            <ToggleButton value="annotations">
-              <AnnotationIcon sx={{ mr: 1 }} />
-              Annotations
-            </ToggleButton>
-          </ToggleButtonGroup>
-
-          {/* Show Links Toggle */}
-          <Tooltip title="Highlight linked text between documents">
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showLinkedTextHighlights}
-                  onChange={(event) =>
-                    setShowLinkedTextHighlights(event.target.checked)
-                  }
-                  color="primary"
-                  size="small"
-                />
-              }
-              label="Show Cross References"
-              sx={{ margin: 0, flexShrink: 0 }}
-            />
-          </Tooltip>
-
-          <Divider orientation="vertical" flexItem />
-
-          {/* Document Chips - Always Visible */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              flex: 1,
-              minWidth: 0,
-            }}
-          >
-            <Tooltip title="Documents currently open for viewing">
-              <CompareIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
-            </Tooltip>
-
-            {viewedDocuments.map((doc, index) => (
-              <Chip
-                key={doc.id}
-                label={
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <span>{doc.title}</span>
-                    {index === 0 && (
-                      <span style={{ fontSize: "10px", opacity: 0.7 }}>
-                        (primary)
-                      </span>
-                    )}
-                  </Box>
-                }
-                onDelete={
-                  index === 0 && viewedDocuments.length === 1
-                    ? undefined
-                    : () => handleRemoveDocument(doc.id)
-                }
-                deleteIcon={<CloseIcon />}
-                color={index === 0 ? "primary" : "default"}
-                variant={index === 0 ? "filled" : "outlined"}
-                sx={{
-                  maxWidth: "250px",
-                  "& .MuiChip-label": {
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  },
-                }}
-              />
-            ))}
-
-            {/* Add Document Button */}
-            {viewedDocuments.length < 2 && (
-              <Tooltip title="Add a document for side-by-side comparison">
-                <IconButton
-                  size="small"
-                  onClick={() => setShowDocumentSelector(!showDocumentSelector)}
-                  color={showDocumentSelector ? "primary" : "default"}
-                  sx={{
-                    border: "1px dashed",
-                    borderColor: "divider",
-                    flexShrink: 0,
-                  }}
-                >
-                  <AddIcon />
-                </IconButton>
-              </Tooltip>
-            )}
-
-            {/* Link Documents Button - Only when 2 docs */}
-            {viewedDocuments.length === 2 && (
-              <Tooltip title="Create links between passages in these documents">
-                <Button
-                  onClick={() => setIsLinkingModeActive(true)}
-                  variant={isLinkingModeActive ? "contained" : "outlined"}
-                  size="small"
-                  startIcon={<LinkIcon />}
-                  sx={{ flexShrink: 0 }}
-                >
-                  {isLinkingModeActive
-                    ? "Linking Active"
-                    : "Create Intertext Link"}
-                </Button>
-              </Tooltip>
-            )}
-          </Box>
-
-          {/* Help Icon */}
-          <Tooltip title="Learn about document comparison and annotation features">
-            <Box sx={{ flexShrink: 0 }}>
-              <HighlightingHelpIcon />
-            </Box>
-          </Tooltip>
-        </Box>
-
-        {/* Document Selector Dropdown - Conditional */}
-        {showDocumentSelector && viewedDocuments.length < 2 && (
-          <Box
-            sx={{
-              padding: 2,
-              paddingTop: 0,
-              borderTop: "1px solid",
-              borderColor: "divider",
-              backgroundColor: "grey.50",
-              display: "flex",
-              gap: 2,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Collection</InputLabel>
-              <Select
-                value={selectedCollectionId}
-                onChange={(e) => handleCollectionChange(Number(e.target.value))}
-                label="Collection"
-              >
-                {documentCollections.map((collection) => (
-                  <MenuItem key={collection.id} value={collection.id}>
-                    {collection.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl
-              size="small"
-              sx={{ minWidth: 300, flex: 1 }}
-              disabled={
-                isLoadingDocuments || availableInSelectedCollection.length === 0
-              }
-            >
-              <InputLabel>Document</InputLabel>
-              <Select
-                value={comparisonDocumentId || ""}
-                onChange={(e) => {
-                  const selectedId = Number(e.target.value);
-                  if (selectedId) {
-                    handleAddComparisonDocument(selectedId);
-                  }
-                }}
-                label="Document"
-              >
-                {isLoadingDocuments ? (
-                  <MenuItem value="">Loading...</MenuItem>
-                ) : (
-                  [
-                    <MenuItem key="placeholder" value="">
-                      {availableInSelectedCollection.length === 0
-                        ? "No other documents available"
-                        : "Select a document"}
-                    </MenuItem>,
-                    ...availableInSelectedCollection.map((doc) => (
-                      <MenuItem key={doc.id} value={doc.id}>
-                        {doc.title || `Document ${doc.id}`}
-                      </MenuItem>
-                    )),
-                  ]
-                )}
-              </Select>
-            </FormControl>
-
-            <Button
-              size="small"
-              onClick={() => setShowDocumentSelector(false)}
-              variant="text"
-            >
-              Cancel
-            </Button>
-          </Box>
-        )}
-
-        {/* Linking Mode Hint */}
-        {isLinkingModeActive && (
-          <Box
-            sx={{
-              padding: 1.5,
-              backgroundColor: "info.light",
-              color: "info.contrastText",
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              fontSize: "0.875rem",
-            }}
-          >
-            <LinkIcon fontSize="small" />
-            <span>
-              💡 <strong>Linking Mode Active:</strong> Select text in one
-              document, then select text in the other document to create a link.
-              Right-click linked text to navigate.
-            </span>
-            <Button
-              size="small"
-              onClick={() => setIsLinkingModeActive(false)}
-              sx={{ marginLeft: "auto", color: "inherit" }}
-            >
-              Exit Linking Mode
-            </Button>
-          </Box>
-        )}
-      </Box>
+      {/* Toolbar Component */}
+      <DocumentComparisonToolbar
+        viewMode={viewMode}
+        showLinkedTextHighlights={showLinkedTextHighlights}
+        viewedDocuments={viewedDocuments}
+        showDocumentSelector={showDocumentSelector}
+        isLinkingModeActive={isLinkingModeActive}
+        isLoadingDocuments={isLoadingDocuments}
+        selectedCollectionId={selectedCollectionId}
+        comparisonDocumentId={comparisonDocumentId}
+        documentCollections={documentCollections}
+        availableDocuments={availableInSelectedCollection}
+        handleBackToDocuments={handleBackToDocuments}
+        handleViewModeChange={handleViewModeChange}
+        setShowLinkedTextHighlights={setShowLinkedTextHighlights}
+        handleRemoveDocument={handleRemoveDocument}
+        setShowDocumentSelector={setShowDocumentSelector}
+        setIsLinkingModeActive={setIsLinkingModeActive}
+        handleCollectionChange={handleCollectionChange}
+        handleAddComparisonDocument={handleAddComparisonDocument}
+      />
 
       {/* Loading Indicator */}
       {isLoadingDocuments && (
