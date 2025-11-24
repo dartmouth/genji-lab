@@ -4,7 +4,8 @@ import {
   TableHead, TableRow, Paper, IconButton, Alert, CircularProgress,
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Tabs, Tab
 } from '@mui/material';
-import { FlagOutlined, DeleteOutline } from '@mui/icons-material';
+import { FlagOutlined, DeleteOutline, Visibility } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface Flag {
@@ -17,6 +18,8 @@ interface Flag {
     content: string;
     author: { id: number; name: string };
     document_element_id: number;
+    document_id: number;
+    document_collection_id: number;
     created: string;
   } | null;
 }
@@ -56,6 +59,7 @@ function a11yPropsSubTab(index: number) {
 }
 
 const ManageFlags: React.FC = () => {
+  const navigate = useNavigate();
   const [flags, setFlags] = useState<Flag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +134,14 @@ const ManageFlags: React.FC = () => {
 
   const handleSubTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveSubTab(newValue);
+  };
+
+  const handleViewInDocument = (flag: Flag) => {
+    if (flag.flagged_annotation?.document_collection_id && flag.flagged_annotation?.document_id) {
+      navigate(
+        `/collections/${flag.flagged_annotation.document_collection_id}/documents/${flag.flagged_annotation.document_id}?annotationId=${flag.flagged_annotation.id}`
+      );
+    }
   };
 
   return (
@@ -261,6 +273,15 @@ const ManageFlags: React.FC = () => {
                           {flag.flag_reason.length > 50 && '...'}
                         </TableCell>
                         <TableCell>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleViewInDocument(flag)}
+                            title="View in document"
+                            color="primary"
+                            disabled={!flag.flagged_annotation?.document_id || !flag.flagged_annotation?.document_collection_id}
+                          >
+                            <Visibility fontSize="small" />
+                          </IconButton>
                           <IconButton
                             size="small"
                             onClick={() => handleActionClick(flag, 'unflag')}

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { registerHighlight, removeHighlight } from "@store";
+import { FaFlag } from 'react-icons/fa';
 
 interface HighlightProps {
   id: string;
@@ -14,6 +15,7 @@ interface HighlightProps {
   };
   annotationId: string;
   color?: string;
+  isFlagged?: boolean;
 }
 
 const Highlight: React.FC<HighlightProps> = ({
@@ -22,6 +24,7 @@ const Highlight: React.FC<HighlightProps> = ({
   position,
   annotationId,
   motivation,
+  isFlagged = false,
 }) => {
   const color = motivation == "commenting" ? "#c4dd88" : "#abf7ff";
   const dispatch = useDispatch();
@@ -65,6 +68,29 @@ const Highlight: React.FC<HighlightProps> = ({
           transition: "opacity 0.2s ease",
         }}
       />
+      {isFlagged && (
+        <div
+          style={{
+            position: "absolute",
+            left: `${position.left - 2}px`,
+            top: `${position.top - 2}px`,
+            backgroundColor: "#dc3545",
+            color: "white",
+            padding: "2px 4px",
+            borderRadius: "3px",
+            fontSize: "10px",
+            fontWeight: "bold",
+            zIndex: 10,
+            pointerEvents: "none",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "2px",
+          }}
+        >
+          <FaFlag style={{ fontSize: "8px" }} />
+        </div>
+      )}
     </div>
   );
 };

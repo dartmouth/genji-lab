@@ -508,14 +508,12 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
       }}
     >
       {/* Header: Document info, type badge, and author */}
-      <AnnotationCardHeader
-        annotation={annotation}
-        documentColor={documentColor}
-        documentTitle={documentTitle}
-        showDocumentInfo={showDocumentInfo}
-      />
-
-      {/* Toolbar: Only show for authenticated users */}
+          <AnnotationCardHeader
+            annotation={annotation}
+            documentColor={documentColor}
+            documentTitle={documentTitle}
+            showDocumentInfo={showDocumentInfo}
+          />      {/* Toolbar: Only show for authenticated users */}
       {isAuthenticated && (
         <AnnotationCardToolbar
           annotation={annotation}

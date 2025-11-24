@@ -31,6 +31,7 @@ interface DocumentContentPanelProps {
   }>;
   isLinkingModeActive?: boolean;
   showLinkedTextHighlights?: boolean;
+  flaggedAnnotationId?: string | null;
 }
 
 const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
@@ -40,6 +41,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
   viewMode = "annotations",
   isLinkingModeActive = false,
   showLinkedTextHighlights = false,
+  flaggedAnnotationId = null,
 }) => {
   // Use memoized selectors to prevent unnecessary re-renders
   const dispatch = useAppDispatch();
@@ -176,6 +178,7 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                   viewMode={viewMode}
                   showLinkedTextHighlights={showLinkedTextHighlights}
                   viewedDocuments={viewedDocuments}
+                  flaggedAnnotationId={flaggedAnnotationId}
                 />
               </div>
 

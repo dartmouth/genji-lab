@@ -1,5 +1,5 @@
 // src/features/documentView/components/tabbedAnnotationsPanel/AnnotationsList.tsx
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Annotation } from "@documentView/types/annotation";
 import AnnotationCard from "../annotationCard/AnnotationCard";
 
@@ -16,6 +16,7 @@ export interface AnnotationsListProps {
     color?: string;
   }>;
   getDocumentTitle: (docId: number) => string;
+  flaggedAnnotationId?: string | null;
 }
 
 const AnnotationsList: React.FC<AnnotationsListProps> = ({
@@ -25,7 +26,23 @@ const AnnotationsList: React.FC<AnnotationsListProps> = ({
   activeTab,
   documents,
   getDocumentTitle,
+  flaggedAnnotationId = null,
 }) => {
+  // Hooks must be called unconditionally at the top
+  const flaggedCardRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to flagged annotation on mount
+  useEffect(() => {
+    if (flaggedAnnotationId && flaggedCardRef.current) {
+      setTimeout(() => {
+        flaggedCardRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      }, 100);
+    }
+  }, [flaggedAnnotationId]);
+
   if (annotations.length === 0) {
     return (
       <div
@@ -72,19 +89,25 @@ const AnnotationsList: React.FC<AnnotationsListProps> = ({
         const documentColor = document?.color || "#6c757d";
         const documentTitle =
           document?.title || getDocumentTitle(annotation.document_id);
+        // Compare as strings since flaggedAnnotationId comes from URL query param
+        const isFlagged = flaggedAnnotationId !== null && flaggedAnnotationId === annotation.id.toString();
 
         return (
-          <AnnotationCard
+          <div
             key={annotation.id}
-            id={annotation.id}
-            annotation={annotation}
-            isHighlighted={false}
-            depth={0}
-            documentColor={documentColor}
-            documentTitle={documentTitle}
-            showDocumentInfo={activeTab === "all"}
-            position={position}
-          />
+            ref={isFlagged ? flaggedCardRef : null}
+          >
+            <AnnotationCard
+              id={annotation.id}
+              annotation={annotation}
+              isHighlighted={false}
+              depth={0}
+              documentColor={documentColor}
+              documentTitle={documentTitle}
+              showDocumentInfo={activeTab === "all"}
+              position={position}
+            />
+          </div>
         );
       })}
     </div>

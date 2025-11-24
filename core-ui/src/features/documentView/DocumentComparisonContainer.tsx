@@ -24,6 +24,7 @@ interface DocumentComparisonContainerProps {
   showLinkedTextHighlights?: boolean;
   isAnnotationsPanelCollapsed?: boolean;
   onToggleAnnotationsPanel?: () => void;
+  flaggedAnnotationId?: string | null;
   // onOpenLinkedDocument?: (
   //   documentId: number,
   //   collectionId: number,
@@ -50,6 +51,7 @@ const DocumentComparisonContainer: React.FC<
   showLinkedTextHighlights = false,
   isAnnotationsPanelCollapsed = true, // Default to collapsed
   onToggleAnnotationsPanel,
+  flaggedAnnotationId = null,
   // onOpenLinkedDocument,
 }) => {
   // State for active document (for highlight tracking)
@@ -365,6 +367,7 @@ const DocumentComparisonContainer: React.FC<
                   viewMode={viewMode}
                   isLinkingModeActive={isLinkingModeActive}
                   showLinkedTextHighlights={showLinkedTextHighlights}
+                  flaggedAnnotationId={flaggedAnnotationId}
                 />
               </div>
             </div>
@@ -441,6 +444,7 @@ const DocumentComparisonContainer: React.FC<
                 position={annotationPanelPosition}
                 onChangePosition={setAnnotationPanelPosition}
                 onToggleVisibility={onToggleAnnotationsPanel}
+                flaggedAnnotationId={flaggedAnnotationId}
               />
             </div>
           )}
