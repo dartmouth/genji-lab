@@ -19,6 +19,7 @@ interface TabbedAnnotationsPanelProps {
   position?: PanelPosition;
   onChangePosition?: (position: PanelPosition) => void;
   onToggleVisibility?: () => void;
+  flaggedAnnotationId?: string | null;
 }
 
 const TabbedAnnotationsPanel: React.FC<TabbedAnnotationsPanelProps> = ({
@@ -28,7 +29,8 @@ const TabbedAnnotationsPanel: React.FC<TabbedAnnotationsPanelProps> = ({
   isHovering = false,
   position = 'bottom',
   onChangePosition,
-  onToggleVisibility
+  onToggleVisibility,
+  flaggedAnnotationId = null
 }) => {
   
   // State for active tab: 'doc-{id}' for document tabs or 'all' for all annotations
@@ -95,6 +97,7 @@ const TabbedAnnotationsPanel: React.FC<TabbedAnnotationsPanelProps> = ({
           activeTab={activeTab}
           documents={documents}
           getDocumentTitle={getDocumentTitle}
+          flaggedAnnotationId={flaggedAnnotationId}
         />
       </div>
     </div>

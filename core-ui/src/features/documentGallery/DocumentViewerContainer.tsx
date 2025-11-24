@@ -1,6 +1,6 @@
 // src/features/documentGallery/DocumentViewerContainer.tsx
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import {
   setSelectedCollectionId as setReduxSelectedCollectionId,
@@ -92,7 +92,9 @@ export const DocumentContentView: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
+  // Handle annotation highlighting from hash or query parameter
   useEffect(() => {
     const getAnnotationIdFromHash = (): string | null => {
       const hash = location.hash;
@@ -102,16 +104,23 @@ export const DocumentContentView: React.FC = () => {
       return null;
     };
 
-    const hash = getAnnotationIdFromHash();
-    if (documentId && hash) {
+    // Check both hash and query parameter for annotationId
+    const hashAnnotationId = getAnnotationIdFromHash();
+    const queryAnnotationId = searchParams.get('annotationId');
+    const annotationId = queryAnnotationId || hashAnnotationId;
+
+    if (documentId && annotationId) {
+      // Open the annotations panel when navigating to a specific annotation
+      setIsAnnotationsPanelCollapsed(false);
+      
       dispatch(
         setHoveredHighlights({
           documentId: documentId as unknown as number,
-          highlightIds: [hash],
+          highlightIds: [annotationId],
         })
       );
     }
-  }, [location.hash, dispatch, documentId]);
+  }, [location.hash, searchParams, dispatch, documentId]);
 
   const [viewedDocuments, setViewedDocuments] = useState<
     Array<{
@@ -718,6 +727,7 @@ export const DocumentContentView: React.FC = () => {
           showLinkedTextHighlights={showLinkedTextHighlights}
           isAnnotationsPanelCollapsed={isAnnotationsPanelCollapsed}
           onToggleAnnotationsPanel={handleToggleAnnotationsPanel}
+          flaggedAnnotationId={searchParams.get('annotationId')}
         />
       ) : (
         <div className="no-documents-message">

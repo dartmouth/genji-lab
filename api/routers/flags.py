@@ -102,6 +102,8 @@ def get_flags(
                     "name": f"{flagged_annotation.creator.first_name} {flagged_annotation.creator.last_name}" if flagged_annotation else None,
                 } if flagged_annotation else None,
                 "document_element_id": flagged_annotation.document_element_id if flagged_annotation else None,
+                "document_id": flagged_annotation.document_id if flagged_annotation else None,
+                "document_collection_id": flagged_annotation.document_collection_id if flagged_annotation else None,
                 "created": flagged_annotation.created.isoformat() if flagged_annotation and flagged_annotation.created else None,
             } if flagged_annotation else None,
         })

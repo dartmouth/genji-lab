@@ -51,6 +51,7 @@ interface HighlightedTextProps {
     collectionId: number;
     title: string;
   }>;
+  flaggedAnnotationId?: string | null;
 }
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({
@@ -62,6 +63,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
   documentId,
   isLinkingModeActive = false,
   showLinkedTextHighlights = false,
+  flaggedAnnotationId = null,
 }) => {
   const dispatch = useAppDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -653,23 +655,28 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         )}
 
         {Array.from(highlightPositions.entries()).map(
-          ([annotationId, position_elems]) => (
-            <div
-              key={annotationId}
-              className={`highlight-container highlight-container-${annotationId}`}
-            >
-              {position_elems.positions.map((position, index) => (
-                <Highlight
-                  key={`${annotationId}-${index}`}
-                  motivation={position_elems.motivation}
-                  id={`highlight-${annotationId}`}
-                  documentId={documentId}
-                  annotationId={`${annotationId}`}
-                  position={position}
-                />
-              ))}
-            </div>
-          )
+          ([annotationId, position_elems]) => {
+            // Convert annotationId to string for comparison since flaggedAnnotationId comes from URL
+            const isFlagged = flaggedAnnotationId !== null && flaggedAnnotationId === String(annotationId);
+            return (
+              <div
+                key={annotationId}
+                className={`highlight-container highlight-container-${annotationId}`}
+              >
+                {position_elems.positions.map((position, index) => (
+                  <Highlight
+                    key={`${annotationId}-${index}`}
+                    motivation={position_elems.motivation}
+                    id={`highlight-${annotationId}`}
+                    documentId={documentId}
+                    annotationId={`${annotationId}`}
+                    position={position}
+                    isFlagged={isFlagged}
+                  />
+                ))}
+              </div>
+            );
+          }
         )}
 
         {showLinkedTextHighlights && hasLinkedText && (
