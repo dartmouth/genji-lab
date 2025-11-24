@@ -14,6 +14,25 @@ const api: AxiosInstance = axios.create({
   timeout: 10000,
 });
 
+// Add request interceptor to include auth token if available
+api.interceptors.request.use(
+  (config) => {
+    // Try to get token from localStorage
+    const token =
+      localStorage.getItem("access_token") ||
+      sessionStorage.getItem("access_token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 interface FetchAnnotationParams {
   documentElementId: number;
   classroomID?: number;
@@ -38,16 +57,6 @@ export const fetchAnnotationByMotivation = createAsyncThunk(
       const annotationsByMotivation: AnnotationsByMotivation =
         await response.data;
 
-      // // SPECIAL CASE: Fetch linking annotations using the new endpoint
-      // const linkingResponse = await api.get(
-      //   `/annotations/links/${documentElementId}`
-      // );
-      // const linkingAnnotations = await linkingResponse.data;
-
-      // if (linkingAnnotations.length > 0) {
-      //   annotationsByMotivation.linking = linkingAnnotations;
-      // }
-
       // Dispatch to Redux slices
       Object.entries(annotationsByMotivation).forEach(
         ([motivation, annotations]) => {
@@ -62,6 +71,17 @@ export const fetchAnnotationByMotivation = createAsyncThunk(
 
       return annotationsByMotivation;
     } catch (error) {
+      // Handle 401 Unauthorized gracefully for unauthenticated users
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        console.log(
+          `No authenticated access for element ${documentElementId} - showing public content only`
+        );
+        // Return empty annotations instead of throwing error
+        // This allows unauthenticated users to view documents without annotations
+        return {};
+      }
+
+      // For other errors, log and rethrow
       console.error("Error fetching annotations:", error);
       throw error;
     }
