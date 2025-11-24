@@ -193,6 +193,60 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
     [allLinkingAnnotations]
   );
 
+  const calculateContextMenuPosition = useCallback(
+    (
+      clickX: number,
+      clickY: number,
+      menuItemCount: number
+    ): { x: number; y: number } => {
+      // Estimate menu dimensions
+      const menuWidth = 250; // Approximate width of context menu
+      const menuItemHeight = 40; // Approximate height per menu item
+      const menuPadding = 20; // Top and bottom padding
+      const estimatedMenuHeight = menuItemCount * menuItemHeight + menuPadding;
+
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      const margin = 10; // Margin from edges
+
+      let menuX = clickX;
+      let menuY = clickY;
+
+      // Check if menu goes off right edge
+      if (menuX + menuWidth > windowWidth - margin) {
+        menuX = windowWidth - menuWidth - margin;
+      }
+
+      // Check if menu goes off left edge
+      if (menuX < margin) {
+        menuX = margin;
+      }
+
+      // Check if menu goes off bottom edge
+      if (menuY + estimatedMenuHeight > windowHeight - margin) {
+        // Try positioning above the click point first
+        const aboveY = clickY - estimatedMenuHeight;
+        if (aboveY >= margin) {
+          menuY = aboveY;
+        } else {
+          // If it doesn't fit above, position at bottom with scroll
+          menuY = windowHeight - estimatedMenuHeight - margin;
+          if (menuY < margin) {
+            menuY = margin;
+          }
+        }
+      }
+
+      // Check if menu goes off top edge
+      if (menuY < margin) {
+        menuY = margin;
+      }
+
+      return { x: menuX, y: menuY };
+    },
+    []
+  );
+
   useEffect(() => {
     const handleContextMenu = async (e: MouseEvent) => {
       const clickedElement = e.target as HTMLElement;
@@ -300,12 +354,32 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
       e.preventDefault();
       e.stopPropagation();
 
-      const position = {
-        x: Math.min(e.clientX, window.innerWidth - 250),
-        y: Math.min(e.clientY, window.innerHeight - 200),
-      };
-
       const hierarchicalAnnotations = findLinkedAnnotations(selection);
+
+      // Count menu items to calculate proper positioning
+      let menuItemCount = 2; // "Create Comment" + "Add External Reference"
+
+      if (
+        user?.roles?.includes("admin") ||
+        user?.roles?.includes("verified_scholar")
+      ) {
+        menuItemCount++; // "Create Scholarly Annotation"
+      }
+
+      if (user?.roles?.includes("admin")) {
+        menuItemCount++; // "Add Content to Link"
+      }
+
+      if (Object.keys(hierarchicalAnnotations).length > 0) {
+        menuItemCount++; // "View Linked Text"
+      }
+
+      // Calculate position that keeps menu on screen
+      const position = calculateContextMenuPosition(
+        e.clientX,
+        e.clientY,
+        menuItemCount
+      );
 
       setMenuState({
         isVisible: true,
@@ -361,6 +435,8 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
     createSelectionFromClickContext,
     findLinkedAnnotations,
     allLinkingAnnotations,
+    calculateContextMenuPosition,
+    user?.roles,
   ]);
 
   useEffect(() => {
