@@ -11,11 +11,25 @@ import axios from "axios";
 
 import { DocumentElement } from "@/types";
 
-// API client setup (reusing the same configuration as in documentSlice)
+// API client setup
 const api = axios.create({
   baseURL: "/api/v1",
   timeout: 10000,
 });
+
+// Extended type for API response with document metadata
+interface DocumentMetadata {
+  title: string;
+  description: string;
+  document_collection_id: number;
+  id: number;
+  created: string;
+  modified: string;
+}
+
+interface DocumentElementWithMetadata extends DocumentElement {
+  document: DocumentMetadata;
+}
 
 interface DocumentElementsState {
   // Normalized state structure for multiple documents
@@ -34,6 +48,19 @@ interface DocumentElementsState {
   currentDocumentId: number | null;
   // Bulk loading status
   bulkLoadingStatus: "idle" | "loading" | "succeeded" | "failed";
+  
+  // NEW: Store individual elements by their element ID (not document ID)
+  elementsById: {
+    [elementId: number]: DocumentElementWithMetadata;
+  };
+  // NEW: Track loading state for individual elements
+  elementStatus: {
+    [elementId: number]: "idle" | "loading" | "succeeded" | "failed";
+  };
+  // NEW: Track errors for individual elements
+  elementErrors: {
+    [elementId: number]: string | null;
+  };
 }
 
 // Type for the bulk API response
@@ -61,9 +88,12 @@ const initialState: DocumentElementsState = {
   documentErrors: {},
   currentDocumentId: null,
   bulkLoadingStatus: "idle",
+  elementsById: {},
+  elementStatus: {},
+  elementErrors: {},
 };
 
-// Thunk for fetching elements for any document
+// Existing thunk for fetching elements for any document
 export const fetchDocumentElements = createAsyncThunk(
   "documentElements/fetchElements",
   async (documentId: number, { rejectWithValue }) => {
@@ -86,6 +116,7 @@ export const fetchDocumentElements = createAsyncThunk(
   }
 );
 
+// Existing bulk fetch thunk
 export const fetchAllDocumentElements = createAsyncThunk<
   BulkDocumentResponse,
   void,
@@ -107,6 +138,29 @@ export const fetchAllDocumentElements = createAsyncThunk<
     );
   }
 });
+
+// NEW: Thunk for fetching a single document element by element ID
+export const fetchSingleDocumentElement = createAsyncThunk(
+  "documentElements/fetchSingleElement",
+  async (elementId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/elements/${elementId}`);
+
+      if (!(response.status === 200)) {
+        return rejectWithValue(
+          `Failed to fetch document element: ${response.statusText}`
+        );
+      }
+
+      const element: DocumentElementWithMetadata = response.data;
+      return element;
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
+  }
+);
 
 // Slice
 const documentElementsSlice = createSlice({
@@ -131,6 +185,9 @@ const documentElementsSlice = createSlice({
         state.documentStatus = {};
         state.documentErrors = {};
         state.currentDocumentId = null;
+        state.elementsById = {};
+        state.elementStatus = {};
+        state.elementErrors = {};
       }
     },
     setCurrentDocumentId: (state, action: PayloadAction<number | null>) => {
@@ -159,7 +216,6 @@ const documentElementsSlice = createSlice({
         state.documentStatus[documentId] = "succeeded";
 
         // Set currentDocumentId only if not already set
-        // This prevents comparison documents from becoming the main document
         if (state.currentDocumentId === null) {
           state.currentDocumentId = documentId;
         }
@@ -201,6 +257,24 @@ const documentElementsSlice = createSlice({
       .addCase(fetchAllDocumentElements.rejected, (state, action) => {
         state.bulkLoadingStatus = "failed";
         console.error("Bulk loading failed:", action.payload);
+      })
+      // NEW: Handle single element fetch
+      .addCase(fetchSingleDocumentElement.pending, (state, action) => {
+        const elementId = action.meta.arg;
+        state.elementStatus[elementId] = "loading";
+        state.elementErrors[elementId] = null;
+      })
+      .addCase(fetchSingleDocumentElement.fulfilled, (state, action) => {
+        const element = action.payload;
+        state.elementsById[element.id] = element;
+        state.elementStatus[element.id] = "succeeded";
+        state.elementErrors[element.id] = null;
+      })
+      .addCase(fetchSingleDocumentElement.rejected, (state, action) => {
+        const elementId = action.meta.arg;
+        state.elementStatus[elementId] = "failed";
+        state.elementErrors[elementId] =
+          (action.payload as string) || "Unknown error";
       });
   },
 });
@@ -266,6 +340,42 @@ export const selectCurrentDocumentId = createSelector(
 export const selectBulkLoadingStatus = createSelector(
   [selectDocumentElementsState],
   (documentElementsState) => documentElementsState.bulkLoadingStatus
+);
+
+// NEW: Memoized selector for single element by element ID
+export const selectElementById = createSelector(
+  [
+    selectDocumentElementsState,
+    (_state: RootState, elementId: number | null) => elementId,
+  ],
+  (documentElementsState, elementId) => {
+    if (!elementId) return null;
+    return documentElementsState.elementsById[elementId] || null;
+  }
+);
+
+// NEW: Memoized selector for element status by element ID
+export const selectElementStatusById = createSelector(
+  [
+    selectDocumentElementsState,
+    (_state: RootState, elementId: number | null) => elementId,
+  ],
+  (documentElementsState, elementId): "idle" | "loading" | "succeeded" | "failed" => {
+    if (!elementId) return "idle";
+    return documentElementsState.elementStatus[elementId] || "idle";
+  }
+);
+
+// NEW: Memoized selector for element error by element ID
+export const selectElementErrorById = createSelector(
+  [
+    selectDocumentElementsState,
+    (_state: RootState, elementId: number | null) => elementId,
+  ],
+  (documentElementsState, elementId) => {
+    if (!elementId) return null;
+    return documentElementsState.elementErrors[elementId] || null;
+  }
 );
 
 export default documentElementsSlice.reducer;

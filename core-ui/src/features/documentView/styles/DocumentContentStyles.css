@@ -508,7 +508,44 @@
     background-color: rgba(255, 235, 59, 0);
   }
 }
-
+/* 
+/* Element positioning wrapper */
 .document-element-wrapper {
-  margin-bottom: 16px;
+  position: relative;
+  margin-bottom: 6px;
+}
+
+/* Small, subtle button for opening element in new window */
+.element-open-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: rgba(74, 144, 226, 0.1);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 3px;
+  padding: 1px 3px;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  z-index: 10;
+  color: #4a90e2;
+  line-height: 1;
+}
+
+/* Show button more prominently on hover of wrapper */
+.document-element-wrapper:hover .element-open-button {
+  opacity: 1;
+}
+
+/* Button hover state */
+.element-open-button:hover {
+  background-color: rgba(74, 144, 226, 0.2);
+  border-color: rgba(74, 144, 226, 0.5);
+}
+
+/* Button active/click state */
+.element-open-button:active {
+  background-color: rgba(74, 144, 226, 0.3);
+  transform: scale(0.95);
 }

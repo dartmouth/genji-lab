@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuthContext";
 import { LinkViewPage} from '@features/linkView'
 import LandingPage from "./components/LandingPage";
 import GetStartedPage from "./components/GetStartedPage";
+import DocumentElementViewer from "./features/canonicalLink/documentElementView";
 import AboutPage from "./components/AboutPage";
 
 // Main Routes component
@@ -38,6 +39,7 @@ const RouterSwitchBoard: React.FC = () => {
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route path="/search" element={<SearchResultsApp />} />
       <Route path="/links/:annotationId" element={<LinkViewPage />} />
+      <Route path="/element" element={<DocumentElementViewer />} />
     </Routes>
   );
 };

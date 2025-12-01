@@ -12,6 +12,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
+    platform: linux/arm64
     ports:
       - "8000:8000"
     volumes:
