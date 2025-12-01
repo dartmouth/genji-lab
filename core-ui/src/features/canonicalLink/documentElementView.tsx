@@ -45,6 +45,19 @@ const DocumentElementViewer: React.FC = () => {
     selectElementErrorById(state, elementId)
   );
 
+  const [copySuccess, setCopySuccess] = React.useState(false);
+
+  const handleCopyUrl = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url)
+      .then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy URL:', err);
+      });
+  };
   useEffect(() => {
     if (!elementId) return;
 
@@ -162,6 +175,14 @@ const DocumentElementViewer: React.FC = () => {
                 color="secondary"
               />
             )}
+            <Chip
+              label={copySuccess ? "Copied!" : "Copy URL"}
+              size="small"
+              variant="filled"
+              color={copySuccess ? "success" : "primary"}
+              onClick={handleCopyUrl}
+              sx={{ cursor: 'pointer' }}
+            />
           </Stack>
 
           <Divider sx={{ mb: 3 }} />
