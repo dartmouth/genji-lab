@@ -113,8 +113,22 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
         {/* Add data attributes for better element identification */}
         {documentElements.map((content) => {
           const paragraphId = `DocumentElements/${content.id}`;
+          
+          const handleOpenInNewWindow = () => {
+            window.open(`/element?element_id=${content.id}`, '_blank', 'noopener,noreferrer');
+          };
+          
           return (
             <div key={content.id} className="document-element-wrapper">
+              <button 
+                className="element-open-button"
+                onClick={handleOpenInNewWindow}
+                title="Open paragraph in new window"
+                aria-label={`Open element ${content.id} in new window`}
+              >
+                ↗
+              </button>
+              
               <div
                 className="document-content"
                 id={paragraphId}
@@ -134,8 +148,6 @@ const DocumentContentPanel: React.FC<DocumentContentPanelProps> = ({
                   viewedDocuments={viewedDocuments}
                 />
               </div>
-
-              {/* <ExternalReferencesDisplay paragraphId={paragraphId} /> */}
             </div>
           );
         })}
