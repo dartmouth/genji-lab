@@ -74,14 +74,13 @@ const DocumentComparisonContainer: React.FC<
   const documentColors = useMemo(() => {
     // Define a list of distinct colors for documents
     const colors = [
-      "#4285F4", // Blue
-      "#34A853", // Green
-      "#FBBC05", // Yellow
-      "#EA4335", // Red
-      "#8F44AD", // Purple
-      "#16A085", // Teal
-      "#F39C12", // Orange
-      "#2C3E50", // Dark Blue
+      "#2C656B", // Blue
+      "#FE6100", // Green
+      "#FFB000", // Yellow
+      "#DC267F", // Red
+      "#785EF0", // Purple
+      "#CDAC8B", // Teal
+      "#648FFF", // Orange
     ];
 
     return documents.reduce((acc, doc, index) => {

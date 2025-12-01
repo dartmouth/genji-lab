@@ -129,10 +129,10 @@ const AddStudentSearch: React.FC<AddStudentSearchProps> = ({
           mb: 2,
           '& .MuiOutlinedInput-root': {
             '&:hover fieldset': {
-              borderColor: '#00693e',
+              borderColor: '#2C656B',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#00693e',
+              borderColor: '#2C656B',
             },
           },
         }}
@@ -178,8 +178,8 @@ const AddStudentSearch: React.FC<AddStudentSearchProps> = ({
                     onClick={() => handleUserAdd(user)}
                     disabled={addingUserId === user.id}
                     sx={{
-                      borderColor: '#00693e',
-                      color: '#00693e',
+                      borderColor: '#2C656B',
+                      color: '#2C656B',
                       '&:hover': {
                         borderColor: '#004d2d',
                         backgroundColor: 'rgba(0, 105, 62, 0.04)',

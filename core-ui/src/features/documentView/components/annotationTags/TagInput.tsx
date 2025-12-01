@@ -62,7 +62,7 @@ const TagInput: React.FC<TagInputProps> = ({ onSubmit, onClose }) => {
         <button
           style={{
             padding: '5px 10px',
-            backgroundColor: '#007bff',
+            backgroundColor: '#648FFF',
             color: 'white',
             border: 'none',
             borderRadius: '4px',

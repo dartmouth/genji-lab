@@ -74,8 +74,8 @@ const UserSearchWithResults: React.FC<UserSearchWithResultsProps> = ({
                   onClick={() => onUserAdd(user)}
                   disabled={addingUserId === user.id}
                   sx={{
-                    borderColor: '#00693e',
-                    color: '#00693e',
+                    borderColor: '#2C656B',
+                    color: '#2C656B',
                     '&:hover': {
                       borderColor: '#004d2d',
                       backgroundColor: '#f0f8f5',

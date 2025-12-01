@@ -295,7 +295,7 @@ const AppHeader: React.FC = () => {
                       }}
                       disabled={!activeClassroomValue && !user.groups[0]?.id}
                       style={{
-                        backgroundColor: isOptedOut === "true" ? "#00693e" : "#1976d2",
+                        backgroundColor: isOptedOut === "true" ? "#2C656B" : "#1976d2",
                         color: "white",
                         border: "none",
                         transition: "background-color 0.3s ease"

@@ -59,7 +59,7 @@
 
 .form-field input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: #648FFF;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
@@ -119,7 +119,7 @@
 }
 
 .submit-button {
-  background-color: #007bff;
+  background-color: #648FFF;
   color: white;
 }
 
@@ -148,7 +148,7 @@
 .link-button {
   background: none;
   border: none;
-  color: #007bff;
+  color: #648FFF;
   text-decoration: underline;
   cursor: pointer;
   font-size: inherit;

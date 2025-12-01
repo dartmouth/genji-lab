@@ -136,6 +136,7 @@ const ExternalReferenceDialog: React.FC<ExternalReferenceDialogProps> = ({
           fontSize: "1.25rem",
           borderBottom: 1,
           borderColor: "divider",
+          color: '#2C656B'
         }}
       >
         Add External Reference

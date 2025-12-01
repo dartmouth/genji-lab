@@ -105,7 +105,7 @@ function a11yPropsSubTab(index: number) {
 
 // Styled components
 const CreateButton = styled(Button)(({ theme }) => ({
-  backgroundColor: '#00693e',
+  backgroundColor: '#2C656B',
   color: 'white',
   '&:hover': {
     backgroundColor: '#004d2d',
@@ -651,7 +651,7 @@ const ManageClassrooms: React.FC = () => {
                         startIcon={<PersonAdd />}
                         onClick={handleOpenAddStudentModal}
                         sx={{
-                          backgroundColor: '#00693e',
+                          backgroundColor: '#2C656B',
                           color: 'white',
                           '&:hover': {
                             backgroundColor: '#004d2d',
@@ -692,7 +692,7 @@ const ManageClassrooms: React.FC = () => {
                                 {member.email ? (
                                   <a 
                                     href={`mailto:${member.email}`}
-                                    style={{ textDecoration: 'none', color: '#00693e' }}
+                                    style={{ textDecoration: 'none', color: '#2C656B' }}
                                   >
                                     {member.email}
                                   </a>

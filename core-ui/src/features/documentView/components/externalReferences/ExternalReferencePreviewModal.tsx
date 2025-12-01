@@ -107,6 +107,7 @@ const ExternalReferencePreviewModal: React.FC<
           onClick={handleOpenInNewTab}
           variant="contained"
           startIcon={<OpenInNewIcon />}
+          sx={{backgroundColor: '#2C656B'}}
         >
           Open in New Tab
         </Button>

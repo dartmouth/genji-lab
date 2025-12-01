@@ -286,7 +286,7 @@ const ManageFlags: React.FC = () => {
                             size="small"
                             onClick={() => handleActionClick(flag, 'unflag')}
                             title="Unflag (keep comment)"
-                            sx={{ color: '#00693e' }}
+                            sx={{ color: '#2C656B' }}
                           >
                             <FlagOutlined fontSize="small" />
                           </IconButton>

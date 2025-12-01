@@ -48,8 +48,8 @@ const HighlightingHelpIcon: React.FC<HighlightingHelpIconProps> = ({
         </>
       ),
       colorClass: "highlight-comment",
-      backgroundColor: "rgba(196, 221, 136, 0.3)",
-      borderColor: "#c4dd88",
+      backgroundColor: '#785EF0',
+      borderColor: "#785EF0",
     },
     {
       type: "Scholarly Annotation",
@@ -62,8 +62,8 @@ const HighlightingHelpIcon: React.FC<HighlightingHelpIconProps> = ({
         </>
       ),
       colorClass: "highlight-scholarly",
-      backgroundColor: "rgba(171, 247, 255, 0.3)",
-      borderColor: "#abf7ff",
+      backgroundColor: "#DC267F",
+      borderColor: "#DC267F",
     },
     {
       type: "Linked Text",
@@ -74,15 +74,15 @@ const HighlightingHelpIcon: React.FC<HighlightingHelpIconProps> = ({
         </>
       ),
       colorClass: "highlight-linked",
-      backgroundColor: "rgba(244, 67, 54, 0.15)",
-      borderColor: "#f44336",
+      backgroundColor: "#ffae00ac",
+      borderColor: "#ffae00ac",
     },
     {
       type: "Navigation Highlight",
       description: "Temporarily highlighted during navigation",
       colorClass: "highlight-navigation",
-      backgroundColor: "rgba(255, 235, 59, 0.35)",
-      borderColor: "#ffeb3b",
+      backgroundColor: "#FE6100",
+      borderColor: "#FE6100",
     },
   ];
 

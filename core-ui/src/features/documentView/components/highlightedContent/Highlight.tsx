@@ -26,7 +26,7 @@ const Highlight: React.FC<HighlightProps> = ({
   motivation,
   isFlagged = false,
 }) => {
-  const color = motivation == "commenting" ? "#c4dd88" : "#abf7ff";
+  const color = motivation == "commenting" ? "#785EF0" : "#DC267F";
   const dispatch = useDispatch();
 
   useEffect(() => {

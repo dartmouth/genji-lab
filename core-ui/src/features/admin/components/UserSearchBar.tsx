@@ -90,10 +90,10 @@ const UserSearchBar: React.FC<UserSearchBarProps> = ({
         sx={{
           '& .MuiOutlinedInput-root': {
             '&:hover fieldset': {
-              borderColor: '#00693e',
+              borderColor: '#2C656B',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#00693e',
+              borderColor: '#2C656B',
             },
           },
         }}

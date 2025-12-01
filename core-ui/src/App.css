@@ -188,7 +188,7 @@ body {
 }
 
 .app-title.clickable:hover {
-  color: #007bff;
+  color: #648FFF;
 }
 
 .main {
@@ -215,7 +215,7 @@ body {
 .user-avatar {
   width: 40px;
   height: 40px;
-  background-color: #00693e;
+  background-color: #2C656B;
   border-radius: 50%;
   display: flex;
   justify-content: center;

@@ -70,7 +70,7 @@
 /* Styling for active paragraph */
 .document-content.active-paragraph {
   background-color: rgba(0, 123, 255, 0.05);
-  border-left: 3px solid #007bff;
+  border-left: 3px solid #648FFF;
 }
 
 /* Highlight animations */
@@ -205,7 +205,7 @@
 /* Individual linked text highlight */
 .linked-text-highlight {
   position: absolute;
-  background-color: rgba(220, 53, 69, 0.4) !important;
+  background-color: #ffae00ac !important;
   border-radius: 1px;
   pointer-events: none;
   transition: all 0.2s ease;
@@ -218,7 +218,7 @@
   top: -2px;
   right: 2px;
   font-size: 10px;
-  color: #dc3545;
+  color: #ffae00ac;
   pointer-events: none;
   z-index: 3;
   text-shadow: 0 0 2px rgba(255, 255, 255, 0.9);

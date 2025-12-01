@@ -126,7 +126,7 @@ const DocumentElementViewer: React.FC = () => {
         {/* Document Metadata Section */}
         <Box
           sx={{
-            bgcolor: 'primary.main',
+            bgcolor: "#2C656B",
             color: 'primary.contrastText',
             p: 2,
           }}
@@ -181,7 +181,10 @@ const DocumentElementViewer: React.FC = () => {
               variant="filled"
               color={copySuccess ? "success" : "primary"}
               onClick={handleCopyUrl}
-              sx={{ cursor: 'pointer' }}
+              sx={{ cursor: 'pointer',
+
+                backgroundColor: copySuccess ? "#FFB000" : "#2C656B"
+               }}
             />
           </Stack>
 

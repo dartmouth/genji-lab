@@ -25,12 +25,12 @@
 }
 
 .app-header .search-input:focus {
-  border-color: #00693e;
+  border-color: #2C656B;
 }
 
 .app-header .search-bar-container .search-submit-button {
   padding: 8px 16px;
-  background-color: #005530;
+  background-color: #2C656B;
   color: white;
   border: none;
   border-radius: 4px;
@@ -40,7 +40,7 @@
 }
 
 .app-header .search-submit-button:hover {
-  background-color: #005530;
+  background-color: #2c656bcf;
 }
 
 .app-header .advanced-search-button {

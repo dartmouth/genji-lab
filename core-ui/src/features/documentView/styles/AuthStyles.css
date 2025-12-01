@@ -24,7 +24,7 @@
   }
   
   .login-button:hover:not(:disabled) {
-    background-color: #00693e !important;
+    background-color: #2C656B !important;
     color: white !important;
   }
   
@@ -35,15 +35,15 @@
 
   /* Distinguish between different login types */
   .login-button.cas-login {
-    background-color: #004d2e !important; /* Keep the existing Dartmouth green */
+    background-color: #2C656B !important; /* Keep the existing Dartmouth green */
   }
 
   .login-button.cas-login:hover:not(:disabled) {
-    background-color: #00693e !important;
+    background-color: #2c656bcf !important;
   }
 
   .login-button.basic-login {
-    background-color: #007bff !important; /* Blue for basic auth */
+    background-color: #648FFF !important; /* Blue for basic auth */
   }
 
   .login-button.basic-login:hover:not(:disabled) {
@@ -51,11 +51,11 @@
   }
 
   .login-button.register-button {
-    background-color: #28a745 !important; /* Green for register */
+    background-color: #FFB000 !important; /* Green for register */
   }
 
   .login-button.register-button:hover:not(:disabled) {
-    background-color: #1e7e34 !important;
+    background-color: #ffaf028a !important;
   }
   
   .auth-error {

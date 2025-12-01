@@ -75,7 +75,7 @@
   background-color: #fff;
   color: #000;
   font-weight: 600;
-  border-bottom: 2px solid #007bff;
+  border-bottom: 2px solid #648FFF;
 }
 
 /* Adjust tab button styling for vertical orientation */
@@ -91,7 +91,7 @@
 .position-left .tab-button.active,
 .position-right .tab-button.active {
   border-bottom: none;
-  border-right: 2px solid #007bff;
+  border-right: 2px solid #648FFF;
 }
 
 .tab-icon {
@@ -389,7 +389,7 @@
   }
   
   .tab-button.active {
-    border-bottom: 2px solid #007bff !important;
+    border-bottom: 2px solid #648FFF !important;
     border-right: none !important;
   }
   

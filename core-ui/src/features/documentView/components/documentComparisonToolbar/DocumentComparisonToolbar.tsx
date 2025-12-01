@@ -122,7 +122,10 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
               startIcon={<span>←</span>}
               variant="outlined"
               size="small"
-              sx={{ minWidth: isExtraSmall ? "40px" : "auto" }}
+              sx={{ minWidth: isExtraSmall ? "40px" : "auto",
+                color: '#2C656B',
+                borderColor:'#2C656B'
+               }}
             >
               {!isExtraSmall && "Back to Documents"}
             </Button>
@@ -150,7 +153,17 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
                   onChange={(event) =>
                     setShowLinkedTextHighlights(event.target.checked)
                   }
-                  color="primary"
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#2C656B',
+                      '&:hover': {
+                        backgroundColor: 'rgba(44, 101, 107, 0.08)',
+                      },
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#2C656B',
+                    },
+                  }}
                   size="small"
                 />
               }
@@ -161,7 +174,9 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
                   ? "Show Links"
                   : "Show Intertext Links"
               }
-              sx={{ margin: 0 }}
+              sx={{ margin: 0
+                
+               }}
             />
           </Tooltip>
 
@@ -199,14 +214,22 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
                 index === 0 ? undefined : () => handleRemoveDocument(doc.id)
               }
               deleteIcon={<CloseIcon />}
-              color={index === 0 ? "primary" : "default"}
               variant={index === 0 ? "filled" : "outlined"}
               sx={{
                 maxWidth: isExtraSmall ? "150px" : isSmall ? "200px" : "250px",
+                backgroundColor: index === 0 ? "#2C656B" : "#FE6100",
+                color: "#fff", // Set text color to white for better contrast
                 "& .MuiChip-label": {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                },
+                // Optional: style the delete icon color
+                "& .MuiChip-deleteIcon": {
+                  color: "rgba(255, 255, 255, 0.7)",
+                  "&:hover": {
+                    color: "#fff",
+                  },
                 },
               }}
             />
@@ -265,7 +288,10 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
                   variant={isLinkingModeActive ? "contained" : "outlined"}
                   size="small"
                   startIcon={<LinkIcon />}
-                  sx={{ flexShrink: 0 }}
+                  sx={{ flexShrink: 0,
+                    color: '#2C656B',
+                    borderColor: '#2C656B'
+                   }}
                 >
                   {isMedium ? "Link" : "Create Intertext Link"}
                 </Button>

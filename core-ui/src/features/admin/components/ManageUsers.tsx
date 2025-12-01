@@ -60,7 +60,7 @@ const RoleChip = styled(Chip, {
   margin: theme.spacing(0.25),
   cursor: 'pointer',
   ...(assigned ? {
-    backgroundColor: '#00693e',
+    backgroundColor: '#2C656B',
     color: 'white',
     '&:hover': {
       backgroundColor: '#004d2d',
@@ -73,8 +73,8 @@ const RoleChip = styled(Chip, {
     },
   } : {
     backgroundColor: 'transparent',
-    color: '#00693e',
-    border: `1px solid #00693e`,
+    color: '#2C656B',
+    border: `1px solid #2C656B`,
     '&:hover': {
       backgroundColor: '#f0f8f5',
     },
@@ -82,7 +82,7 @@ const RoleChip = styled(Chip, {
 }));
 
 const SaveButton = styled(Button)(({ theme }) => ({
-  backgroundColor: '#00693e',
+  backgroundColor: '#2C656B',
   color: 'white',
   '&:hover': {
     backgroundColor: '#004d2d',

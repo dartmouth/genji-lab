@@ -43,7 +43,7 @@ const styles = {
   settingsIcon: {
     width: '20px',
     height: '20px',
-    fill: '#007bff'
+    fill: '#648FFF'
   } as React.CSSProperties,
 
   titleText: {
@@ -106,7 +106,7 @@ const styles = {
   checkbox: {
     width: '16px',
     height: '16px',
-    accentColor: '#007bff'
+    accentColor: '#648FFF'
   } as React.CSSProperties,
 
   checkboxLabel: {
@@ -128,7 +128,7 @@ const styles = {
   } as React.CSSProperties,
 
   selectFocus: {
-    borderColor: '#007bff',
+    borderColor: '#648FFF',
     outline: 'none'
   } as React.CSSProperties,
 
@@ -144,7 +144,7 @@ const styles = {
   } as React.CSSProperties,
 
   numberInputFocus: {
-    borderColor: '#007bff',
+    borderColor: '#648FFF',
     outline: 'none'
   } as React.CSSProperties,
 
@@ -333,7 +333,7 @@ const AdvancedSettings: React.FC<AdvancedSearchProps> = (advanced) => {
                 value={settings.sortBy}
                 onChange={(e) => handleSortByChange(e.target.value)}
                 onFocus={(e) => {
-                  (e.target as HTMLSelectElement).style.borderColor = '#007bff';
+                  (e.target as HTMLSelectElement).style.borderColor = '#648FFF';
                 }}
                 onBlur={(e) => {
                   (e.target as HTMLSelectElement).style.borderColor = '#ced4da';
@@ -353,7 +353,7 @@ const AdvancedSettings: React.FC<AdvancedSearchProps> = (advanced) => {
                 value={settings.sortOrder}
                 onChange={(e) => handleSortOrderChange(e.target.value as "asc" | "desc")}
                 onFocus={(e) => {
-                  (e.target as HTMLSelectElement).style.borderColor = '#007bff';
+                  (e.target as HTMLSelectElement).style.borderColor = '#648FFF';
                 }}
                 onBlur={(e) => {
                   (e.target as HTMLSelectElement).style.borderColor = '#ced4da';
@@ -376,7 +376,7 @@ const AdvancedSettings: React.FC<AdvancedSearchProps> = (advanced) => {
                 max="100"
                 onChange={(e) => handleLimitChange(parseInt(e.target.value) || 1)}
                 onFocus={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = '#007bff';
+                  (e.target as HTMLInputElement).style.borderColor = '#648FFF';
                 }}
                 onBlur={(e) => {
                   (e.target as HTMLInputElement).style.borderColor = '#ced4da';
