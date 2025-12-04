@@ -43,114 +43,113 @@ router = APIRouter(prefix="/api/v1", tags=["authentication"])
 
 
 def extract_attribute_from_cas(
-    xml_string: str, 
-    attribute_name: str, 
-    cas_config: models.CASConfiguration
+    xml_string: str, attribute_name: str, cas_config: models.CASConfiguration
 ) -> str:
     """
     Generic function to extract any attribute from CAS XML response.
-    
+
     Args:
         xml_string: XML response from CAS server
         attribute_name: Name of the attribute to extract
         cas_config: CAS configuration object
-        
+
     Returns:
         Extracted attribute value or empty string if not found
     """
     try:
         root = ET.fromstring(xml_string)
         namespace = {"cas": cas_config.xml_namespace}
-        
+
         # Try to find the element directly
         element = root.find(f".//cas:{attribute_name}", namespace)
         if element is not None and element.text:
             return element.text.strip()
-        
+
         # Try as attribute with name/value pattern
-        attr_element = root.find(f'.//cas:attribute[@name="{attribute_name}"]', namespace)
+        attr_element = root.find(
+            f'.//cas:attribute[@name="{attribute_name}"]', namespace
+        )
         if attr_element is not None and "value" in attr_element.attrib:
             return attr_element.attrib["value"].strip()
-        
+
     except ET.ParseError as e:
         logger.error(f"XML parsing error in extract_attribute_from_cas: {e}")
     except Exception as e:
         logger.error(f"Unexpected error in extract_attribute_from_cas: {e}")
-    
+
     return ""
 
 
 def extract_and_format_email(
-    xml_string: str, 
-    cas_config: models.CASConfiguration,
-    username: str = None
+    xml_string: str, cas_config: models.CASConfiguration, username: str = None
 ) -> str:
     """
     Extract and format email from CAS XML response using configuration.
-    
+
     Args:
         xml_string: XML response from CAS server
         cas_config: CAS configuration object
         username: Optional username for constructing email
-        
+
     Returns:
         Formatted email address or empty string if not found
     """
     try:
         email_attr = cas_config.attribute_mapping.get("email", "email")
-        
+
         if cas_config.email_format == "from_cas":
             # Extract from CAS response
             email = extract_attribute_from_cas(xml_string, email_attr, cas_config)
             if email:
                 return email.lower().replace(" ", ".")
-        
+
         # Construct email if format is "construct" or if extraction failed
-        if cas_config.email_format == "construct" and cas_config.email_domain and username:
+        if (
+            cas_config.email_format == "construct"
+            and cas_config.email_domain
+            and username
+        ):
             return f"{username.lower().replace(' ', '.')}@{cas_config.email_domain}"
-        
+
         # Fallback: try to extract from user element
         root = ET.fromstring(xml_string)
         namespace = {"cas": cas_config.xml_namespace}
         user_element = root.find(".//cas:user", namespace)
-        
+
         if user_element is not None and user_element.text:
             return user_element.text.lower().replace(" ", ".")
-            
+
     except ET.ParseError as e:
         logger.error(f"XML parsing error in extract_and_format_email: {e}")
     except Exception as e:
         logger.error(f"Unexpected error in extract_and_format_email: {e}")
-    
+
     return ""
 
 
-def extract_name_parts(
-    xml_string: str, 
-    cas_config: models.CASConfiguration
-) -> dict:
+def extract_name_parts(xml_string: str, cas_config: models.CASConfiguration) -> dict:
     """
     Extract first and last name from CAS XML response using configuration.
-    
+
     Args:
         xml_string: XML response from CAS server
         cas_config: CAS configuration object
-        
+
     Returns:
         Dict with first_name, last_name, and full_name (empty strings if not found)
     """
     try:
         root = ET.fromstring(xml_string)
         namespace = {"cas": cas_config.xml_namespace}
-        
+
         # Try to get full name first
         full_name_attr = cas_config.attribute_mapping.get("full_name", "name")
         name_element = root.find(f".//cas:{full_name_attr}", namespace)
-        
+
         if name_element is not None and name_element.text:
             full_name = name_element.text
             name_parts = full_name.split()
-            
+
             if len(name_parts) == 2:
                 first_name, last_name = name_parts
             elif len(name_parts) > 2:
@@ -159,61 +158,58 @@ def extract_name_parts(
             else:
                 first_name = name_parts[0] if name_parts else ""
                 last_name = ""
-            
+
             return {
                 "first_name": first_name,
                 "last_name": last_name,
                 "full_name": full_name,
             }
-        
+
         # Try to extract first and last name separately
         first_name_attr = cas_config.attribute_mapping.get("first_name", "givenName")
         last_name_attr = cas_config.attribute_mapping.get("last_name", "sn")
-        
+
         first_name = extract_attribute_from_cas(xml_string, first_name_attr, cas_config)
         last_name = extract_attribute_from_cas(xml_string, last_name_attr, cas_config)
-        
+
         if first_name or last_name:
             return {
                 "first_name": first_name,
                 "last_name": last_name,
                 "full_name": f"{first_name} {last_name}".strip(),
             }
-            
+
     except ET.ParseError as e:
         logger.error(f"XML parsing error in extract_name_parts: {e}")
     except Exception as e:
         logger.error(f"Unexpected error in extract_name_parts: {e}")
-    
+
     return {"first_name": "", "last_name": "", "full_name": ""}
 
 
-def extract_cas_metadata(
-    xml_string: str, 
-    cas_config: models.CASConfiguration
-) -> dict:
+def extract_cas_metadata(xml_string: str, cas_config: models.CASConfiguration) -> dict:
     """
     Extract all relevant metadata from CAS response using configuration.
-    
+
     Args:
         xml_string: XML response from CAS server
         cas_config: CAS configuration object
-        
+
     Returns:
         Dict with CAS metadata based on config (empty dict if extraction fails)
     """
     metadata = {}
-    
+
     try:
         # Extract attributes specified in config
         for attr_name in cas_config.metadata_attributes:
             value = extract_attribute_from_cas(xml_string, attr_name, cas_config)
             if value:
                 metadata[attr_name] = value
-                
+
     except Exception as e:
         logger.error(f"Unexpected error in extract_cas_metadata: {e}")
-    
+
     return metadata
 
 
@@ -298,7 +294,7 @@ def get_or_create_user_from_cas(
 
         # Reload user with fresh relations using shared utility
         return load_user_with_relations(db_session, existing_user.id)
-    
+
     else:
         # Create new user
         new_user = models.User(
@@ -340,34 +336,28 @@ async def validate_cas_ticket(
     """
     # Load CAS configuration from database
     cas_config = db.query(models.CASConfiguration).first()
-    
+
     if not cas_config or not cas_config.enabled:
-        raise HTTPException(
-            status_code=400, 
-            detail="CAS authentication is not enabled"
-        )
-    
+        raise HTTPException(status_code=400, detail="CAS authentication is not enabled")
+
     if not data.ticket:
         raise HTTPException(status_code=400, detail="Missing CAS ticket")
-    
+
     # Build validation URL from config
     validation_url = (
         f"{cas_config.server_url}{cas_config.validation_endpoint}"
         f"?ticket={data.ticket}&service={data.service}"
     )
-    
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(validation_url)
             response.raise_for_status()
             xml = response.text
-            
+
             if "<cas:authenticationSuccess>" not in xml:
-                raise HTTPException(
-                    status_code=401, 
-                    detail="CAS authentication failed"
-                )
-            
+                raise HTTPException(status_code=401, detail="CAS authentication failed")
+
             # Use config-driven extraction
             user = get_or_create_user_from_cas(db, xml, cas_config)
 
@@ -385,6 +375,7 @@ async def validate_cas_ticket(
                 username=user.username,
                 email=user.email,
                 is_active=user.is_active,
+                viewed_tutorial=user.viewed_tutorial,
                 user_metadata=user.user_metadata,
                 roles=get_user_roles(user),
                 groups=get_user_groups(user),

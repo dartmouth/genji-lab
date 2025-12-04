@@ -210,6 +210,7 @@ body {
 
 .user-avatar-container {
   position: relative;
+  z-index: 1200;
 }
 
 .user-avatar {
@@ -246,7 +247,7 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 12px;
   margin-right: 40px;
-  z-index: 1001;
+  z-index: 1200;
   animation: fadeIn 0.2s ease-in-out;
 }
 
