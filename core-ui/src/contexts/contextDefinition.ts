@@ -1,5 +1,5 @@
-// authContextDefinition.ts
-import { createContext } from 'react';
+// contextDefinition.ts
+import { createContext } from "react";
 
 export interface AuthUser {
   id: number;
@@ -12,6 +12,7 @@ export interface AuthUser {
   ttl: string;
   groups: Array<{ name: string; id: number }>;
   is_active: boolean;
+  viewed_tutorial: boolean; // ← ADD THIS LINE
   [key: string]: unknown;
 }
 
@@ -19,12 +20,12 @@ export interface AuthUser {
 export interface AuthContextType {
   // User information
   user: AuthUser | null;
-  
+
   // Authentication state
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Authentication actions
   login: (username?: string, password?: string) => Promise<void> | void;
   loginBasic: (username: string, password: string) => Promise<void>;
@@ -43,4 +44,6 @@ export interface RegisterData {
 }
 
 // Create the context with a default value
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);

@@ -27,6 +27,7 @@ class UserResponse(BaseModel):
     email: Optional[str] = None
     username: str
     is_active: bool
+    viewed_tutorial: bool = False
     roles: List[str] = []
     groups: List[Dict[str, Any]] = []
     user_metadata: Optional[Dict[str, Any]] = None

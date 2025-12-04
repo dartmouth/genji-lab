@@ -1,6 +1,11 @@
 // src/features/documentGallery/DocumentViewerContainer.tsx
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import {
   setSelectedCollectionId as setReduxSelectedCollectionId,
@@ -93,13 +98,13 @@ export const DocumentContentView: React.FC = () => {
 
     // Check both hash and query parameter for annotationId
     const hashAnnotationId = getAnnotationIdFromHash();
-    const queryAnnotationId = searchParams.get('annotationId');
+    const queryAnnotationId = searchParams.get("annotationId");
     const annotationId = queryAnnotationId || hashAnnotationId;
 
     if (documentId && annotationId) {
       // Open the annotations panel when navigating to a specific annotation
       setIsAnnotationsPanelCollapsed(false);
-      
+
       dispatch(
         setHoveredHighlights({
           documentId: documentId as unknown as number,
@@ -249,7 +254,7 @@ export const DocumentContentView: React.FC = () => {
   );
 
   useEffect(() => {
-    if (!documentId && !collectionId) {
+    if (!documentId || !collectionId) {
       return;
     }
     const docId = Number(documentId);
@@ -477,7 +482,7 @@ export const DocumentContentView: React.FC = () => {
           showLinkedTextHighlights={showLinkedTextHighlights}
           isAnnotationsPanelCollapsed={isAnnotationsPanelCollapsed}
           onToggleAnnotationsPanel={handleToggleAnnotationsPanel}
-          flaggedAnnotationId={searchParams.get('annotationId')}
+          flaggedAnnotationId={searchParams.get("annotationId")}
         />
       ) : (
         <Box
