@@ -78,7 +78,7 @@ export const useCasAuth = ({
         }
         
         const userData = await response.json();
-        console.log(userData)
+        //console.log(userData)
         
         // Set auth state with expiration
         const expiresAt = Date.now() + (sessionExpirationHours * 60 * 60 * 1000);
@@ -88,7 +88,7 @@ export const useCasAuth = ({
           expiresAt,
         });
       } catch (e) {
-        console.error('Error validating CAS ticket:', e);
+        //console.error('Error validating CAS ticket:', e);
         setError(e instanceof Error ? e.message : 'Unknown error during authentication');
         setAuthState({ isAuthenticated: false, user: null });
       }
@@ -112,7 +112,7 @@ export const useCasAuth = ({
           localStorage.removeItem(localStorageKey);
         }
       } catch (e) {
-        console.error('Failed to parse auth data from localStorage', e);
+        //console.error('Failed to parse auth data from localStorage', e);
         localStorage.removeItem(localStorageKey);
       }
     }

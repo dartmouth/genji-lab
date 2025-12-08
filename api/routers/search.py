@@ -5,9 +5,6 @@ from sqlalchemy import text
 from dotenv import load_dotenv, find_dotenv
 from typing import List
 
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from database import get_db
 from models.models import Annotation as AnnotationModel
 from schemas.search import (

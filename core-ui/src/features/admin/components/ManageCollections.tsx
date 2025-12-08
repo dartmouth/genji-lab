@@ -264,7 +264,7 @@ const ManageCollections: React.FC = () => {
           modified: stats.modified
         });
       } catch (error: any) {
-        console.error('Failed to fetch collection statistics:', error);
+        //console.error('Failed to fetch collection statistics:', error);
         const errorMessage = error.response?.data?.detail || error.message || 'Error fetching collection statistics';
         showNotification(errorMessage, 'error');
       } finally {
@@ -330,7 +330,7 @@ To confirm, please type the collection name exactly as shown:
       setDeleteProgress(20);
       
       const response = await api.delete(`/collections/${selectedCollection}?force=true`);
-      console.log(`Delete status is ${response.status}`)
+      //console.log(`Delete status is ${response.status}`)
       
       setDeleteProgress(70);
       setDeleteProgress(90);
@@ -588,7 +588,7 @@ To confirm, please type the collection name exactly as shown:
         });
         setUpdateVisibilityNewVisibility(collectionData.visibility);
       } catch (error: any) {
-        console.error('Failed to fetch collection details:', error);
+        //console.error('Failed to fetch collection details:', error);
         const errorMessage = error.response?.data?.detail || error.message || 'Error fetching collection details';
         showNotification(errorMessage, 'error');
       } finally {
@@ -668,7 +668,7 @@ To confirm, please type the collection name exactly as shown:
     try {
       const response = await api.get(`/collections/${collectionId}`);
       const details = response.data;
-      console.log('Collection details response:', details); // Debug logging
+      //console.log('Collection details response:', details); // Debug logging
       setOverviewCollectionDetails(details);
     } catch (error: any) {
       console.error('Failed to fetch collection details:', error);

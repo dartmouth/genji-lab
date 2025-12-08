@@ -62,8 +62,6 @@ class User(Base):
     owned_annotations = relationship("Annotation", foreign_keys="Annotation.owner_id", back_populates="owner")
     owned_documents = relationship("Document", foreign_keys="Document.owner_id", back_populates="owner")
     owned_collections = relationship("DocumentCollection", foreign_keys="DocumentCollection.owner_id", back_populates="owner")
-    modified_collections = relationship("DocumentCollection", foreign_keys="DocumentCollection.modified_by_id", back_populates="modified_by")
-    owned_collections = relationship("DocumentCollection", foreign_keys="DocumentCollection.owner_id", back_populates="owner")
     created_groups = relationship("Group", foreign_keys="Group.created_by_id", back_populates="created_by")
     created_shares = relationship("ObjectSharing", foreign_keys="ObjectSharing.created_by_id", back_populates="created_by")
     roles = relationship("Role", secondary=user_roles, back_populates="users")

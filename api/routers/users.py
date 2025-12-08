@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update, delete
-from sqlalchemy.orm import joinedload  # Add this import
+from sqlalchemy.orm import joinedload
 
 from database import get_db
 from models.models import User as UserModel, Role as RoleModel
@@ -37,7 +37,7 @@ def read_users(
     """
     Retrieve users with optional filtering (includes roles via joinedload)
     """
-    query = select(UserModel).options(joinedload(UserModel.roles))  # Add joinedload here
+    query = select(UserModel).options(joinedload(UserModel.roles))
     
     # Apply filters if provided
     if first_name:
@@ -66,7 +66,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     """
     Get a specific user by ID (includes roles via joinedload)
     """
-    query = select(UserModel).options(joinedload(UserModel.roles)).filter(UserModel.id == user_id)  # Add joinedload here
+    query = select(UserModel).options(joinedload(UserModel.roles)).filter(UserModel.id == user_id)
     result = db.execute(query)
     user = result.scalars().unique().first() 
     if user is None:
@@ -78,7 +78,6 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     """
     Update a user (includes roles in response)
     """
-    # First get the user with roles
     query = select(UserModel).options(joinedload(UserModel.roles)).filter(UserModel.id == user_id)
     result = db.execute(query)
     db_user = result.scalars().unique().first() 
@@ -103,7 +102,6 @@ def partial_update_user(
     """
     Partially update a user (includes roles in response)
     """
-    # First get the user with roles
     query = select(UserModel).options(joinedload(UserModel.roles)).filter(UserModel.id == user_id)
     result = db.execute(query)
     db_user = result.scalars().unique().first() 
