@@ -93,7 +93,7 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
       className="document-viewer-header"
       sx={{
         position: "sticky",
-        top: 0,
+        top: "60px",
         zIndex: 1100,
         backgroundColor: "background.paper",
         borderBottom: "1px solid",
@@ -122,10 +122,11 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
               startIcon={<span>←</span>}
               variant="outlined"
               size="small"
-              sx={{ minWidth: isExtraSmall ? "40px" : "auto",
-                color: '#2C656B',
-                borderColor:'#2C656B'
-               }}
+              sx={{
+                minWidth: isExtraSmall ? "40px" : "auto",
+                color: "#2C656B",
+                borderColor: "#2C656B",
+              }}
             >
               {!isExtraSmall && "Back to Documents"}
             </Button>
@@ -154,14 +155,14 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
                     setShowLinkedTextHighlights(event.target.checked)
                   }
                   sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: '#2C656B',
-                      '&:hover': {
-                        backgroundColor: 'rgba(44, 101, 107, 0.08)',
+                    "& .MuiSwitch-switchBase.Mui-checked": {
+                      color: "#2C656B",
+                      "&:hover": {
+                        backgroundColor: "rgba(44, 101, 107, 0.08)",
                       },
                     },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: '#2C656B',
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: "#2C656B",
                     },
                   }}
                   size="small"
@@ -174,9 +175,7 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
                   ? "Show Links"
                   : "Show Intertext Links"
               }
-              sx={{ margin: 0
-                
-               }}
+              sx={{ margin: 0 }}
             />
           </Tooltip>
 
@@ -288,10 +287,11 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
                   variant={isLinkingModeActive ? "contained" : "outlined"}
                   size="small"
                   startIcon={<LinkIcon />}
-                  sx={{ flexShrink: 0,
-                    color: '#2C656B',
-                    borderColor: '#2C656B'
-                   }}
+                  sx={{
+                    flexShrink: 0,
+                    color: "#2C656B",
+                    borderColor: "#2C656B",
+                  }}
                 >
                   {isMedium ? "Link" : "Create Intertext Link"}
                 </Button>

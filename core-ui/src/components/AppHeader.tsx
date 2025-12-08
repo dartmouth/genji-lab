@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@hooks/useLocalStorage";
-import { Flag } from '@mui/icons-material';
-import axios from 'axios';
+import { Flag } from "@mui/icons-material";
+import axios from "axios";
 
 import { useAppDispatch, useAppSelector } from "@store/hooks";
 import {
@@ -15,6 +16,8 @@ import {
 import { SimpleSearchBar } from "@/features/search";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
+import { TutorialModal } from "./TutorialModal";
+import { useTutorial } from "@hooks/useTutorial";
 import "../features/documentView/styles/AuthStyles.css";
 
 interface CASPublicConfig {
@@ -35,10 +38,14 @@ const AppHeader: React.FC = () => {
   const dispatch = useAppDispatch();
   const { settings } = useAppSelector((state) => state.siteSettings);
 
+  // Tutorial state
+  const { showTutorial, openTutorial, closeTutorial, completeTutorial } =
+    useTutorial();
+
   // CAS public config state
   const [casConfig, setCasConfig] = useState<CASPublicConfig>({
     enabled: false,
-    display_name: "CAS Login"
+    display_name: "CAS Login",
   });
 
   // Load site settings on component mount
@@ -50,10 +57,10 @@ const AppHeader: React.FC = () => {
   useEffect(() => {
     const fetchCASConfig = async () => {
       try {
-        const response = await axios.get('/api/v1/cas-config/public');
+        const response = await axios.get("/api/v1/cas-config/public");
         setCasConfig(response.data);
       } catch (error) {
-        console.error('Failed to load CAS config:', error);
+        console.error("Failed to load CAS config:", error);
       }
     };
 
@@ -112,35 +119,54 @@ const AppHeader: React.FC = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!dropdownOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if click is outside both avatar and dropdown
+      if (
+        !target.closest(".user-avatar") &&
+        !target.closest(".dropdown-menu")
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
+
   // Fetch flag count for admins
   const fetchFlagCount = async () => {
     try {
-      const response = await axios.get('/api/v1/flags/count', {
+      const response = await axios.get("/api/v1/flags/count", {
         withCredentials: true,
       });
       setFlagCount(response.data.count);
     } catch (error) {
-      console.error('Failed to fetch flag count:', error);
+      console.error("Failed to fetch flag count:", error);
     }
   };
 
   // Fetch flag count on mount and every 4 hours if user is admin
   useEffect(() => {
-    if (isAuthenticated && user?.roles?.includes('admin')) {
+    if (isAuthenticated && user?.roles?.includes("admin")) {
       fetchFlagCount(); // Fetch immediately on mount/login
       const interval = setInterval(fetchFlagCount, 14400000);
-      
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).refreshFlagCount = fetchFlagCount;
-      
+
       const handleRefresh = () => fetchFlagCount();
-      window.addEventListener('refreshFlagCount', handleRefresh);
-      
+      window.addEventListener("refreshFlagCount", handleRefresh);
+
       return () => {
         clearInterval(interval);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (window as any).refreshFlagCount;
-        window.removeEventListener('refreshFlagCount', handleRefresh);
+        window.removeEventListener("refreshFlagCount", handleRefresh);
       };
     }
   }, [isAuthenticated, user]);
@@ -185,6 +211,20 @@ const AppHeader: React.FC = () => {
     setShowRegisterForm(true);
   };
 
+  const handleTutorialComplete = async () => {
+    if (user) {
+      await completeTutorial(user.id);
+    } else {
+      // For anonymous users, just close the tutorial
+      closeTutorial();
+    }
+  };
+
+  const handleOpenTutorialFromMenu = () => {
+    setDropdownOpen(false);
+    openTutorial();
+  };
+
   return (
     <header className="app-header">
       <div className="header-left">
@@ -196,134 +236,185 @@ const AppHeader: React.FC = () => {
       <div className="header-right">
         {isAuthenticated && user ? (
           // Authenticated user - show avatar and dropdown
-          <div className="user-avatar-container">
-            <div className="user-avatar" onClick={toggleDropdown} style={{ position: 'relative' }}>
+          <div
+            className="user-avatar-container"
+            style={{ position: "relative", zIndex: 1300 }}
+          >
+            <div
+              className="user-avatar"
+              onClick={toggleDropdown}
+              style={{ position: "relative" }}
+            >
               <span>
                 {`${user.first_name.charAt(0)}${user.last_name.charAt(
                   0
                 )}`.toUpperCase()}
               </span>
-              
+
               {/* Flag notification badge - admin only, positioned at bottom-left */}
-              {user?.roles?.includes('admin') && flagCount > 0 && (
+              {user?.roles?.includes("admin") && flagCount > 0 && (
                 <div
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate('/admin?tab=flags&subtab=1');
+                    navigate("/admin?tab=flags&subtab=1");
                   }}
                   style={{
-                    position: 'absolute',
-                    bottom: '-2px',
-                    left: '-2px',
-                    cursor: 'pointer',
-                    backgroundColor: '#fff',
-                    borderRadius: '50%',
-                    width: '20px',
-                    height: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    position: "absolute",
+                    bottom: "-2px",
+                    left: "-2px",
+                    cursor: "pointer",
+                    backgroundColor: "#fff",
+                    borderRadius: "50%",
+                    width: "20px",
+                    height: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
                   }}
-                  title={`${flagCount} flagged comment${flagCount !== 1 ? 's' : ''}`}
+                  title={`${flagCount} flagged comment${
+                    flagCount !== 1 ? "s" : ""
+                  }`}
                 >
-                  <Flag sx={{ fontSize: '14px', color: '#d32f2f' }} />
+                  <Flag sx={{ fontSize: "14px", color: "#d32f2f" }} />
                 </div>
               )}
             </div>
-            {dropdownOpen && (
-              <div className="dropdown-menu">
-                <div className="user-info">
-                  {`Welcome, ${user.first_name} ${user.last_name}`}
-                </div>
-                {user?.roles &&
-                (user.roles.includes("admin") ||
-                  user.roles.includes("instructor")) ? (
-                  <button
-                    className="admin-button"
-                    onClick={() => (window.location.href = "/admin")}
-                  >
-                    Administration
-                  </button>
-                ) : (
-                  <div></div>
-                )}
-                <br />
-                <br />
-                {user?.groups && user.groups.length > 0 ? (
-                  <div>
-                    <div>{isOptedOut === "true" ? "Select Classroom" : "Active Classroom"}</div>
-                    <select
-                      className="group-selector"
-                      value={activeClassroomValue || user.groups[0]?.id || ""}
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        console.log(
-                          "Setting classroom to:",
-                          newValue,
-                          typeof newValue
-                        );
-                        if (newValue) {
-                          // Only set if truthy
-                          setActiveClassroomValue(newValue);
-                        }
-                      }}
-                    >
-                      {user.groups.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </select>
-                    <br />
-                    <br />
-                    <button
-                      className="logout-button"
-                      onClick={() => {
-                        // Check current opted-out state
-                        const currentOptedOut = isOptedOut === "true";
-                        
-                        if (currentOptedOut) {
-                          // User is clicking "Enter Classroom"
-                          setIsOptedOut("false");
-                          setDropdownOpen(false); // Close dropdown after entering
-                        } else {
-                          // User is clicking "Exit Classroom"
-                          setIsOptedOut("true");
-                          setDropdownOpen(false); // Close dropdown after exiting
-                        }
-                      }}
-                      disabled={!activeClassroomValue && !user.groups[0]?.id}
-                      style={{
-                        backgroundColor: isOptedOut === "true" ? "#2C656B" : "#1976d2",
-                        color: "white",
-                        border: "none",
-                        transition: "background-color 0.3s ease"
-                      }}
-                    >
-                      {isOptedOut === "true" ? "Enter Classroom" : "Exit Classroom"}
-                    </button>
-                  </div>
-                ) : (
-                  <div>No groups</div>
-                )}
-                <br />
-                <br />
-                <button
-                  className="logout-button"
-                  onClick={() => {
-                    toggleDropdown();
-                    logout();
+            {dropdownOpen &&
+              createPortal(
+                <div
+                  className="dropdown-menu"
+                  style={{
+                    position: "fixed",
+                    top: "60px",
+                    right: "-1.5em",
+                    zIndex: 10000,
                   }}
                 >
-                  Logout
-                </button>
-              </div>
-            )}
+                  <div className="user-info">
+                    {`Welcome, ${user.first_name} ${user.last_name}`}
+                  </div>
+
+                  {/* View Tutorial Button */}
+                  <button
+                    className="admin-button"
+                    onClick={handleOpenTutorialFromMenu}
+                  >
+                    View Tutorial
+                  </button>
+
+                  {user?.roles &&
+                  (user.roles.includes("admin") ||
+                    user.roles.includes("instructor")) ? (
+                    <button
+                      className="admin-button"
+                      onClick={() => (window.location.href = "/admin")}
+                    >
+                      Administration
+                    </button>
+                  ) : (
+                    <div></div>
+                  )}
+                  <br />
+                  <br />
+                  {user?.groups && user.groups.length > 0 ? (
+                    <div>
+                      <div>
+                        {isOptedOut === "true"
+                          ? "Select Classroom"
+                          : "Active Classroom"}
+                      </div>
+                      <select
+                        className="group-selector"
+                        value={activeClassroomValue || user.groups[0]?.id || ""}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          console.log(
+                            "Setting classroom to:",
+                            newValue,
+                            typeof newValue
+                          );
+                          if (newValue) {
+                            // Only set if truthy
+                            setActiveClassroomValue(newValue);
+                          }
+                        }}
+                      >
+                        {user.groups.map((group) => (
+                          <option key={group.id} value={group.id}>
+                            {group.name}
+                          </option>
+                        ))}
+                      </select>
+                      <br />
+                      <br />
+                      <button
+                        className="logout-button"
+                        onClick={() => {
+                          // Check current opted-out state
+                          const currentOptedOut = isOptedOut === "true";
+
+                          if (currentOptedOut) {
+                            // User is clicking "Enter Classroom"
+                            setIsOptedOut("false");
+                            setDropdownOpen(false); // Close dropdown after entering
+                          } else {
+                            // User is clicking "Exit Classroom"
+                            setIsOptedOut("true");
+                            setDropdownOpen(false); // Close dropdown after exiting
+                          }
+                        }}
+                        disabled={!activeClassroomValue && !user.groups[0]?.id}
+                        style={{
+                          backgroundColor:
+                            isOptedOut === "true" ? "#2C656B" : "#1976d2",
+                          color: "white",
+                          border: "none",
+                          transition: "background-color 0.3s ease",
+                        }}
+                      >
+                        {isOptedOut === "true"
+                          ? "Enter Classroom"
+                          : "Exit Classroom"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div>No groups</div>
+                  )}
+                  <br />
+                  <br />
+                  <button
+                    className="logout-button"
+                    onClick={() => {
+                      toggleDropdown();
+                      logout();
+                    }}
+                    style={{
+                      backgroundColor: "#DC267F",
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>,
+                document.body
+              )}
           </div>
         ) : (
-          // Anonymous user - show auth buttons
+          // Anonymous user - show auth buttons AND tutorial button
           <div className="auth-controls">
+            {/* Tutorial Button for Anonymous Users */}
+            <button
+              onClick={openTutorial}
+              className="login-button"
+              style={{
+                backgroundColor: "#785EF0",
+                border: "none",
+              }}
+              title="View Tutorial"
+            >
+              Tutorial
+            </button>
+
             {casConfig.enabled && (
               <button
                 onClick={handleCasLogin}
@@ -351,6 +442,14 @@ const AppHeader: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Tutorial Modal */}
+      <TutorialModal
+        open={showTutorial}
+        onClose={closeTutorial}
+        onComplete={handleTutorialComplete}
+      />
+
       {showLoginForm && (
         <LoginForm
           onCancel={handleLoginFormCancel}
