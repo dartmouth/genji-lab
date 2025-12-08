@@ -1,7 +1,7 @@
-FROM postgres:17.2
+FROM postgres:17.7
 
-# Install dependencies
 RUN apt-get update && \
+    apt-get upgrade && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
     lsb-release \
