@@ -6,9 +6,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# The actual application code will be mounted at runtime
-# This is just a placeholder to set up the container structure
-RUN mkdir -p alembic
+COPY alembic/ ./alembic/
 
 # Set the entrypoint to alembic
 ENTRYPOINT ["alembic"]
