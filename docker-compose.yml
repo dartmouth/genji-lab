@@ -52,8 +52,8 @@ services:
     platform: linux/arm64
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
-    volumes:
-      - ./api:/app
+    # volumes:
+    #   - ./api:/app
     depends_on:
       postgres:
         condition: service_healthy

@@ -6,7 +6,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY alembic/ ./alembic/
+COPY . .
+# COPY alembic.ini .
+# COPY alembic/ ./alembic/
+
+
+ENV ALEMBIC_CONFIG=/app/alembic.ini
 
 # Set the entrypoint to alembic
 ENTRYPOINT ["alembic"]
