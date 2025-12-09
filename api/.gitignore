@@ -2,3 +2,9 @@
 routers/__pycache__/*
 schemas/__pycache__/*
 __pycache__/
+
+# Test artifacts
+tests/htmlcov/
+.coverage
+*.coverage
+.pytest_cache/
