@@ -26,9 +26,13 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing
 |------|---------|
 | `tests/__init__.py` | Package documentation and usage instructions |
 | `tests/conftest.py` | Test fixtures, in-memory database setup, SQLite-compatible models |
-| `tests/test_documents.py` | 29 tests for document operations |
+| `tests/test_documents.py` | 38 tests for document operations |
 | `tests/test_document_collections.py` | 16 tests for collection operations |
+| `tests/test_document_elements.py` | 32 tests for document element operations |
+| `tests/test_word_import.py` | 31 tests for Word document import (with mocking) |
 | `pytest.ini` | Pytest configuration |
+
+**Total: 117 tests** running in under 1 second
 
 ## Test Dependencies
 
@@ -66,7 +70,7 @@ The tests verify the data layer logic directly (CRUD operations, relationships, 
 
 | Benefit | Description |
 |---------|-------------|
-| **Fast** | Runs ~45 tests in ~0.5 seconds |
+| **Fast** | Runs ~117 tests in ~1 second |
 | **No Dependencies** | Requires no external services (no PostgreSQL, no Docker) |
 | **Isolated** | Each test gets a fresh database (tables recreated per test) |
 | **Reliable** | No flaky tests due to network or database issues |
@@ -97,9 +101,11 @@ Name                                 Stmts   Miss  Cover   Missing
 tests\__init__.py                        0      0   100%
 tests\conftest.py                      147      0   100%
 tests\test_document_collections.py      92      0   100%
-tests\test_documents.py                170      0   100%
+tests\test_document_elements.py        265      0   100%
+tests\test_documents.py                208      0   100%
+tests\test_word_import.py              195      0   100%
 ------------------------------------------------------------------
-TOTAL                                  409      0   100%
+TOTAL                                  907      0   100%
 ```
 
 **Column Meanings:**
@@ -190,17 +196,43 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 
 ## What's Tested
 
-### Documents (29 tests)
+### Documents (38 tests)
 
 | Category | Tests |
 |----------|-------|
 | **Create** | Success, collection validation, duplicate name detection (case-insensitive) |
 | **Read** | List, pagination, filter by collection/title, single document, element count |
-| **Update** | Full update, partial update (title/description), duplicate name detection |
+| **Update** | Full update, partial update (title/description), duplicate name detection, empty description, rename to same name, case change, modified timestamp, move to different collection |
 | **Delete** | Single delete, cascade to elements, bulk delete |
 | **Elements** | CRUD operations, pagination |
 | **Stats** | Annotation counts |
 | **Relationships** | Document-collection relationships, cascade deletes |
+
+### Document Elements (32 tests)
+
+| Category | Tests |
+|----------|-------|
+| **Create** | Success, validation, complex content, hierarchy, multiple elements |
+| **Read** | List, pagination, single element, with document info, content filtering |
+| **Update** | Content, hierarchy, partial updates, modified timestamp, move to different document |
+| **Delete** | Single, with annotations cascade, force parameter, bulk delete |
+| **Annotations** | Get annotations, empty, pagination, count by motivation |
+| **Hierarchy** | Ordering, section grouping |
+| **Delete Content** | Delete elements keeping document, delete annotations keeping elements, cascading deletes |
+
+### Word Import (31 tests)
+
+| Category | Tests |
+|----------|-------|
+| **Validation** | File extension (.docx, .txt, .pdf, .doc), case sensitivity |
+| **Collection** | Exists, not found |
+| **Paragraph Extraction** | Simple paragraphs, empty lines, hierarchy |
+| **Document Creation** | Create document, create elements |
+| **Transaction** | Successful commit, rollback on failure |
+| **Link Extraction** | With links, without links, various formats |
+| **Text Formatting** | Plain, bold, italic, empty paragraph |
+| **Paragraph Format** | Defaults, indent processing |
+| **Edge Cases** | Empty document, whitespace only, very long text, special characters, duplicate titles |
 
 ### Collections (16 tests)
 

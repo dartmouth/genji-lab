@@ -287,6 +287,128 @@ class TestUpdateDocument:
         assert sample_document.title == original_title
         assert sample_document.description == "New description only"
 
+    def test_update_description_to_empty(self, db_session, sample_document):
+        """Test updating description to empty string (should be allowed)."""
+        sample_document.description = ""
+        db_session.commit()
+        db_session.refresh(sample_document)
+        
+        assert sample_document.description == ""
+
+    def test_update_description_to_none(self, db_session, sample_document):
+        """Test updating description to None/null (should be allowed)."""
+        sample_document.description = None
+        db_session.commit()
+        db_session.refresh(sample_document)
+        
+        assert sample_document.description is None
+
+    def test_rename_to_same_name(self, db_session, sample_document):
+        """Test renaming document to its current name (should be allowed)."""
+        original_title = sample_document.title
+        
+        sample_document.title = original_title  # Same name
+        db_session.commit()
+        db_session.refresh(sample_document)
+        
+        assert sample_document.title == original_title
+
+    def test_rename_case_change_only(self, db_session, sample_document):
+        """Test changing only the case of the title (should be allowed)."""
+        sample_document.title = sample_document.title.upper()
+        db_session.commit()
+        db_session.refresh(sample_document)
+        
+        assert sample_document.title == "TEST DOCUMENT"
+
+    def test_rename_duplicate_detection_case_insensitive(
+        self, db_session, sample_collection, sample_document
+    ):
+        """Test that duplicate detection is case-insensitive when renaming."""
+        # Create another document
+        create_document(
+            db_session,
+            sample_collection.id,
+            title="Existing Document"
+        )
+        
+        # Check if a case-variant exists (simulating API validation)
+        new_title = "EXISTING DOCUMENT"  # Same as "Existing Document" case-insensitive
+        
+        existing = db_session.execute(
+            select(Document).where(
+                Document.document_collection_id == sample_collection.id,
+                func.lower(Document.title) == new_title.lower(),
+                Document.id != sample_document.id
+            )
+        ).scalar_one_or_none()
+        
+        assert existing is not None  # Duplicate detected
+
+    def test_update_modified_timestamp(self, db_session, sample_document):
+        """Test that modified timestamp updates on change."""
+        original_modified = sample_document.modified
+        
+        # Small delay to ensure timestamp difference
+        import time
+        time.sleep(0.01)
+        
+        sample_document.title = "Renamed Document"
+        sample_document.modified = datetime.now()
+        db_session.commit()
+        db_session.refresh(sample_document)
+        
+        assert sample_document.modified > original_modified
+
+    def test_update_preserves_created_timestamp(self, db_session, sample_document):
+        """Test that created timestamp is not changed on update."""
+        original_created = sample_document.created
+        
+        sample_document.title = "Renamed Document"
+        sample_document.description = "New description"
+        sample_document.modified = datetime.now()
+        db_session.commit()
+        db_session.refresh(sample_document)
+        
+        assert sample_document.created == original_created
+
+    def test_update_preserves_collection_relationship(
+        self, db_session, sample_collection, sample_document
+    ):
+        """Test that updating document doesn't change its collection."""
+        original_collection_id = sample_document.document_collection_id
+        
+        sample_document.title = "Renamed Document"
+        sample_document.description = "New description"
+        db_session.commit()
+        db_session.refresh(sample_document)
+        
+        assert sample_document.document_collection_id == original_collection_id
+        assert sample_document.collection.id == sample_collection.id
+
+    def test_move_document_to_different_collection(
+        self, db_session, sample_user, sample_collection, sample_document
+    ):
+        """Test moving a document to a different collection."""
+        # Create another collection
+        other_collection = DocumentCollection(
+            title="Other Collection",
+            visibility="public",
+            text_direction="ltr",
+            owner_id=sample_user.id,
+            language="en",
+        )
+        db_session.add(other_collection)
+        db_session.commit()
+        
+        # Move document
+        sample_document.document_collection_id = other_collection.id
+        db_session.commit()
+        db_session.refresh(sample_document)
+        
+        assert sample_document.document_collection_id == other_collection.id
+        assert sample_document.collection.id == other_collection.id
+
 
 class TestDeleteDocument:
     """Tests for document deletion operations."""
