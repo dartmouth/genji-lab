@@ -12,7 +12,7 @@ export interface AuthUser {
   ttl: string;
   groups: Array<{ name: string; id: number }>;
   is_active: boolean;
-  viewed_tutorial: boolean; // ← ADD THIS LINE
+  viewed_tutorial: boolean;
   [key: string]: unknown;
 }
 
