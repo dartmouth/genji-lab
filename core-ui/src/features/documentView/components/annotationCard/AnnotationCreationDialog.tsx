@@ -8,7 +8,7 @@ import {
   sliceMap,
 } from "@store";
 import { Link as LinkIcon } from "@mui/icons-material";
-import { debounce } from "lodash";
+// import { debounce } from "lodash";
 import { makeTextAnnotationBody, parseURI } from "@documentView/utils";
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@/hooks/useLocalStorage";
@@ -253,10 +253,9 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
 
   const handleLogin = () => {
     login();
-    // Don't close the dialog - let user authenticate and come back
   };
 
-  const onTextChangeDebounce = debounce(onTextChange, 10);
+  // const onTextChangeDebounce = debounce(onTextChange, 10);
 
   if (!newAnno || !newAnno.motivation) {
     return null;
@@ -448,7 +447,7 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
               <textarea
                 ref={textareaRef}
                 value={newAnno.content}
-                onChange={(e) => onTextChangeDebounce(e.target.value)}
+                onChange={(e) => onTextChange(e.target.value)}
                 placeholder={
                   newAnno.motivation === "commenting"
                     ? "Enter your comment here..."

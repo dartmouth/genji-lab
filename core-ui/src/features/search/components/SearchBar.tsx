@@ -186,7 +186,7 @@ const AnnotationSearchBar: React.FC<SearchBarProps> = ({
       if (onSearchChange) {
         onSearchChange(searchQuery);
       }
-      console.log('Search Query JSON:', JSON.stringify(searchQuery, null, 2));
+      // console.log('Search Query JSON:', JSON.stringify(searchQuery, null, 2));
     }, 300);
 
     return () => clearTimeout(timer);
