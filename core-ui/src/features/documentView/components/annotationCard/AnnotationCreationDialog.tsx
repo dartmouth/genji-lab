@@ -464,7 +464,7 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
                 <textarea
                   ref={textareaRef}
                   value={newAnno.content}
-                  onChange={(e) => onTextChangeDebounce(e.target.value)}
+                  onChange={(e) => onTextChange(e.target.value)}
                   maxLength={MAX_CHARACTERS}
                   placeholder={
                     newAnno.motivation === "commenting"
