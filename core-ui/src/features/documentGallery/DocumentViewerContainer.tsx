@@ -426,8 +426,6 @@ export const DocumentContentView: React.FC = () => {
     )
     .sort((a, b) => a.id - b.id);
 
-  console.log("View Mode DocumentViewerContainer", viewMode);
-
   return (
     <div className="document-content-view">
       {/* Toolbar Component */}

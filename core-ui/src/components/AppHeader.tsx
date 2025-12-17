@@ -26,7 +26,7 @@ interface CASPublicConfig {
 }
 
 const AppHeader: React.FC = () => {
-  const { user, isAuthenticated, logout, login, isLoading, error } = useAuth();
+  const { user, isAuthenticated, logout, login, isLoading } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const navigate = useNavigate();
 
@@ -287,7 +287,7 @@ const AppHeader: React.FC = () => {
                   style={{
                     position: "fixed",
                     top: "60px",
-                    right: "-1.5em",
+                    right: "10px",
                     zIndex: 10000,
                   }}
                 >
@@ -329,11 +329,6 @@ const AppHeader: React.FC = () => {
                         value={activeClassroomValue || user.groups[0]?.id || ""}
                         onChange={(e) => {
                           const newValue = e.target.value;
-                          console.log(
-                            "Setting classroom to:",
-                            newValue,
-                            typeof newValue
-                          );
                           if (newValue) {
                             // Only set if truthy
                             setActiveClassroomValue(newValue);
@@ -438,7 +433,6 @@ const AppHeader: React.FC = () => {
             >
               Register
             </button>
-            {error && <div className="auth-error">{error}</div>}
           </div>
         )}
       </div>
@@ -450,18 +444,53 @@ const AppHeader: React.FC = () => {
         onComplete={handleTutorialComplete}
       />
 
-      {showLoginForm && (
-        <LoginForm
-          onCancel={handleLoginFormCancel}
-          onSwitchToRegister={handleSwitchToRegister}
-        />
-      )}
-      {showRegisterForm && (
-        <RegisterForm
-          onCancel={handleRegisterFormCancel}
-          onSwitchToLogin={handleSwitchToLogin}
-        />
-      )}
+      {/* Login Form - Rendered via Portal */}
+      {showLoginForm &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 10000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <LoginForm
+              onCancel={handleLoginFormCancel}
+              onSwitchToRegister={handleSwitchToRegister}
+            />
+          </div>,
+          document.body
+        )}
+
+      {/* Register Form - Rendered via Portal */}
+      {showRegisterForm &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 10000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <RegisterForm
+              onCancel={handleRegisterFormCancel}
+              onSwitchToLogin={handleSwitchToLogin}
+            />
+          </div>,
+          document.body
+        )}
     </header>
   );
 };

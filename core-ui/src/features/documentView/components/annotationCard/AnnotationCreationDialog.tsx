@@ -40,6 +40,9 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
   const dialogRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Character limit constant
+  const MAX_CHARACTERS = 5000;
+
   // Get classroom context from localStorage
   const [activeClassroomValue] = useLocalStorage("active_classroom");
   const [isOptedOut] = useLocalStorage("classroom_opted_out");
@@ -52,6 +55,10 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
     selectionEnd: 0,
     url: "",
   });
+
+  // Calculate character count
+  const characterCount = newAnno?.content?.length || 0;
+  const isOverLimit = characterCount > MAX_CHARACTERS;
 
   // Auto-select first link when links load
   useEffect(() => {
@@ -88,7 +95,10 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
   }, [isAuthenticated]);
 
   const onTextChange = (value: string) => {
-    dispatch(setContent(value));
+    // Don't allow more than MAX_CHARACTERS
+    if (value.length <= MAX_CHARACTERS) {
+      dispatch(setContent(value));
+    }
   };
 
   if (annotationCreate.motivation === "external_reference") {
@@ -134,19 +144,26 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
       markdownLink +
       newAnno.content.substring(selectionEnd);
 
-    dispatch(setContent(newText));
-    setLinkDialog({
-      isOpen: false,
-      selectedText: "",
-      selectionStart: 0,
-      selectionEnd: 0,
-      url: "",
-    });
+    // Check if new text exceeds limit
+    if (newText.length <= MAX_CHARACTERS) {
+      dispatch(setContent(newText));
+      setLinkDialog({
+        isOpen: false,
+        selectedText: "",
+        selectionStart: 0,
+        selectionEnd: 0,
+        url: "",
+      });
 
-    // Focus back to textarea
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 100);
+      // Focus back to textarea
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+    } else {
+      alert(
+        `Adding this link would exceed the ${MAX_CHARACTERS} character limit`
+      );
+    }
   };
 
   const handleCancelLink = () => {
@@ -309,7 +326,6 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
               color: "#333",
             }}
           >
-            {/* {newAnno.motivation === 'commenting' ? "Add Comment" : "Add Scholarly Annotation"} */}
             {newAnno.motivation === "commenting"
               ? "Add Comment"
               : newAnno.motivation === "scholarly"
@@ -445,29 +461,51 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
             {newAnno.motivation === "linking" ? (
               <div></div>
             ) : (
-              <textarea
-                ref={textareaRef}
-                value={newAnno.content}
-                onChange={(e) => onTextChangeDebounce(e.target.value)}
-                placeholder={
-                  newAnno.motivation === "commenting"
-                    ? "Enter your comment here..."
-                    : "Enter your scholarly annotation here..."
-                }
-                style={{
-                  width: "100%",
-                  minHeight: "120px",
-                  padding: "12px",
-                  marginBottom: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #ddd",
-                  fontSize: "14px",
-                  fontFamily: "inherit",
-                  boxSizing: "border-box",
-                  resize: "vertical",
-                }}
-              />
-            )} 
+              <div style={{ position: "relative" }}>
+                <textarea
+                  ref={textareaRef}
+                  value={newAnno.content}
+                  onChange={(e) => onTextChangeDebounce(e.target.value)}
+                  maxLength={MAX_CHARACTERS}
+                  placeholder={
+                    newAnno.motivation === "commenting"
+                      ? "Enter your comment here..."
+                      : "Enter your scholarly annotation here..."
+                  }
+                  style={{
+                    width: "100%",
+                    minHeight: "120px",
+                    padding: "12px",
+                    paddingBottom: "30px", // Make room for counter
+                    marginBottom: "8px",
+                    borderRadius: "6px",
+                    border: `1px solid ${isOverLimit ? "#dc3545" : "#ddd"}`,
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                    boxSizing: "border-box",
+                    resize: "vertical",
+                  }}
+                />
+                {/* Character Counter */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "16px",
+                    right: "12px",
+                    fontSize: "11px",
+                    color: isOverLimit
+                      ? "#dc3545"
+                      : characterCount > MAX_CHARACTERS * 0.9
+                      ? "#ff9800"
+                      : "#666",
+                    fontWeight: isOverLimit ? 600 : 400,
+                    pointerEvents: "none",
+                  }}
+                >
+                  {characterCount}/{MAX_CHARACTERS}
+                </div>
+              </div>
+            )}
 
             {/* Preview of rendered links */}
             {newAnno.content.includes("[") &&
@@ -682,7 +720,8 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
           {isAuthenticated &&
             (() => {
               const isEnabled =
-                newAnno.content.trim() || newAnno.motivation === "linking";
+                (newAnno.content.trim() && !isOverLimit) ||
+                newAnno.motivation === "linking";
 
               return (
                 <button
