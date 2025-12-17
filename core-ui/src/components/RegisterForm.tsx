@@ -12,8 +12,60 @@ interface RegisterFormData extends RegisterData {
   confirmPassword: string;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onCancel, onSwitchToLogin }) => {
-  const { isAuthenticated, register } = useAuth();
+// Map error codes and messages to user-friendly text
+const getFriendlyErrorMessage = (error: string | null): string => {
+  if (!error) return "";
+
+  // Check for specific error patterns
+  if (
+    error.includes("400") ||
+    error.toLowerCase().includes("already registered")
+  ) {
+    return "This email is already registered. Please use a different email or try logging in.";
+  }
+  if (
+    error.toLowerCase().includes("username already taken") ||
+    (error.toLowerCase().includes("username") &&
+      error.toLowerCase().includes("exists"))
+  ) {
+    return "This username is already taken. Please choose a different username.";
+  }
+  if (error.includes("409") || error.toLowerCase().includes("conflict")) {
+    return "This email or username is already registered. Please try logging in instead.";
+  }
+  if (error.includes("422") || error.toLowerCase().includes("validation")) {
+    return "Please check that all fields meet the requirements.";
+  }
+  if (error.includes("500") || error.toLowerCase().includes("server error")) {
+    return "Server error. Please try again later.";
+  }
+  if (
+    error.toLowerCase().includes("network") ||
+    error.toLowerCase().includes("timeout")
+  ) {
+    return "Network error. Please check your connection and try again.";
+  }
+  if (error.toLowerCase().includes("password")) {
+    return "Password does not meet requirements. Must be 8+ characters with uppercase, lowercase, and number.";
+  }
+  if (error.toLowerCase().includes("email")) {
+    return "Please enter a valid email address.";
+  }
+
+  // If it's already a friendly message, return it
+  if (!error.match(/\d{3}/) && error.length < 150) {
+    return error;
+  }
+
+  // Generic fallback
+  return "Registration failed. Please check your information and try again.";
+};
+
+const RegisterForm: React.FC<RegisterFormProps> = ({
+  onCancel,
+  onSwitchToLogin,
+}) => {
+  const { isAuthenticated, register, error: authError } = useAuth();
   const [formData, setFormData] = useState<RegisterFormData>({
     first_name: "",
     last_name: "",
@@ -24,7 +76,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onCancel, onSwitchToLogin }
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   // Close form when authentication succeeds
   useEffect(() => {
@@ -55,7 +109,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onCancel, onSwitchToLogin }
     } else if (formData.username.length < 3) {
       errors.username = "Username must be at least 3 characters";
     } else if (!/^[a-zA-Z0-9._-]+$/.test(formData.username)) {
-      errors.username = "Username can only contain letters, numbers, periods, underscores, and hyphens";
+      errors.username =
+        "Username can only contain letters, numbers, periods, underscores, and hyphens";
     }
 
     if (!formData.password) {
@@ -93,9 +148,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onCancel, onSwitchToLogin }
 
     try {
       if (register === undefined) {
-        return
+        return;
       }
-      
+
       await register({
         first_name: formData.first_name,
         last_name: formData.last_name,
@@ -103,12 +158,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onCancel, onSwitchToLogin }
         username: formData.username,
         password: formData.password,
       });
-      
+
       // Registration successful, user will be automatically logged in
       // The useEffect will close the form when isAuthenticated becomes true
     } catch (err) {
-      console.error('Registration error:', err);
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      console.error("Registration error:", err);
+      // Error will be shown via authError
     } finally {
       setIsLoading(false);
     }
@@ -116,20 +171,28 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onCancel, onSwitchToLogin }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     // Clear validation error when user starts typing
     if (validationErrors[name]) {
-      setValidationErrors(prev => ({ ...prev, [name]: "" }));
+      setValidationErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+
+    // Clear server error when user starts typing
+    if (error || authError) {
+      setError(null);
     }
   };
+
+  // Get the friendly error message
+  const displayError = error || getFriendlyErrorMessage(authError);
 
   return (
     <div className="register-form-overlay">
       <div className="register-form-container">
         <form onSubmit={handleSubmit} className="register-form">
           <h3>Create Account</h3>
-          
+
           <div className="form-row">
             <div className="form-field half-width">
               <label htmlFor="first_name">First Name:</label>
@@ -228,15 +291,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onCancel, onSwitchToLogin }
               className={validationErrors.confirmPassword ? "error" : ""}
             />
             {validationErrors.confirmPassword && (
-              <div className="field-error">{validationErrors.confirmPassword}</div>
+              <div className="field-error">
+                {validationErrors.confirmPassword}
+              </div>
             )}
           </div>
 
-          {error && (
-            <div className="register-error">
-              {error}
-            </div>
-          )}
+          {displayError && <div className="register-error">{displayError}</div>}
 
           <div className="form-actions">
             <button

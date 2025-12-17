@@ -24,73 +24,73 @@
 #     volumes:
 #       - ./api:/app
 services:
-  postgres:
-    build:
-      context: ./postgres
-      dockerfile: Dockerfile
-    platform: linux/arm64
-    container_name: postgres-pgroonga
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-myapp}
-      PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - ./postgres/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-myapp}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  # postgres:
+  #   build:
+  #     context: ./postgres
+  #     dockerfile: Dockerfile
+  #   # platform: linux/arm64
+  #   container_name: postgres-pgroonga
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+  #     POSTGRES_DB: ${POSTGRES_DB:-myapp}
+  #     PGDATA: /var/lib/postgresql/data/pgdata
+  #   ports:
+  #     - "${POSTGRES_PORT:-5432}:5432"
+  #   volumes:
+  #     - ./postgres/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-myapp}"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
-  migrations:
-    build:
-      context: ./api
-      dockerfile: Dockerfile.migrations
-    platform: linux/arm64
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
-    # volumes:
-    #   - ./api:/app
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: on-failure
-  seed-dev:
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    platform: linux/arm64
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
-      ENVIRONMENT: development
-      API_BASE_URL: http://api:8000  # Internal container communication
-    command: python seed_dev_admin.py
-    volumes:
-      - ./api:/app
-      # - ./seed_data:/app/seed_data  # Mount directory for sample files
-    depends_on:
-      migrations:
-        condition: service_completed_successfully
-      api:
-        condition: service_started  # API needs to be running for HTTP requests
-    restart: on-failure
+  # migrations:
+  #   build:
+  #     context: ./api
+  #     dockerfile: Dockerfile.migrations
+  #   # platform: linux/arm64
+  #   environment:
+  #     DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
+  #   # volumes:
+  #   #   - ./api:/app
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   restart: on-failure
+  # seed-dev:
+  #   build:
+  #     context: ./api
+  #     dockerfile: Dockerfile
+  #   platform: linux/arm64
+  #   environment:
+  #     DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
+  #     ENVIRONMENT: development
+  #     API_BASE_URL: http://api:8000  # Internal container communication
+  #   command: python seed_dev_admin.py
+  #   volumes:
+  #     - ./api:/app
+  #     # - ./seed_data:/app/seed_data  # Mount directory for sample files
+  #   depends_on:
+  #     migrations:
+  #       condition: service_completed_successfully
+  #     api:
+  #       condition: service_started  # API needs to be running for HTTP requests
+  #   restart: on-failure
   api:
     build:
       context: ./api
       dockerfile: Dockerfile
-    platform: linux/arm64
+    # platform: linux/arm64
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
     ports:
       - "8000:8000"
     volumes:
       - ./api:/app
-    depends_on:
-      migrations:
-        condition: service_completed_successfully
+    # depends_on:
+    #   migrations:
+    #     condition: service_completed_successfully
 
   ui:
     build:

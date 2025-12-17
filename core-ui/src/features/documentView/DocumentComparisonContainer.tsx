@@ -1,5 +1,6 @@
 // src/documentView/DocumentComparisonContainer.tsx
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { DocumentContentPanel } from ".";
 import TabbedAnnotationsPanel from "./components/TabbedAnnotationsPanel";
 import { useAppSelector } from "@store/hooks";
@@ -376,7 +377,8 @@ const DocumentComparisonContainer: React.FC<
         {/* Tabbed annotations panel - only shown in annotations mode and when visible */}
         {viewMode === "annotations" &&
           documents.length > 0 &&
-          isPanelVisible && (
+          isPanelVisible &&
+          createPortal(
             <div
               className={`annotations-panel-container position-${annotationPanelPosition}`}
               style={{
@@ -387,8 +389,8 @@ const DocumentComparisonContainer: React.FC<
                       left: 0,
                       right: 0,
                       width: "100%",
-                      height: "40%",
-                      maxHeight: "400px",
+                      display: "flex",
+                      flexDirection: "column",
                     }
                   : annotationPanelPosition === "right"
                   ? {
@@ -396,24 +398,22 @@ const DocumentComparisonContainer: React.FC<
                       top: "64px",
                       right: 0,
                       bottom: 0,
-                      width: "30%",
-                      maxWidth: "400px",
                       height: "calc(100vh - 64px)",
-                      overflowY: "auto",
+                      display: "flex",
+                      flexDirection: "row",
                     }
                   : {
                       position: "fixed",
                       top: "64px",
                       left: 0,
                       bottom: 0,
-                      width: "30%",
-                      maxWidth: "400px",
                       height: "calc(100vh - 64px)",
-                      overflowY: "auto",
+                      display: "flex",
+                      flexDirection: "row",
                     }),
-                zIndex: 100,
+                zIndex: 9999,
                 boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-                backgroundColor: "#f9f9f9",
+                backgroundColor: "transparent",
                 borderTop:
                   annotationPanelPosition === "bottom"
                     ? "1px solid #ddd"
@@ -429,6 +429,7 @@ const DocumentComparisonContainer: React.FC<
                 opacity: 1,
                 backdropFilter: "none",
                 WebkitBackdropFilter: "none",
+                overflow: "visible",
               }}
             >
               <TabbedAnnotationsPanel
@@ -445,7 +446,8 @@ const DocumentComparisonContainer: React.FC<
                 onToggleVisibility={onToggleAnnotationsPanel}
                 flaggedAnnotationId={flaggedAnnotationId}
               />
-            </div>
+            </div>,
+            document.body
           )}
 
         {/* Sticky reopen button - only shown when panel is closed */}

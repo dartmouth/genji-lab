@@ -14,7 +14,7 @@ export const useIAM = () => {
   const [user, setUser] = useState<DecodedToken | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const userDialogRef = useRef<HTMLDialogElement | null>(null);
-  
+
   // Use the API client hook for fetching users
   const users = useApiClient<DecodedToken[]>("/users/");
 
@@ -26,7 +26,7 @@ export const useIAM = () => {
     } else {
       openUserDialog(); // Show user selection dialog if no JWT
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array to run only once
 
   const getCookie = (name: string): string | null => {
@@ -84,7 +84,8 @@ export const useIAM = () => {
   };
 
   const logout = () => {
-    document.cookie = "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+    document.cookie =
+      "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
@@ -104,11 +105,7 @@ export const useIAM = () => {
       userDialogRef.current.close();
     }
   };
-  // useEffect(() => {
-  //   console.log("Users data type:", typeof users.data);
-  //   console.log("Is array:", Array.isArray(users.data));
-  //   console.log("Users data:", users.data);
-  // }, [users.data]);
+
   // Render the user selection dialog
   const renderUserSelection = (): ReactNode => (
     <dialog ref={userDialogRef} className="user-selection-modal">
@@ -138,6 +135,6 @@ export const useIAM = () => {
     user,
     isAuthenticated,
     logout,
-    renderUserSelection
+    renderUserSelection,
   };
 };

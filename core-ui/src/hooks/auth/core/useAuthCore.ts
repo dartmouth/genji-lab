@@ -114,9 +114,6 @@ export const useAuthCore = (config: AuthCoreConfig): UseAuthCoreReturn => {
           // Verify current active classroom is still valid for this user
           const userGroupIds = authState.user.groups.map((group) => group.id);
           if (!userGroupIds.includes(Number(activeClassroomValue))) {
-            console.log(
-              "WARNING: resetting classroom - user no longer has access"
-            );
             setActiveClassroomValue(null);
           }
         }
