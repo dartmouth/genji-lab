@@ -184,7 +184,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
     setIsFlagging(true);
   };
 
-  // New link handler - only for annotation creators
   const handleLinkClick = () => {
     // Only allow link functionality for annotation creators
     if (!user || user.id !== annotation.creator.id) {
@@ -484,13 +483,12 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         padding: "16px",
         marginBottom: depth > 0 ? "8px" : "12px",
         boxShadow: "0 2px 4px rgba(0,0,0,0.08)",
-        width:
-          depth > 0
-            ? `${300 - 15 * depth}px`
-            : position === "left" || position === "right"
-            ? "340px"
-            : "100%",
+        // Make cards fully responsive to panel width
+        width: depth > 0 ? `${300 - 15 * depth}px` : "100%",
         maxWidth: "100%",
+        minWidth:
+          position === "left" || position === "right" ? "250px" : "auto",
+        boxSizing: "border-box", // Include padding in width calculation
         position: "relative",
         transition: "all 0.2s ease",
         overflow: "visible",
@@ -509,7 +507,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         documentColor={documentColor}
         documentTitle={documentTitle}
         showDocumentInfo={showDocumentInfo}
-      />{" "}
+      />
+
       {/* Toolbar: Only show for authenticated users */}
       {isAuthenticated && (
         <AnnotationCardToolbar
@@ -523,25 +522,27 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
             user && user.id === annotation.creator.id
               ? handleLinkClick
               : undefined
-          } // Only for creators
+          }
           isReplying={isReplying}
           isFlagging={isFlagging}
-          isEditing={isEditing} // Pass editing state
+          isEditing={isEditing}
           position={position}
           onActionMenuOpen={handleActionMenuOpen}
           actionButtonRef={actionButtonRef}
         />
       )}
+
       {/* Content: Body text and tags - Show to everyone */}
       <AnnotationCardContent
         annotation={annotation}
         tags={tags}
         userId={user?.id}
-        isTagging={isTagging && isAuthenticated} // Only allow tagging if authenticated
+        isTagging={isTagging && isAuthenticated}
         onRemoveTag={handleRemoveTag}
         onTagSubmit={handleTagSubmit}
         onCloseTagging={handleCloseTagging}
       />
+
       {/* Show interaction counts for anonymous users */}
       {!isAuthenticated && (
         <div
@@ -575,6 +576,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           </span>
         </div>
       )}
+
       {/* Editing form - Only for authenticated users */}
       {isEditing && isAuthenticated && (
         <AnnotationEditor
@@ -583,6 +585,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           onCancel={handleEditCancel}
         />
       )}
+
       {/* Reply/Flag forms - Only for authenticated users */}
       {isAuthenticated && isFlagging && !isReplying && (
         <ReplyForm
@@ -598,6 +601,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           onSave={handleReplySave}
         />
       )}
+
       {/* Replies section - Show to everyone */}
       <AnnotationCardReplies
         replies={replies}
@@ -607,6 +611,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         AnnotationCardComponent={AnnotationCard}
         position={position}
       />
+
       {/* Action menu for side panels - Only for authenticated users */}
       {isAuthenticated &&
         (position === "left" || position === "right") &&
@@ -630,6 +635,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
             )}
           </>
         )}
+
       {/* Regular dropdown for bottom position - Only for authenticated users */}
       {isAuthenticated && position === "bottom" && actionMenuAnchor && (
         <>
