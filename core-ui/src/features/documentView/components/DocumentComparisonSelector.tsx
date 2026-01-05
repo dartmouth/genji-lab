@@ -35,9 +35,6 @@ const DocumentComparisonSelector: React.FC<DocumentComparisonSelectorProps> = ({
   // When the selected collection changes, fetch its documents
   useEffect(() => {
     if (selectedCollectionId) {
-      console.log(
-        `DocumentComparisonSelector: Fetching documents for collection ${selectedCollectionId}`
-      );
       dispatch(fetchDocumentsByCollection(selectedCollectionId));
     }
   }, [selectedCollectionId, dispatch]);
@@ -62,7 +59,6 @@ const DocumentComparisonSelector: React.FC<DocumentComparisonSelectorProps> = ({
   // Handle collection selection
   const handleCollectionSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCollectionId = Number(e.target.value);
-    console.log(`Selecting collection: ${newCollectionId}`);
     setSelectedCollectionId(newCollectionId);
     // Clear any selected comparison document when changing collections
     onCompareDocument(null);

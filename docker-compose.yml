@@ -28,7 +28,7 @@ services:
   #   build:
   #     context: ./postgres
   #     dockerfile: Dockerfile
-  #   #platform: linux/arm64
+  #   # platform: linux/arm64
   #   container_name: postgres-pgroonga
   #   environment:
   #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -49,11 +49,11 @@ services:
   #   build:
   #     context: ./api
   #     dockerfile: Dockerfile.migrations
-  #   #platform: linux/arm64
+  #   # platform: linux/arm64
   #   environment:
   #     DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
-  #   volumes:
-  #     - ./api:/app
+  #   # volumes:
+  #   #   - ./api:/app
   #   depends_on:
   #     postgres:
   #       condition: service_healthy
@@ -81,7 +81,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    #platform: linux/arm64
+    # platform: linux/arm64
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
     ports:

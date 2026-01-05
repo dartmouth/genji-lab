@@ -5,14 +5,15 @@ import { parseURI } from "@documentView/utils";
 export const flattenTargets = (
   targets: (TextTarget | ObjectTarget | (TextTarget | ObjectTarget)[])[]
 ): (TextTarget | ObjectTarget)[] => {
-  return targets.flatMap(t => Array.isArray(t) ? t : [t]);
+  return targets.flatMap((t) => (Array.isArray(t) ? t : [t]));
 };
 
 export const getTextTargets = (
   targets: (TextTarget | ObjectTarget | (TextTarget | ObjectTarget)[])[]
 ): TextTarget[] => {
-    // console.log("flattening")
-  return flattenTargets(targets).filter((t): t is TextTarget => 'selector' in t);
+  return flattenTargets(targets).filter(
+    (t): t is TextTarget => "selector" in t
+  );
 };
 
 export const findTargetForParagraph = (
@@ -20,7 +21,7 @@ export const findTargetForParagraph = (
   paragraphId: string
 ): TextTarget | undefined => {
   let target = targets.find((t) => t.source === paragraphId);
-  
+
   if (!target) {
     const numericId = parseURI(paragraphId);
     target = targets.find(
@@ -29,6 +30,6 @@ export const findTargetForParagraph = (
         t.source === `/DocumentElements/${numericId}`
     );
   }
-  
+
   return target;
 };

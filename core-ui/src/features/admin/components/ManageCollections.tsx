@@ -389,10 +389,10 @@ To confirm, please type the collection name exactly as shown:
 
     try {
       setDeleteProgress(20);
+      
+      const response = await api.delete(`/collections/${selectedCollection}?force=true`);
 
-      await api.delete(`/collections/${selectedCollection}?force=true`);
-      //console.log(`Delete status is ${response.status}`)
-
+      
       setDeleteProgress(70);
       setDeleteProgress(90);
 
@@ -776,7 +776,6 @@ To confirm, please type the collection name exactly as shown:
     try {
       const response = await api.get(`/collections/${collectionId}`);
       const details = response.data;
-      //console.log('Collection details response:', details); // Debug logging
       setOverviewCollectionDetails(details);
     } catch (error: any) {
       console.error("Failed to fetch collection details:", error);

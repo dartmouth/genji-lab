@@ -162,7 +162,7 @@
 /* Annotations Panel Container */
 .annotations-panel-container {
   background-color: #f5f5f5;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   border: 1px solid #e0e0e0;
@@ -173,7 +173,6 @@
 .annotations-panel-container.position-bottom {
   position: sticky;
   bottom: 0;
-  height: 40%;
   width: 100%;
   border-top: 2px solid #e0e0e0;
   z-index: 100; /* Ensure it stays above other content */
@@ -183,7 +182,6 @@
   position: sticky;
   top: 0;
   right: 0;
-  width: 25%; /* Reduce from 30% to 25% */
   height: 100vh; /* Use viewport height for full height stickiness */
   border-left: 2px solid #e0e0e0;
   z-index: 100;
@@ -193,7 +191,6 @@
   position: sticky;
   top: 0;
   left: 0;
-  width: 25%; /* Reduce from 30% to 25% */
   height: 100vh; /* Use viewport height for full height stickiness */
   border-right: 2px solid #e0e0e0;
   order: 1; /* Move panel to the left when position is left */

@@ -84,7 +84,7 @@
 }
 
 .cancel-button {
-  background-color: #6c757d;
+  background-color: #6c757d !important;
   color: white;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .submit-button {
-  background-color: #648FFF;
+  background-color: #648FFF !important;
   color: white;
 }
 

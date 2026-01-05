@@ -14,8 +14,6 @@ const ViewToggleButton: React.FC<ViewToggleButtonProps> = ({
   viewModeChange,
   viewMode,
 }) => {
-  console.log("View Mode", viewMode);
-  console.log("View Mode Change", viewModeChange);
   return (
     <ToggleButtonGroup
       value={viewMode}

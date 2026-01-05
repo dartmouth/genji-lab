@@ -72,14 +72,8 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
   const actionButtonRef = useRef<HTMLButtonElement>(null);
 
   // Custom hooks
-  const {
-    tags,
-    isTagging,
-    setIsTagging,
-    handleTagsClick,
-    handleRemoveTag,
-    handleTagSubmit,
-  } = useAnnotationTags(annotation, user?.id);
+  const { tags, isTagging, setIsTagging, handleRemoveTag, handleTagSubmit } =
+    useAnnotationTags(annotation, user?.id);
 
   // Redux selectors
   const replies = useAppSelector((state: RootState) =>
@@ -190,10 +184,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
     setIsFlagging(true);
   };
 
-  const handleTagsMenuClick = () => {
-    handleTagsClick();
-  };
-
   // New link handler - only for annotation creators
   const handleLinkClick = () => {
     // Only allow link functionality for annotation creators
@@ -255,8 +245,14 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
       "Upvote",
       segment
     );
-    const classId = activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
-    dispatch(upvoteAnnotations.thunks.saveAnnotation({annotation: upvote, classroomId: classId}));
+    const classId =
+      activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
+    dispatch(
+      upvoteAnnotations.thunks.saveAnnotation({
+        annotation: upvote,
+        classroomId: classId,
+      })
+    );
   };
 
   // Dropdown menu component for portal
@@ -508,12 +504,13 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
       }}
     >
       {/* Header: Document info, type badge, and author */}
-          <AnnotationCardHeader
-            annotation={annotation}
-            documentColor={documentColor}
-            documentTitle={documentTitle}
-            showDocumentInfo={showDocumentInfo}
-          />      {/* Toolbar: Only show for authenticated users */}
+      <AnnotationCardHeader
+        annotation={annotation}
+        documentColor={documentColor}
+        documentTitle={documentTitle}
+        showDocumentInfo={showDocumentInfo}
+      />{" "}
+      {/* Toolbar: Only show for authenticated users */}
       {isAuthenticated && (
         <AnnotationCardToolbar
           annotation={annotation}
@@ -522,7 +519,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           onFlagClick={handleFlagClick}
           onEditClick={handleEditClick}
           onDeleteClick={handleCommentDelete}
-          onTagsClick={handleTagsMenuClick}
           onLinkClick={
             user && user.id === annotation.creator.id
               ? handleLinkClick
@@ -536,7 +532,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           actionButtonRef={actionButtonRef}
         />
       )}
-
       {/* Content: Body text and tags - Show to everyone */}
       <AnnotationCardContent
         annotation={annotation}
@@ -547,7 +542,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         onTagSubmit={handleTagSubmit}
         onCloseTagging={handleCloseTagging}
       />
-
       {/* Show interaction counts for anonymous users */}
       {!isAuthenticated && (
         <div
@@ -581,7 +575,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           </span>
         </div>
       )}
-
       {/* Editing form - Only for authenticated users */}
       {isEditing && isAuthenticated && (
         <AnnotationEditor
@@ -590,7 +583,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           onCancel={handleEditCancel}
         />
       )}
-
       {/* Reply/Flag forms - Only for authenticated users */}
       {isAuthenticated && isFlagging && !isReplying && (
         <ReplyForm
@@ -606,7 +598,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           onSave={handleReplySave}
         />
       )}
-
       {/* Replies section - Show to everyone */}
       <AnnotationCardReplies
         replies={replies}
@@ -616,7 +607,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         AnnotationCardComponent={AnnotationCard}
         position={position}
       />
-
       {/* Action menu for side panels - Only for authenticated users */}
       {isAuthenticated &&
         (position === "left" || position === "right") &&
@@ -640,7 +630,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
             )}
           </>
         )}
-
       {/* Regular dropdown for bottom position - Only for authenticated users */}
       {isAuthenticated && position === "bottom" && actionMenuAnchor && (
         <>

@@ -1,5 +1,5 @@
 // useCasAuth.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface CasAuthConfig {
   casServerUrl: string;
@@ -16,9 +16,9 @@ interface AuthState {
     last_name: string;
     netid: string;
     email?: string;
-    user_metadata?: Record<string, string|number|object>;
-    groups: Array<{name: string; id: number}>,
-    roles?: Array<string>,
+    user_metadata?: Record<string, string | number | object>;
+    groups: Array<{ name: string; id: number }>;
+    roles?: Array<string>;
     ttl: string; // ISO format timestamp for expiration
   } | null;
   expiresAt?: number; // Unix timestamp in milliseconds when the session expires
@@ -32,7 +32,7 @@ interface UseCasAuthReturn extends AuthState {
 }
 
 const DEFAULT_EXPIRATION_HOURS = 24;
-const DEFAULT_STORAGE_KEY = 'cas_auth_data';
+const DEFAULT_STORAGE_KEY = "cas_auth_data";
 
 export const useCasAuth = ({
   casServerUrl,
@@ -47,41 +47,41 @@ export const useCasAuth = ({
     user: null,
   });
 
-    // Extract and validate ticket from URL
+  // Extract and validate ticket from URL
   const checkForTicket = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     const urlParams = new URLSearchParams(window.location.search);
-    const ticket = urlParams.get('ticket');
-    
+    const ticket = urlParams.get("ticket");
+
     if (ticket) {
       try {
         // Remove ticket from URL to prevent issues on refresh
-        const newUrl = window.location.pathname + 
-          (urlParams.toString() ? '?' + urlParams.toString() : '');
+        const newUrl =
+          window.location.pathname +
+          (urlParams.toString() ? "?" + urlParams.toString() : "");
         window.history.replaceState({}, document.title, newUrl);
-        
+
         // Validate ticket with your backend
         // This is where you would make an API call to your backend
         // that communicates with the CAS server to validate the ticket
-        const response = await fetch('/api/v1/validate-cas-ticket', {
-          method: 'POST',
+        const response = await fetch("/api/v1/validate-cas-ticket", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ ticket, service: serviceUrl }),
         });
-        
+
         if (!response.ok) {
-          throw new Error('Failed to validate ticket');
+          throw new Error("Failed to validate ticket");
         }
-        
+
         const userData = await response.json();
-        //console.log(userData)
-        
+
         // Set auth state with expiration
-        const expiresAt = Date.now() + (sessionExpirationHours * 60 * 60 * 1000);
+        const expiresAt = Date.now() + sessionExpirationHours * 60 * 60 * 1000;
         setAuthState({
           isAuthenticated: true,
           user: userData,
@@ -89,11 +89,13 @@ export const useCasAuth = ({
         });
       } catch (e) {
         //console.error('Error validating CAS ticket:', e);
-        setError(e instanceof Error ? e.message : 'Unknown error during authentication');
+        setError(
+          e instanceof Error ? e.message : "Unknown error during authentication"
+        );
         setAuthState({ isAuthenticated: false, user: null });
       }
     }
-    
+
     setIsLoading(false);
   }, [serviceUrl, sessionExpirationHours]);
 
@@ -103,7 +105,7 @@ export const useCasAuth = ({
     if (storedData) {
       try {
         const parsedData: AuthState = JSON.parse(storedData);
-        
+
         // Check if session is expired
         if (parsedData.expiresAt && parsedData.expiresAt > Date.now()) {
           setAuthState(parsedData);
@@ -112,11 +114,11 @@ export const useCasAuth = ({
           localStorage.removeItem(localStorageKey);
         }
       } catch (e) {
-        //console.error('Failed to parse auth data from localStorage', e);
+        console.error("Failed to parse auth data from localStorage", e);
         localStorage.removeItem(localStorageKey);
       }
     }
-    
+
     // Check for ticket in URL
     checkForTicket();
   }, [checkForTicket, localStorageKey]);
@@ -130,18 +132,16 @@ export const useCasAuth = ({
     }
   }, [authState, localStorageKey]);
 
-
-
   // Redirect to CAS login
   const login = useCallback(() => {
     // Ensure the CAS server URL is properly formatted as an absolute URL
     let casUrl = casServerUrl;
-    
+
     // If the CAS URL doesn't start with http:// or https://, assume it's a domain
-    if (!casUrl.startsWith('http://') && !casUrl.startsWith('https://')) {
-        casUrl = `https://${casUrl}`;
+    if (!casUrl.startsWith("http://") && !casUrl.startsWith("https://")) {
+      casUrl = `https://${casUrl}`;
     }
-    
+
     // Construct the full login URL
     const loginUrl = `${casUrl}/cas/login?service=${serviceUrl}`;
     window.location.href = loginUrl;
@@ -151,9 +151,11 @@ export const useCasAuth = ({
   const logout = useCallback(() => {
     // Clear local auth state
     setAuthState({ isAuthenticated: false, user: null });
-    
+
     // Redirect to CAS logout
-    const logoutUrl = `${casServerUrl}/logout?service=${encodeURIComponent(serviceUrl)}`;
+    const logoutUrl = `${casServerUrl}/logout?service=${encodeURIComponent(
+      serviceUrl
+    )}`;
     window.location.href = logoutUrl;
   }, [casServerUrl, serviceUrl]);
 

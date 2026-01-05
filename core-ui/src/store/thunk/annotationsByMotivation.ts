@@ -73,9 +73,6 @@ export const fetchAnnotationByMotivation = createAsyncThunk(
     } catch (error) {
       // Handle 401 Unauthorized gracefully for unauthenticated users
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        console.log(
-          `No authenticated access for element ${documentElementId} - showing public content only`
-        );
         // Return empty annotations instead of throwing error
         // This allows unauthenticated users to view documents without annotations
         return {};

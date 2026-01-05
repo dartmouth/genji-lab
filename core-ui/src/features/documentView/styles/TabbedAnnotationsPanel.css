@@ -2,11 +2,24 @@
 .tabbed-annotations-panel {
   display: flex;
   flex-direction: column;
-  height: 100%;
   background-color: #f9f9f9;
   overflow: visible;
   opacity: 1;
   box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.1);
+  position: relative; /* Ensure resize handle is positioned correctly */
+  /* height removed - now controlled by inline styles for resize functionality */
+}
+
+/* Resize handle - ensure it's on top of everything */
+.resize-handle {
+  position: absolute;
+  z-index: 1000 !important;
+  background-color: transparent;
+  transition: background-color 0.2s;
+}
+
+.resize-handle:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Tabs Header Styling */
@@ -18,7 +31,9 @@
   background-color: #e9ecef;
   min-height: 40px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  padding: 0 8px 0 0; 
+  padding: 0 8px 0 0;
+  position: relative;
+  z-index: 1; /* Below resize handle */
 }
 
 .tabs-container {
@@ -184,6 +199,8 @@
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  position: relative;
+  z-index: 1; /* Below resize handle */
 }
 
 /* Fix for left/right position */
