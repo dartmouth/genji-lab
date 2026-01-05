@@ -47,14 +47,47 @@ def get_password_hash(password: str) -> str:
     """Hash a password using bcrypt."""
     return pwd_context.hash(password)
 
-
-router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
-
+def assign_admin_if_first_user(db: Session, user: models.User) -> bool:
+    """
+    Check if this is the first user in the system (no admins exist).
+    If so, grant them the admin role.
+    Returns True if admin was assigned, False otherwise.
+    """
+    # Check if any user with admin role exists
+    admin_role = db.query(models.Role).filter(models.Role.name == "admin").first()
+    
+    if not admin_role:
+        # Create admin role if it doesn't exist
+        admin_role = models.Role(
+            name="admin",
+            description="System administrator with full privileges"
+        )
+        db.add(admin_role)
+        db.flush()
+    
+    # Check if anyone already has the admin role
+    existing_admin = (
+        db.query(models.User)
+        .join(models.user_roles)
+        .join(models.Role)
+        .filter(models.Role.name == "admin")
+        .first()
+    )
+    
+    if existing_admin is None:
+        # No admin exists - make this user the admin
+        if admin_role not in user.roles:
+            user.roles.append(admin_role)
+            db.commit()
+            return True
+    
+    return False
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> models.User:
     """Wrapper for the get_current_user utility to work with FastAPI Depends."""
     return get_current_user_from_utils(request, db)
 
+router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 
 @router.post(
     "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
@@ -112,7 +145,8 @@ async def register_user(
 
     # Assign default role
     assign_default_role_to_user(db, new_user)
-
+    assign_admin_if_first_user(db, new_user)
+    
     # Reload user with roles and groups using shared utility
     user_with_relations = load_user_with_relations(db, new_user.id)
 

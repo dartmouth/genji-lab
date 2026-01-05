@@ -1,25 +1,57 @@
 import React, { useState, useEffect } from "react";
 
-import { Tabs, Tab, Box, Typography, styled, FormControl, 
-  InputLabel, Select, MenuItem, Snackbar, Alert, 
-  Dialog, DialogActions, DialogContent, DialogContentText, 
-  DialogTitle, Button, LinearProgress, TextField,
-  Table, TableBody, TableCell, TableContainer, TableHead, 
-  TableRow, Paper, TablePagination, TableSortLabel,
-  Chip, Grid, Divider, Skeleton,
-  Modal, IconButton } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
-import { createDocumentCollection, updateDocumentCollection, useAppDispatch } from '@store';
+import {
+  Tabs,
+  Tab,
+  Box,
+  Typography,
+  styled,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+  LinearProgress,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TablePagination,
+  TableSortLabel,
+  Chip,
+  Grid,
+  Divider,
+  Skeleton,
+  Modal,
+  IconButton,
+} from "@mui/material";
+import { Close as CloseIcon } from "@mui/icons-material";
+import {
+  createDocumentCollection,
+  updateDocumentCollection,
+  useAppDispatch,
+} from "@store";
 
 import { useAuth } from "@hooks/useAuthContext.ts";
 import { useAppSelector } from "@store/hooks";
 import { selectAllDocumentCollections, fetchDocumentCollections } from "@store";
 
-import axios, {AxiosInstance} from "axios";
+import axios, { AxiosInstance } from "axios";
 const api: AxiosInstance = axios.create({
-    baseURL: '/api/v1',
-    timeout: 10000,
-  });
+  baseURL: "/api/v1",
+  timeout: 10000,
+});
 
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
@@ -31,9 +63,9 @@ interface SubTabPanelProps {
 // Helper function to display user name
 const getUserDisplayName = (user: any) => {
   if (user.first_name || user.last_name) {
-    return `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    return `${user.first_name || ""} ${user.last_name || ""}`.trim();
   }
-  return 'Unknown User';
+  return "Unknown User";
 };
 
 function SubTabPanel(props: SubTabPanelProps) {
@@ -104,18 +136,18 @@ const StyledForm = styled("form")(({ theme }) => ({
 
 // Modal style
 const modalStyle = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: { xs: '90%', sm: 800, md: 1000 },
-  maxHeight: '90vh',
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
+  position: "absolute" as "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: { xs: "90%", sm: 800, md: 1000 },
+  maxHeight: "90vh",
+  bgcolor: "background.paper",
+  border: "2px solid #000",
   borderRadius: 2,
   boxShadow: 24,
   p: 4,
-  overflow: 'auto'
+  overflow: "auto",
 };
 
 const ManageCollections: React.FC = () => {
@@ -135,10 +167,19 @@ const ManageCollections: React.FC = () => {
     onConfirm: () => void;
     requiresNameConfirmation?: boolean;
     expectedName?: string;
-  }>({ open: false, title: '', message: '', onConfirm: () => {}, requiresNameConfirmation: false, expectedName: '' });
- 
-  const showNotification = (message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
+  }>({
+    open: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    requiresNameConfirmation: false,
+    expectedName: "",
+  });
 
+  const showNotification = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning"
+  ) => {
     setNotification({ open: true, message, severity });
   };
 
@@ -148,10 +189,12 @@ const ManageCollections: React.FC = () => {
 
   const handleCloseConfirmDialog = () => {
     setConfirmDialog({ ...confirmDialog, open: false });
-    setConfirmationText('');
+    setConfirmationText("");
   };
 
-  const handleConfirmationTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleConfirmationTextChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setConfirmationText(event.target.value);
   };
 
@@ -184,23 +227,33 @@ const ManageCollections: React.FC = () => {
   const [selectedCollection, setSelectedCollection] = useState<string>("");
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(false);
-  
+
   // Rename-specific state
-  const [renameNewName, setRenameNewName] = useState<string>('');
+  const [renameNewName, setRenameNewName] = useState<string>("");
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
-  const [renameSelectedCollection, setRenameSelectedCollection] = useState<string>('');
-  
+  const [renameSelectedCollection, setRenameSelectedCollection] =
+    useState<string>("");
+
   // Update visibility-specific state
-  const [updateVisibilitySelectedCollection, setUpdateVisibilitySelectedCollection] = useState<string>('');
-  const [updateVisibilityNewVisibility, setUpdateVisibilityNewVisibility] = useState<string>('');
-  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState<boolean>(false);
-  const [isLoadingVisibilityCollection, setIsLoadingVisibilityCollection] = useState<boolean>(false);
-  const [updateVisibilityCollectionDetails, setUpdateVisibilityCollectionDetails] = useState<{
+  const [
+    updateVisibilitySelectedCollection,
+    setUpdateVisibilitySelectedCollection,
+  ] = useState<string>("");
+  const [updateVisibilityNewVisibility, setUpdateVisibilityNewVisibility] =
+    useState<string>("");
+  const [isUpdatingVisibility, setIsUpdatingVisibility] =
+    useState<boolean>(false);
+  const [isLoadingVisibilityCollection, setIsLoadingVisibilityCollection] =
+    useState<boolean>(false);
+  const [
+    updateVisibilityCollectionDetails,
+    setUpdateVisibilityCollectionDetails,
+  ] = useState<{
     title: string;
     visibility: string;
     description?: string;
   } | null>(null);
-  
+
   const [collectionStats, setCollectionStats] = useState<{
     document_count: number;
     element_count: number;
@@ -212,16 +265,22 @@ const ManageCollections: React.FC = () => {
     created: string;
     modified: string;
   } | null>(null);
-  const [confirmationText, setConfirmationText] = useState<string>('');
+  const [confirmationText, setConfirmationText] = useState<string>("");
   const [deleteProgress, setDeleteProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState<boolean>(false);
 
   // Overview tab state
   const [overviewPage, setOverviewPage] = useState<number>(0);
   const [overviewRowsPerPage, setOverviewRowsPerPage] = useState<number>(10);
-  const [overviewSortOrder, setOverviewSortOrder] = useState<'modified' | 'title'>('modified');
-  const [overviewSortDirection, setOverviewSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [selectedOverviewCollection, setSelectedOverviewCollection] = useState<number | null>(null);
+  const [overviewSortOrder, setOverviewSortOrder] = useState<
+    "modified" | "title"
+  >("modified");
+  const [overviewSortDirection, setOverviewSortDirection] = useState<
+    "asc" | "desc"
+  >("desc");
+  const [selectedOverviewCollection, setSelectedOverviewCollection] = useState<
+    number | null
+  >(null);
   const [overviewCollectionDetails, setOverviewCollectionDetails] = useState<{
     id: number;
     title: string;
@@ -238,15 +297,16 @@ const ManageCollections: React.FC = () => {
     scholarly_annotation_count: number;
     comment_count: number;
   } | null>(null);
-  const [isLoadingOverviewDetails, setIsLoadingOverviewDetails] = useState<boolean>(false);
+  const [isLoadingOverviewDetails, setIsLoadingOverviewDetails] =
+    useState<boolean>(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState<boolean>(false);
 
   const handleCollectionSelect = async (event: any) => {
     const collectionId = event.target.value;
     setSelectedCollection(collectionId);
     setCollectionStats(null);
-    setConfirmationText('');
-    
+    setConfirmationText("");
+
     if (collectionId) {
       setIsLoadingStats(true);
       try {
@@ -261,12 +321,15 @@ const ManageCollections: React.FC = () => {
           description: stats.description,
           visibility: stats.visibility,
           created: stats.created,
-          modified: stats.modified
+          modified: stats.modified,
         });
       } catch (error: any) {
         //console.error('Failed to fetch collection statistics:', error);
-        const errorMessage = error.response?.data?.detail || error.message || 'Error fetching collection statistics';
-        showNotification(errorMessage, 'error');
+        const errorMessage =
+          error.response?.data?.detail ||
+          error.message ||
+          "Error fetching collection statistics";
+        showNotification(errorMessage, "error");
       } finally {
         setIsLoadingStats(false);
       }
@@ -278,22 +341,21 @@ const ManageCollections: React.FC = () => {
     newValue: number
   ) => {
     setActiveSubTab(newValue);
-    
+
     // Reset form states when changing tabs
     if (newValue === 3) {
       // Reset rename form when entering rename tab
-      setRenameSelectedCollection('');
-      setRenameNewName('');
+      setRenameSelectedCollection("");
+      setRenameNewName("");
     }
   };
 
   const initiateDeleteCollection = () => {
-
     if (!selectedCollection || !collectionStats) {
-      showNotification('Please select a collection first', 'error');
+      showNotification("Please select a collection first", "error");
       return;
     }
-    
+
     const message = `Are you sure you want to delete the collection "${collectionStats.title}"?
 
 This will permanently delete:
@@ -309,45 +371,50 @@ To confirm, please type the collection name exactly as shown:
 
     setConfirmDialog({
       open: true,
-      title: 'Confirm Collection Deletion',
+      title: "Confirm Collection Deletion",
       message,
       onConfirm: handleDeleteCollection,
       requiresNameConfirmation: true,
-      expectedName: collectionStats.title
+      expectedName: collectionStats.title,
     });
   };
 
   const handleDeleteCollection = async () => {
-
     if (!selectedCollection || !collectionStats) return;
-    
+
     setConfirmDialog({ ...confirmDialog, open: false });
     setIsDeleting(true);
     setShowProgress(true);
     setDeleteProgress(0);
-    
+
     try {
       setDeleteProgress(20);
-      
-      const response = await api.delete(`/collections/${selectedCollection}?force=true`);
+
+      await api.delete(`/collections/${selectedCollection}?force=true`);
       //console.log(`Delete status is ${response.status}`)
-      
+
       setDeleteProgress(70);
       setDeleteProgress(90);
-      
+
       // Refresh the collections list after successful deletion
       dispatch(fetchDocumentCollections({ includeUsers: true }));
       refreshOverviewData();
 
-      setSelectedCollection('');
+      setSelectedCollection("");
       setCollectionStats(null);
-      setConfirmationText('');
-      
+      setConfirmationText("");
+
       setDeleteProgress(100);
-      
-      showNotification(`Collection "${collectionStats.title}" deleted successfully`, 'success');
+
+      showNotification(
+        `Collection "${collectionStats.title}" deleted successfully`,
+        "success"
+      );
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || error.message || "An unknown error occurred";
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.message ||
+        "An unknown error occurred";
       showNotification(`Failed to delete collection: ${errorMessage}`, "error");
     } finally {
       setIsDeleting(false);
@@ -372,7 +439,7 @@ To confirm, please type the collection name exactly as shown:
     language: "en",
   });
   const [submitted, setSubmitted] = useState<boolean>(false);
-  const [titleError, setTitleError] = useState<string>('');
+  const [titleError, setTitleError] = useState<string>("");
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
   const handleChange = (
@@ -387,14 +454,14 @@ To confirm, please type the collection name exactly as shown:
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
-    
+
     setFormData((prevData) => ({
       ...prevData,
       title: newTitle,
     }));
 
     // Clear previous error immediately
-    setTitleError('');
+    setTitleError("");
 
     // Debounce validation check
     if (newTitle.trim()) {
@@ -402,12 +469,12 @@ To confirm, please type the collection name exactly as shown:
         // Only validate if the value hasn't changed since this timeout was set
         setFormData((currentData) => {
           if (currentData.title === newTitle && newTitle.trim()) {
-            const nameExists = documentCollections.some(c => 
-              c.title.toLowerCase() === newTitle.trim().toLowerCase()
+            const nameExists = documentCollections.some(
+              (c) => c.title.toLowerCase() === newTitle.trim().toLowerCase()
             );
-            
+
             if (nameExists) {
-              setTitleError('A collection with this name already exists');
+              setTitleError("A collection with this name already exists");
             }
           }
           return currentData;
@@ -418,31 +485,31 @@ To confirm, please type the collection name exactly as shown:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (isCreating) {
       return;
     }
-    
+
     // Check for real-time validation error
     if (titleError) {
-      showNotification(titleError, 'error');
+      showNotification(titleError, "error");
       return;
     }
-    
+
     // Check for duplicate collection names (case-insensitive) as backup
-    const nameExists = documentCollections.some(c => 
-      c.title.toLowerCase() === formData.title.trim().toLowerCase()
+    const nameExists = documentCollections.some(
+      (c) => c.title.toLowerCase() === formData.title.trim().toLowerCase()
     );
-    
+
     if (nameExists) {
-      showNotification('Collection name already exists', 'error');
+      showNotification("Collection name already exists", "error");
       return;
     }
-    
+
     // Start creation process
     setIsCreating(true);
-    
+
     // Clear form immediately to prevent re-submission with same data
     const submittedData = { ...formData };
     setFormData({
@@ -451,8 +518,8 @@ To confirm, please type the collection name exactly as shown:
       text_direction: "ltr",
       language: "en",
     });
-    setTitleError('');
-    
+    setTitleError("");
+
     try {
       const payload = {
         title: submittedData.title,
@@ -463,20 +530,25 @@ To confirm, please type the collection name exactly as shown:
         collection_metadata: {},
         created_by_id: user?.id || 1,
       };
-      
+
       await dispatch(createDocumentCollection(payload)).unwrap();
       setSubmitted(true);
-      showNotification(`Collection "${submittedData.title}" created successfully!`, 'success');
-      
+      showNotification(
+        `Collection "${submittedData.title}" created successfully!`,
+        "success"
+      );
+
       // Refresh overview data after creation
       setTimeout(() => {
         refreshOverviewData();
       }, 1000);
-      
     } catch (error: any) {
       // If creation fails, restore the form data so user doesn't lose their work
       setFormData(submittedData);
-      showNotification(`Failed to create collection: ${error.message || 'Unknown error'}`, 'error');
+      showNotification(
+        `Failed to create collection: ${error.message || "Unknown error"}`,
+        "error"
+      );
     } finally {
       // Add a minimum delay to prevent rapid re-submission
       setTimeout(() => {
@@ -489,93 +561,109 @@ To confirm, please type the collection name exactly as shown:
   const handleRenameCollectionSelect = (event: any) => {
     const collectionId = event.target.value;
     setRenameSelectedCollection(collectionId);
-    
+
     // Pre-fill the new name field with current collection title
     if (collectionId) {
-      const selectedCollection = documentCollections.find(c => c.id === parseInt(collectionId));
-      setRenameNewName(selectedCollection?.title || '');
+      const selectedCollection = documentCollections.find(
+        (c) => c.id === parseInt(collectionId)
+      );
+      setRenameNewName(selectedCollection?.title || "");
     } else {
-      setRenameNewName('');
+      setRenameNewName("");
     }
   };
 
-  const handleRenameNewNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRenameNewNameChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRenameNewName(event.target.value);
   };
 
   const handleRenameCollection = async () => {
     if (!renameSelectedCollection || !renameNewName.trim()) {
-      showNotification('Please select a collection and enter a new name', 'error');
+      showNotification(
+        "Please select a collection and enter a new name",
+        "error"
+      );
       return;
     }
 
-    const selectedCollection = documentCollections.find(c => c.id === parseInt(renameSelectedCollection));
+    const selectedCollection = documentCollections.find(
+      (c) => c.id === parseInt(renameSelectedCollection)
+    );
     if (!selectedCollection) {
-      showNotification('Selected collection not found', 'error');
+      showNotification("Selected collection not found", "error");
       return;
     }
 
     if (renameNewName.trim() === selectedCollection.title) {
-      showNotification('New name must be different from current name', 'error');
+      showNotification("New name must be different from current name", "error");
       return;
     }
 
     // Check if name already exists
-    const nameExists = documentCollections.some(c => 
-      c.title.toLowerCase() === renameNewName.trim().toLowerCase() && 
-      c.id !== parseInt(renameSelectedCollection)
+    const nameExists = documentCollections.some(
+      (c) =>
+        c.title.toLowerCase() === renameNewName.trim().toLowerCase() &&
+        c.id !== parseInt(renameSelectedCollection)
     );
-    
+
     if (nameExists) {
-      showNotification('A collection with this name already exists', 'error');
+      showNotification("A collection with this name already exists", "error");
       return;
     }
 
     setIsRenaming(true);
-    
+
     try {
-      await dispatch(updateDocumentCollection({
-        id: parseInt(renameSelectedCollection),
-        updates: {
-          title: renameNewName.trim(),
-          modified_by_id: user?.id || 1
-        }
-      })).unwrap();
-      
+      await dispatch(
+        updateDocumentCollection({
+          id: parseInt(renameSelectedCollection),
+          updates: {
+            title: renameNewName.trim(),
+            modified_by_id: user?.id || 1,
+          },
+        })
+      ).unwrap();
+
       // Refresh collections to show updated data
       dispatch(fetchDocumentCollections({ includeUsers: true }));
       refreshOverviewData();
-      
+
       showNotification(
-        `Collection renamed from "${selectedCollection.title}" to "${renameNewName.trim()}"`, 
-        'success'
+        `Collection renamed from "${
+          selectedCollection.title
+        }" to "${renameNewName.trim()}"`,
+        "success"
       );
-      
+
       // Reset form
-      setRenameSelectedCollection('');
-      setRenameNewName('');
-      
+      setRenameSelectedCollection("");
+      setRenameNewName("");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showNotification(`Failed to rename collection: ${errorMessage}`, 'error');
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      showNotification(`Failed to rename collection: ${errorMessage}`, "error");
     } finally {
       setIsRenaming(false);
     }
   };
 
   const isRenameFormValid = () => {
-    return renameSelectedCollection && 
-           renameNewName.trim() && 
-           renameNewName.trim().length > 0;
+    return (
+      renameSelectedCollection &&
+      renameNewName.trim() &&
+      renameNewName.trim().length > 0
+    );
   };
 
   // Update visibility functionality handlers
   const handleUpdateVisibilityCollectionSelect = async (event: any) => {
     const collectionId = event.target.value;
     setUpdateVisibilitySelectedCollection(collectionId);
-    setUpdateVisibilityNewVisibility('');
+    setUpdateVisibilityNewVisibility("");
     setUpdateVisibilityCollectionDetails(null);
-    
+
     if (collectionId) {
       setIsLoadingVisibilityCollection(true);
       try {
@@ -584,13 +672,16 @@ To confirm, please type the collection name exactly as shown:
         setUpdateVisibilityCollectionDetails({
           title: collectionData.title,
           visibility: collectionData.visibility,
-          description: collectionData.description
+          description: collectionData.description,
         });
         setUpdateVisibilityNewVisibility(collectionData.visibility);
       } catch (error: any) {
         //console.error('Failed to fetch collection details:', error);
-        const errorMessage = error.response?.data?.detail || error.message || 'Error fetching collection details';
-        showNotification(errorMessage, 'error');
+        const errorMessage =
+          error.response?.data?.detail ||
+          error.message ||
+          "Error fetching collection details";
+        showNotification(errorMessage, "error");
       } finally {
         setIsLoadingVisibilityCollection(false);
       }
@@ -603,59 +694,76 @@ To confirm, please type the collection name exactly as shown:
 
   const handleUpdateCollectionVisibility = async () => {
     if (!updateVisibilitySelectedCollection || !updateVisibilityNewVisibility) {
-      showNotification('Please select a collection and visibility option', 'error');
+      showNotification(
+        "Please select a collection and visibility option",
+        "error"
+      );
       return;
     }
 
     if (!updateVisibilityCollectionDetails) {
-      showNotification('Collection details not loaded', 'error');
+      showNotification("Collection details not loaded", "error");
       return;
     }
 
-    if (updateVisibilityNewVisibility === updateVisibilityCollectionDetails.visibility) {
-      showNotification('New visibility must be different from current visibility', 'error');
+    if (
+      updateVisibilityNewVisibility ===
+      updateVisibilityCollectionDetails.visibility
+    ) {
+      showNotification(
+        "New visibility must be different from current visibility",
+        "error"
+      );
       return;
     }
 
     setIsUpdatingVisibility(true);
-    
+
     try {
-      await dispatch(updateDocumentCollection({
-        id: parseInt(updateVisibilitySelectedCollection),
-        updates: {
-          visibility: updateVisibilityNewVisibility,
-          modified_by_id: user?.id || 1
-        }
-      })).unwrap();
-      
+      await dispatch(
+        updateDocumentCollection({
+          id: parseInt(updateVisibilitySelectedCollection),
+          updates: {
+            visibility: updateVisibilityNewVisibility,
+            modified_by_id: user?.id || 1,
+          },
+        })
+      ).unwrap();
+
       // Refresh collections to show updated data
       dispatch(fetchDocumentCollections({ includeUsers: true }));
       refreshOverviewData();
-      
+
       // Update the local collection details to reflect the change
       setUpdateVisibilityCollectionDetails({
         ...updateVisibilityCollectionDetails,
-        visibility: updateVisibilityNewVisibility
+        visibility: updateVisibilityNewVisibility,
       });
-      
+
       showNotification(
-        `Collection visibility updated from "${updateVisibilityCollectionDetails.visibility}" to "${updateVisibilityNewVisibility}" for collection "${updateVisibilityCollectionDetails.title}"`, 
-        'success'
+        `Collection visibility updated from "${updateVisibilityCollectionDetails.visibility}" to "${updateVisibilityNewVisibility}" for collection "${updateVisibilityCollectionDetails.title}"`,
+        "success"
       );
-      
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      showNotification(`Failed to update collection visibility: ${errorMessage}`, 'error');
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      showNotification(
+        `Failed to update collection visibility: ${errorMessage}`,
+        "error"
+      );
     } finally {
       setIsUpdatingVisibility(false);
     }
   };
 
   const isUpdateVisibilityFormValid = () => {
-    return updateVisibilitySelectedCollection && 
-           updateVisibilityNewVisibility && 
-           updateVisibilityCollectionDetails &&
-           updateVisibilityNewVisibility !== updateVisibilityCollectionDetails.visibility;
+    return (
+      updateVisibilitySelectedCollection &&
+      updateVisibilityNewVisibility &&
+      updateVisibilityCollectionDetails &&
+      updateVisibilityNewVisibility !==
+        updateVisibilityCollectionDetails.visibility
+    );
   };
 
   // Overview tab handlers
@@ -664,16 +772,19 @@ To confirm, please type the collection name exactly as shown:
     setOverviewCollectionDetails(null);
     setDetailsModalOpen(true);
     setIsLoadingOverviewDetails(true);
-    
+
     try {
       const response = await api.get(`/collections/${collectionId}`);
       const details = response.data;
       //console.log('Collection details response:', details); // Debug logging
       setOverviewCollectionDetails(details);
     } catch (error: any) {
-      console.error('Failed to fetch collection details:', error);
-      const errorMessage = error.response?.data?.detail || error.message || 'Failed to fetch collection details';
-      showNotification(errorMessage, 'error');
+      console.error("Failed to fetch collection details:", error);
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.message ||
+        "Failed to fetch collection details";
+      showNotification(errorMessage, "error");
       setDetailsModalOpen(false);
     } finally {
       setIsLoadingOverviewDetails(false);
@@ -686,14 +797,16 @@ To confirm, please type the collection name exactly as shown:
     setOverviewCollectionDetails(null);
   };
 
-  const handleOverviewSortChange = (newSortOrder: 'modified' | 'title') => {
+  const handleOverviewSortChange = (newSortOrder: "modified" | "title") => {
     if (overviewSortOrder === newSortOrder) {
       // Toggle direction if same column
-      setOverviewSortDirection(overviewSortDirection === 'asc' ? 'desc' : 'asc');
+      setOverviewSortDirection(
+        overviewSortDirection === "asc" ? "desc" : "asc"
+      );
     } else {
       // New column, set appropriate default direction
       setOverviewSortOrder(newSortOrder);
-      setOverviewSortDirection(newSortOrder === 'modified' ? 'desc' : 'asc');
+      setOverviewSortDirection(newSortOrder === "modified" ? "desc" : "asc");
     }
   };
 
@@ -701,7 +814,9 @@ To confirm, please type the collection name exactly as shown:
     setOverviewPage(newPage);
   };
 
-  const handleOverviewRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOverviewRowsPerPageChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setOverviewRowsPerPage(parseInt(event.target.value, 10));
     setOverviewPage(0);
   };
@@ -717,14 +832,14 @@ To confirm, please type the collection name exactly as shown:
   // Sort and paginate collections for overview
   const sortedCollections = React.useMemo(() => {
     const sorted = [...documentCollections].sort((a, b) => {
-      if (overviewSortOrder === 'title') {
+      if (overviewSortOrder === "title") {
         const result = a.title.localeCompare(b.title);
-        return overviewSortDirection === 'asc' ? result : -result;
+        return overviewSortDirection === "asc" ? result : -result;
       } else {
         // Sort by modified date - we'll use ID as proxy since we don't have modified date in basic list
         // In a real implementation, you might want to fetch this data or sort by ID
         const result = a.id - b.id; // Newer IDs are likely more recent
-        return overviewSortDirection === 'asc' ? result : -result;
+        return overviewSortDirection === "asc" ? result : -result;
       }
     });
     return sorted;
@@ -732,7 +847,10 @@ To confirm, please type the collection name exactly as shown:
 
   const paginatedCollections = React.useMemo(() => {
     const startIndex = overviewPage * overviewRowsPerPage;
-    return sortedCollections.slice(startIndex, startIndex + overviewRowsPerPage);
+    return sortedCollections.slice(
+      startIndex,
+      startIndex + overviewRowsPerPage
+    );
   }, [sortedCollections, overviewPage, overviewRowsPerPage]);
 
   return (
@@ -772,7 +890,7 @@ To confirm, please type the collection name exactly as shown:
           <Typography variant="h5" gutterBottom>
             Document Collection Overview
           </Typography>
-          
+
           {/* Collections Table */}
           <TableContainer component={Paper} sx={{ mb: 3 }}>
             <Table>
@@ -780,9 +898,13 @@ To confirm, please type the collection name exactly as shown:
                 <TableRow>
                   <TableCell>
                     <TableSortLabel
-                      active={overviewSortOrder === 'title'}
-                      direction={overviewSortOrder === 'title' ? overviewSortDirection : 'asc'}
-                      onClick={() => handleOverviewSortChange('title')}
+                      active={overviewSortOrder === "title"}
+                      direction={
+                        overviewSortOrder === "title"
+                          ? overviewSortDirection
+                          : "asc"
+                      }
+                      onClick={() => handleOverviewSortChange("title")}
                     >
                       Title
                     </TableSortLabel>
@@ -797,7 +919,7 @@ To confirm, please type the collection name exactly as shown:
                   <TableRow
                     key={collection.id}
                     hover
-                    sx={{ cursor: 'pointer' }}
+                    sx={{ cursor: "pointer" }}
                   >
                     <TableCell>{collection.title}</TableCell>
                     <TableCell>
@@ -812,17 +934,25 @@ To confirm, please type the collection name exactly as shown:
                       )}
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={(collection as any).visibility || 'Unknown'}
+                      <Chip
+                        label={(collection as any).visibility || "Unknown"}
                         size="small"
-                        color={(collection as any).visibility === 'public' ? 'success' : (collection as any).visibility === 'private' ? 'error' : 'default'}
+                        color={
+                          (collection as any).visibility === "public"
+                            ? "success"
+                            : (collection as any).visibility === "private"
+                            ? "error"
+                            : "default"
+                        }
                       />
                     </TableCell>
                     <TableCell align="center">
-                      <Button 
-                        size="small" 
+                      <Button
+                        size="small"
                         variant="outlined"
-                        onClick={() => handleOverviewCollectionSelect(collection.id)}
+                        onClick={() =>
+                          handleOverviewCollectionSelect(collection.id)
+                        }
                       >
                         View Details
                       </Button>
@@ -854,9 +984,10 @@ To confirm, please type the collection name exactly as shown:
           />
 
           {/* Instructions */}
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Box sx={{ mt: 3, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
-              Click "View Details" on any collection to see comprehensive information including statistics and metadata
+              Click "View Details" on any collection to see comprehensive
+              information including statistics and metadata
             </Typography>
           </Box>
 
@@ -868,7 +999,14 @@ To confirm, please type the collection name exactly as shown:
             aria-describedby="collection-details-description"
           >
             <Box sx={modalStyle}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 3,
+                }}
+              >
                 <Typography variant="h5" component="h2">
                   Collection Details
                 </Typography>
@@ -876,12 +1014,17 @@ To confirm, please type the collection name exactly as shown:
                   <CloseIcon />
                 </IconButton>
               </Box>
-              
+
               {isLoadingOverviewDetails ? (
                 <Box>
                   <Skeleton variant="text" width="60%" height={32} />
                   <Skeleton variant="text" width="40%" height={24} />
-                  <Skeleton variant="rectangular" width="100%" height={200} sx={{ mt: 2 }} />
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={200}
+                    sx={{ mt: 2 }}
+                  />
                 </Box>
               ) : overviewCollectionDetails ? (
                 <Grid container spacing={3}>
@@ -891,31 +1034,53 @@ To confirm, please type the collection name exactly as shown:
                       Basic Information
                     </Typography>
                     <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary">Title</Typography>
-                      <Typography variant="body1" fontWeight="medium">{overviewCollectionDetails.title}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Title
+                      </Typography>
+                      <Typography variant="body1" fontWeight="medium">
+                        {overviewCollectionDetails.title}
+                      </Typography>
                     </Box>
                     {overviewCollectionDetails.description && (
                       <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary">Description</Typography>
-                        <Typography variant="body1">{overviewCollectionDetails.description}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Description
+                        </Typography>
+                        <Typography variant="body1">
+                          {overviewCollectionDetails.description}
+                        </Typography>
                       </Box>
                     )}
                     <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary">Visibility</Typography>
-                      <Chip 
-                        label={overviewCollectionDetails.visibility} 
+                      <Typography variant="body2" color="text.secondary">
+                        Visibility
+                      </Typography>
+                      <Chip
+                        label={overviewCollectionDetails.visibility}
                         size="small"
-                        color={overviewCollectionDetails.visibility === 'public' ? 'success' : 'default'}
+                        color={
+                          overviewCollectionDetails.visibility === "public"
+                            ? "success"
+                            : "default"
+                        }
                         sx={{ mt: 0.5 }}
                       />
                     </Box>
                     <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary">Language</Typography>
-                      <Typography variant="body1">{overviewCollectionDetails.language}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Language
+                      </Typography>
+                      <Typography variant="body1">
+                        {overviewCollectionDetails.language}
+                      </Typography>
                     </Box>
                     <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary">Text Direction</Typography>
-                      <Typography variant="body1">{overviewCollectionDetails.text_direction}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Text Direction
+                      </Typography>
+                      <Typography variant="body1">
+                        {overviewCollectionDetails.text_direction}
+                      </Typography>
                     </Box>
                   </Grid>
 
@@ -926,35 +1091,89 @@ To confirm, please type the collection name exactly as shown:
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={6}>
-                        <Box sx={{ p: 2, bgcolor: 'primary.50', borderRadius: 1, textAlign: 'center' }}>
-                          <Typography variant="h4" color="primary.main" fontWeight="bold">
+                        <Box
+                          sx={{
+                            p: 2,
+                            bgcolor: "primary.50",
+                            borderRadius: 1,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="h4"
+                            color="primary.main"
+                            fontWeight="bold"
+                          >
                             {overviewCollectionDetails.document_count}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">Documents</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Documents
+                          </Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={6}>
-                        <Box sx={{ p: 2, bgcolor: 'secondary.50', borderRadius: 1, textAlign: 'center' }}>
-                          <Typography variant="h4" color="secondary.main" fontWeight="bold">
+                        <Box
+                          sx={{
+                            p: 2,
+                            bgcolor: "secondary.50",
+                            borderRadius: 1,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="h4"
+                            color="secondary.main"
+                            fontWeight="bold"
+                          >
                             {overviewCollectionDetails.element_count}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">Paragraphs</Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Box sx={{ p: 2, bgcolor: 'success.50', borderRadius: 1, textAlign: 'center' }}>
-                          <Typography variant="h4" color="success.main" fontWeight="bold">
-                            {overviewCollectionDetails.scholarly_annotation_count}
+                          <Typography variant="body2" color="text.secondary">
+                            Paragraphs
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">Scholarly Annotations</Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={6}>
-                        <Box sx={{ p: 2, bgcolor: 'warning.50', borderRadius: 1, textAlign: 'center' }}>
-                          <Typography variant="h4" color="warning.main" fontWeight="bold">
+                        <Box
+                          sx={{
+                            p: 2,
+                            bgcolor: "success.50",
+                            borderRadius: 1,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="h4"
+                            color="success.main"
+                            fontWeight="bold"
+                          >
+                            {
+                              overviewCollectionDetails.scholarly_annotation_count
+                            }
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Scholarly Annotations
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            bgcolor: "warning.50",
+                            borderRadius: 1,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="h4"
+                            color="warning.main"
+                            fontWeight="bold"
+                          >
                             {overviewCollectionDetails.comment_count}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">Comments</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Comments
+                          </Typography>
                         </Box>
                       </Grid>
                     </Grid>
@@ -968,15 +1187,29 @@ To confirm, please type the collection name exactly as shown:
                     </Typography>
                     <Grid container spacing={3}>
                       <Grid item xs={12} sm={6}>
-                        <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>Created</Typography>
+                        <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            gutterBottom
+                          >
+                            Created
+                          </Typography>
                           <Typography variant="body1" fontWeight="medium">
-                            {new Date(overviewCollectionDetails.created).toLocaleDateString()} at{' '}
-                            {new Date(overviewCollectionDetails.created).toLocaleTimeString()}
+                            {new Date(
+                              overviewCollectionDetails.created
+                            ).toLocaleDateString()}{" "}
+                            at{" "}
+                            {new Date(
+                              overviewCollectionDetails.created
+                            ).toLocaleTimeString()}
                           </Typography>
                           {overviewCollectionDetails.created_by ? (
                             <Typography variant="body2" color="text.secondary">
-                              by {getUserDisplayName(overviewCollectionDetails.created_by)}
+                              by{" "}
+                              {getUserDisplayName(
+                                overviewCollectionDetails.created_by
+                              )}
                             </Typography>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
@@ -986,15 +1219,29 @@ To confirm, please type the collection name exactly as shown:
                         </Box>
                       </Grid>
                       <Grid item xs={12} sm={6}>
-                        <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>Last Modified</Typography>
+                        <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: 1 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            gutterBottom
+                          >
+                            Last Modified
+                          </Typography>
                           <Typography variant="body1" fontWeight="medium">
-                            {new Date(overviewCollectionDetails.modified).toLocaleDateString()} at{' '}
-                            {new Date(overviewCollectionDetails.modified).toLocaleTimeString()}
+                            {new Date(
+                              overviewCollectionDetails.modified
+                            ).toLocaleDateString()}{" "}
+                            at{" "}
+                            {new Date(
+                              overviewCollectionDetails.modified
+                            ).toLocaleTimeString()}
                           </Typography>
                           {overviewCollectionDetails.modified_by ? (
                             <Typography variant="body2" color="text.secondary">
-                              by {getUserDisplayName(overviewCollectionDetails.modified_by)}
+                              by{" "}
+                              {getUserDisplayName(
+                                overviewCollectionDetails.modified_by
+                              )}
                             </Typography>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
@@ -1034,12 +1281,14 @@ To confirm, please type the collection name exactly as shown:
                 disabled={isCreating}
                 required
                 style={{
-                  borderColor: titleError ? 'red' : undefined,
-                  opacity: isCreating ? 0.6 : 1
+                  borderColor: titleError ? "red" : undefined,
+                  opacity: isCreating ? 0.6 : 1,
                 }}
               />
               {titleError && (
-                <div style={{ color: 'red', fontSize: '14px', marginTop: '4px' }}>
+                <div
+                  style={{ color: "red", fontSize: "14px", marginTop: "4px" }}
+                >
                   {titleError}
                 </div>
               )}
@@ -1095,7 +1344,7 @@ To confirm, please type the collection name exactly as shown:
             </div>
 
             <button type="submit" disabled={!!titleError || isCreating}>
-              {isCreating ? 'Creating Collection...' : 'Add'}
+              {isCreating ? "Creating Collection..." : "Add"}
             </button>
           </StyledForm>
 
@@ -1126,13 +1375,20 @@ To confirm, please type the collection name exactly as shown:
             Delete Document Collection
           </Typography>
           <div>
-            <p>Select a document collection to delete. <strong>Warning:</strong> This will permanently delete all documents, content, and annotations in the collection.</p>
-            <p style={{ color: 'red', fontWeight: 'bold' }}>⚠️ This action cannot be undone!</p>
-            
-            <StyledForm>
+            <p>
+              Select a document collection to delete. <strong>Warning:</strong>{" "}
+              This will permanently delete all documents, content, and
+              annotations in the collection.
+            </p>
+            <p style={{ color: "red", fontWeight: "bold" }}>
+              ⚠️ This action cannot be undone!
+            </p>
 
-              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
-                <InputLabel id="delete-collection-label">Select a collection</InputLabel>
+            <StyledForm>
+              <FormControl fullWidth sx={{ maxWidth: "400px" }}>
+                <InputLabel id="delete-collection-label">
+                  Select a collection
+                </InputLabel>
                 <Select
                   labelId="delete-collection-label"
                   id="delete-collection-select"
@@ -1155,7 +1411,7 @@ To confirm, please type the collection name exactly as shown:
                 </Select>
               </FormControl>
 
-             {/* <button
+              {/* <button
                 type="button"
                 className="delete-button"
                 disabled={!selectedCollection || isDeleting}
@@ -1163,11 +1419,10 @@ To confirm, please type the collection name exactly as shown:
               >
                {isDeleting ? "Deleting..." : "Delete"} 
             </button>  */}
-
             </StyledForm>
 
             {isLoadingStats && (
-              <Box sx={{ width: '100%', mt: 2 }}>
+              <Box sx={{ width: "100%", mt: 2 }}>
                 <LinearProgress />
                 <Typography variant="body2" sx={{ mt: 1 }}>
                   Loading collection statistics...
@@ -1176,38 +1431,59 @@ To confirm, please type the collection name exactly as shown:
             )}
 
             {collectionStats && (
-              <Box sx={{ mt: 2, p: 2, backgroundColor: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '4px' }}>
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 2,
+                  backgroundColor: "#fff3cd",
+                  border: "1px solid #ffeaa7",
+                  borderRadius: "4px",
+                }}
+              >
                 <Typography variant="h6" gutterBottom>
                   Collection Details:
                 </Typography>
-                <Typography variant="body2"><strong>Name:</strong> {collectionStats.title}</Typography>
+                <Typography variant="body2">
+                  <strong>Name:</strong> {collectionStats.title}
+                </Typography>
                 {collectionStats.description && (
-                  <Typography variant="body2"><strong>Description:</strong> {collectionStats.description}</Typography>
+                  <Typography variant="body2">
+                    <strong>Description:</strong> {collectionStats.description}
+                  </Typography>
                 )}
-                <Typography variant="body2"><strong>Visibility:</strong> {collectionStats.visibility}</Typography>
-                <Typography variant="body2"><strong>Created:</strong> {new Date(collectionStats.created).toLocaleDateString()}</Typography>
-                <Typography variant="body2"><strong>Modified:</strong> {new Date(collectionStats.modified).toLocaleDateString()}</Typography>
-                
+                <Typography variant="body2">
+                  <strong>Visibility:</strong> {collectionStats.visibility}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Created:</strong>{" "}
+                  {new Date(collectionStats.created).toLocaleDateString()}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Modified:</strong>{" "}
+                  {new Date(collectionStats.modified).toLocaleDateString()}
+                </Typography>
+
                 <Typography variant="h6" sx={{ mt: 2 }} gutterBottom>
                   Content to be deleted:
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                <Typography variant="body2" sx={{ color: "error.main" }}>
                   • {collectionStats.document_count} documents
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                <Typography variant="body2" sx={{ color: "error.main" }}>
                   • {collectionStats.element_count} paragraphs
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'error.main' }}>
-                  • {collectionStats.scholarly_annotation_count} scholarly annotations
+                <Typography variant="body2" sx={{ color: "error.main" }}>
+                  • {collectionStats.scholarly_annotation_count} scholarly
+                  annotations
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                <Typography variant="body2" sx={{ color: "error.main" }}>
                   • {collectionStats.comment_count} comments
                 </Typography>
               </Box>
             )}
 
             {showProgress && (
-              <Box sx={{ width: '100%', mt: 2 }}>
+              <Box sx={{ width: "100%", mt: 2 }}>
                 <LinearProgress variant="determinate" value={deleteProgress} />
                 <Typography variant="body2" sx={{ mt: 1 }}>
                   Deleting collection... {deleteProgress}%
@@ -1222,7 +1498,7 @@ To confirm, please type the collection name exactly as shown:
               disabled={!selectedCollection || isDeleting || !collectionStats}
               sx={{ marginTop: 2 }}
             >
-              {isDeleting ? 'Deleting...' : 'Delete Collection'}
+              {isDeleting ? "Deleting..." : "Delete Collection"}
             </Button>
           </div>
         </SubTabPanel>
@@ -1274,7 +1550,6 @@ To confirm, please type the collection name exactly as shown:
                 />
               </div>
 
-              
               <Button
                 variant="contained"
                 color="primary"
@@ -1282,9 +1557,8 @@ To confirm, please type the collection name exactly as shown:
                 disabled={!isRenameFormValid() || isRenaming}
                 sx={{ marginTop: 2 }}
               >
-                {isRenaming ? 'Renaming...' : 'Rename Collection'}
+                {isRenaming ? "Renaming..." : "Rename Collection"}
               </Button>
-
             </StyledForm>
           </div>
         </SubTabPanel>
@@ -1296,8 +1570,10 @@ To confirm, please type the collection name exactly as shown:
           <div>
             <p>Select a collection to update its visibility setting:</p>
             <StyledForm>
-              <FormControl fullWidth sx={{ maxWidth: '400px' }}>
-                <InputLabel id="update-visibility-collection-label">Select a collection</InputLabel>
+              <FormControl fullWidth sx={{ maxWidth: "400px" }}>
+                <InputLabel id="update-visibility-collection-label">
+                  Select a collection
+                </InputLabel>
                 <Select
                   labelId="update-visibility-collection-label"
                   id="update-visibility-collection-select"
@@ -1310,7 +1586,10 @@ To confirm, please type the collection name exactly as shown:
                     <em>Select a collection</em>
                   </MenuItem>
                   {documentCollections.map((collection) => (
-                    <MenuItem key={collection.id} value={collection.id.toString()}>
+                    <MenuItem
+                      key={collection.id}
+                      value={collection.id.toString()}
+                    >
                       {collection.title}
                     </MenuItem>
                   ))}
@@ -1318,7 +1597,7 @@ To confirm, please type the collection name exactly as shown:
               </FormControl>
 
               {isLoadingVisibilityCollection && (
-                <Box sx={{ width: '100%', mt: 2 }}>
+                <Box sx={{ width: "100%", mt: 2 }}>
                   <LinearProgress />
                   <Typography variant="body2" sx={{ mt: 1 }}>
                     Loading collection details...
@@ -1327,22 +1606,41 @@ To confirm, please type the collection name exactly as shown:
               )}
 
               {updateVisibilityCollectionDetails && (
-                <Box sx={{ mt: 2, p: 2, backgroundColor: '#e3f2fd', border: '1px solid #bbdefb', borderRadius: '4px' }}>
+                <Box
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    backgroundColor: "#e3f2fd",
+                    border: "1px solid #bbdefb",
+                    borderRadius: "4px",
+                  }}
+                >
                   <Typography variant="h6" gutterBottom>
                     Collection Details:
                   </Typography>
-                  <Typography variant="body2"><strong>Name:</strong> {updateVisibilityCollectionDetails.title}</Typography>
+                  <Typography variant="body2">
+                    <strong>Name:</strong>{" "}
+                    {updateVisibilityCollectionDetails.title}
+                  </Typography>
                   {updateVisibilityCollectionDetails.description && (
-                    <Typography variant="body2"><strong>Description:</strong> {updateVisibilityCollectionDetails.description}</Typography>
+                    <Typography variant="body2">
+                      <strong>Description:</strong>{" "}
+                      {updateVisibilityCollectionDetails.description}
+                    </Typography>
                   )}
-                  <Typography variant="body2"><strong>Current Visibility:</strong> {updateVisibilityCollectionDetails.visibility}</Typography>
+                  <Typography variant="body2">
+                    <strong>Current Visibility:</strong>{" "}
+                    {updateVisibilityCollectionDetails.visibility}
+                  </Typography>
                 </Box>
               )}
-              
+
               {updateVisibilityCollectionDetails && (
-                <div className="form-group" style={{ marginTop: '16px' }}>
-                  <FormControl fullWidth sx={{ maxWidth: '400px' }}>
-                    <InputLabel id="update-visibility-new-visibility-label">New Visibility</InputLabel>
+                <div className="form-group" style={{ marginTop: "16px" }}>
+                  <FormControl fullWidth sx={{ maxWidth: "400px" }}>
+                    <InputLabel id="update-visibility-new-visibility-label">
+                      New Visibility
+                    </InputLabel>
                     <Select
                       labelId="update-visibility-new-visibility-label"
                       id="update-visibility-new-visibility-select"
@@ -1358,15 +1656,17 @@ To confirm, please type the collection name exactly as shown:
                   </FormControl>
                 </div>
               )}
-              
+
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleUpdateCollectionVisibility}
-                disabled={!isUpdateVisibilityFormValid() || isUpdatingVisibility}
+                disabled={
+                  !isUpdateVisibilityFormValid() || isUpdatingVisibility
+                }
                 sx={{ marginTop: 2 }}
               >
-                {isUpdatingVisibility ? 'Updating...' : 'Update Visibility'}
+                {isUpdatingVisibility ? "Updating..." : "Update Visibility"}
               </Button>
             </StyledForm>
           </div>
@@ -1397,16 +1697,17 @@ To confirm, please type the collection name exactly as shown:
           maxWidth="md"
           fullWidth
         >
-
-          <DialogTitle id="alert-dialog-title" sx={{ color: 'error.main' }}>
-
+          <DialogTitle id="alert-dialog-title" sx={{ color: "error.main" }}>
             {confirmDialog.title}
           </DialogTitle>
           <DialogContent>
-            <DialogContentText id="alert-dialog-description" sx={{ marginBottom: 2, whiteSpace: 'pre-line' }}>
+            <DialogContentText
+              id="alert-dialog-description"
+              sx={{ marginBottom: 2, whiteSpace: "pre-line" }}
+            >
               {confirmDialog.message}
             </DialogContentText>
-            
+
             {confirmDialog.requiresNameConfirmation && (
               <TextField
                 autoFocus
@@ -1417,22 +1718,30 @@ To confirm, please type the collection name exactly as shown:
                 variant="outlined"
                 value={confirmationText}
                 onChange={handleConfirmationTextChange}
-                error={confirmationText !== '' && !isConfirmationValid()}
-                helperText={confirmationText !== '' && !isConfirmationValid() ? 'Collection name must match exactly' : ''}
+                error={confirmationText !== "" && !isConfirmationValid()}
+                helperText={
+                  confirmationText !== "" && !isConfirmationValid()
+                    ? "Collection name must match exactly"
+                    : ""
+                }
                 sx={{ mt: 2 }}
               />
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseConfirmDialog}>Cancel</Button>
-            <Button 
-              onClick={confirmDialog.onConfirm} 
-              color="error" 
-              variant="contained" 
-              disabled={confirmDialog.requiresNameConfirmation && !isConfirmationValid()}
+            <Button
+              onClick={confirmDialog.onConfirm}
+              color="error"
+              variant="contained"
+              disabled={
+                confirmDialog.requiresNameConfirmation && !isConfirmationValid()
+              }
               autoFocus={!confirmDialog.requiresNameConfirmation}
             >
-              {confirmDialog.requiresNameConfirmation ? 'DELETE COLLECTION' : 'Delete'}
+              {confirmDialog.requiresNameConfirmation
+                ? "DELETE COLLECTION"
+                : "Delete"}
             </Button>
           </DialogActions>
         </Dialog>

@@ -18,7 +18,7 @@ interface UseAuthCoreReturn {
 }
 
 export const useAuthCore = (config: AuthCoreConfig): UseAuthCoreReturn => {
-  const { localStorageKey, sessionExpirationHours } = config;
+  const { localStorageKey = "auth_data", sessionExpirationHours = 24 } = config;
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authState, setAuthState] = useState<AuthState>({

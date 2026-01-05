@@ -47,9 +47,18 @@ TestBase = declarative_base()
 # Test-specific models (SQLite-compatible versions of production models)
 # =============================================================================
 
+# User-role association table
+user_roles = Table(
+    "user_roles",
+    TestBase.metadata,
+    Column("user_id", Integer, ForeignKey("users.id")),
+    Column("role_id", Integer, ForeignKey("roles.id")),
+)
+
+
 class User(TestBase):
     __tablename__ = "users"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(255))
     last_name = Column(String(255))
@@ -77,6 +86,17 @@ class User(TestBase):
     owned_documents = relationship(
         "Document", foreign_keys="Document.owner_id", back_populates="owner"
     )
+    roles = relationship("Role", secondary=user_roles, back_populates="users")
+
+
+class Role(TestBase):
+    __tablename__ = "roles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), unique=True)
+    description = Column(String(255))
+
+    users = relationship("User", secondary=user_roles, back_populates="roles")
 
 
 class DocumentCollection(TestBase):
@@ -205,6 +225,87 @@ def sample_user(db_session: Session) -> User:
         is_active=True,
         viewed_tutorial=False,
     )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def admin_role(db_session: Session) -> Role:
+    """Create an admin role for testing."""
+    role = Role(
+        name="admin",
+        description="Administrator role with full permissions"
+    )
+    db_session.add(role)
+    db_session.commit()
+    db_session.refresh(role)
+    return role
+
+
+@pytest.fixture
+def editor_role(db_session: Session) -> Role:
+    """Create an editor role for testing."""
+    role = Role(
+        name="editor",
+        description="Editor role with content modification permissions"
+    )
+    db_session.add(role)
+    db_session.commit()
+    db_session.refresh(role)
+    return role
+
+
+@pytest.fixture
+def viewer_role(db_session: Session) -> Role:
+    """Create a viewer role for testing."""
+    role = Role(
+        name="viewer",
+        description="Viewer role with read-only permissions"
+    )
+    db_session.add(role)
+    db_session.commit()
+    db_session.refresh(role)
+    return role
+
+
+@pytest.fixture
+def sample_roles(admin_role: Role, editor_role: Role, viewer_role: Role) -> list[Role]:
+    """Create a list of sample roles for testing."""
+    return [admin_role, editor_role, viewer_role]
+
+
+@pytest.fixture
+def user_with_admin_role(db_session: Session, admin_role: Role) -> User:
+    """Create a user with admin role for testing."""
+    user = User(
+        first_name="Admin",
+        last_name="User",
+        email="admin@example.com",
+        username="adminuser",
+        is_active=True,
+        viewed_tutorial=False,
+    )
+    user.roles.append(admin_role)
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def user_with_multiple_roles(db_session: Session, admin_role: Role, editor_role: Role) -> User:
+    """Create a user with multiple roles for testing."""
+    user = User(
+        first_name="Multi",
+        last_name="Role",
+        email="multirole@example.com",
+        username="multiroleuser",
+        is_active=True,
+        viewed_tutorial=False,
+    )
+    user.roles.extend([admin_role, editor_role])
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
