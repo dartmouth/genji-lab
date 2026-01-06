@@ -302,13 +302,14 @@ const AppHeader: React.FC = () => {
                   >
                     View Tutorial
                   </button>
-
+                  {" "}
                   {user?.roles &&
                   (user.roles.includes("admin") ||
                     user.roles.includes("instructor")) ? (
                     <button
                       className="admin-button"
                       onClick={() => (window.location.href = "/admin")}
+                      style={{ marginLeft: "2px" }}
                     >
                       Administration
                     </button>
