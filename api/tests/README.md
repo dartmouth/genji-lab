@@ -32,10 +32,11 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing
 | `tests/test_document_elements.py` | 32 tests for document element operations |
 | `tests/test_groups.py` | 44 tests for group/classroom operations |
 | `tests/test_flags.py` | 45 tests for flag/content moderation operations |
+| `tests/test_site_settings.py` | 49 tests for site settings and branding operations |
 | `tests/test_word_import.py` | 31 tests for Word document import (with mocking) |
 | `pytest.ini` | Pytest configuration |
 
-**Total: 244 tests** running in under 2.5 seconds
+**Total: 293 tests** running in under 3 seconds
 
 ## Test Dependencies
 
@@ -281,6 +282,17 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 | **Authentication** | Admin role required, non-admin denied access, admin can count/list/unflag/remove |
 | **Edge Cases** | Long flag reason, empty body, multiple users flagging same comment, remove deletes all user flags, orphaned flags, count accuracy |
 
+### Site Settings (49 tests)
+
+| Category | Tests |
+|----------|-------|
+| **Basic Settings** | Get default/existing settings, update title/logo_enabled flag, title validation (length, characters, empty), settings history tracking |
+| **Logo Upload** | Valid PNG/JPG (1200x40), dimension validation, file size handling, base64 storage, logo enables flag, preserve other settings, remove logo |
+| **Favicon Upload** | Valid PNG 16x16/32x32/64x64, dimension validation (min 16x16, max 64x64), file size handling (500KB limit), base64 storage, preserve other settings, remove favicon |
+| **File Serving** | Serve logo/favicon with correct MIME types (image/png, image/jpeg), return 404 when not enabled/no data |
+| **Authentication** | Track updated_by user for all operations (create, update, upload, remove) |
+| **Edge Cases** | Special characters in title, multiple sequential updates, upload/remove lifecycle, both logo and favicon together, remove one preserves other, large files near limits, base64 encode/decode roundtrip, timestamp tracking |
+
 ### Collections (16 tests)
 
 | Category | Tests |
@@ -345,6 +357,7 @@ Fixtures are reusable test setup components defined in `conftest.py`. They're au
 | `sample_annotation` | Regular comment annotation |
 | `sample_flag` | Flag annotation pointing to sample_annotation |
 | `annotation_with_multiple_flags` | One annotation with 3 flags from different users |
+| `sample_site_settings` | Site settings entry with default values |
 
 ### Using Fixtures in Tests
 
@@ -720,6 +733,22 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 | Target validation | 7 tests for target structure validation |
 | Authorization | 6 tests for admin-only access |
 
+### Site Settings (`/api/v1/site-settings`) - ✅ Fully Covered
+
+| Endpoint | Test Coverage |
+|----------|---------------|
+| GET `/` | Get current settings, 2 tests |
+| PUT `/` | Update settings (title, logo_enabled), 5 tests |
+| POST `/upload-logo` | Upload logo (1200x40 PNG/JPG), 8 tests |
+| POST `/upload-favicon` | Upload favicon (16-64px PNG/ICO), 10 tests |
+| DELETE `/remove-logo` | Remove logo, 2 tests |
+| DELETE `/remove-favicon` | Remove favicon, 1 test |
+| GET `/logo` | Serve logo file, 4 tests |
+| GET `/favicon` | Serve favicon file, 2 tests |
+| GET `/cache-buster` | Get cache timestamp, covered implicitly |
+| File validation | Dimensions, size limits, MIME types, base64 encoding |
+| Authorization | 6 tests for update tracking |
+
 ### Not Yet Covered - 🔴 Needs Tests
 
 | Area | Priority | Notes |
@@ -733,8 +762,8 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 ## Test Performance
 
 ### Current Metrics
-- **244 tests** run in **~2.2 seconds**
-- Average: **~9ms per test**
+- **293 tests** run in **~3 seconds**
+- Average: **~10ms per test**
 - Uses in-memory SQLite (no I/O overhead)
 - All tests run in parallel-safe isolation
 

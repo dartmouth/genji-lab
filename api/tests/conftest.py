@@ -198,6 +198,25 @@ class Annotation(TestBase):
     creator = relationship("User", foreign_keys=[creator_id])
 
 
+class SiteSettings(TestBase):
+    __tablename__ = "site_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    site_title = Column(String(50), nullable=False, default="Site Title")
+    site_logo_enabled = Column(Boolean, nullable=False, default=False)
+    updated_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+    # Logo and favicon storage
+    site_logo_data = Column(Text, nullable=True)
+    site_logo_mime_type = Column(String(50), nullable=True)
+    site_favicon_data = Column(Text, nullable=True)
+    site_favicon_mime_type = Column(String(50), nullable=True)
+
+    # Relationships
+    updated_by = relationship("User")
+
+
 # =============================================================================
 # Database engine and session setup
 # =============================================================================
@@ -737,3 +756,40 @@ def create_document_element(
     db_session.commit()
     db_session.refresh(element)
     return element
+
+
+def create_site_settings(
+    db_session: Session,
+    updated_by_id: int,
+    site_title: str = "Test Site",
+    site_logo_enabled: bool = False,
+    site_logo_data: str = None,
+    site_logo_mime_type: str = None,
+    site_favicon_data: str = None,
+    site_favicon_mime_type: str = None,
+) -> SiteSettings:
+    """Helper function to create site settings."""
+    settings = SiteSettings(
+        site_title=site_title,
+        site_logo_enabled=site_logo_enabled,
+        updated_by_id=updated_by_id,
+        site_logo_data=site_logo_data,
+        site_logo_mime_type=site_logo_mime_type,
+        site_favicon_data=site_favicon_data,
+        site_favicon_mime_type=site_favicon_mime_type,
+    )
+    db_session.add(settings)
+    db_session.commit()
+    db_session.refresh(settings)
+    return settings
+
+
+@pytest.fixture
+def sample_site_settings(db_session: Session, sample_admin: User) -> SiteSettings:
+    """Create a sample site settings entry."""
+    return create_site_settings(
+        db_session=db_session,
+        updated_by_id=sample_admin.id,
+        site_title="Genji Test Site",
+    )
+
