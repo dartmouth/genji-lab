@@ -185,6 +185,7 @@ class Annotation(TestBase):
     document_element_id = Column(Integer, ForeignKey("document_elements.id"))
     creator_id = Column(Integer, ForeignKey("users.id"))
     owner_id = Column(Integer, ForeignKey("users.id"))
+    classroom_id = Column(Integer, ForeignKey("groups.id"), nullable=True)
 
     type = Column(String(100))
     created = Column(DateTime)
@@ -192,6 +193,9 @@ class Annotation(TestBase):
     motivation = Column(String(100))
     body = Column(JSON)
     target = Column(JSON)
+
+    # Relationships
+    creator = relationship("User", foreign_keys=[creator_id])
 
 
 # =============================================================================
@@ -550,9 +554,150 @@ def group_with_members(db_session: Session, sample_group: Group) -> Group:
     return sample_group
 
 
+@pytest.fixture
+def sample_annotation(db_session: Session, sample_user: User, sample_document: Document) -> Annotation:
+    """Create a sample annotation (regular comment) for testing."""
+    annotation = Annotation(
+        document_collection_id=sample_document.document_collection_id,
+        document_id=sample_document.id,
+        document_element_id=None,
+        creator_id=sample_user.id,
+        owner_id=sample_user.id,
+        motivation="commenting",
+        body={"value": "This is a test comment"},
+        target=[{"source": f"Document/{sample_document.id}"}],
+        created=datetime.now(),
+        modified=datetime.now(),
+    )
+    db_session.add(annotation)
+    db_session.commit()
+    db_session.refresh(annotation)
+    return annotation
+
+
+@pytest.fixture
+def sample_flag(db_session: Session, sample_user: User, sample_annotation: Annotation) -> Annotation:
+    """Create a sample flag annotation pointing to sample_annotation."""
+    flag = Annotation(
+        document_collection_id=sample_annotation.document_collection_id,
+        document_id=sample_annotation.document_id,
+        document_element_id=sample_annotation.document_element_id,
+        creator_id=sample_user.id,
+        owner_id=sample_user.id,
+        motivation="flagging",
+        body={"value": "Inappropriate content"},
+        target=[{"source": f"Annotation/{sample_annotation.id}"}],
+        created=datetime.now(),
+        modified=datetime.now(),
+    )
+    db_session.add(flag)
+    db_session.commit()
+    db_session.refresh(flag)
+    return flag
+
+
+@pytest.fixture
+def annotation_with_multiple_flags(
+    db_session: Session, 
+    sample_annotation: Annotation,
+    sample_user: User
+) -> tuple[Annotation, list[Annotation]]:
+    """Create an annotation with multiple flags from different users."""
+    flags = []
+    
+    # Create 3 additional users who will flag the annotation
+    for i in range(3):
+        user = User(
+            first_name=f"Flagger{i+1}",
+            last_name="User",
+            email=f"flagger{i+1}@example.com",
+            username=f"flagger{i+1}",
+            is_active=True,
+        )
+        db_session.add(user)
+        db_session.flush()
+        
+        # Create flag from this user
+        flag = Annotation(
+            document_collection_id=sample_annotation.document_collection_id,
+            document_id=sample_annotation.document_id,
+            document_element_id=sample_annotation.document_element_id,
+            creator_id=user.id,
+            owner_id=user.id,
+            motivation="flagging",
+            body={"value": f"Flag reason {i+1}"},
+            target=[{"source": f"Annotation/{sample_annotation.id}"}],
+            created=datetime.now(),
+            modified=datetime.now(),
+        )
+        db_session.add(flag)
+        flags.append(flag)
+    
+    db_session.commit()
+    for flag in flags:
+        db_session.refresh(flag)
+    
+    return sample_annotation, flags
+
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
+def create_annotation(
+    db_session: Session,
+    creator_id: int,
+    document_collection_id: int = None,
+    document_id: int = None,
+    document_element_id: int = None,
+    motivation: str = "commenting",
+    body: dict = None,
+    target: list = None,
+    classroom_id: int = None,
+) -> Annotation:
+    """Helper function to create an annotation."""
+    annotation = Annotation(
+        document_collection_id=document_collection_id,
+        document_id=document_id,
+        document_element_id=document_element_id,
+        creator_id=creator_id,
+        owner_id=creator_id,
+        motivation=motivation,
+        body=body or {"value": "Test annotation"},
+        target=target or [{"source": "Document/1"}],
+        classroom_id=classroom_id,
+        created=datetime.now(),
+        modified=datetime.now(),
+    )
+    db_session.add(annotation)
+    db_session.commit()
+    db_session.refresh(annotation)
+    return annotation
+
+
+def create_flag(
+    db_session: Session,
+    creator_id: int,
+    flagged_annotation_id: int,
+    reason: str = "Inappropriate content",
+    classroom_id: int = None,
+) -> Annotation:
+    """Helper function to create a flag annotation pointing to another annotation."""
+    flag = Annotation(
+        creator_id=creator_id,
+        owner_id=creator_id,
+        motivation="flagging",
+        body={"value": reason},
+        target=[{"source": f"Annotation/{flagged_annotation_id}"}],
+        classroom_id=classroom_id,
+        created=datetime.now(),
+        modified=datetime.now(),
+    )
+    db_session.add(flag)
+    db_session.commit()
+    db_session.refresh(flag)
+    return flag
+
 
 def create_document(
     db_session: Session,

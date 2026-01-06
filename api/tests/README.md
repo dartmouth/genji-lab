@@ -31,10 +31,11 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing
 | `tests/test_document_collections.py` | 16 tests for collection operations |
 | `tests/test_document_elements.py` | 32 tests for document element operations |
 | `tests/test_groups.py` | 44 tests for group/classroom operations |
+| `tests/test_flags.py` | 45 tests for flag/content moderation operations |
 | `tests/test_word_import.py` | 31 tests for Word document import (with mocking) |
 | `pytest.ini` | Pytest configuration |
 
-**Total: 199 tests** running in under 2 seconds
+**Total: 244 tests** running in under 2.5 seconds
 
 ## Test Dependencies
 
@@ -267,10 +268,18 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 | **Membership Queries** | Count members, list members with details, find groups for user, find groups created by user |
 | **Relationships** | User belongs to multiple groups, group has multiple members, creator relationship, deleting user removes from groups, deleting group preserves users |
 | **Edge Cases** | No description, long name, same start and end date, far future dates |
-| **Link Extraction** | With links, without links, various formats |
-| **Text Formatting** | Plain, bold, italic, empty paragraph |
-| **Paragraph Format** | Defaults, indent processing |
-| **Edge Cases** | Empty document, whitespace only, very long text, special characters, duplicate titles |
+
+### Flags/Content Moderation (45 tests)
+
+| Category | Tests |
+|----------|-------|
+| **Flag Creation & Retrieval** | Create annotation/flag, count flags (empty/with flags), list with enriched data, classroom filtering, target parsing, ordered by date |
+| **Classroom Filtering** | Count/list with classroom context, mixed classroom content, filter accuracy |
+| **Unflag Operations** | Unflag success (keep comment), classroom context, nonexistent flag, one of multiple flags, verify comment preserved, count decreases |
+| **Remove Comment** | Remove with single/multiple flags, cascade delete all flags, count tracking, find all flags for comment, classroom context, flagged comment not found |
+| **Target Structure** | Valid format, missing source field, wrong format, nonexistent annotation ID, empty array, null target, pointing to deleted annotation |
+| **Authentication** | Admin role required, non-admin denied access, admin can count/list/unflag/remove |
+| **Edge Cases** | Long flag reason, empty body, multiple users flagging same comment, remove deletes all user flags, orphaned flags, count accuracy |
 
 ### Collections (16 tests)
 
@@ -333,6 +342,9 @@ Fixtures are reusable test setup components defined in `conftest.py`. They're au
 | `expired_group` | Classroom with expired join link (started 30 days ago) |
 | `ended_group` | Classroom that ended 10 days ago |
 | `group_with_members` | Classroom with creator + 3 additional members |
+| `sample_annotation` | Regular comment annotation |
+| `sample_flag` | Flag annotation pointing to sample_annotation |
+| `annotation_with_multiple_flags` | One annotation with 3 flags from different users |
 
 ### Using Fixtures in Tests
 
@@ -697,6 +709,17 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 |----------|---------------|
 | Full CRUD operations | 44 tests covering create, read, delete, member management, date validation, business logic, relationships |
 
+### Flags/Content Moderation (`/api/v1/flags`) - ✅ Fully Covered
+
+| Endpoint | Test Coverage |
+|----------|---------------|
+| GET `/count` | Flag count with classroom filtering |
+| GET `/` | List flags with enriched data, classroom filtering |
+| DELETE `/{flag_id}/unflag` | Remove flag (keep comment), 8 tests |
+| DELETE `/{flag_id}/remove-comment` | Remove comment + cascade delete all flags, 8 tests |
+| Target validation | 7 tests for target structure validation |
+| Authorization | 6 tests for admin-only access |
+
 ### Not Yet Covered - 🔴 Needs Tests
 
 | Area | Priority | Notes |
@@ -710,8 +733,8 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 ## Test Performance
 
 ### Current Metrics
-- **199 tests** run in **~1.7 seconds**
-- Average: **~8.5ms per test**
+- **244 tests** run in **~2.2 seconds**
+- Average: **~9ms per test**
 - Uses in-memory SQLite (no I/O overhead)
 - All tests run in parallel-safe isolation
 
