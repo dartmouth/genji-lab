@@ -30,10 +30,11 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing
 | `tests/test_documents.py` | 38 tests for document operations |
 | `tests/test_document_collections.py` | 16 tests for collection operations |
 | `tests/test_document_elements.py` | 32 tests for document element operations |
+| `tests/test_groups.py` | 44 tests for group/classroom operations |
 | `tests/test_word_import.py` | 31 tests for Word document import (with mocking) |
 | `pytest.ini` | Pytest configuration |
 
-**Total: 155 tests** running in under 4 seconds
+**Total: 199 tests** running in under 2 seconds
 
 ## Test Dependencies
 
@@ -247,6 +248,25 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 | **Paragraph Extraction** | Simple paragraphs, empty lines, hierarchy |
 | **Document Creation** | Create document, create elements |
 | **Transaction** | Successful commit, rollback on failure |
+| **Link Extraction** | Links present, no links, various formats |
+| **Text Formatting** | Plain text, bold, italic, empty paragraphs |
+| **Paragraph Format** | Defaults, indentation (none/value/fraction) |
+| **Edge Cases** | Empty document, whitespace only, very long paragraphs, special characters, duplicate titles |
+
+### Groups/Classrooms (44 tests)
+
+| Category | Tests |
+|----------|-------|
+| **Create Group** | Success, nullable dates, auto-add creator as member, duplicate name detection, end_date validation |
+| **Read Groups** | Empty list, list, single group, not found, with members count, public info, creator info |
+| **Delete Group** | Single delete, removes memberships, authorization (creator only) |
+| **Add Members** | Success, multiple members, prevent duplicates, joined_at timestamp |
+| **Remove Members** | Success, remove non-member |
+| **Date Validation** | end_date after start_date, valid date range, join link expiration (start + 2 weeks), join link valid/expired, classroom active/ended |
+| **Business Logic** | Cannot add after class ends, can add during join period, admin can add after join expires |
+| **Membership Queries** | Count members, list members with details, find groups for user, find groups created by user |
+| **Relationships** | User belongs to multiple groups, group has multiple members, creator relationship, deleting user removes from groups, deleting group preserves users |
+| **Edge Cases** | No description, long name, same start and end date, far future dates |
 | **Link Extraction** | With links, without links, various formats |
 | **Text Formatting** | Plain, bold, italic, empty paragraph |
 | **Paragraph Format** | Defaults, indent processing |
@@ -309,6 +329,10 @@ Fixtures are reusable test setup components defined in `conftest.py`. They're au
 | `sample_document` | A test document (requires `sample_collection`) |
 | `sample_document_with_elements` | Document with 3 paragraph elements |
 | `multiple_documents` | 5 documents for bulk operation testing |
+| `sample_group` | Active classroom (ends 90 days from now) |
+| `expired_group` | Classroom with expired join link (started 30 days ago) |
+| `ended_group` | Classroom that ended 10 days ago |
+| `group_with_members` | Classroom with creator + 3 additional members |
 
 ### Using Fixtures in Tests
 
@@ -421,6 +445,54 @@ def test_filter_users_by_name(self, db_session):
     ).scalars().all()
 
     assert len(users) == 2
+```
+
+### Testing Groups with Date Logic
+
+```python
+from datetime import date, timedelta
+from tests.conftest import group_members
+
+def test_group_join_link_expiration(self, db_session, sample_group):
+    """Test business logic for join link expiration (2 weeks after start)."""
+    JOIN_LINK_EXPIRATION_WEEKS = 2
+    
+    if sample_group.start_date:
+        expiration_date = sample_group.start_date + timedelta(weeks=JOIN_LINK_EXPIRATION_WEEKS)
+        today = date.today()
+        
+        assert today <= expiration_date  # sample_group is active
+
+def test_add_member_to_group(self, db_session, sample_group):
+    """Test adding members using the association table."""
+    new_user = User(
+        first_name="New",
+        last_name="Member",
+        email="newmember@example.com",
+        username="newmember"
+    )
+    db_session.add(new_user)
+    db_session.commit()
+    
+    # Add to group
+    db_session.execute(
+        group_members.insert().values(
+            group_id=sample_group.id,
+            user_id=new_user.id,
+            joined_at=datetime.now()
+        )
+    )
+    db_session.commit()
+    
+    # Verify membership
+    is_member = db_session.execute(
+        select(group_members).where(
+            (group_members.c.group_id == sample_group.id) &
+            (group_members.c.user_id == new_user.id)
+        )
+    ).first()
+    
+    assert is_member is not None
 ```
 
 ---
@@ -619,6 +691,12 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 |----------|---------------|
 | Import workflow | 31 tests covering validation, extraction, transaction handling, edge cases |
 
+### Groups/Classrooms (`/api/v1/groups`) - ✅ Fully Covered
+
+| Endpoint | Test Coverage |
+|----------|---------------|
+| Full CRUD operations | 44 tests covering create, read, delete, member management, date validation, business logic, relationships |
+
 ### Not Yet Covered - 🔴 Needs Tests
 
 | Area | Priority | Notes |
@@ -626,15 +704,14 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 | Authentication (`/api/v1/auth`) | High | Login, logout, token refresh, CAS integration |
 | Permissions | Medium | Role-based access control enforcement |
 | Annotations | Medium | CRUD operations for annotations |
-| Groups | Low | Group management if implemented |
 
 ---
 
 ## Test Performance
 
 ### Current Metrics
-- **155 tests** run in **~3.6 seconds**
-- Average: **~23ms per test**
+- **199 tests** run in **~1.7 seconds**
+- Average: **~8.5ms per test**
 - Uses in-memory SQLite (no I/O overhead)
 - All tests run in parallel-safe isolation
 

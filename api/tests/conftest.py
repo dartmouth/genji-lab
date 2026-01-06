@@ -55,6 +55,15 @@ user_roles = Table(
     Column("role_id", Integer, ForeignKey("roles.id")),
 )
 
+# Group membership association table
+group_members = Table(
+    "group_members",
+    TestBase.metadata,
+    Column("group_id", Integer, ForeignKey("groups.id")),
+    Column("user_id", Integer, ForeignKey("users.id")),
+    Column("joined_at", DateTime, default=func.current_timestamp()),
+)
+
 
 class User(TestBase):
     __tablename__ = "users"
@@ -87,6 +96,7 @@ class User(TestBase):
         "Document", foreign_keys="Document.owner_id", back_populates="owner"
     )
     roles = relationship("Role", secondary=user_roles, back_populates="users")
+    groups = relationship("Group", secondary=group_members, back_populates="members")
 
 
 class Role(TestBase):
@@ -97,6 +107,22 @@ class Role(TestBase):
     description = Column(String(255))
 
     users = relationship("User", secondary=user_roles, back_populates="roles")
+
+
+class Group(TestBase):
+    __tablename__ = "groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100))
+    description = Column(String(255))
+    created_at = Column(DateTime, default=func.current_timestamp())
+    created_by_id = Column(Integer, ForeignKey("users.id"))
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
+
+    # Relationships
+    members = relationship("User", secondary=group_members, back_populates="groups")
+    created_by = relationship("User", foreign_keys=[created_by_id])
 
 
 class DocumentCollection(TestBase):
@@ -399,6 +425,129 @@ def multiple_documents(
         db_session.refresh(doc)
     
     return documents
+
+
+@pytest.fixture
+def sample_group(db_session: Session, sample_user: User) -> Group:
+    """Create a sample group/classroom for testing."""
+    from datetime import date, timedelta
+    
+    group = Group(
+        name="Test Classroom",
+        description="A test classroom for testing",
+        created_at=datetime.now(),
+        created_by_id=sample_user.id,
+        start_date=date.today(),
+        end_date=date.today() + timedelta(days=90),  # 3 months from now
+    )
+    db_session.add(group)
+    db_session.flush()
+    
+    # Add creator as a member
+    db_session.execute(
+        group_members.insert().values(
+            group_id=group.id,
+            user_id=sample_user.id,
+            joined_at=datetime.now()
+        )
+    )
+    
+    db_session.commit()
+    db_session.refresh(group)
+    return group
+
+
+@pytest.fixture
+def expired_group(db_session: Session, sample_user: User) -> Group:
+    """Create a group with expired join link (>2 weeks after start)."""
+    from datetime import date, timedelta
+    
+    group = Group(
+        name="Expired Join Link Classroom",
+        description="Join link has expired",
+        created_at=datetime.now(),
+        created_by_id=sample_user.id,
+        start_date=date.today() - timedelta(days=30),  # Started 30 days ago
+        end_date=date.today() + timedelta(days=60),    # Still active, but join expired
+    )
+    db_session.add(group)
+    db_session.flush()
+    
+    # Add creator as a member
+    db_session.execute(
+        group_members.insert().values(
+            group_id=group.id,
+            user_id=sample_user.id,
+            joined_at=datetime.now()
+        )
+    )
+    
+    db_session.commit()
+    db_session.refresh(group)
+    return group
+
+
+@pytest.fixture
+def ended_group(db_session: Session, sample_user: User) -> Group:
+    """Create a group that has ended."""
+    from datetime import date, timedelta
+    
+    group = Group(
+        name="Ended Classroom",
+        description="This classroom has ended",
+        created_at=datetime.now(),
+        created_by_id=sample_user.id,
+        start_date=date.today() - timedelta(days=100),
+        end_date=date.today() - timedelta(days=10),  # Ended 10 days ago
+    )
+    db_session.add(group)
+    db_session.flush()
+    
+    # Add creator as a member
+    db_session.execute(
+        group_members.insert().values(
+            group_id=group.id,
+            user_id=sample_user.id,
+            joined_at=datetime.now()
+        )
+    )
+    
+    db_session.commit()
+    db_session.refresh(group)
+    return group
+
+
+@pytest.fixture
+def group_with_members(db_session: Session, sample_group: Group) -> Group:
+    """Create a group with multiple members."""
+    # Create additional users
+    users = []
+    for i in range(3):
+        user = User(
+            first_name=f"Member{i+1}",
+            last_name=f"Test{i+1}",
+            email=f"member{i+1}@example.com",
+            username=f"member{i+1}",
+            is_active=True,
+        )
+        db_session.add(user)
+        users.append(user)
+    
+    db_session.flush()
+    
+    # Add users as members
+    for user in users:
+        db_session.execute(
+            group_members.insert().values(
+                group_id=sample_group.id,
+                user_id=user.id,
+                joined_at=datetime.now()
+            )
+        )
+    
+    db_session.commit()
+    db_session.refresh(sample_group)
+    return sample_group
 
 
 # =============================================================================
