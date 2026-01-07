@@ -240,10 +240,6 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-# =============================================================================
-# Fixtures
-# =============================================================================
-
 @pytest.fixture(scope="function")
 def db_session() -> Generator[Session, None, None]:
     """
@@ -260,8 +256,11 @@ def db_session() -> Generator[Session, None, None]:
 
 
 # =============================================================================
-# Factory Fixtures
+# Data Fixtures
 # =============================================================================
+# These fixtures return single instances of test objects.
+# For creating multiple instances with custom parameters, use the helper
+# functions at the bottom of this file (create_annotation, create_document, etc.)
 
 @pytest.fixture
 def sample_user(db_session: Session) -> User:
@@ -659,9 +658,20 @@ def annotation_with_multiple_flags(
     return sample_annotation, flags
 
 
+@pytest.fixture
+def sample_site_settings(db_session: Session, sample_admin: User) -> SiteSettings:
+    """Create a sample site settings entry."""
+    return create_site_settings(
+        db_session=db_session,
+        updated_by_id=sample_admin.id,
+        site_title="Genji Test Site",
+    )
+
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def create_annotation(
     db_session: Session,
@@ -782,14 +792,3 @@ def create_site_settings(
     db_session.commit()
     db_session.refresh(settings)
     return settings
-
-
-@pytest.fixture
-def sample_site_settings(db_session: Session, sample_admin: User) -> SiteSettings:
-    """Create a sample site settings entry."""
-    return create_site_settings(
-        db_session=db_session,
-        updated_by_id=sample_admin.id,
-        site_title="Genji Test Site",
-    )
-

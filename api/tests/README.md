@@ -74,7 +74,7 @@ The tests verify the data layer logic directly (CRUD operations, relationships, 
 
 | Benefit | Description |
 |---------|-------------|
-| **Fast** | Runs ~117 tests in ~1 second |
+| **Fast** | Runs ~293 tests in ~3 seconds |
 | **No Dependencies** | Requires no external services (no PostgreSQL, no Docker) |
 | **Isolated** | Each test gets a fresh database (tables recreated per test) |
 | **Reliable** | No flaky tests due to network or database issues |
@@ -217,6 +217,18 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 | **Role Queries** | Find users with specific role, find users without roles, count users per role, filter users with multiple roles |
 | **Relationships** | User-collection relationships (owned/created) |
 
+
+### Collections (16 tests)
+
+| Category | Tests |
+|----------|-------|
+| **Create** | Success, duplicate name detection (case-insensitive) |
+| **Read** | List, filter by visibility/title, single collection, document count |
+| **Update** | Full and partial updates |
+| **Delete** | Single delete, cascade to documents |
+| **Relationships** | Owner/creator relationships |
+
+
 ### Documents (38 tests)
 
 | Category | Tests |
@@ -293,15 +305,6 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 | **Authentication** | Track updated_by user for all operations (create, update, upload, remove) |
 | **Edge Cases** | Special characters in title, multiple sequential updates, upload/remove lifecycle, both logo and favicon together, remove one preserves other, large files near limits, base64 encode/decode roundtrip, timestamp tracking |
 
-### Collections (16 tests)
-
-| Category | Tests |
-|----------|-------|
-| **Create** | Success, duplicate name detection (case-insensitive) |
-| **Read** | List, filter by visibility/title, single collection, document count |
-| **Update** | Full and partial updates |
-| **Delete** | Single delete, cascade to documents |
-| **Relationships** | Owner/creator relationships |
 
 ---
 
@@ -934,12 +937,15 @@ pytest --durations=0             # Show all test durations
 ```
 api/tests/
 ├── conftest.py                      # Fixtures & test models (Role, User, etc.)
-├── test_users.py                    # User & role tests (38 tests)
-├── test_documents.py                # Document tests (38 tests)
-├── test_document_collections.py     # Collection tests (16 tests)
-├── test_document_elements.py        # Element tests (32 tests)
-├── test_word_import.py              # Import tests (31 tests)
-└── README.md                        # This file
+├── test_document_collections.py     # Document Collections tests
+├── test_documents.py                # Documents tests
+├── test_document_elements.py        # Document Elements tests
+├── test_flags.py                    # Flag comments tests
+├── test_groups.py                   # Group/Classroom tests
+├── test_site_settings.py            # Site settings tests
+├── test_users.py                    # User & role tests
+├── test_word_import.py              # Word doc Import tests
+└── README.md                        # Testing suite reference
 ```
 
 ### Running Specific Tests
