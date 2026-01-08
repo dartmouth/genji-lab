@@ -26,17 +26,19 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing
 |------|---------|
 | `tests/__init__.py` | Package documentation and usage instructions |
 | `tests/conftest.py` | Test fixtures, in-memory database setup, SQLite-compatible models |
+| `tests/test_auth.py` | 28 tests for authentication operations |
 | `tests/test_users.py` | 38 tests for user and role management operations |
 | `tests/test_documents.py` | 38 tests for document operations |
 | `tests/test_document_collections.py` | 16 tests for collection operations |
 | `tests/test_document_elements.py` | 32 tests for document element operations |
 | `tests/test_groups.py` | 44 tests for group/classroom operations |
 | `tests/test_flags.py` | 45 tests for flag/content moderation operations |
+| `tests/test_roles.py` | 11 tests for role management operations |
 | `tests/test_site_settings.py` | 49 tests for site settings and branding operations |
 | `tests/test_word_import.py` | 31 tests for Word document import (with mocking) |
 | `pytest.ini` | Pytest configuration |
 
-**Total: 293 tests** running in under 3 seconds
+**Total: 332 tests** running in under 12 seconds
 
 ## Test Dependencies
 
@@ -185,6 +187,9 @@ python -m pytest tests/test_users.py::TestUserRoleAssignment::test_assign_single
 # Run tests matching a keyword
 python -m pytest -k "delete"  # Runs all tests with "delete" in the name
 python -m pytest -k "role"    # Runs all tests with "role" in the name
+
+# Quick summary view (Windows PowerShell)
+python -m pytest tests/ -v --tb=short | Select-String -Pattern "passed|failed|error"
 ```
 
 ### Coverage Commands
@@ -203,6 +208,17 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 ---
 
 ## What's Tested
+
+### Authentication (28 tests)
+
+| Category | Tests |
+|----------|-------|
+| **Password Hashing** | Hash generation, correct/incorrect password verification, salt uniqueness |
+| **User Registration** | Register with password, duplicate email/username validation, password storage (hashed not plaintext), User-UserPassword relationship, unique constraint, metadata tracking |
+| **First User Admin** | First user gets admin role, subsequent users don't, admin role creation, multiple users validation |
+| **Login Validation** | Correct/incorrect credentials, nonexistent username, inactive user, missing password_auth, relationship loading |
+| **Password Change** | Successful change, incorrect current password rejection, password validation, users without password_auth, timestamp updates |
+| **Role & Metadata** | User loaded with roles, metadata tracking on registration, default values |
 
 ### Users & Roles (38 tests)
 
@@ -293,6 +309,13 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 | **Target Structure** | Valid format, missing source field, wrong format, nonexistent annotation ID, empty array, null target, pointing to deleted annotation |
 | **Authentication** | Admin role required, non-admin denied access, admin can count/list/unflag/remove |
 | **Edge Cases** | Long flag reason, empty body, multiple users flagging same comment, remove deletes all user flags, orphaned flags, count accuracy |
+
+### Roles (11 tests)
+
+| Category | Tests |
+|----------|-------|
+| **List Roles** | Empty database, multiple roles sorted alphabetically, pagination (skip/limit), default pagination behavior, ordering verification |
+| **Get Single Role** | Get by ID (success/not found), null description handling, field verification, multiple role retrieval |
 
 ### Site Settings (49 tests)
 
@@ -684,6 +707,19 @@ def test_good(db_session, sample_user):
 
 This shows which backend API endpoints in `api/routers/` have corresponding tests:
 
+### Authentication (`/api/v1/auth`) - ✅ Fully Covered
+
+| Endpoint | Test Coverage |
+|----------|---------------|
+| POST `/register` | User registration, duplicate validation, password hashing, 7 tests |
+| POST `/login` | Login validation, password verification, inactive users, 6 tests |
+| GET `/me` | Current user info (tested via role/metadata loading) |
+| POST `/change-password` | Password change, validation, timestamp tracking, 4 tests |
+| POST `/logout` | Session management (mocked in tests) |
+| Password Security | Bcrypt hashing, salt generation, verification, 4 tests |
+| Business Logic | First user admin assignment, 4 tests |
+| Relationships | User-UserPassword relationship, metadata tracking, 3 tests |
+
 ### Users (`/api/v1/users`) - ✅ Fully Covered
 
 | Endpoint | Test Coverage |
@@ -736,6 +772,13 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 | Target validation | 7 tests for target structure validation |
 | Authorization | 6 tests for admin-only access |
 
+### Roles (`/api/v1/roles`) - ✅ Fully Covered
+
+| Endpoint | Test Coverage |
+|----------|---------------|
+| GET `/` | List roles with pagination (skip/limit), alphabetical ordering, 6 tests |
+| GET `/{role_id}` | Get single role, not found handling, field verification, 5 tests |
+
 ### Site Settings (`/api/v1/site-settings`) - ✅ Fully Covered
 
 | Endpoint | Test Coverage |
@@ -756,17 +799,17 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 
 | Area | Priority | Notes |
 |------|----------|-------|
-| Authentication (`/api/v1/auth`) | High | Login, logout, token refresh, CAS integration |
-| Permissions | Medium | Role-based access control enforcement |
-| Annotations | Medium | CRUD operations for annotations |
+| CAS Authentication (`/api/v1/cas`) | High | CAS login flow, CAS callback, service tickets |
+| Annotations (`/api/v1/annotations`) | High | CRUD operations for annotations |
+| Search (`/api/v1/search`) | Medium | Search functionality across documents/elements |
 
 ---
 
 ## Test Performance
 
 ### Current Metrics
-- **293 tests** run in **~3 seconds**
-- Average: **~10ms per test**
+- **332 tests** run in **~12 seconds**
+- Average: **~36ms per test** (includes bcrypt password hashing)
 - Uses in-memory SQLite (no I/O overhead)
 - All tests run in parallel-safe isolation
 

@@ -97,6 +97,20 @@ class User(TestBase):
     )
     roles = relationship("Role", secondary=user_roles, back_populates="users")
     groups = relationship("Group", secondary=group_members, back_populates="members")
+    password_auth = relationship("UserPassword", back_populates="user", uselist=False)
+
+
+class UserPassword(TestBase):
+    __tablename__ = "user_passwords"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    hashed_password = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=func.current_timestamp())
+    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+
+    # Relationships
+    user = relationship("User", back_populates="password_auth")
 
 
 class Role(TestBase):
@@ -792,3 +806,19 @@ def create_site_settings(
     db_session.commit()
     db_session.refresh(settings)
     return settings
+
+
+def create_user_password(
+    db_session: Session,
+    user_id: int,
+    hashed_password: str
+) -> UserPassword:
+    """Helper function to create a password for a user."""
+    user_password = UserPassword(
+        user_id=user_id,
+        hashed_password=hashed_password
+    )
+    db_session.add(user_password)
+    db_session.commit()
+    db_session.refresh(user_password)
+    return user_password
