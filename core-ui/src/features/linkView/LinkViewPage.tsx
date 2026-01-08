@@ -9,6 +9,7 @@ import { fetchDocumentElements } from "@store/slice/documentElementsSlice";
 import { fetchAllDocuments } from "@store/slice/documentSlice";
 import { fetchDocumentCollections } from "@store/slice/documentCollectionSlice";
 import { selectAllLoadedElements } from "@store/selector/combinedSelectors";
+import { useAuth } from "@hooks/useAuthContext";
 import {
   Box,
   Container,
@@ -18,8 +19,16 @@ import {
   Alert,
   Paper,
   Pagination,
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { TextTarget } from "@documentView/types";
 import { LinkCard } from "./LinkCard";
 import { PinnedTargetsPanel } from "./PinnedTargetsPanel";
@@ -34,6 +43,7 @@ export const LinkViewPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +51,15 @@ export const LinkViewPage: React.FC = () => {
   const [pinnedGroupIds, setPinnedGroupIds] = useState<Set<string>>(new Set());
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [dataLoading, setDataLoading] = useState(true);
+
+  // Delete entire annotation state
+  const [showDeleteAnnotationConfirm, setShowDeleteAnnotationConfirm] =
+    useState(false);
+  const [isDeletingAnnotation, setIsDeletingAnnotation] = useState(false);
+  const [deleteAnnotationError, setDeleteAnnotationError] = useState<
+    string | null
+  >(null);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
 
   const annotation = useAppSelector((state) =>
     annotationId
@@ -53,6 +72,9 @@ export const LinkViewPage: React.FC = () => {
   const allCollections = useAppSelector(
     (state) => state.documentCollections.collections
   );
+
+  // Check if current user can delete entire annotation (admin only)
+  const canDeleteAnnotation = user && user.roles?.includes("admin");
 
   // Fetch annotation if not loaded
   useEffect(() => {
@@ -261,12 +283,6 @@ export const LinkViewPage: React.FC = () => {
     return { pinnedGroups: pinned, unpinnedGroups: unpinned };
   }, [targetGroups, pinnedGroupIds, getGroupId]);
 
-  // const totalTargetCount = useMemo(() => {
-  //   return targetGroups.reduce((count, group) => {
-  //     return count + (Array.isArray(group) ? group.length : 1);
-  //   }, 0);
-  // }, [targetGroups]);
-
   const totalPages = Math.ceil(unpinnedGroups.length / TARGETS_PER_PAGE);
   const startIndex = (currentPage - 1) * TARGETS_PER_PAGE;
   const endIndex = startIndex + TARGETS_PER_PAGE;
@@ -333,6 +349,58 @@ export const LinkViewPage: React.FC = () => {
     navigate(-1);
   }, [navigate]);
 
+  const handleDeleteAnnotationClick = () => {
+    setShowDeleteAnnotationConfirm(true);
+  };
+
+  const handleDeleteAnnotationCancel = () => {
+    setShowDeleteAnnotationConfirm(false);
+    setDeleteAnnotationError(null);
+  };
+
+  const handleDeleteAnnotationConfirm = async () => {
+    if (!annotationId) return;
+
+    setIsDeletingAnnotation(true);
+    setDeleteAnnotationError(null);
+
+    try {
+      await dispatch(
+        linkingAnnotations.thunks.deleteAnnotation({
+          annotationId: parseInt(annotationId),
+        })
+      ).unwrap();
+
+      // Success
+      setShowDeleteSuccess(true);
+      setShowDeleteAnnotationConfirm(false);
+
+      // Navigate back after brief delay
+      setTimeout(() => {
+        navigate(-1);
+      }, 1500);
+    } catch (error) {
+      console.error("Failed to delete annotation:", error);
+      setDeleteAnnotationError("Failed to delete link. Please try again.");
+    } finally {
+      setIsDeletingAnnotation(false);
+    }
+  };
+
+  const handleTargetDeleteSuccess = () => {
+    // Re-fetch the annotation to get updated targets
+    if (annotationId) {
+      dispatch(fetchAnnotationById(annotationId))
+        .unwrap()
+        .then((fetchedAnnotation) => {
+          dispatch(linkingAnnotations.actions.addAnnotation(fetchedAnnotation));
+        })
+        .catch((err) => {
+          console.error("Failed to refresh annotation:", err);
+        });
+    }
+  };
+
   if (loading || dataLoading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, textAlign: "center" }}>
@@ -364,147 +432,239 @@ export const LinkViewPage: React.FC = () => {
   const linkName = annotation.body?.value || "Unnamed Link";
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 3 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={handleBack}
-          sx={{ mb: 2 }}
-        >
-          Back
-        </Button>
-        <Typography variant="h3" component="h1" gutterBottom>
-          {linkName}
-        </Typography>
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          alignItems: "stretch",
-          height: "calc(100vh - 250px)",
-          minHeight: "600px",
-        }}
-      >
-        <PinnedTargetsPanel
-          pinnedTargets={pinnedGroups.map((pg) => pg.group)}
-          onTogglePin={handleTogglePin}
-          isOpen={isPanelOpen}
-          onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
-        />
+    <>
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ mb: 3 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+            <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
+              Back
+            </Button>
+            {canDeleteAnnotation && (
+              <Tooltip title="Delete entire link (admin only)" arrow>
+                <IconButton
+                  onClick={handleDeleteAnnotationClick}
+                  color="error"
+                  sx={{
+                    ml: "auto",
+                    "&:hover": {
+                      backgroundColor: "error.light",
+                    },
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+          <Typography variant="h3" component="h1" gutterBottom>
+            {linkName}
+          </Typography>
+        </Box>
 
         <Box
           sx={{
-            flex: 1,
-            minWidth: 0,
             display: "flex",
-            flexDirection: "column",
+            gap: 2,
+            alignItems: "stretch",
+            height: "calc(100vh - 250px)",
+            minHeight: "600px",
           }}
         >
-          <Paper
+          <PinnedTargetsPanel
+            pinnedTargets={pinnedGroups.map((pg) => pg.group)}
+            onTogglePin={handleTogglePin}
+            isOpen={isPanelOpen}
+            onTogglePanel={() => setIsPanelOpen(!isPanelOpen)}
+            annotationId={annotationId}
+            onDeleteSuccess={handleTargetDeleteSuccess}
+          />
+
+          <Box
             sx={{
-              p: 3,
+              flex: 1,
+              minWidth: 0,
               display: "flex",
               flexDirection: "column",
-              height: "100%",
-              overflow: "hidden",
             }}
           >
-            {totalPages > 1 && (
-              <Box sx={{ mb: 2, flexShrink: 0 }}>
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={handlePageChange}
-                  color="primary"
-                  size="large"
-                  showFirstButton
-                  showLastButton
-                  sx={{ display: "flex", justifyContent: "center" }}
-                />
-              </Box>
-            )}
-
-            <Box
-              id="unpinned-content-scroll"
+            <Paper
               sx={{
-                flex: 1,
-                overflowY: "auto",
-                overflowX: "hidden",
-                pr: 1,
-                minHeight: 0,
-                "&::-webkit-scrollbar": {
-                  width: "10px",
-                },
-                "&::-webkit-scrollbar-track": {
-                  backgroundColor: "background.default",
-                  borderRadius: "5px",
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: "primary.main",
-                  borderRadius: "5px",
-                  "&:hover": {
-                    backgroundColor: "primary.dark",
-                  },
-                },
+                p: 3,
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+                overflow: "hidden",
               }}
             >
-              {paginatedGroups.length > 0 ? (
-                <>
-                  {paginatedGroups.map(({ group, id }) => (
-                    <LinkCard
-                      key={id}
-                      target={group}
-                      isPinned={false}
-                      onTogglePin={handleTogglePin}
-                    />
-                  ))}
-                </>
-              ) : (
-                <Alert severity="info">
-                  {unpinnedGroups.length === 0 && pinnedGroups.length > 0
-                    ? "All target groups are pinned"
-                    : "No targets available"}
-                </Alert>
+              {totalPages > 1 && (
+                <Box sx={{ mb: 2, flexShrink: 0 }}>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={handlePageChange}
+                    color="primary"
+                    size="large"
+                    showFirstButton
+                    showLastButton
+                    sx={{ display: "flex", justifyContent: "center" }}
+                  />
+                </Box>
               )}
-            </Box>
 
-            {totalPages > 1 && (
-              <Box sx={{ mt: 2, flexShrink: 0 }}>
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={handlePageChange}
-                  color="primary"
-                  size="large"
-                  showFirstButton
-                  showLastButton
-                  sx={{ display: "flex", justifyContent: "center" }}
-                />
-              </Box>
-            )}
-
-            {unpinnedGroups.length > 0 && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
+              <Box
+                id="unpinned-content-scroll"
                 sx={{
-                  display: "block",
-                  textAlign: "center",
-                  mt: 1,
-                  flexShrink: 0,
+                  flex: 1,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  pr: 1,
+                  minHeight: 0,
+                  "&::-webkit-scrollbar": {
+                    width: "10px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    backgroundColor: "background.default",
+                    borderRadius: "5px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: "primary.main",
+                    borderRadius: "5px",
+                    "&:hover": {
+                      backgroundColor: "primary.dark",
+                    },
+                  },
                 }}
               >
-                Showing {startIndex + 1}-
-                {Math.min(endIndex, unpinnedGroups.length)} of{" "}
-                {unpinnedGroups.length} unpinned{" "}
-                {unpinnedGroups.length === 1 ? "group" : "groups"}
-              </Typography>
-            )}
-          </Paper>
+                {paginatedGroups.length > 0 ? (
+                  <>
+                    {paginatedGroups.map(({ group, id }) => (
+                      <LinkCard
+                        key={id}
+                        target={group}
+                        isPinned={false}
+                        onTogglePin={handleTogglePin}
+                        annotationId={annotationId}
+                        onDeleteSuccess={handleTargetDeleteSuccess}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <Alert severity="info">
+                    {unpinnedGroups.length === 0 && pinnedGroups.length > 0
+                      ? "All target groups are pinned"
+                      : "No targets available"}
+                  </Alert>
+                )}
+              </Box>
+
+              {totalPages > 1 && (
+                <Box sx={{ mt: 2, flexShrink: 0 }}>
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={handlePageChange}
+                    color="primary"
+                    size="large"
+                    showFirstButton
+                    showLastButton
+                    sx={{ display: "flex", justifyContent: "center" }}
+                  />
+                </Box>
+              )}
+
+              {unpinnedGroups.length > 0 && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    display: "block",
+                    textAlign: "center",
+                    mt: 1,
+                    flexShrink: 0,
+                  }}
+                >
+                  Showing {startIndex + 1}-
+                  {Math.min(endIndex, unpinnedGroups.length)} of{" "}
+                  {unpinnedGroups.length} unpinned{" "}
+                  {unpinnedGroups.length === 1 ? "group" : "groups"}
+                </Typography>
+              )}
+            </Paper>
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+
+      {/* Delete Entire Annotation Confirmation Dialog */}
+      <Dialog
+        open={showDeleteAnnotationConfirm}
+        onClose={handleDeleteAnnotationCancel}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 600, color: "error.main" }}>
+          Delete Entire Link?
+        </DialogTitle>
+
+        <DialogContent>
+          {deleteAnnotationError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {deleteAnnotationError}
+            </Alert>
+          )}
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Are you sure you want to delete this entire link? This will remove
+            all targets and cannot be undone.
+          </Typography>
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: "grey.50",
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="subtitle2" fontWeight="bold">
+              {linkName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {targetGroups.length} target{targetGroups.length !== 1 ? "s" : ""}
+            </Typography>
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleDeleteAnnotationCancel}
+            disabled={isDeletingAnnotation}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteAnnotationConfirm}
+            variant="contained"
+            color="error"
+            disabled={isDeletingAnnotation}
+            sx={{ minWidth: 120 }}
+          >
+            {isDeletingAnnotation ? "Deleting..." : "Delete Link"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={showDeleteSuccess}
+        autoHideDuration={3000}
+        onClose={() => setShowDeleteSuccess(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setShowDeleteSuccess(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Link deleted successfully
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
