@@ -139,6 +139,50 @@ class Group(TestBase):
     created_by = relationship("User", foreign_keys=[created_by_id])
 
 
+class CASConfiguration(TestBase):
+    __tablename__ = "cas_configuration"
+
+    id = Column(Integer, primary_key=True, index=True)
+    enabled = Column(Boolean, default=False)
+
+    # Core CAS settings
+    server_url = Column(String(255), nullable=False)
+    validation_endpoint = Column(String(100), default="/serviceValidate")
+    protocol_version = Column(String(10), default="2.0")
+
+    # XML parsing configuration
+    xml_namespace = Column(String(255), default="http://www.yale.edu/tp/cas")
+
+    # Attribute mapping (using JSON for SQLite compatibility)
+    attribute_mapping = Column(
+        JSON,
+        default={
+            "username": "netid",
+            "email": "email",
+            "first_name": "givenName",
+            "last_name": "sn",
+            "full_name": "name",
+        },
+    )
+
+    # Username extraction patterns (try in order)
+    username_patterns = Column(
+        JSON,
+        default=[
+            '<cas:attribute name="{attr}" value="([^"]+)"',
+            "<cas:{attr}>([^<]+)</cas:{attr}>",
+            "<cas:user>([^<]+)</cas:user>",
+        ],
+    )
+
+    # Additional metadata fields to extract
+    metadata_attributes = Column(JSON, default=["uid", "netid", "did", "affil"])
+
+    # Email handling
+    email_domain = Column(String(255), nullable=True)
+    email_format = Column(String(50), default="from_cas")
+
+
 class DocumentCollection(TestBase):
     __tablename__ = "document_collections"
 
@@ -822,3 +866,52 @@ def create_user_password(
     db_session.commit()
     db_session.refresh(user_password)
     return user_password
+
+
+def create_cas_configuration(
+    db_session: Session,
+    enabled: bool = True,
+    server_url: str = "https://login.dartmouth.edu/cas",
+    validation_endpoint: str = "/serviceValidate",
+    xml_namespace: str = "http://www.yale.edu/tp/cas",
+    email_format: str = "from_cas",
+    email_domain: str = None,
+    attribute_mapping: dict = None,
+    username_patterns: list = None,
+    metadata_attributes: list = None,
+) -> CASConfiguration:
+    """Helper function to create a CAS configuration."""
+    if attribute_mapping is None:
+        attribute_mapping = {
+            "username": "netid",
+            "email": "email",
+            "first_name": "givenName",
+            "last_name": "sn",
+            "full_name": "name",
+        }
+    
+    if username_patterns is None:
+        username_patterns = [
+            '<cas:attribute name="{attr}" value="([^"]+)"',
+            "<cas:{attr}>([^<]+)</cas:{attr}>",
+            "<cas:user>([^<]+)</cas:user>",
+        ]
+    
+    if metadata_attributes is None:
+        metadata_attributes = ["uid", "netid", "did", "affil"]
+    
+    config = CASConfiguration(
+        enabled=enabled,
+        server_url=server_url,
+        validation_endpoint=validation_endpoint,
+        xml_namespace=xml_namespace,
+        email_format=email_format,
+        email_domain=email_domain,
+        attribute_mapping=attribute_mapping,
+        username_patterns=username_patterns,
+        metadata_attributes=metadata_attributes,
+    )
+    db_session.add(config)
+    db_session.commit()
+    db_session.refresh(config)
+    return config

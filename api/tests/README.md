@@ -27,6 +27,7 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing
 | `tests/__init__.py` | Package documentation and usage instructions |
 | `tests/conftest.py` | Test fixtures, in-memory database setup, SQLite-compatible models |
 | `tests/test_auth.py` | 28 tests for authentication operations |
+| `tests/test_cas_auth.py` | 31 tests for CAS authentication operations |
 | `tests/test_users.py` | 38 tests for user and role management operations |
 | `tests/test_documents.py` | 38 tests for document operations |
 | `tests/test_document_collections.py` | 16 tests for collection operations |
@@ -38,7 +39,7 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing
 | `tests/test_word_import.py` | 31 tests for Word document import (with mocking) |
 | `pytest.ini` | Pytest configuration |
 
-**Total: 332 tests** running in under 12 seconds
+**Total: 363 tests** running in ~11 seconds
 
 ## Test Dependencies
 
@@ -76,7 +77,7 @@ The tests verify the data layer logic directly (CRUD operations, relationships, 
 
 | Benefit | Description |
 |---------|-------------|
-| **Fast** | Runs ~293 tests in ~3 seconds |
+| **Fast** | Runs 363 tests in ~11 seconds |
 | **No Dependencies** | Requires no external services (no PostgreSQL, no Docker) |
 | **Isolated** | Each test gets a fresh database (tables recreated per test) |
 | **Reliable** | No flaky tests due to network or database issues |
@@ -219,6 +220,16 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 | **Login Validation** | Correct/incorrect credentials, nonexistent username, inactive user, missing password_auth, relationship loading |
 | **Password Change** | Successful change, incorrect current password rejection, password validation, users without password_auth, timestamp updates |
 | **Role & Metadata** | User loaded with roles, metadata tracking on registration, default values |
+
+### CAS Authentication (31 tests)
+
+| Category | Tests |
+|----------|-------|
+| **XML Parsing** | Extract attributes (element format, attribute format), missing attributes, email extraction (from_cas mode), email construction (construct mode), name parts (separate fields, from full_name, missing), CAS metadata extraction, malformed XML handling |
+| **User Creation from CAS** | Parse user data from CAS response, create new user with CAS data, update existing user metadata (flag_modified for JSON fields), metadata tracking (auth_method, cas_data, timestamps), default role assignment, username extraction patterns, constructed email for users |
+| **CAS Configuration** | Create configuration, default values, custom attribute mapping, disabled CAS, load from database |
+| **Validation Endpoint** | Successful validation parsing, authentication failure parsing, disabled config detection, missing ticket validation, HTTP validation URL structure |
+| **Edge Cases** | Empty XML response, usernames with special characters, email formatting (remove spaces, lowercase), different XML namespaces, missing username detection |
 
 ### Users & Roles (38 tests)
 
@@ -372,6 +383,8 @@ Fixtures are reusable test setup components defined in `conftest.py`. They're au
 | `sample_roles` | List of all three roles (admin, editor, viewer) |
 | `user_with_admin_role` | User with admin role assigned |
 | `user_with_multiple_roles` | User with both admin and editor roles |
+| `sample_user_password` | UserPassword for sample_user with hashed password |
+| `sample_cas_configuration` | CAS configuration with default Dartmouth settings |
 | `sample_collection` | A test document collection (requires `sample_user`) |
 | `sample_document` | A test document (requires `sample_collection`) |
 | `sample_document_with_elements` | Document with 3 paragraph elements |
@@ -720,6 +733,16 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 | Business Logic | First user admin assignment, 4 tests |
 | Relationships | User-UserPassword relationship, metadata tracking, 3 tests |
 
+### CAS Authentication (`/api/v1/cas-auth`) - ✅ Fully Covered
+
+| Endpoint | Test Coverage |
+|----------|---------------|
+| POST `/validate` | CAS ticket validation (endpoint behavior tests), 5 tests |
+| XML Parsing | Extract attributes (element/attribute formats), email extraction/construction, name parsing, metadata extraction, 10 tests |
+| User Management | Create/update users from CAS, metadata tracking with flag_modified, role assignment, 6 tests |
+| Configuration | CAS config CRUD, default values, attribute mapping, disabled state, 5 tests |
+| Edge Cases | Empty XML, special characters, email formatting, different namespaces, missing username, 5 tests |
+
 ### Users (`/api/v1/users`) - ✅ Fully Covered
 
 | Endpoint | Test Coverage |
@@ -799,7 +822,6 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 
 | Area | Priority | Notes |
 |------|----------|-------|
-| CAS Authentication (`/api/v1/cas`) | High | CAS login flow, CAS callback, service tickets |
 | Annotations (`/api/v1/annotations`) | High | CRUD operations for annotations |
 | Search (`/api/v1/search`) | Medium | Search functionality across documents/elements |
 
@@ -808,8 +830,8 @@ This shows which backend API endpoints in `api/routers/` have corresponding test
 ## Test Performance
 
 ### Current Metrics
-- **332 tests** run in **~12 seconds**
-- Average: **~36ms per test** (includes bcrypt password hashing)
+- **363 tests** run in **~11 seconds**
+- Average: **~30ms per test** (includes bcrypt password hashing)
 - Uses in-memory SQLite (no I/O overhead)
 - All tests run in parallel-safe isolation
 
