@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Pagination, Typography, Box } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -21,6 +22,7 @@ const DocumentCollectionGallery: React.FC<DocumentCollectionGalleryProps> = ({
   onCollectionSelect,
 }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   // Select data using the selectors from the slice
   const collections = useAppSelector(selectAllDocumentCollections);
@@ -53,6 +55,10 @@ const DocumentCollectionGallery: React.FC<DocumentCollectionGalleryProps> = ({
     }
   };
 
+  const handleBackToHome = () => {
+    navigate("/");
+  };
+
   // Handle different states
   if (status === "loading") {
     return <div>Loading document collections...</div>;
@@ -68,6 +74,10 @@ const DocumentCollectionGallery: React.FC<DocumentCollectionGalleryProps> = ({
 
   return (
     <div className="collection-container">
+      <button onClick={handleBackToHome} className="back-button">
+        ← Back to Home
+      </button>
+
       <h1 className="collection-heading">Document Collections</h1>
 
       <div className="collection-grid">

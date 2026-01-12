@@ -1,5 +1,5 @@
 // src/documentView/DocumentComparisonContainer.tsx
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { DocumentContentPanel } from ".";
 import TabbedAnnotationsPanel from "./components/TabbedAnnotationsPanel";
@@ -26,35 +26,17 @@ interface DocumentComparisonContainerProps {
   isAnnotationsPanelCollapsed?: boolean;
   onToggleAnnotationsPanel?: () => void;
   flaggedAnnotationId?: string | null;
-  // onOpenLinkedDocument?: (
-  //   documentId: number,
-  //   collectionId: number,
-  //   targetInfo: {
-  //     sourceURI: string;
-  //     start: number;
-  //     end: number;
-  //   },
-  //   allTargets?: Array<{
-  //     sourceURI: string;
-  //     start: number;
-  //     end: number;
-  //     text: string;
-  //   }>
-  // ) => void;
 }
 
-const DocumentComparisonContainer: React.FC<
-  DocumentComparisonContainerProps
-> = ({
+function DocumentComparisonContainer({
   documents,
-  viewMode = "annotations", // Changed default to annotations
+  viewMode = "annotations",
   isLinkingModeActive = false,
   showLinkedTextHighlights = false,
-  isAnnotationsPanelCollapsed = true, // Default to collapsed
+  isAnnotationsPanelCollapsed = true,
   onToggleAnnotationsPanel,
   flaggedAnnotationId = null,
-  // onOpenLinkedDocument,
-}) => {
+}: DocumentComparisonContainerProps) {
   // State for active document (for highlight tracking)
   const [activeDocumentId, setActiveDocumentId] = useState<number | undefined>(
     documents.length > 0 ? documents[0].id : undefined
@@ -63,6 +45,9 @@ const DocumentComparisonContainer: React.FC<
   // State for annotation panel position (bottom, right, left)
   const [annotationPanelPosition, setAnnotationPanelPosition] =
     useState<AnnotationPanelPosition>("bottom");
+
+  // Track panel size for dynamic document container adjustment
+  const [annotationPanelSize, setAnnotationPanelSize] = useState<number>(400);
 
   // Use the collapsed state from props instead of internal state
   const isPanelVisible = !isAnnotationsPanelCollapsed;
@@ -76,12 +61,12 @@ const DocumentComparisonContainer: React.FC<
     // Define a list of distinct colors for documents
     const colors = [
       "#2C656B", // Blue
-      "#FE6100", // Green
+      "#FE6100", // Orange
       "#FFB000", // Yellow
       "#DC267F", // Red
       "#785EF0", // Purple
       "#CDAC8B", // Teal
-      "#648FFF", // Orange
+      "#648FFF", // Light Blue
     ];
 
     return documents.reduce((acc, doc, index) => {
@@ -236,6 +221,36 @@ const DocumentComparisonContainer: React.FC<
     setActiveDocumentId(docId);
   };
 
+  // Handle panel size changes - wrapped in useCallback to prevent infinite loops
+  const handlePanelSizeChange = useCallback((size: number) => {
+    setAnnotationPanelSize(size);
+  }, []); // Empty dependency array since setAnnotationPanelSize is stable
+
+  // Calculate dynamic padding based on panel size and position
+  const getDocumentsContainerStyle = (): React.CSSProperties => {
+    const GAP = -30; // Gap between panel and documents (adjust this value to your preference)
+
+    if (viewMode === "annotations" && isPanelVisible) {
+      if (annotationPanelPosition === "bottom") {
+        return {
+          paddingBottom: "40%",
+          maxHeight: "calc(100vh - 64px)",
+        };
+      } else if (annotationPanelPosition === "right") {
+        return {
+          paddingRight: `${annotationPanelSize + GAP}px`,
+          width: "100%",
+        };
+      } else if (annotationPanelPosition === "left") {
+        return {
+          paddingLeft: `${annotationPanelSize + GAP}px`,
+          width: "100%",
+        };
+      }
+    }
+    return {};
+  };
+
   return (
     <div
       className={`
@@ -253,8 +268,6 @@ const DocumentComparisonContainer: React.FC<
         overflow: "hidden",
       }}
     >
-      {/* Document toolbar completely removed to prevent overlay with annotation tabs */}
-
       <div
         className="content-and-annotations-container"
         style={{
@@ -275,22 +288,8 @@ const DocumentComparisonContainer: React.FC<
             flex: 1,
             overflow: "auto",
             paddingTop: "64px",
-            ...(viewMode === "annotations" && isPanelVisible
-              ? annotationPanelPosition === "bottom"
-                ? {
-                    paddingBottom: "40%",
-                    maxHeight: "calc(100vh - 64px)",
-                  }
-                : annotationPanelPosition === "right"
-                ? {
-                    paddingRight: "30%",
-                    width: "100%",
-                  }
-                : {
-                    paddingLeft: "30%",
-                    width: "100%",
-                  }
-              : {}),
+            transition: "padding 0.2s ease", // Smooth transition when resizing
+            ...getDocumentsContainerStyle(),
           }}
         >
           {documents.map((doc, index) => (
@@ -444,6 +443,7 @@ const DocumentComparisonContainer: React.FC<
                 position={annotationPanelPosition}
                 onChangePosition={setAnnotationPanelPosition}
                 onToggleVisibility={onToggleAnnotationsPanel}
+                onPanelSizeChange={handlePanelSizeChange}
                 flaggedAnnotationId={flaggedAnnotationId}
               />
             </div>,
@@ -499,6 +499,6 @@ const DocumentComparisonContainer: React.FC<
       </div>
     </div>
   );
-};
+}
 
 export default DocumentComparisonContainer;

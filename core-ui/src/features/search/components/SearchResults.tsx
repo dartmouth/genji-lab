@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { SearchResult } from "../types/query";
 import { useSelector } from "react-redux";
@@ -245,9 +244,9 @@ const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
     }
   };
 
-  const formatRelevanceScore = (score: number) => {
-    return (score * 100).toFixed(1) + "%";
-  };
+  // const formatRelevanceScore = (score: number) => {
+  //   return (score * 100).toFixed(1) + "%";
+  // };
 
   return (
     <div
@@ -272,9 +271,9 @@ const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
             ID: {result.annotation_id || result.element_id}
           </span>
         </div>
-        <span style={styles.relevanceText}>
+        {/* <span style={styles.relevanceText}>
           Relevance: {formatRelevanceScore(result.relevance_score)}
-        </span>
+        </span> */}
       </div>
 
       {/* Content */}
