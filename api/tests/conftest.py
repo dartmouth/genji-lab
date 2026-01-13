@@ -248,12 +248,19 @@ class Annotation(TestBase):
     type = Column(String(100))
     created = Column(DateTime)
     modified = Column(DateTime)
+    generator = Column(String(255))
+    generated = Column(DateTime)
     motivation = Column(String(100))
     body = Column(JSON)
     target = Column(JSON)
+    
+    status = Column(String(50))
+    annotation_type = Column(String(100))
+    context = Column(String(255))
 
     # Relationships
     creator = relationship("User", foreign_keys=[creator_id])
+    owner = relationship("User", foreign_keys=[owner_id])
 
 
 class SiteSettings(TestBase):
@@ -915,3 +922,94 @@ def create_cas_configuration(
     db_session.commit()
     db_session.refresh(config)
     return config
+
+
+def create_annotation_body(
+    body_id: int = 1,
+    value: str = "Test annotation text",
+    body_type: str = "TextualBody",
+    format: str = "text/html",
+) -> dict:
+    """Helper function to create an annotation body structure."""
+    return {
+        "id": body_id,
+        "type": body_type,
+        "value": value,
+        "format": format,
+    }
+
+
+def create_annotation_target(
+    target_id: int = 1,
+    element_id: int = 1,
+    start: int = 0,
+    end: int = 10,
+    text: str = "selected text",
+) -> dict:
+    """Helper function to create an annotation target structure."""
+    return {
+        "id": target_id,
+        "type": "SpecificResource",
+        "source": f"DocumentElements/{element_id}",
+        "selector": {
+            "type": "TextQuoteSelector",
+            "value": text,
+            "refined_by": {
+                "type": "TextPositionSelector",
+                "start": start,
+                "end": end,
+            },
+        },
+    }
+
+
+def create_full_annotation(
+    db_session: Session,
+    creator_id: int,
+    document_collection_id: int,
+    document_id: int,
+    document_element_id: int,
+    motivation: str = "commenting",
+    body_value: str = "Test comment",
+    target_element_ids: list = None,
+    classroom_id: int = None,
+) -> Annotation:
+    """Helper function to create a complete annotation with proper structure."""
+    if target_element_ids is None:
+        target_element_ids = [document_element_id] if document_element_id else []
+    
+    body = create_annotation_body(body_id=1, value=body_value)
+    
+    targets = [
+        create_annotation_target(
+            target_id=i + 1,
+            element_id=elem_id,
+            start=0,
+            end=len(body_value),
+            text=body_value[:20] if len(body_value) > 20 else body_value,
+        )
+        for i, elem_id in enumerate(target_element_ids)
+    ]
+    
+    annotation = Annotation(
+        document_collection_id=document_collection_id,
+        document_id=document_id,
+        document_element_id=document_element_id,
+        creator_id=creator_id,
+        owner_id=creator_id,
+        classroom_id=classroom_id,
+        type="Annotation",
+        motivation=motivation,
+        body=body,
+        target=targets,
+        status="active",
+        annotation_type="standard",
+        created=datetime.now(),
+        modified=datetime.now(),
+        generated=datetime.now(),
+        generator="Genji Test Suite",
+    )
+    db_session.add(annotation)
+    db_session.commit()
+    db_session.refresh(annotation)
+    return annotation

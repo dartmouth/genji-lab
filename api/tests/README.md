@@ -34,12 +34,13 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing
 | `tests/test_document_elements.py` | 32 tests for document element operations |
 | `tests/test_groups.py` | 44 tests for group/classroom operations |
 | `tests/test_flags.py` | 45 tests for flag/content moderation operations |
+| `tests/test_annotations.py` | 52 tests for annotations (Layers 1-3: CRUD, data structures, complex queries) |
 | `tests/test_roles.py` | 11 tests for role management operations |
 | `tests/test_site_settings.py` | 49 tests for site settings and branding operations |
 | `tests/test_word_import.py` | 31 tests for Word document import (with mocking) |
 | `pytest.ini` | Pytest configuration |
 
-**Total: 363 tests** running in ~11 seconds
+**Total: 415 tests** running in ~12 seconds
 
 ## Test Dependencies
 
@@ -77,7 +78,7 @@ The tests verify the data layer logic directly (CRUD operations, relationships, 
 
 | Benefit | Description |
 |---------|-------------|
-| **Fast** | Runs 363 tests in ~11 seconds |
+| **Fast** | Runs 415 tests in ~12 seconds |
 | **No Dependencies** | Requires no external services (no PostgreSQL, no Docker) |
 | **Isolated** | Each test gets a fresh database (tables recreated per test) |
 | **Reliable** | No flaky tests due to network or database issues |
@@ -320,6 +321,40 @@ python -m pytest tests/ --cov=tests --cov-report=term-missing --cov-report=html:
 | **Target Structure** | Valid format, missing source field, wrong format, nonexistent annotation ID, empty array, null target, pointing to deleted annotation |
 | **Authentication** | Admin role required, non-admin denied access, admin can count/list/unflag/remove |
 | **Edge Cases** | Long flag reason, empty body, multiple users flagging same comment, remove deletes all user flags, orphaned flags, count accuracy |
+
+### Annotations (52 tests - Complete: CRUD, Data Structures, Complex Queries)
+
+**Layer 1: Basic CRUD (22 tests)**
+
+| Category | Tests |
+|----------|-------|
+| **Create Annotation** | Success with body/target structure, classroom context, linking motivation, multiple targets, timestamp validation (created/modified/generated) |
+| **List Annotations** | Empty list, list all, pagination (skip/limit), filter by motivation (commenting/linking/tagging), filter by document_element_id, classroom context filtering, non-classroom context |
+| **Get Single** | Success by ID, not found (404), classroom context validation (wrong classroom returns nothing), eager-load creator relationship |
+| **Update Annotation** | Body value update (using flag_modified for JSON), motivation change, modified timestamp update, not found handling |
+| **Delete Annotation** | Success, not found handling, classroom context validation (prevents deletion from wrong classroom) |
+
+**Layer 2: Data Structure Validation (18 tests)**
+
+| Category | Tests |
+|----------|-------|
+| **Body Structure** | Required fields (id/type/value/format), ID integer validation, type field (TextualBody), format field (text/html) |
+| **Target Structure** | Required fields (id/type/source/selector), ID integer validation, source URI format (DocumentElements/{id}), selector structure (TextQuoteSelector with refined_by TextPositionSelector) |
+| **Multiple Targets** | Array of targets with proper structure, unique target IDs, empty target array handling |
+| **Selector Validation** | TextPositionSelector fields (start/end integers), TextQuoteSelector value (selected text), position range validation (start < end) |
+| **JSON Integrity** | Body stored as dict not string, target stored as list not string, nested selector structure preservation, database roundtrip integrity |
+
+**Layer 3: Complex Queries and Target Matching (12 tests)**
+
+| Category | Tests |
+|----------|-------|
+| **Target Matching** | Find annotations by target element ID (simulates JSONB path queries in Python since SQLite doesn't support jsonb_path_exists) |
+| **By-Motivation Endpoint** | Group by single motivation, group by multiple motivations, group with classroom context filtering (commenting in classroom, linking global) |
+| **Links Endpoint** | Find linking annotations by target element, classroom context filtering for links, handle no matching links |
+| **Nested Targets** | Nested target array structure (cross-element selections), query annotations with nested targets (handles both flat and nested) |
+| **Element ID Extraction** | Extract ID from DocumentElements URI, extract all unique IDs from targets, filter out source element from results |
+
+**Note**: Layer 3 tests simulate JSONB path query logic in Python since SQLite doesn't support PostgreSQL's `jsonb_path_exists()` function. Tests validate the filtering logic that would occur after the JSONB query in production.
 
 ### Roles (11 tests)
 
