@@ -13,48 +13,57 @@ interface RegisterFormData extends RegisterData {
 }
 
 // Map error codes and messages to user-friendly text
-const getFriendlyErrorMessage = (error: string | null): string => {
+const getFriendlyErrorMessage = (error: string | null | unknown): string => {
   if (!error) return "";
+
+  // Convert error to string if it's an object
+  const errorStr = typeof error === "string" ? error : String(error);
 
   // Check for specific error patterns
   if (
-    error.includes("400") ||
-    error.toLowerCase().includes("already registered")
+    errorStr.includes("400") ||
+    errorStr.toLowerCase().includes("already registered")
   ) {
     return "This email is already registered. Please use a different email or try logging in.";
   }
   if (
-    error.toLowerCase().includes("username already taken") ||
-    (error.toLowerCase().includes("username") &&
-      error.toLowerCase().includes("exists"))
+    errorStr.toLowerCase().includes("username already taken") ||
+    (errorStr.toLowerCase().includes("username") &&
+      errorStr.toLowerCase().includes("exists"))
   ) {
     return "This username is already taken. Please choose a different username.";
   }
-  if (error.includes("409") || error.toLowerCase().includes("conflict")) {
+  if (errorStr.includes("409") || errorStr.toLowerCase().includes("conflict")) {
     return "This email or username is already registered. Please try logging in instead.";
   }
-  if (error.includes("422") || error.toLowerCase().includes("validation")) {
+  if (
+    errorStr.includes("422") ||
+    errorStr.toLowerCase().includes("validation")
+  ) {
     return "Please check that all fields meet the requirements.";
   }
-  if (error.includes("500") || error.toLowerCase().includes("server error")) {
+  if (
+    errorStr.includes("500") ||
+    errorStr.toLowerCase().includes("server error")
+  ) {
     return "Server error. Please try again later.";
   }
   if (
-    error.toLowerCase().includes("network") ||
-    error.toLowerCase().includes("timeout")
+    errorStr.toLowerCase().includes("network") ||
+    errorStr.toLowerCase().includes("timeout")
   ) {
     return "Network error. Please check your connection and try again.";
   }
-  if (error.toLowerCase().includes("password")) {
+  if (errorStr.toLowerCase().includes("password")) {
     return "Password does not meet requirements. Must be 8+ characters with uppercase, lowercase, and number.";
   }
-  if (error.toLowerCase().includes("email")) {
+  if (errorStr.toLowerCase().includes("email")) {
     return "Please enter a valid email address.";
   }
 
   // If it's already a friendly message, return it
-  if (!error.match(/\d{3}/) && error.length < 150) {
-    return error;
+  if (!errorStr.match(/\d{3}/) && errorStr.length < 150) {
+    return errorStr;
   }
 
   // Generic fallback

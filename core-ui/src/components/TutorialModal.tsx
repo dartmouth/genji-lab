@@ -30,7 +30,7 @@ const tutorialSteps = [
         </Typography>
         <Typography paragraph>
           This platform allows scholars to read, compare, and annotate
-          translations of The Tale of Genji side by side.
+          translations of The Tale of Genji side by side with the original text.
         </Typography>
       </>
     ),

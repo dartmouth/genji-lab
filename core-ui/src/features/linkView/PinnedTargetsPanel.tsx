@@ -30,6 +30,8 @@ interface PinnedTargetsPanelProps {
   onTogglePin: (targetId: string) => void;
   isOpen: boolean;
   onTogglePanel: () => void;
+  annotationId?: string;
+  onDeleteSuccess?: () => void;
 }
 
 export const PinnedTargetsPanel: React.FC<PinnedTargetsPanelProps> = ({
@@ -37,6 +39,8 @@ export const PinnedTargetsPanel: React.FC<PinnedTargetsPanelProps> = ({
   onTogglePin,
   isOpen,
   onTogglePanel,
+  annotationId,
+  onDeleteSuccess,
 }) => {
   // Get data from Redux
   const allElements = useAppSelector(selectAllLoadedElements);
@@ -266,6 +270,8 @@ export const PinnedTargetsPanel: React.FC<PinnedTargetsPanelProps> = ({
                   isPinned={true}
                   onTogglePin={onTogglePin}
                   showPinButton={true}
+                  annotationId={annotationId}
+                  onDeleteSuccess={onDeleteSuccess}
                 />
               );
             })}

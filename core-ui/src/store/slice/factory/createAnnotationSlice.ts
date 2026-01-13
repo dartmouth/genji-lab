@@ -15,7 +15,7 @@ import {
   AnnotationPatch,
   AnnotationAddTarget,
   TextTarget,
-  ObjectTarget
+  ObjectTarget,
 } from "@documentView/types";
 
 import {
@@ -23,10 +23,9 @@ import {
   createSaveAnnotationThunk,
   createPatchAnnotationThunk,
   createDeleteAnnotationThunk,
-  createAddTargetThunk
+  createAddTargetThunk,
+  createRemoveTargetThunk,
 } from "@store/thunk/factory/createAnnotationThunks";
-
-// Import RootState type
 import type { RootState } from "@store/index";
 
 // The state structure for a single annotation bucket
@@ -68,6 +67,11 @@ export type AnnotationSlice = {
       AnnotationDelete,
       { state: RootState }
     >;
+    removeTarget: AsyncThunk<
+      Annotation | null,
+      { annotationId: number; targetId: number },
+      { state: RootState }
+    >;
   };
   selectors: {
     selectAnnotationById: (
@@ -106,11 +110,14 @@ export interface AnnotationsState {
 }
 
 const flattenTargets = (
-  targets: (TextTarget | ObjectTarget | (TextTarget | ObjectTarget)[])[] | null | undefined
+  targets:
+    | (TextTarget | ObjectTarget | (TextTarget | ObjectTarget)[])[]
+    | null
+    | undefined
 ): (TextTarget | ObjectTarget)[] => {
   if (!targets) return [];
-  
-  return targets.flatMap(target => 
+
+  return targets.flatMap((target) =>
     Array.isArray(target) ? target : [target]
   );
 };
@@ -219,7 +226,7 @@ export function createAnnotationSlice(bucketName: string) {
         const { annotationId, target } = action.payload;
         const stringId = String(annotationId);
         const annotation = state.byId[stringId];
-        
+
         if (!annotation) {
           console.error(`Annotation ${annotationId} not found`);
           return;
@@ -231,20 +238,20 @@ export function createAnnotationSlice(bucketName: string) {
         // Update byParent index for each new target
         target.forEach((newTarget) => {
           const sourceId = String(newTarget.source);
-          
+
           if (sourceId) {
             // Initialize array if needed
             if (!state.byParent[sourceId]) {
               state.byParent[sourceId] = [];
             }
-            
+
             // Add reference to annotation ID (avoid duplicates)
             if (!state.byParent[sourceId].includes(stringId)) {
               state.byParent[sourceId].push(stringId);
             }
           }
         });
-      }
+      },
     },
   });
 
@@ -253,7 +260,8 @@ export function createAnnotationSlice(bucketName: string) {
     saveAnnotation: createSaveAnnotationThunk(bucketName, slice.actions),
     patchAnnotation: createPatchAnnotationThunk(bucketName, slice.actions),
     deleteAnnotation: createDeleteAnnotationThunk(bucketName, slice.actions),
-    addTarget: createAddTargetThunk(bucketName, slice.actions)
+    addTarget: createAddTargetThunk(bucketName, slice.actions),
+    removeTarget: createRemoveTargetThunk(bucketName, slice.actions),
   };
 
   const getBucketState = (state: RootState): AnnotationState => {

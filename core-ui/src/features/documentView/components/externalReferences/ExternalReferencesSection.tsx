@@ -4,11 +4,15 @@ import React, { useState } from "react";
 import { IconButton, Collapse } from "@mui/material";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import { Annotation } from "@documentView/types";
+import { useAppDispatch } from "@store/hooks";
+import { externalReferenceThunks } from "@store";
 import ExternalReferencePreviewModal from "./ExternalReferencePreviewModal";
 import "@documentView/styles/ExternalReferenceStyles.css";
 
 interface ExternalReferencesSectionProps {
   references: Annotation[];
+  documentElementId: string;
+  classroomId?: string;
 }
 
 interface PreviewState {
@@ -16,17 +20,22 @@ interface PreviewState {
   title: string;
   description: string;
   url: string;
+  annotation: Annotation | null;
 }
 
 const ExternalReferencesSection: React.FC<ExternalReferencesSectionProps> = ({
   references,
+  documentElementId,
+  classroomId,
 }) => {
+  const dispatch = useAppDispatch();
   const [expanded, setExpanded] = useState(false);
   const [previewState, setPreviewState] = useState<PreviewState>({
     open: false,
     title: "",
     description: "",
     url: "",
+    annotation: null,
   });
 
   if (references.length === 0) {
@@ -41,6 +50,7 @@ const ExternalReferencesSection: React.FC<ExternalReferencesSectionProps> = ({
         title: metadata.title || "Untitled Reference",
         description: metadata.description || "",
         url: metadata.url || "",
+        annotation: annotation,
       });
     } catch (error) {
       console.error("Failed to parse reference metadata:", error);
@@ -56,6 +66,16 @@ const ExternalReferencesSection: React.FC<ExternalReferencesSectionProps> = ({
     } catch (error) {
       console.error("Failed to parse reference metadata:", error);
     }
+  };
+
+  const handleDeleteSuccess = () => {
+    // Refetch external references for this document element
+    dispatch(
+      externalReferenceThunks.fetchAnnotations({
+        documentElementId: documentElementId,
+        classroomId: classroomId,
+      })
+    );
   };
 
   return (
@@ -137,10 +157,14 @@ const ExternalReferencesSection: React.FC<ExternalReferencesSectionProps> = ({
 
       <ExternalReferencePreviewModal
         open={previewState.open}
-        onClose={() => setPreviewState({ ...previewState, open: false })}
+        onClose={() =>
+          setPreviewState({ ...previewState, open: false, annotation: null })
+        }
         title={previewState.title}
         description={previewState.description}
         url={previewState.url}
+        annotation={previewState.annotation || undefined}
+        onDeleteSuccess={handleDeleteSuccess}
       />
     </>
   );
