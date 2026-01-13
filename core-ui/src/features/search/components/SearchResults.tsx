@@ -191,35 +191,26 @@ const highlightSearchTermInElement = (
   element: HTMLElement,
   searchQuery: string
 ): boolean => {
-  console.log("highlightSearchTermInElement called with query:", searchQuery);
-
   // The element is the wrapper div, we need to find the actual paragraph with text
   const paragraphElement = element.querySelector(".annotatable-paragraph");
   if (!paragraphElement) {
-    console.log("No annotatable-paragraph found");
     return false;
   }
 
   const textNode = paragraphElement.firstChild;
   if (!textNode || !(textNode instanceof Text)) {
-    console.log("No text node found in paragraph");
     return false;
   }
 
   const text = textNode.textContent || "";
-  console.log("Text content:", text.substring(0, 100) + "...");
 
   // Find the search term (case-insensitive)
   const lowerText = text.toLowerCase();
   const lowerQuery = searchQuery.toLowerCase().trim();
 
-  console.log("Looking for:", lowerQuery);
-
   const index = lowerText.indexOf(lowerQuery);
-  console.log("Index found:", index);
 
   if (index === -1) {
-    console.log("Search term not found in text");
     return false; // Search term not found
   }
 
@@ -275,7 +266,6 @@ const highlightSearchTermInElement = (
       }, 2500);
     });
 
-    console.log("Successfully highlighted search term");
     return true;
   } catch (error) {
     console.error("Error highlighting search term:", error);
@@ -301,30 +291,17 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
       : result.content.substring(0, maxLength) + "...";
 
   const handleViewClick = () => {
-    console.log("=== SEARCH RESULT VIEW CLICKED ===");
-    console.log("Result data:", result);
-    console.log("Source URI:", result.source);
-    console.log("Search query:", searchQuery);
-    console.log("Result type:", result.type);
-    console.log("Annotation ID:", result.annotation_id);
-
     // Navigate to the document first
     const route = getResultRoute(result);
-    console.log("Navigating to route:", route);
     navigate(route);
 
     // After navigation, wait for the document to load, then highlight
     setTimeout(() => {
-      console.log("Timeout fired, attempting to highlight");
-
       // Find the element directly
       const element = document.getElementById(result.source);
       if (!element) {
-        console.error("Element not found:", result.source);
         return;
       }
-
-      console.log("Element found, scrolling into view...");
 
       // Find the actual paragraph element for positioning
       const paragraphElement = element.querySelector(".annotatable-paragraph");
@@ -346,21 +323,12 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
 
       // Wait a bit for scroll to complete, then apply highlight
       setTimeout(() => {
-        console.log("Applying highlight...");
-
         // For annotations/comments, fetch the annotation and use its selector data
         if (
           (result.type === "annotation" || result.type === "comment") &&
           result.annotation_id
         ) {
-          console.log(
-            "Looking for annotation highlight:",
-            result.annotation_id
-          );
-
           setTimeout(async () => {
-            console.log("Fetching annotation data from API...");
-
             try {
               // Fetch the annotation from the API
               const response = await fetch(
@@ -373,7 +341,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
               }
 
               const annotationData = await response.json();
-              console.log("Annotation data:", annotationData);
 
               // Find the target for this specific document element
               const target = annotationData.target.find(
@@ -389,9 +356,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
               );
 
               if (!target || !target.selector) {
-                console.log(
-                  "No selector found for this element, using fallback"
-                );
                 const highlighted = highlightSearchTermInElement(
                   element,
                   searchQuery
@@ -403,16 +367,12 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
               }
 
               const { start, end } = target.selector.refined_by;
-              console.log(
-                `Creating manual highlight at positions ${start}-${end}`
-              );
 
               // Find the paragraph element
               const paragraphElement = element.querySelector(
                 ".annotatable-paragraph"
               );
               if (!paragraphElement) {
-                console.log("No paragraph element found");
                 highlightWholeElement(element);
                 return;
               }
@@ -426,7 +386,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
 
               const textNode = paragraphElement.firstChild;
               if (!textNode || !(textNode instanceof Text)) {
-                console.log("No text node found");
                 highlightWholeElement(element);
                 return;
               }
@@ -439,8 +398,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
               // Get rectangles for the text (handles multi-line)
               const rects = Array.from(range.getClientRects());
               const containerRect = paragraphElement.getBoundingClientRect();
-
-              console.log(`Creating ${rects.length} highlight overlays`);
 
               // Create highlight overlays
               rects.forEach((rect) => {
@@ -485,8 +442,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
                   }, 300);
                 }, 2500);
               });
-
-              console.log("Manual annotation highlight created successfully");
             } catch (error) {
               console.error("Error fetching annotation:", error);
               // Fallback
@@ -508,12 +463,9 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
 
           if (!highlighted) {
             // Fallback: highlight the whole paragraph if term not found
-            console.log("Search term not found, highlighting whole paragraph");
             highlightWholeElement(element);
           }
         }
-
-        console.log("✅ Highlight applied successfully");
       }, 500); // Wait 500ms for scroll animation
     }, 1000); // Wait 1 second for document to load
   };
@@ -584,10 +536,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
     }
   };
 
-  // const formatRelevanceScore = (score: number) => {
-  //   return (score * 100).toFixed(1) + "%";
-  // };
-
   return (
     <div
       style={styles.resultCard}
@@ -611,9 +559,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
             ID: {result.annotation_id || result.element_id}
           </span>
         </div>
-        {/* <span style={styles.relevanceText}>
-          Relevance: {formatRelevanceScore(result.relevance_score)}
-        </span> */}
       </div>
 
       {/* Content */}
