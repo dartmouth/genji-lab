@@ -8,38 +8,46 @@ interface LoginFormProps {
 }
 
 // Map error codes and messages to user-friendly text
-const getFriendlyErrorMessage = (error: string | null): string => {
+const getFriendlyErrorMessage = (error: string | null | unknown): string => {
   if (!error) return "";
+
+  // Convert error to string if it's an object
+  const errorStr = typeof error === "string" ? error : String(error);
 
   // Check for specific error patterns
   if (
-    error.includes("401") ||
-    error.toLowerCase().includes("invalid username or password")
+    errorStr.includes("401") ||
+    errorStr.toLowerCase().includes("invalid username or password")
   ) {
     return "Invalid username or password. Please try again.";
   }
-  if (error.includes("400") || error.toLowerCase().includes("missing")) {
+  if (errorStr.includes("400") || errorStr.toLowerCase().includes("missing")) {
     return "Please fill in all required fields.";
   }
-  if (error.includes("403") || error.toLowerCase().includes("inactive")) {
+  if (errorStr.includes("403") || errorStr.toLowerCase().includes("inactive")) {
     return "Your account has been disabled. Please contact support.";
   }
-  if (error.includes("500") || error.toLowerCase().includes("server error")) {
+  if (
+    errorStr.includes("500") ||
+    errorStr.toLowerCase().includes("server error")
+  ) {
     return "Server error. Please try again later.";
   }
   if (
-    error.toLowerCase().includes("network") ||
-    error.toLowerCase().includes("timeout")
+    errorStr.toLowerCase().includes("network") ||
+    errorStr.toLowerCase().includes("timeout")
   ) {
     return "Network error. Please check your connection and try again.";
   }
-  if (error.toLowerCase().includes("password authentication not available")) {
+  if (
+    errorStr.toLowerCase().includes("password authentication not available")
+  ) {
     return "This account uses institutional login. Please use 'Login with Dartmouth SSO' instead.";
   }
 
   // If it's already a friendly message, return it
-  if (!error.match(/\d{3}/) && error.length < 100) {
-    return error;
+  if (!errorStr.match(/\d{3}/) && errorStr.length < 100) {
+    return errorStr;
   }
 
   // Generic fallback

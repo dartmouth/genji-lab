@@ -25,6 +25,7 @@ interface TabbedAnnotationsPanelProps {
   position?: PanelPosition;
   onChangePosition?: (position: PanelPosition) => void;
   onToggleVisibility?: () => void;
+  onPanelSizeChange?: (size: number) => void;
   flaggedAnnotationId?: string | null;
 }
 
@@ -36,6 +37,7 @@ const TabbedAnnotationsPanel: React.FC<TabbedAnnotationsPanelProps> = ({
   position = "bottom",
   onChangePosition,
   onToggleVisibility,
+  onPanelSizeChange,
   flaggedAnnotationId = null,
 }) => {
   // State for active tab: 'doc-{id}' for document tabs or 'all' for all annotations
@@ -64,6 +66,13 @@ const TabbedAnnotationsPanel: React.FC<TabbedAnnotationsPanelProps> = ({
       }
     }
   }, [panelSize, position]);
+
+  // Notify parent when panel size changes (only for left/right positions)
+  useEffect(() => {
+    if (onPanelSizeChange && (position === "left" || position === "right")) {
+      onPanelSizeChange(panelSize);
+    }
+  }, [panelSize, position, onPanelSizeChange]);
 
   // Filter annotations based on active tab
   const getFilteredAnnotations = () => {

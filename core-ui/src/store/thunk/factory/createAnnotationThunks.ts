@@ -160,7 +160,6 @@ export function createAddTargetThunk(
     async (patch: AnnotationAddTarget, { dispatch, rejectWithValue }) => {
       try {
         const newTarg = { target: patch.target };
-        // Use your API client
         const response = await api.patch(
           `/annotations/add-target/${patch.annotationId}`,
           newTarg
@@ -171,6 +170,44 @@ export function createAddTargetThunk(
         dispatch(sliceActions.addAnnotation(savedAnnotation));
 
         return savedAnnotation;
+      } catch (error) {
+        return rejectWithValue(
+          error instanceof Error ? error.message : "Unknown error"
+        );
+      }
+    }
+  );
+}
+
+export function createRemoveTargetThunk(
+  bucketName: string,
+  sliceActions: AnnotationSliceActions
+) {
+  const thunkName = `annotations/${bucketName}/removeTarget`;
+
+  return createAsyncThunk<
+    Annotation | null, // null if annotation was deleted entirely
+    { annotationId: number; targetId: number },
+    { state: RootState }
+  >(
+    thunkName,
+    async ({ annotationId, targetId }, { dispatch, rejectWithValue }) => {
+      try {
+        const response = await api.patch(
+          `/annotations/remove-target/${annotationId}?target_id=${targetId}`
+        );
+
+        // If 204, annotation was deleted entirely (last target removed)
+        if (response.status === 204) {
+          dispatch(sliceActions.deleteAnnotation({ annotationId }));
+          return null;
+        }
+
+        // Otherwise, update with the new annotation data
+        const updatedAnnotation: Annotation = response.data;
+        dispatch(sliceActions.addAnnotation(updatedAnnotation));
+
+        return updatedAnnotation;
       } catch (error) {
         return rejectWithValue(
           error instanceof Error ? error.message : "Unknown error"
@@ -193,7 +230,6 @@ export function createDeleteAnnotationThunk(
     { state: RootState }
   >(thunkName, async (id: AnnotationDelete, { dispatch, rejectWithValue }) => {
     try {
-      // Use your API client
       await api.delete(`/annotations/${id.annotationId}`);
 
       dispatch(sliceActions.deleteAnnotation(id));

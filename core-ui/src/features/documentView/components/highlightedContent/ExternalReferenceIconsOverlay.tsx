@@ -1,12 +1,16 @@
 // src/features/documentView/components/highlightedContent/ExternalReferenceIconsOverlay.tsx
 
 import React, { useState, useEffect, useCallback, RefObject } from "react";
-import { useAppSelector } from "@store/hooks";
+import { useAppSelector, useAppDispatch } from "@store/hooks";
 import { externalReferenceAnnotations } from "@store/slice/annotationSlices";
 import { RootState } from "@store";
 import { ExternalReferenceIcon } from "../externalReferences";
 import ExternalReferencePreviewModal from "../externalReferences/ExternalReferencePreviewModal";
 import { getTextTargets } from "./utils";
+import { Annotation } from "@documentView/types";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { parseURI } from "@documentView/utils";
+
 interface ExternalReferenceIconsOverlayProps {
   text: string;
   paragraphId: string;
@@ -22,21 +26,32 @@ interface IconPosition {
     description: string;
     url: string;
   };
+  annotation: Annotation;
 }
 
 const ExternalReferenceIconsOverlay: React.FC<
   ExternalReferenceIconsOverlayProps
 > = ({ text, paragraphId, containerRef }) => {
+  const dispatch = useAppDispatch();
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeClassroomValue, _setActiveClassroomValue] =
+    useLocalStorage("active_classroom");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
+
   const [previewState, setPreviewState] = useState<{
     open: boolean;
     title: string;
     description: string;
     url: string;
+    annotation: Annotation | null;
   }>({
     open: false,
     title: "",
     description: "",
     url: "",
+    annotation: null,
   });
 
   const [iconPositions, setIconPositions] = useState<IconPosition[]>([]);
@@ -64,7 +79,7 @@ const ExternalReferenceIconsOverlay: React.FC<
     const positions: IconPosition[] = [];
 
     externalReferences.forEach((annotation, index) => {
-      const flatTargets = getTextTargets(annotation.target)
+      const flatTargets = getTextTargets(annotation.target);
       const target = flatTargets.find((t) => t.source === paragraphId);
       if (!target || !target.selector) return;
 
@@ -100,6 +115,7 @@ const ExternalReferenceIconsOverlay: React.FC<
           left: rect.left - containerRect.left,
           top: rect.top - containerRect.top,
           metadata,
+          annotation,
         });
       } catch (error) {
         console.error("Failed to calculate reference icon position:", error);
@@ -128,6 +144,19 @@ const ExternalReferenceIconsOverlay: React.FC<
     };
   }, [calculatePositions, containerRef]);
 
+  const handleDeleteSuccess = useCallback(() => {
+    // Refetch external references for this paragraph after successful deletion
+    const params: { documentElementId: string; classroomId?: string } = {
+      documentElementId: String(parseURI(paragraphId)),
+    };
+
+    if (activeClassroomValue && isOptedOut !== "true") {
+      params.classroomId = String(activeClassroomValue);
+    }
+
+    dispatch(externalReferenceAnnotations.thunks.fetchAnnotations(params));
+  }, [dispatch, paragraphId, activeClassroomValue, isOptedOut]);
+
   if (iconPositions.length === 0) {
     return null;
   }
@@ -155,6 +184,7 @@ const ExternalReferenceIconsOverlay: React.FC<
                 title: pos.metadata.title,
                 description: pos.metadata.description,
                 url: pos.metadata.url,
+                annotation: pos.annotation,
               });
             }}
           />
@@ -162,10 +192,18 @@ const ExternalReferenceIconsOverlay: React.FC<
       ))}
       <ExternalReferencePreviewModal
         open={previewState.open}
-        onClose={() => setPreviewState({ ...previewState, open: false })}
+        onClose={() =>
+          setPreviewState({
+            ...previewState,
+            open: false,
+            annotation: null,
+          })
+        }
         title={previewState.title}
         description={previewState.description}
         url={previewState.url}
+        annotation={previewState.annotation || undefined}
+        onDeleteSuccess={handleDeleteSuccess}
       />
     </>
   );

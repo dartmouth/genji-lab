@@ -9,6 +9,7 @@ import {
 } from "@store";
 import { Link as LinkIcon } from "@mui/icons-material";
 // import { debounce } from "lodash";
+import type { Annotation } from "@documentView/types";
 import { makeTextAnnotationBody, parseURI } from "@documentView/utils";
 import { useAuth } from "@hooks/useAuthContext";
 import useLocalStorage from "@/hooks/useLocalStorage";
@@ -93,6 +94,59 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
       }
     }
   }, [isAuthenticated]);
+
+  // Fetch all linking annotations when dialog opens with linking motivation
+  useEffect(() => {
+    if (annotationCreate.motivation === "linking" && isAuthenticated) {
+      // Fetch all linking annotations regardless of document
+      // This ensures the dropdown has all available links
+      const fetchAllLinks = async () => {
+        try {
+          // Get classroom context
+          const classroomParams =
+            activeClassroomValue && isOptedOut !== "true"
+              ? { classroom_id: activeClassroomValue }
+              : {};
+
+          // Make direct API call to get all linking annotations
+          const response = await fetch(
+            `/api/v1/annotations/?motivation=linking${
+              classroomParams.classroom_id
+                ? `&classroom_id=${classroomParams.classroom_id}`
+                : ""
+            }`,
+            {
+              headers: {
+                Authorization: `Bearer ${
+                  localStorage.getItem("access_token") ||
+                  sessionStorage.getItem("access_token")
+                }`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const allLinkingAnnotations =
+              (await response.json()) as Annotation[];
+            // Add them all to Redux
+            allLinkingAnnotations.forEach((annotation) => {
+              dispatch(linkingAnnotations.actions.addAnnotation(annotation));
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch all linking annotations:", error);
+        }
+      };
+
+      fetchAllLinks();
+    }
+  }, [
+    annotationCreate.motivation,
+    isAuthenticated,
+    activeClassroomValue,
+    isOptedOut,
+    dispatch,
+  ]);
 
   const onTextChange = (value: string) => {
     // Don't allow more than MAX_CHARACTERS
@@ -202,18 +256,51 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
     });
   };
 
-  const saveLinkingAnnotation = () => {
+  const saveLinkingAnnotation = async () => {
     if (!selectedLink) {
       return;
     }
     const linkingBody = makeLinkAnnotationBody();
 
-    dispatch(
-      linkingAnnotations.thunks.addTarget({
-        annotationId: selectedLink,
-        target: linkingBody,
-      })
-    );
+    try {
+      // Dispatch the addTarget thunk and wait for it to complete
+      await dispatch(
+        linkingAnnotations.thunks.addTarget({
+          annotationId: selectedLink,
+          target: linkingBody,
+        })
+      ).unwrap();
+
+      // After successfully adding targets, refetch annotations for all affected elements
+      // Extract unique element IDs from the segments
+      const affectedElementIds = new Set<number>();
+      newAnno.target.segments.forEach((seg) => {
+        const elementId = parseURI(seg.sourceURI);
+        if (elementId) {
+          affectedElementIds.add(elementId as unknown as number);
+        }
+      });
+
+      // Refetch annotations for each affected element
+      const classroomParams =
+        activeClassroomValue && isOptedOut !== "true"
+          ? { classroomID: activeClassroomValue as unknown as number }
+          : {};
+
+      for (const elementId of affectedElementIds) {
+        await dispatch(
+          linkingAnnotations.thunks.fetchAnnotations({
+            documentElementId: String(elementId),
+            classroomId: classroomParams.classroomID
+              ? String(classroomParams.classroomID)
+              : undefined,
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Failed to add content to link:", error);
+      // Optionally show an error message to the user
+    }
   };
 
   const saveStandardAnnotation = () => {
@@ -248,13 +335,13 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
     dispatch(slice.thunks.saveAnnotation(saveParams));
   };
 
-  const onSave = () => {
+  const onSave = async () => {
     if (!user || !isAuthenticated) {
       return;
     }
 
     if (newAnno.motivation === "linking") {
-      saveLinkingAnnotation();
+      await saveLinkingAnnotation();
     } else {
       saveStandardAnnotation();
     }

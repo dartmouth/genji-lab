@@ -366,7 +366,10 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
         menuItemCount++; // "Create Scholarly Annotation"
       }
 
-      if (user?.roles?.includes("admin")) {
+      if (
+        user?.roles?.includes("admin") ||
+        user?.roles?.includes("verified_scholar")
+      ) {
         menuItemCount++; // "Add Content to Link"
       }
 
@@ -529,7 +532,8 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
                 Create Scholarly Annotation
               </ContextButton>
             )}
-            {user?.roles?.includes("admin") && (
+            {(user?.roles?.includes("admin") ||
+              user?.roles?.includes("verified_scholar")) && (
               <ContextButton
                 onClick={(e: React.MouseEvent) => {
                   e.preventDefault();

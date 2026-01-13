@@ -589,6 +589,7 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     isNavigationHighlighted,
     viewMode,
     documentId,
+    linkingAnnotations,
   ]);
 
   const handleCloseDialog = () => {
@@ -657,7 +658,9 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
         {Array.from(highlightPositions.entries()).map(
           ([annotationId, position_elems]) => {
             // Convert annotationId to string for comparison since flaggedAnnotationId comes from URL
-            const isFlagged = flaggedAnnotationId !== null && flaggedAnnotationId === String(annotationId);
+            const isFlagged =
+              flaggedAnnotationId !== null &&
+              flaggedAnnotationId === String(annotationId);
             return (
               <div
                 key={annotationId}

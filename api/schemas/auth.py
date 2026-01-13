@@ -52,7 +52,7 @@ class UserRegister(BaseModel):
             raise ValueError(
                 "Username can only contain letters, numbers, underscores, hyphens, and periods"
             )
-        return v.lower()
+        return v
 
     @validator("password")
     def validate_password(cls, v):

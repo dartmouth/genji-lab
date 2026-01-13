@@ -5,6 +5,7 @@ import { useAuth } from "@hooks/useAuthContext";
 import { linkingAnnotations } from "@store";
 import { makeTextAnnotationBody } from "@documentView/utils";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import { fetchAnnotationByMotivation } from "@store/thunk/annotationsByMotivation";
 
 import {
   Link as LinkIcon,
@@ -363,8 +364,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
         setFirstSelection(multiElementSelection);
         setCurrentStep("second");
       } else if (currentStep === "second") {
-        // REMOVED: Check preventing same-document linking
-        // Now allows linking within the same document
+        // Allows linking within the same document
         setSecondSelection(multiElementSelection);
         setCurrentStep("confirm");
       }
@@ -391,7 +391,31 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, firstSelection, documents]);
 
-  const handleSaveLink = () => {
+  // Helper function to refetch annotations for affected elements
+  const refetchAffectedElements = async (
+    selection: MultiElementSelection | null
+  ) => {
+    if (!selection) return;
+
+    const classroomId =
+      activeClassroomValue && !isOptedOut
+        ? parseInt(activeClassroomValue as string)
+        : undefined;
+
+    // Refetch annotations for each affected document element
+    const refetchPromises = selection.elements.map((element) => {
+      return dispatch(
+        fetchAnnotationByMotivation({
+          documentElementId: element.documentElementId,
+          classroomID: classroomId,
+        })
+      );
+    });
+
+    await Promise.all(refetchPromises);
+  };
+
+  const handleSaveLink = async () => {
     if (!user || !isAuthenticated || !firstSelection) {
       return;
     }
@@ -437,12 +461,20 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     const classroomId =
       activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
 
-    dispatch(
+    // Save the annotation
+    await dispatch(
       linkingAnnotations.thunks.saveAnnotation({
         annotation: annoBody,
         classroomId: classroomId,
       })
-    );
+    ).unwrap();
+
+    // NEW: Refetch annotations for all affected elements to trigger highlight recalculation
+    await refetchAffectedElements(firstSelection);
+    if (secondSelection) {
+      await refetchAffectedElements(secondSelection);
+    }
+
     onClose();
   };
 
@@ -455,7 +487,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   };
 
   // NEW: Handle saving with just first selection
-  const handleSavePartialLink = () => {
+  const handleSavePartialLink = async () => {
     if (!user || !isAuthenticated || !firstSelection) {
       return;
     }
@@ -481,12 +513,17 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     const classroomId =
       activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
 
-    dispatch(
+    // Save the annotation
+    await dispatch(
       linkingAnnotations.thunks.saveAnnotation({
         annotation: annoBody,
         classroomId: classroomId,
       })
-    );
+    ).unwrap();
+
+    // Refetch annotations for all affected elements to trigger highlight recalculation
+    await refetchAffectedElements(firstSelection);
+
     onClose();
   };
 
@@ -638,7 +675,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
             </button>
           )}
 
-          {/* NEW: Partial save button */}
+          {/* Partial save button */}
           {currentStep === "second" && isAuthenticated && firstSelection && (
             <button
               onClick={handleSavePartialLink}
