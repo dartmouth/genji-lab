@@ -391,7 +391,7 @@ def delete_document(
 def get_document_elements(
     document_id: int,
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 10000,  # Increased to support large documents
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -564,8 +564,12 @@ def import_word_document(
         # Process the Word document
         contents = file.file.read()
         doc = docx.Document(BytesIO(contents))
-        paragraph_count = len(doc.paragraphs)
-
+        
+        # Log document structure for debugging
+        total_paragraphs = len(doc.paragraphs)
+        total_tables = len(doc.tables)
+        non_empty_paragraphs = sum(1 for p in doc.paragraphs if p.text.strip())
+       
         # Extract paragraphs
         paragraphs = extract_paragraphs(doc, document_collection_id, db_document.id)
 
@@ -603,7 +607,9 @@ def import_word_document(
                 },
                 "import_results": {
                     "filename": file.filename,
-                    "paragraph_count": paragraph_count,
+                    "total_paragraphs": total_paragraphs,
+                    "non_empty_paragraphs": non_empty_paragraphs,
+                    "total_tables": total_tables,
                     "elements_created": len(created_elements),
                     "message": "Document created and Word content imported successfully",
                 },
