@@ -35,7 +35,7 @@ import {
 import axios, { AxiosInstance } from "axios";
 const api: AxiosInstance = axios.create({
   baseURL: "/api/v1",
-  timeout: 10000,
+  timeout: 120000, // 2 minutes timeout for operations like Word document processing
 });
 
 // TabPanel for the sub-tabs
