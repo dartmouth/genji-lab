@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, status, Response, UploadFile, File
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from schemas.document_elements import (
@@ -15,7 +16,6 @@ from schemas.document_elements import (
 )
 from schemas.annotations import Annotation
 from services.document_element_service import document_element_service
-from routers.word_import import extract_paragraphs
 
 router = APIRouter(
     prefix="/api/v1/elements",
@@ -151,8 +151,8 @@ def get_element_annotations(
 def get_elements_by_document(
     document_id: int,
     skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
+    limit: int = 10000,  # Increased to support large documents
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get all elements for a specific document
@@ -202,7 +202,6 @@ def upload_word_doc(
         document_collection_id=document_collection_id,
         document_id=document_id,
         file_content=contents,
-        filename=file.filename,
-        extract_paragraphs_func=extract_paragraphs
+        filename=file.filename
     )
     return JSONResponse(content=result, status_code=status.HTTP_201_CREATED)

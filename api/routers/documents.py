@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from schemas.documents import (
     Document,
@@ -23,7 +24,6 @@ from schemas.documents import (
 )
 from schemas.document_elements import DocumentElement as DocumentElementSchema
 from services.document_service import document_service
-from routers.word_import import extract_paragraphs
 
 
 class BulkDeleteRequest(BaseModel):
@@ -138,8 +138,8 @@ def bulk_delete_documents(
 def get_document_elements(
     document_id: int,
     skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db),
+    limit: int = 10000,  # Increased to support large documents
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get all elements for a specific document
@@ -183,7 +183,6 @@ def import_word_document(
         title=title,
         description=description,
         file_content=contents,
-        filename=file.filename,
-        extract_paragraphs_func=extract_paragraphs
+        filename=file.filename
     )
     return JSONResponse(content=result, status_code=status.HTTP_201_CREATED)

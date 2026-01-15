@@ -21,6 +21,13 @@ from schemas.document_elements import (
 from services.base_service import BaseService
 
 
+# Import document_service for word processing utilities
+# Use TYPE_CHECKING to avoid circular imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from services.document_service import DocumentService
+
+
 class DocumentElementService(BaseService[DocumentElementModel]):
     """Service for document element CRUD operations."""
     
@@ -400,8 +407,7 @@ class DocumentElementService(BaseService[DocumentElementModel]):
         document_collection_id: int,
         document_id: int,
         file_content: bytes,
-        filename: str,
-        extract_paragraphs_func
+        filename: str
     ) -> Dict[str, Any]:
         """
         Upload and process a Word document into document elements.
@@ -417,10 +423,13 @@ class DocumentElementService(BaseService[DocumentElementModel]):
             )
         
         try:
+            # Import here to avoid circular import at module level
+            from services.document_service import document_service
+            
             doc = docx.Document(BytesIO(file_content))
             paragraph_count = len(doc.paragraphs)
             
-            paragraphs = extract_paragraphs_func(doc, document_collection_id, document_id)
+            paragraphs = document_service._extract_paragraphs(doc, document_collection_id, document_id)
             
             if document_id:
                 self._verify_document_exists(db, document_id)

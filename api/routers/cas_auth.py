@@ -3,6 +3,8 @@ CAS (Central Authentication Service) authentication endpoints.
 Uses shared utilities from auth_utils for consistency with basic auth.
 """
 
+from sqlalchemy.orm import Session
+
 from fastapi import APIRouter, Request, Depends
 
 from database import get_db
