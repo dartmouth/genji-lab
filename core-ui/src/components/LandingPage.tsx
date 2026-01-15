@@ -1,3 +1,5 @@
+// core-ui/src/components/LandingPage.tsx
+
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@hooks/useAuthContext";
@@ -32,6 +34,10 @@ const LandingPage: React.FC = () => {
           <nav className="landing-nav">
             <Link to="/collections" className="landing-link">
               Go to Collections
+            </Link>
+
+            <Link to="/intertext-links" className="landing-link">
+              Browse Intertext Links
             </Link>
 
             <Link to="/get-started" className="landing-link">

@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { SearchResult } from "../types/query";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
+import { useAppSelector } from "@store/hooks";
+import {
+  RootState,
+  selectAllDocuments,
+  selectAllDocumentCollections,
+} from "@/store";
 import AdvancedSettings from "./AdvancedSettings";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -219,7 +223,7 @@ const highlightSearchTermInElement = (
     const containerRect = paragraphElement.getBoundingClientRect();
 
     // Create a range for the matched text
-    const range = document.createRange();
+    const range = window.document.createRange();
     range.setStart(textNode, index);
     range.setEnd(textNode, index + lowerQuery.length);
 
@@ -227,8 +231,8 @@ const highlightSearchTermInElement = (
     const rects = Array.from(range.getClientRects());
 
     // Create highlight overlays for each rectangle
-    rects.forEach((rect) => {
-      const highlight = document.createElement("div");
+    rects.forEach((rect: DOMRect) => {
+      const highlight = window.document.createElement("div");
       highlight.className = "search-result-highlight";
       highlight.style.position = "absolute";
       highlight.style.left = `${rect.left - containerRect.left}px`;
@@ -284,6 +288,18 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
   const navigate = useNavigate();
   const maxLength = 200;
   const shouldTruncate = result.content.length > maxLength;
+
+  // Get all documents and collections from Redux using selectors
+  const allDocuments = useAppSelector(selectAllDocuments);
+  const allCollections = useAppSelector(selectAllDocumentCollections);
+
+  // Find the specific document and collection for this result
+  const resultDocument = allDocuments.find(
+    (doc) => doc.id === result.document_id
+  );
+  const resultCollection = allCollections.find(
+    (coll) => coll.id === result.collection_id
+  );
 
   const displayContent =
     expanded || !shouldTruncate
@@ -391,7 +407,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
               }
 
               // Create range for the annotated text
-              const range = document.createRange();
+              const range = window.document.createRange();
               range.setStart(textNode, start);
               range.setEnd(textNode, end);
 
@@ -400,8 +416,8 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
               const containerRect = paragraphElement.getBoundingClientRect();
 
               // Create highlight overlays
-              rects.forEach((rect) => {
-                const highlight = document.createElement("div");
+              rects.forEach((rect: DOMRect) => {
+                const highlight = window.document.createElement("div");
                 highlight.className = "search-annotation-highlight";
                 highlight.style.position = "absolute";
                 highlight.style.left = `${rect.left - containerRect.left}px`;
@@ -504,15 +520,10 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
 
     switch (type.toLowerCase()) {
       case "document":
-        return (
-          <svg {...iconProps} viewBox="0 0 24 24">
-            <path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z" />
-          </svg>
-        );
       case "element":
         return (
           <svg {...iconProps} viewBox="0 0 24 24">
-            <path d="M5,5H19V7H5V5M5,9H19V11H5V9M5,13H19V15H5V13M3,17H15V19H3V17M17,17V14L22,18.5L17,23V20H15V17H17Z" />
+            <path d="M6,2A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z" />
           </svg>
         );
       case "comment":
@@ -536,6 +547,24 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
     }
   };
 
+  // Helper function to get user-friendly type label
+  const getTypeLabel = (result: SearchResult): string => {
+    if (result.type === "element") {
+      return "Document";
+    }
+    if (result.type === "annotation") {
+      // Check motivation to distinguish between comment and scholarly annotation
+      if (result.motivation === "commenting") {
+        return "Comment";
+      } else if (result.motivation === "scholarly") {
+        return "Scholarly Annotation";
+      }
+      return "Annotation";
+    }
+    // Capitalize first letter for other types
+    return result.type.charAt(0).toUpperCase() + result.type.slice(1);
+  };
+
   return (
     <div
       style={styles.resultCard}
@@ -552,9 +581,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
       <div style={styles.cardHeader}>
         <div style={styles.typeSection}>
           {getTypeIcon(result.type)}
-          <span style={styles.typeText}>
-            {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
-          </span>
+          <span style={styles.typeText}>{getTypeLabel(result)}</span>
           <span style={styles.chip}>
             ID: {result.annotation_id || result.element_id}
           </span>
@@ -566,7 +593,12 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
 
       {/* Footer */}
       <div style={styles.cardFooter}>
-        <span style={styles.sourceText}>Source: {result.source}</span>
+        <span style={styles.sourceText}>
+          Source:{" "}
+          {resultDocument && resultCollection
+            ? `${resultCollection.title} / ${resultDocument.title}`
+            : result.source}
+        </span>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           {shouldTruncate && (
             <button
@@ -610,7 +642,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
 };
 
 const SearchResultsContainer: React.FC = () => {
-  const searchData = useSelector(
+  const searchData = useAppSelector(
     (state: RootState) => state.searchResults.searchResults
   );
   const { query, total_results, results } = searchData;

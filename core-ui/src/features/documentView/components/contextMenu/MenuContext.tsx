@@ -545,18 +545,21 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
               </ContextButton>
             )}
 
-            <ContextButton
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dispatch(setMotivation("external_reference"));
-              }}
-              style={{
-                borderTop: "1px solid #eee",
-              }}
-            >
-              Add External Reference 🔗
-            </ContextButton>
+            {(user?.roles?.includes("admin") ||
+              user?.roles?.includes("verified_scholar")) && (
+              <ContextButton
+                onClick={(e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dispatch(setMotivation("external_reference"));
+                }}
+                style={{
+                  borderTop: "1px solid #eee",
+                }}
+              >
+                Add External Reference 🔗
+              </ContextButton>
+            )}
 
             {hasLinkedAnnotations && (
               <ContextButton
