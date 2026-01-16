@@ -73,10 +73,10 @@ def create_annotation(
         if isinstance(target, list):
             for sub_targ in target:
                 sub_targ.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
-                sub_targ.creator_id = current_user.id  # Add creator_id
+                # sub_targ.creator_id = current_user.id  # Add creator_id
         else:
             target.id = generate_target_id(db, os.environ.get("DB_SCHEMA"))
-            target.creator_id = current_user.id  # Add creator_id
+            # target.creator_id = current_user.id  # Add creator_id
 
     # Set the creator to current user and classroom
     annotation.creator_id = current_user.id

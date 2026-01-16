@@ -1,5 +1,6 @@
-// src/features/documentView/components/annotationCard/DocumentLinkingOverlay.tsx
+// src/features/documentView/components/DocumentLinkingOverlay.tsx
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useAppDispatch } from "@store/hooks";
 import { useAuth } from "@hooks/useAuthContext";
 import { linkingAnnotations } from "@store";
@@ -60,7 +61,10 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
   const [description, setDescription] = useState("");
 
   // Add a ref to prevent double processing
-  const lastProcessedText = useRef<string>("");
+  const lastProcessedText = useRef("");
+
+  // Ref for the panel to detect outside clicks
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Helper function to safely extract numeric ID from element ID
   const extractNumericId = (elementId: string): string | null => {
@@ -391,6 +395,37 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, firstSelection, documents]);
 
+  // Handle click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]);
+
+  // Handle escape key to close
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [onClose]);
+
   // Helper function to refetch annotations for affected elements
   const refetchAffectedElements = async (
     selection: MultiElementSelection | null
@@ -469,7 +504,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       })
     ).unwrap();
 
-    // NEW: Refetch annotations for all affected elements to trigger highlight recalculation
+    // Refetch annotations for all affected elements to trigger highlight recalculation
     await refetchAffectedElements(firstSelection);
     if (secondSelection) {
       await refetchAffectedElements(secondSelection);
@@ -486,7 +521,7 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     lastProcessedText.current = "";
   };
 
-  // NEW: Handle saving with just first selection
+  // Handle saving with just first selection
   const handleSavePartialLink = async () => {
     if (!user || !isAuthenticated || !firstSelection) {
       return;
@@ -553,157 +588,153 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
     );
   };
 
-  return (
-    <>
-      {/* Document highlighting overlay */}
-      <div className="document-linking-overlay" />
+  return createPortal(
+    <div className="document-linking-panel" ref={panelRef}>
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="document-linking-panel__close-button"
+        aria-label="Close linking mode"
+      >
+        <CloseIcon />
+      </button>
 
-      {/* Floating control panel */}
-      <div className="document-linking-panel">
-        <div className="document-linking-panel__header">
-          <h3 className="document-linking-panel__title">
-            <LinkIcon />
+      {/* Header */}
+      <div className="document-linking-panel__header">
+        <div className="document-linking-panel__header-content">
+          <LinkIcon sx={{ fontSize: "20px" }} />
+          <span className="document-linking-panel__header-title">
             Linking Mode
-          </h3>
-          <button
-            onClick={onClose}
-            className="document-linking-panel__close"
-            title="Exit linking mode"
-          >
-            <CloseIcon />
-          </button>
+          </span>
         </div>
+      </div>
 
-        {/* Instructions */}
-        <div className="document-linking-panel__instructions">
-          <strong>
-            Step{" "}
-            {currentStep === "first"
-              ? "1"
-              : currentStep === "second"
-              ? "2"
-              : "3"}
-            :
-          </strong>{" "}
-          {getStepInstruction()}
-        </div>
+      {/* Instructions */}
+      <div className="document-linking-panel__instruction">
+        <span className="document-linking-panel__step-label">
+          Step{" "}
+          {currentStep === "first" ? "1" : currentStep === "second" ? "2" : "3"}
+          :
+        </span>{" "}
+        {getStepInstruction()}
+      </div>
 
-        {/* Progress indicators */}
-        <div className="document-linking-panel__progress">
-          <div
-            className={`document-linking-panel__progress-bar ${
-              currentStep !== "first"
-                ? "document-linking-panel__progress-bar--active"
-                : "document-linking-panel__progress-bar--inactive"
-            }`}
-          />
-          <div
-            className={`document-linking-panel__progress-bar ${
-              currentStep === "confirm"
-                ? "document-linking-panel__progress-bar--active"
-                : "document-linking-panel__progress-bar--inactive"
-            }`}
-          />
-        </div>
+      {/* Progress indicators */}
+      <div className="document-linking-panel__progress">
+        <div
+          className={`document-linking-panel__progress-dot ${
+            firstSelection ? "active" : ""
+          }`}
+        />
+        <div
+          className={`document-linking-panel__progress-dot ${
+            secondSelection ? "active" : ""
+          }`}
+        />
+      </div>
 
-        {/* Selections display */}
-        {firstSelection && (
-          <div className="document-linking-panel__selection">
-            <div className="document-linking-panel__selection-header">
+      {/* Selections display */}
+      {firstSelection && (
+        <div className="document-linking-panel__selection">
+          <div className="document-linking-panel__selection-header">
+            <span>
               ✓ First: {getDocumentTitle(firstSelection.documentId)}
               {firstSelection.elements.length > 1 && (
                 <span className="document-linking-panel__element-count">
                   ({firstSelection.elements.length} elements)
                 </span>
               )}
-            </div>
-            <div className="document-linking-panel__selection-preview">
-              "{getSelectionPreview(firstSelection)}"
-            </div>
+            </span>
           </div>
-        )}
+          <div className="document-linking-panel__selection-preview">
+            "{getSelectionPreview(firstSelection)}"
+          </div>
+        </div>
+      )}
 
-        {secondSelection && (
-          <div className="document-linking-panel__selection">
-            <div className="document-linking-panel__selection-header">
+      {secondSelection && (
+        <div className="document-linking-panel__selection">
+          <div className="document-linking-panel__selection-header">
+            <span>
               ✓ Second: {getDocumentTitle(secondSelection.documentId)}
               {secondSelection.elements.length > 1 && (
                 <span className="document-linking-panel__element-count">
                   ({secondSelection.elements.length} elements)
                 </span>
               )}
-            </div>
-            <div className="document-linking-panel__selection-preview">
-              "{getSelectionPreview(secondSelection)}"
-            </div>
+            </span>
           </div>
-        )}
-
-        {/* Info message for second step */}
-        {currentStep === "second" && (
-          <div className="document-linking-panel__info">
-            💡 You can select text from{" "}
-            {documents.length > 1 ? "any document" : "the same document"} or
-            save this as a partial link
+          <div className="document-linking-panel__selection-preview">
+            "{getSelectionPreview(secondSelection)}"
           </div>
-        )}
-
-        {/* Description input for confirmation step or second step (for partial saves) */}
-        {(currentStep === "confirm" || currentStep === "second") && (
-          <div className="document-linking-panel__description">
-            <label className="document-linking-panel__description-label">
-              Description (optional):
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe this relationship..."
-              className="document-linking-panel__description-textarea"
-            />
-          </div>
-        )}
-
-        {/* Action buttons */}
-        <div className="document-linking-panel__actions">
-          {currentStep === "confirm" && isAuthenticated && (
-            <button
-              onClick={handleSaveLink}
-              className="document-linking-panel__save-button"
-            >
-              <CheckIcon sx={{ fontSize: "16px" }} />
-              Save Link
-            </button>
-          )}
-
-          {/* Partial save button */}
-          {currentStep === "second" && isAuthenticated && firstSelection && (
-            <button
-              onClick={handleSavePartialLink}
-              className="document-linking-panel__save-button"
-              style={{ backgroundColor: "#16A085" }}
-            >
-              <AddIcon sx={{ fontSize: "16px" }} />
-              Save as Partial Link
-            </button>
-          )}
-
-          {(firstSelection || secondSelection) && (
-            <button
-              onClick={handleReset}
-              className="document-linking-panel__reset-button"
-            >
-              Reset Selections
-            </button>
-          )}
-
-          {!isAuthenticated && (
-            <div className="document-linking-panel__login-notice">
-              Login required to save links
-            </div>
-          )}
         </div>
+      )}
+
+      {/* Info message for second step */}
+      {currentStep === "second" && (
+        <div className="document-linking-panel__info">
+          💡 You can select text from{" "}
+          {documents.length > 1 ? "any document" : "the same document"} or save
+          this as a partial link
+        </div>
+      )}
+
+      {/* Description input for confirmation step or second step (for partial saves) */}
+      {(currentStep === "confirm" || currentStep === "second") && (
+        <div className="document-linking-panel__description">
+          <label className="document-linking-panel__description-label">
+            Intertext Link Title:
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe this relationship..."
+            className="document-linking-panel__description-textarea"
+          />
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="document-linking-panel__actions">
+        {currentStep === "confirm" && isAuthenticated && (
+          <button
+            onClick={handleSaveLink}
+            className="document-linking-panel__save-button"
+          >
+            <CheckIcon sx={{ fontSize: "16px" }} />
+            Save Link
+          </button>
+        )}
+
+        {/* Partial save button */}
+        {currentStep === "second" && isAuthenticated && firstSelection && (
+          <button
+            onClick={handleSavePartialLink}
+            className="document-linking-panel__save-button"
+            style={{ backgroundColor: "#16A085" }}
+          >
+            <AddIcon sx={{ fontSize: "16px" }} />
+            Save as Partial Link
+          </button>
+        )}
+
+        {(firstSelection || secondSelection) && (
+          <button
+            onClick={handleReset}
+            className="document-linking-panel__reset-button"
+          >
+            Reset Selections
+          </button>
+        )}
+
+        {!isAuthenticated && (
+          <div className="document-linking-panel__login-notice">
+            Login required to save links
+          </div>
+        )}
       </div>
-    </>
+    </div>,
+    document.body
   );
 };
 

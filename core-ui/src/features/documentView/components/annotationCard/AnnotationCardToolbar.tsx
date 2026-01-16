@@ -8,7 +8,14 @@ import {
   MoreVert,
   Link as LinkIcon,
 } from "@mui/icons-material";
-import { Menu, MenuItem, Chip, Tooltip, Avatar } from "@mui/material";
+import {
+  Menu,
+  MenuItem,
+  Chip,
+  Tooltip,
+  Avatar,
+  IconButton,
+} from "@mui/material";
 import {
   RootState,
   upvoteAnnotations,
@@ -156,24 +163,38 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
             maxWidth: "calc(100% - 24px)",
           }}
         >
-          <button
-            title="Upvote"
-            onClick={handleUpvote}
-            disabled={hasUserUpvoted}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: hasUserUpvoted ? "not-allowed" : "pointer",
-              color: hasUserUpvoted ? "#aaa" : "#34A853",
-              opacity: hasUserUpvoted ? 0.5 : 1,
-              pointerEvents: hasUserUpvoted ? "none" : "auto",
-              padding: "4px",
-              borderRadius: "4px",
-              transition: "all 0.2s ease",
+          <Tooltip
+            title={
+              hasUserUpvoted ? "You've already liked this" : "Like this comment"
+            }
+            arrow
+            placement="top"
+            slotProps={{
+              popper: {
+                sx: {
+                  zIndex: 99999,
+                },
+              },
             }}
           >
-            <ThumbUp sx={{ fontSize: "1rem" }} />
-          </button>
+            <span style={{ display: "inline-flex" }}>
+              <IconButton
+                onClick={hasUserUpvoted ? undefined : handleUpvote}
+                disabled={hasUserUpvoted}
+                size="small"
+                sx={{
+                  color: hasUserUpvoted ? "#aaa" : "#34A853",
+                  "&:hover": {
+                    backgroundColor: hasUserUpvoted
+                      ? "transparent"
+                      : "rgba(0, 0, 0, 0.04)",
+                  },
+                }}
+              >
+                <ThumbUp sx={{ fontSize: "1rem" }} />
+              </IconButton>
+            </span>
+          </Tooltip>
 
           <Tooltip
             title={
