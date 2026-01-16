@@ -9,19 +9,21 @@ import { SearchResultsApp } from "@features/search";
 import { AdminPanel } from "./features/admin";
 import { JoinClassroomPage } from "./features/admin/components";
 import { useAuth } from "@/hooks/useAuthContext";
-import { LinkViewPage} from '@features/linkView'
+import { LinkViewPage } from "@features/linkView";
 import LandingPage from "./components/LandingPage";
 import GetStartedPage from "./components/GetStartedPage";
 import DocumentElementViewer from "./features/canonicalLink/documentElementView";
 import AboutPage from "./components/AboutPage";
+import IntertextLinksGallery from "./features/linkView/IntertextLinksGallery";
 
 // Main Routes component
 const RouterSwitchBoard: React.FC = () => {
   const { user } = useAuth();
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} /> {/* Replace CollectionsView */}
-      <Route path="/collections" element={<CollectionsView />} /> {/* Move collections here */}
+      <Route path="/" element={<LandingPage />} />{" "}
+      <Route path="/collections" element={<CollectionsView />} />{" "}
+      <Route path="/intertext-links" element={<IntertextLinksGallery />} />
       <Route path="/get-started" element={<GetStartedPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/join-classroom" element={<JoinClassroomPage />} />

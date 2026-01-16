@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from routers.auth_utils import get_session_user
 from database import get_db
 from models.models import User, Group
 
@@ -13,7 +14,6 @@ def get_current_user_sync(
     db: Session = Depends(get_db)
 ) -> User:
     """Get the current authenticated user from session (sync version)."""
-    from routers.auth import get_session_user
     
     session_data = get_session_user(request)
     

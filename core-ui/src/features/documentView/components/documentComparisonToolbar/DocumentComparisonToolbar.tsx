@@ -393,50 +393,6 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
           </Button>
         </Box>
       )}
-
-      {/* Linking Mode Hint */}
-      {isLinkingModeActive && (
-        <Box
-          sx={{
-            padding: 1.5,
-            backgroundColor: "info.light",
-            color: "info.contrastText",
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            fontSize: "0.875rem",
-            flexWrap: isExtraSmall ? "wrap" : "nowrap",
-          }}
-        >
-          <LinkIcon fontSize="small" />
-          <span>
-            {isExtraSmall ? (
-              <>
-                💡 <strong>Linking Mode:</strong> Select text to create links
-              </>
-            ) : isSmall ? (
-              <>
-                💡 <strong>Linking Mode:</strong> Select text to link passages.
-                Save with one or two selections.
-              </>
-            ) : (
-              <>
-                💡 <strong>Linking Mode Active:</strong> Select text to create a
-                link. You can link text within the same document, between
-                documents, or save a partial link with just one selection to
-                complete later. Right-click linked text to navigate.
-              </>
-            )}
-          </span>
-          <Button
-            size="small"
-            onClick={() => setIsLinkingModeActive(false)}
-            sx={{ marginLeft: "auto", color: "inherit", flexShrink: 0 }}
-          >
-            {isExtraSmall ? "Exit" : "Exit Linking Mode"}
-          </Button>
-        </Box>
-      )}
     </Box>
   );
 };
