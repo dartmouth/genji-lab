@@ -55,10 +55,8 @@ class AnnotationService(BaseService[AnnotationModel]):
             if isinstance(target, list):
                 for sub_target in target:
                     sub_target.id = self.generate_target_id(db)
-                    sub_target.creator_id = user.id
             else:
                 target.id = self.generate_target_id(db)
-                target.creator_id = user.id
     
     # ==================== CRUD Operations ====================
     
@@ -255,7 +253,6 @@ class AnnotationService(BaseService[AnnotationModel]):
         
         for target in targets_to_add:
             target["id"] = self.generate_target_id(db)
-            target["creator_id"] = user.id
         
         db_annotation.target = [*db_annotation.target, *targets_to_add]
         db_annotation.modified = datetime.now()
