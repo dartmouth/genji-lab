@@ -1,12 +1,10 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from database import get_db
-from models.models import Role as RoleModel
 from schemas.roles import Role
+from services.role_service import role_service
 
 router = APIRouter(
     prefix="/api/v1/roles",
@@ -14,29 +12,21 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 @router.get("/", response_model=List[Role])
-async def read_roles(
-    skip: int = 0, 
-    limit: int = 100, 
-    db: AsyncSession = Depends(get_db)
+def read_roles(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
 ):
-    """
-    Retrieve all roles sorted alphabetically by name
-    """
-    query = select(RoleModel).order_by(RoleModel.name).offset(skip).limit(limit)
-    
-    result = db.execute(query)
-    roles = result.scalars().all()
-    return roles
+    """Retrieve all roles sorted alphabetically by name."""
+    return role_service.list(db, skip=skip, limit=limit)
+
 
 @router.get("/{role_id}", response_model=Role)
-async def read_role(role_id: int, db: AsyncSession = Depends(get_db)):
-    """
-    Get a specific role by ID
-    """
-    query = select(RoleModel).filter(RoleModel.id == role_id)
-    result = db.execute(query)
-    role = result.scalar_one_or_none()
-    if role is None:
-        raise HTTPException(status_code=404, detail="Role not found")
-    return role
+def read_role(
+    role_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get a specific role by ID."""
+    return role_service.get_by_id(db, role_id)

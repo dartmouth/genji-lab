@@ -28,8 +28,7 @@ services:
   #   build:
   #     context: ./postgres
   #     dockerfile: Dockerfile
-  #   # platform: linux/arm64
-  #   container_name: postgres-pgroonga
+  #   #platform: linux/arm64
   #   environment:
   #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
   #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -62,7 +61,7 @@ services:
   #   build:
   #     context: ./api
   #     dockerfile: Dockerfile
-  #   platform: linux/arm64
+  #   #platform: linux/arm64
   #   environment:
   #     DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
   #     ENVIRONMENT: development
@@ -70,7 +69,7 @@ services:
   #   command: python seed_dev_admin.py
   #   volumes:
   #     - ./api:/app
-  #     # - ./seed_data:/app/seed_data  # Mount directory for sample files
+  #     - ./seed_data:/app/seed_data  # Mount directory for sample files
   #   depends_on:
   #     migrations:
   #       condition: service_completed_successfully

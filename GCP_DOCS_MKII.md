@@ -153,7 +153,7 @@ export TAG=v1.0.0
 ```bash
 gcloud builds submit \
   --tag ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/postgres:${TAG} \
-  --dockerfile docker/postgres/Dockerfile \
+  --dockerfile postgres/Dockerfile \
   .
 ```
 
@@ -168,7 +168,7 @@ gcloud builds submit \
 ```bash
 gcloud builds submit \
   --tag ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/migrations:${TAG} \
-  --dockerfile docker/migrations/Dockerfile \
+  --dockerfile api/Dockerfile.migrations \
   .
 ```
 
@@ -177,7 +177,7 @@ gcloud builds submit \
 ```bash
 gcloud builds submit \
   --tag ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/api:${TAG} \
-  --dockerfile docker/api/Dockerfile \
+  --dockerfile api/Dockerfile \
   .
 ```
 
@@ -186,7 +186,7 @@ gcloud builds submit \
 ```bash
 gcloud builds submit \
   --tag ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/ui:${TAG} \
-  --dockerfile docker/ui/Dockerfile \
+  --dockerfile ui/Dockerfile \
   .
 ```
 
@@ -263,7 +263,7 @@ Edit each manifest file to point to your Artifact Registry images [1]:
 cd manifests/
 ```
 
-In `postgres.yml`, `migrations-job.yml`, `api.yml`, and `ui.yml`, update the `image:` field:
+In `postgres.yml`, `migrations-job.yml`, `api.yml`, and `ui.yml`, update the `image:` field using your preferred command line editor (e.g. vim, nano):
 
 ```yaml
 image: <REGION>-docker.pkg.dev/<PROJECT_ID>/genji-lab-repo/<IMAGE_NAME>:<TAG>
