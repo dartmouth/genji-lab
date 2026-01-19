@@ -19,3 +19,18 @@ class SiteSettingsResponse(SiteSettingsBase):
     
     class Config:
         from_attributes = True
+
+class CollectionMetadataFieldBase(BaseModel):
+    key: str
+    label: str
+    required: bool = False
+
+class CollectionMetadataField(CollectionMetadataFieldBase):
+    pass
+
+class CollectionMetadataFieldCreate(CollectionMetadataFieldBase):
+    pass
+
+
+class CollectionMetadataFieldUpdate(CollectionMetadataFieldBase):
+    pass

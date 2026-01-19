@@ -4,10 +4,11 @@ import base64
 import io
 from typing import Optional, Dict, Any
 from datetime import datetime
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from PIL import Image
-
+from typing import List
 from models.models import SiteSettings, User
 from services.base_service import BaseService
 
@@ -176,9 +177,151 @@ class SiteSettingsService(BaseService[SiteSettings]):
         db.refresh(new_settings)
         
         return new_settings
-    
+    def get_metadata_schema(self, db: Session) -> List[Dict[str, Any]]:
+        """
+        Get the collection metadata schema from site settings.
+        
+        Returns an empty list if no schema is configured.
+        Raises HTTPException 404 if site settings not found.
+        """
+        from models.models import SiteSettings
+        
+        site_settings = self._get_current_settings_or_404(db)
+        if not site_settings:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Site settings not found"
+            )
+        
+        return site_settings.collection_metadata_schema or []
     # ==================== Query Operations ====================
-    
+    def update_metadata_schema(
+        self, 
+        db: Session, 
+        schema: List[Dict[str, Any]],
+        user_id: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Update the collection metadata schema in site settings.
+        
+        Schema format:
+        [
+            {
+                "key": "synopsis",
+                "label": "Synopsis",
+                "required": true
+            },
+            ...
+        ]
+        
+        Raises HTTPException 404 if site settings or user not found.
+        Raises HTTPException 400 if schema validation fails.
+        """
+        from models.models import SiteSettings
+        
+        # Verify user exists
+        self._verify_user_exists(db, user_id)
+        
+        # Validate schema structure
+        self._validate_metadata_schema(schema)
+        
+        # Get or create site settings
+        site_settings = db.execute(
+            select(SiteSettings).limit(1)
+        ).scalar_one_or_none()
+        
+        if not site_settings:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Site settings not found"
+            )
+        
+        site_settings.collection_metadata_schema = schema
+        site_settings.updated_by_id = user_id
+        site_settings.updated_at = datetime.now()
+        
+        db.commit()
+        db.refresh(site_settings)
+        
+        return site_settings.collection_metadata_schema
+
+    def add_metadata_field(
+        self,
+        db: Session,
+        field: Dict[str, Any],
+        user_id: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Add a new field to the collection metadata schema.
+        
+        Raises HTTPException 400 if field with same key already exists.
+        """
+        current_schema = self.get_metadata_schema(db)
+        
+        # Check for duplicate key
+        if any(f.get('key') == field.get('key') for f in current_schema):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Metadata field with key '{field.get('key')}' already exists"
+            )
+        
+        current_schema.append(field)
+        return self.update_metadata_schema(db, current_schema, user_id)
+
+    def update_metadata_field(
+        self,
+        db: Session,
+        field_key: str,
+        updated_field: Dict[str, Any],
+        user_id: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Update a specific field in the collection metadata schema.
+        
+        Raises HTTPException 404 if field not found.
+        """
+        current_schema = self.get_metadata_schema(db)
+        
+        # Find and update the field
+        field_found = False
+        for i, field in enumerate(current_schema):
+            if field.get('key') == field_key:
+                current_schema[i] = updated_field
+                field_found = True
+                break
+        
+        if not field_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Metadata field with key '{field_key}' not found"
+            )
+        
+        return self.update_metadata_schema(db, current_schema, user_id)
+
+    def delete_metadata_field(
+        self,
+        db: Session,
+        field_key: str,
+        user_id: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Delete a field from the collection metadata schema.
+        
+        Raises HTTPException 404 if field not found.
+        """
+        current_schema = self.get_metadata_schema(db)
+        
+        # Filter out the field
+        new_schema = [f for f in current_schema if f.get('key') != field_key]
+        
+        if len(new_schema) == len(current_schema):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Metadata field with key '{field_key}' not found"
+            )
+        
+        return self.update_metadata_schema(db, new_schema, user_id)
+
     def get_settings(self, db: Session) -> SiteSettings:
         """Get current site settings or return defaults."""
         settings = self._get_current_settings(db)
