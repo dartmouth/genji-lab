@@ -71,7 +71,7 @@ gcloud config set project <YOUR_PROJECT_ID>
 ### 2.1 Clone genji-lab
 
 ```bash
-git clone git@github.com:dartmouth/genji-lab.git
+git clone https://github.com/dartmouth/genji-lab.git
 cd genji-lab
 ```
 
