@@ -48,6 +48,9 @@ import { useAppSelector } from "@store/hooks";
 import { selectAllDocumentCollections, fetchDocumentCollections } from "@store";
 
 import axios, { AxiosInstance } from "axios";
+
+import { useCollectionMetadata, CollectionMetadataForm } from "./CollectionMetadataForm";
+
 const api: AxiosInstance = axios.create({
   baseURL: "/api/v1",
   timeout: 10000,
@@ -61,6 +64,7 @@ interface SubTabPanelProps {
 }
 
 // Helper function to display user name
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getUserDisplayName = (user: any) => {
   if (user.first_name || user.last_name) {
     return `${user.first_name || ""} ${user.last_name || ""}`.trim();
@@ -136,7 +140,7 @@ const StyledForm = styled("form")(({ theme }) => ({
 
 // Modal style
 const modalStyle = {
-  position: "absolute" as "absolute",
+  position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
@@ -218,6 +222,14 @@ const ManageCollections: React.FC = () => {
       username: string;
     };
   }>;
+    const {
+    metadataValues,
+    setMetadataValues,
+    metadataErrors,
+    setMetadataErrors,
+    validateMetadata,
+    resetMetadata,
+  } = useCollectionMetadata();
 
   //fetch collections with user info
   useEffect(() => {
@@ -301,6 +313,7 @@ const ManageCollections: React.FC = () => {
     useState<boolean>(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState<boolean>(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCollectionSelect = async (event: any) => {
     const collectionId = event.target.value;
     setSelectedCollection(collectionId);
@@ -323,6 +336,7 @@ const ManageCollections: React.FC = () => {
           created: stats.created,
           modified: stats.modified,
         });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         //console.error('Failed to fetch collection statistics:', error);
         const errorMessage =
@@ -409,6 +423,7 @@ To confirm, please type the collection name exactly as shown:
         `Collection "${collectionStats.title}" deleted successfully`,
         "success"
       );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.detail ||
@@ -482,81 +497,93 @@ To confirm, please type the collection name exactly as shown:
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    // Prevent double submission
-    if (isCreating) {
-      return;
-    }
+  // Prevent double submission
+  if (isCreating) {
+    return;
+  }
 
-    // Check for real-time validation error
-    if (titleError) {
-      showNotification(titleError, "error");
-      return;
-    }
+  // Check for real-time validation error
+  if (titleError) {
+    showNotification(titleError, "error");
+    return;
+  }
 
-    // Check for duplicate collection names (case-insensitive) as backup
-    const nameExists = documentCollections.some(
-      (c) => c.title.toLowerCase() === formData.title.trim().toLowerCase()
+  // Validate metadata fields
+  if (!validateMetadata()) {
+    showNotification("Please fill in all required metadata fields", "error");
+    return;
+  }
+
+  // Check for duplicate collection names (case-insensitive) as backup
+  const nameExists = documentCollections.some(
+    (c) => c.title.toLowerCase() === formData.title.trim().toLowerCase()
+  );
+
+  if (nameExists) {
+    showNotification("Collection name already exists", "error");
+    return;
+  }
+
+  // Start creation process
+  setIsCreating(true);
+
+  // Clear form immediately to prevent re-submission with same data
+  const submittedData = { ...formData };
+  const submittedMetadata = { ...metadataValues };
+  
+  setFormData({
+    title: "",
+    visibility: "public",
+    text_direction: "ltr",
+    language: "en",
+  });
+  setTitleError("");
+  resetMetadata();
+
+  try {
+    const payload = {
+      title: submittedData.title,
+      visibility: submittedData.visibility,
+      text_direction: submittedData.text_direction,
+      language: submittedData.language,
+      hierarchy: { chapter: 1, paragraph: 2 },
+      collection_metadata: submittedMetadata,
+      created_by_id: user?.id || 1,
+    };
+
+    await dispatch(createDocumentCollection(payload)).unwrap();
+    setSubmitted(true);
+    showNotification(
+      `Collection "${submittedData.title}" created successfully!`,
+      "success"
     );
 
-    if (nameExists) {
-      showNotification("Collection name already exists", "error");
-      return;
-    }
-
-    // Start creation process
-    setIsCreating(true);
-
-    // Clear form immediately to prevent re-submission with same data
-    const submittedData = { ...formData };
-    setFormData({
-      title: "",
-      visibility: "public",
-      text_direction: "ltr",
-      language: "en",
-    });
-    setTitleError("");
-
-    try {
-      const payload = {
-        title: submittedData.title,
-        visibility: submittedData.visibility,
-        text_direction: submittedData.text_direction,
-        language: submittedData.language,
-        hierarchy: { chapter: 1, paragraph: 2 },
-        collection_metadata: {},
-        created_by_id: user?.id || 1,
-      };
-
-      await dispatch(createDocumentCollection(payload)).unwrap();
-      setSubmitted(true);
-      showNotification(
-        `Collection "${submittedData.title}" created successfully!`,
-        "success"
-      );
-
-      // Refresh overview data after creation
-      setTimeout(() => {
-        refreshOverviewData();
-      }, 1000);
-    } catch (error: any) {
-      // If creation fails, restore the form data so user doesn't lose their work
-      setFormData(submittedData);
-      showNotification(
-        `Failed to create collection: ${error.message || "Unknown error"}`,
-        "error"
-      );
-    } finally {
-      // Add a minimum delay to prevent rapid re-submission
-      setTimeout(() => {
-        setIsCreating(false);
-      }, 1000);
-    }
-  };
+    // Refresh overview data after creation
+    setTimeout(() => {
+      refreshOverviewData();
+    }, 1000);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    // If creation fails, restore the form data so user doesn't lose their work
+    setFormData(submittedData);
+    setMetadataValues(submittedMetadata);
+    showNotification(
+      `Failed to create collection: ${error.message || "Unknown error"}`,
+      "error"
+    );
+  } finally {
+    // Add a minimum delay to prevent rapid re-submission
+    setTimeout(() => {
+      setIsCreating(false);
+    }, 1000);
+  }
+};
 
   // Rename functionality handlers
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleRenameCollectionSelect = (event: any) => {
     const collectionId = event.target.value;
     setRenameSelectedCollection(collectionId);
@@ -657,6 +684,7 @@ To confirm, please type the collection name exactly as shown:
   };
 
   // Update visibility functionality handlers
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateVisibilityCollectionSelect = async (event: any) => {
     const collectionId = event.target.value;
     setUpdateVisibilitySelectedCollection(collectionId);
@@ -674,6 +702,7 @@ To confirm, please type the collection name exactly as shown:
           description: collectionData.description,
         });
         setUpdateVisibilityNewVisibility(collectionData.visibility);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         //console.error('Failed to fetch collection details:', error);
         const errorMessage =
@@ -687,6 +716,7 @@ To confirm, please type the collection name exactly as shown:
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateVisibilityNewVisibilityChange = (event: any) => {
     setUpdateVisibilityNewVisibility(event.target.value);
   };
@@ -776,6 +806,7 @@ To confirm, please type the collection name exactly as shown:
       const response = await api.get(`/collections/${collectionId}`);
       const details = response.data;
       setOverviewCollectionDetails(details);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Failed to fetch collection details:", error);
       const errorMessage =
@@ -933,11 +964,14 @@ To confirm, please type the collection name exactly as shown:
                     </TableCell>
                     <TableCell>
                       <Chip
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         label={(collection as any).visibility || "Unknown"}
                         size="small"
                         color={
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           (collection as any).visibility === "public"
                             ? "success"
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             : (collection as any).visibility === "private"
                             ? "error"
                             : "default"
@@ -1340,6 +1374,14 @@ To confirm, please type the collection name exactly as shown:
                 <option value="de">German</option>
               </select>
             </div>
+
+            <CollectionMetadataForm
+              values={metadataValues}
+              onChange={setMetadataValues}
+              errors={metadataErrors}
+              onErrorsChange={setMetadataErrors}
+              disabled={isCreating}
+            />
 
             <button type="submit" disabled={!!titleError || isCreating}>
               {isCreating ? "Creating Collection..." : "Add"}
