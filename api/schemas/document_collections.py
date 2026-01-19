@@ -3,13 +3,18 @@ from pydantic import BaseModel
 from datetime import datetime
 from schemas.users import User
 
+
+class CollectionMetadata(BaseModel):
+    title: Optional[str]
+    content: Optional[str]
+
 class DocumentCollectionBase(BaseModel):
     title: Optional[str] = None
     visibility: Optional[str] = None
     text_direction: Optional[str] = None
     language: Optional[str] = None
     hierarchy: Optional[Dict[str, Any]] = None
-    collection_metadata: Optional[Dict[str, Any]] = None
+    collection_metadata: Optional[Dict[str, CollectionMetadata]] = None
 
 class DocumentCollectionCreate(DocumentCollectionBase):
     created_by_id: int
