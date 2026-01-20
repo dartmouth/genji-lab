@@ -21,7 +21,7 @@ import {
   useAppDispatch,
 } from "@store";
 
-import { CollectionSelect } from "../../shared/CollectionSelect";
+import CollectionSelect from "../../shared/CollectionSelect";
 import { CollectionDetailsCard } from "../../shared/CollectionDetailsCard";
 import { StyledForm } from "../../shared/StyledForm";
 import {

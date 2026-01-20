@@ -24,6 +24,7 @@ class CollectionMetadataFieldBase(BaseModel):
     key: str
     label: str
     required: bool = False
+    type: str
 
 class CollectionMetadataField(CollectionMetadataFieldBase):
     pass

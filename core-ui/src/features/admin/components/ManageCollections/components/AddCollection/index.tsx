@@ -11,10 +11,10 @@ import {
 } from "@store";
 
 import { StyledForm } from "../../shared/StyledForm";
-import {
-  useCollectionMetadata,
-  CollectionMetadataForm,
-} from "../../../CollectionMetadataForm";
+
+import { useCollectionMetadata } from "../CollectionMetadata/hooks/useCollectionMetadata";
+import { CollectionMetadataForm } from "../CollectionMetadata";
+
 import {
   DocumentCollection,
   NotificationState,

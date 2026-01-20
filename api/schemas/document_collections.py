@@ -4,9 +4,13 @@ from datetime import datetime
 from schemas.users import User
 
 
+class Base64Image(BaseModel):
+    mime_type: str
+    img_base64: str
+
 class CollectionMetadata(BaseModel):
     title: Optional[str]
-    content: Optional[Union[str, List[str]]]
+    content: Optional[Dict[str, Union[str, List[str], Base64Image]]]
 
 class DocumentCollectionBase(BaseModel):
     title: Optional[str] = None
@@ -14,7 +18,7 @@ class DocumentCollectionBase(BaseModel):
     text_direction: Optional[str] = None
     language: Optional[str] = None
     hierarchy: Optional[Dict[str, Any]] = None
-    collection_metadata: Optional[List[CollectionMetadata]] = None
+    collection_metadata: Optional[Dict[str, Union[str, List[str], Base64Image]]] = None
 
 class DocumentCollectionCreate(DocumentCollectionBase):
     created_by_id: int

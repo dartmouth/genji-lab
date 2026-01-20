@@ -348,7 +348,7 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         
         # Apply pagination
         query = query.offset(skip).limit(limit)
-        
+
         return db.execute(query).scalars().all()
     
     def update(
