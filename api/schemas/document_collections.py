@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from pydantic import BaseModel
 from datetime import datetime
 from schemas.users import User
@@ -6,7 +6,7 @@ from schemas.users import User
 
 class CollectionMetadata(BaseModel):
     title: Optional[str]
-    content: Optional[str]
+    content: Optional[Union[str, List[str]]]
 
 class DocumentCollectionBase(BaseModel):
     title: Optional[str] = None

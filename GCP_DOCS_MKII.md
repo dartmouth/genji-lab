@@ -153,8 +153,8 @@ export TAG=v1.0.0
 ```bash
 gcloud builds submit \
   --tag ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/postgres:${TAG} \
-  --dockerfile postgres/Dockerfile \
-  .
+  ./postgres
+
 ```
 
 **Why?**
@@ -167,9 +167,9 @@ gcloud builds submit \
 
 ```bash
 gcloud builds submit \
-  --tag ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/migrations:${TAG} \
-  --dockerfile api/Dockerfile.migrations \
-  .
+  --config=cloudbuild-migrations.yaml \
+  --substitutions=_TAG=${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/migrations:${TAG} \
+  ./api
 ```
 
 ### 4.5 Build and push the API image
@@ -177,8 +177,7 @@ gcloud builds submit \
 ```bash
 gcloud builds submit \
   --tag ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/api:${TAG} \
-  --dockerfile api/Dockerfile \
-  .
+  ./api
 ```
 
 ### 4.6 Build and push the UI image
@@ -186,8 +185,7 @@ gcloud builds submit \
 ```bash
 gcloud builds submit \
   --tag ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/ui:${TAG} \
-  --dockerfile ui/Dockerfile \
-  .
+  ./core-ui
 ```
 
 ### 4.7 Verify images were pushed

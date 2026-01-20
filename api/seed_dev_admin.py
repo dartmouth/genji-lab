@@ -115,8 +115,12 @@ def seed_document_collection(db: Session, admin_user: models.User):
             owner_id=admin_user.id,
             hierarchy={},
             collection_metadata={
-                "dev_seed": True,
-                "created_at": datetime.now().isoformat()
+                "synopsis": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer eu finibus nisi, at convallis dui. Phasellus purus sem, dignissim ac eleifend eget, tristique id nunc. Phasellus eu efficitur mauris. Integer pulvinar elit sem, id fringilla mi ullamcorper sit amet. Integer euismod, sapien quis luctus pretium, leo sapien egestas arcu, ultrices varius nunc libero sit amet mauris. Pellentesque varius, magna id malesuada consectetur, tortor ex ornare ante, sit amet cursus lectus arcu ac nibh. Suspendisse non eros eu nunc sagittis lobortis vitae mollis enim. Mauris congue rutrum arcu nec fermentum. Etiam imperdiet velit a nisi varius rhoncus. Sed egestas enim ac.",
+                "character_list": ["Lorem", "Ipsum", "Dolor"],
+                "timeline": "From ye olden days to a while ago",
+                "image_url": "https://en.wikipedia.org/wiki/Python_%28programming_language%29#/media/File:Python-logo-notext.svg"
+
+
             }
         )
         
