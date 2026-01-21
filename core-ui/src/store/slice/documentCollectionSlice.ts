@@ -9,7 +9,7 @@ const api: AxiosInstance = axios.create({
 });
 
 // Types
-export interface DocumentCollection {
+interface DocumentCollection {
   id: number;
   title: string;
   description: string;
@@ -18,6 +18,7 @@ export interface DocumentCollection {
   created: string;
   modified: string;
   document_count?: number;
+  collection_metadata: CollectionMetadata,
   created_by?: {
     id: number;
     first_name?: string;
@@ -60,12 +61,13 @@ interface DocumentCollectionUpdate {
   collection_metadata?: CollectionMetadata;
   modified_by_id?: number;
 }
+import { MetadataValue } from '@/features/admin/components/ManageCollections/components/AddCollection/CollectionMetadataForm/types';
 
 interface CollectionMetadata {
-  [key: string]: string | number | boolean
+  [key: string]: MetadataValue
 }
 
-export type {DocumentCollectionCreate, DocumentCollectionUpdate}
+export type {DocumentCollectionCreate, DocumentCollectionUpdate, DocumentCollection}
 export type {Hierarchy}
 export type {CollectionMetadata}
 

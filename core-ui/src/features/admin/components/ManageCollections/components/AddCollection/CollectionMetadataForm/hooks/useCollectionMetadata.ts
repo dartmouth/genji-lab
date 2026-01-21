@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { MetadataField } from '../types'
+import { MetadataField } from "@admin/components/SiteSettings/types";
+import { MetadataValue, Base64Image } from '@admin/components/ManageCollections/components/AddCollection/CollectionMetadataForm/types'
 
 import axios, { AxiosInstance } from 'axios';
 
@@ -9,7 +10,7 @@ const api: AxiosInstance = axios.create({
 });
 
 export const useCollectionMetadata = () => {
-  const [metadataValues, setMetadataValues] = useState<Record<string, string>>({});
+  const [metadataValues, setMetadataValues] = useState<Record<string, MetadataValue>>({});
   const [metadataErrors, setMetadataErrors] = useState<Record<string, string>>({});
   const [metadataSchema, setMetadataSchema] = useState<MetadataField[]>([]);
 
@@ -30,8 +31,26 @@ export const useCollectionMetadata = () => {
     const errors: Record<string, string> = {};
 
     metadataSchema.forEach((field) => {
-      if (field.required && !metadataValues[field.key]?.trim()) {
-        errors[field.key] = `${field.label} is required`;
+      if (field.required) {
+        const value = metadataValues[field.key];
+        let isEmpty = false;
+
+        switch (field.type) {
+          case 'list':
+            isEmpty = !Array.isArray(value) || value.length === 0;
+            break;
+          case 'image': {
+            const imgValue = value as Base64Image;
+            isEmpty = !imgValue?.img_base64;
+            break;
+          }
+          default:
+            isEmpty = typeof value !== 'string' || !value.trim();
+        }
+
+        if (isEmpty) {
+          errors[field.key] = `${field.label} is required`;
+        }
       }
     });
 
@@ -39,10 +58,21 @@ export const useCollectionMetadata = () => {
     return Object.keys(errors).length === 0;
   };
 
+  const getDefaultValue = (type: MetadataField['type']): MetadataValue => {
+    switch (type) {
+      case 'list':
+        return [];
+      case 'image':
+        return { mime_type: '', img_base64: '' };
+      default:
+        return '';
+    }
+  };
+
   const resetMetadata = () => {
-    const resetValues: Record<string, string> = {};
+    const resetValues: Record<string, MetadataValue> = {};
     metadataSchema.forEach((field) => {
-      resetValues[field.key] = '';
+      resetValues[field.key] = getDefaultValue(field.type);
     });
     setMetadataValues(resetValues);
     setMetadataErrors({});

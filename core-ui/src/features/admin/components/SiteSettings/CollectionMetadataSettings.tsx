@@ -55,7 +55,7 @@ const CollectionMetadataSettings: React.FC = () => {
   const [currentField, setCurrentField] = useState<MetadataField>({
     key: '',
     label: '',
-    type: '',
+    type: 'text',
     required: false
   });
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -119,7 +119,7 @@ const CollectionMetadataSettings: React.FC = () => {
       setCurrentField({
         key: '',
         label: '',
-        type: '',
+        type: 'text',
         required: false
       });
     }
@@ -132,7 +132,7 @@ const CollectionMetadataSettings: React.FC = () => {
     setCurrentField({
       key: '',
       label: '',
-      type: '',
+      type: 'text',
       required: false
     });
     setValidationError(null);

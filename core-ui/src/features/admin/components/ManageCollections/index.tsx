@@ -19,7 +19,7 @@ import { DeleteCollection } from "./components/DeleteCollection";
 import { RenameCollection } from "./components/RenameCollection";
 import { UpdateVisibility } from "./components/UpdateVisibility";
 import { useNotification } from "./hooks/useNotification";
-import { DocumentCollection } from "./types";
+import { DocumentCollection } from "@/store/slice/documentCollectionSlice";
 
 interface SubTabPanelProps {
   children?: React.ReactNode;

@@ -12,11 +12,12 @@ import {
 
 import { StyledForm } from "../../shared/StyledForm";
 
-import { useCollectionMetadata } from "../CollectionMetadata/hooks/useCollectionMetadata";
-import { CollectionMetadataForm } from "../CollectionMetadata";
+import { useCollectionMetadata } from "./CollectionMetadataForm/hooks/useCollectionMetadata";
+import { CollectionMetadataForm } from "./CollectionMetadataForm";
+
+import { DocumentCollection } from "@/store/slice/documentCollectionSlice";
 
 import {
-  DocumentCollection,
   NotificationState,
   CreateCollectionFormData,
 } from "../../types";
@@ -136,14 +137,14 @@ export const AddCollection: React.FC<AddCollectionProps> = ({
     resetMetadata();
 
     try {
-      const payload = {
-        title: submittedData.title,
-        visibility: submittedData.visibility,
-        text_direction: submittedData.text_direction,
-        language: submittedData.language,
-        hierarchy: { chapter: 1, paragraph: 2 },
-        collection_metadata: submittedMetadata,
-        created_by_id: user?.id || 1,
+    const payload = {
+      title: submittedData.title,
+      visibility: submittedData.visibility,
+      text_direction: submittedData.text_direction,
+      language: submittedData.language,
+      hierarchy: { chapter: 1, paragraph: 2 },
+      collection_metadata: submittedMetadata, 
+      created_by_id: user?.id || 1,
       };
 
       await dispatch(createDocumentCollection(payload)).unwrap();

@@ -3,14 +3,19 @@
 /**
  * Basic collection information from the collections list
  */
-export interface DocumentCollection {
-  id: number;
-  title: string;
-  description?: string;
-  created_by?: UserReference;
-  modified_by?: UserReference;
-  visibility?: string;
-}
+// import { CollectionMetadata } from "@/store";
+
+// export interface DocumentCollection {
+//   id: number;
+//   title: string;
+//   description?: string;
+//   created_by?: UserReference;
+//   modified_by?: UserReference;
+//   visibility?: string;
+//   collection_metadata: CollectionMetadata,
+
+// }
+
 
 /**
  * Reference to a user (creator or modifier)
