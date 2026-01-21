@@ -18,6 +18,7 @@ interface DocumentCollection {
   created: string;
   modified: string;
   document_count?: number;
+  text_direction?: string
   collection_metadata: CollectionMetadata,
   created_by?: {
     id: number;
