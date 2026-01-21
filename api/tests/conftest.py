@@ -515,8 +515,47 @@ def annotation_with_nested_targets(
 
 # ==================== Service Fixtures ====================
 
+# Sequence counters for SQLite (PostgreSQL uses database sequences)
+_body_id_counter = 0
+_target_id_counter = 0
+
+
+def reset_sequence_counters():
+    """Reset sequence counters for test isolation."""
+    global _body_id_counter, _target_id_counter
+    _body_id_counter = 0
+    _target_id_counter = 0
+
+
 @pytest.fixture
-def annotation_service():
-    """Create AnnotationService instance for testing."""
+def annotation_service(db_session, monkeypatch):
+    """
+    Create AnnotationService instance configured for SQLite testing.
+    
+    Patches ID generation methods to use simple counters instead of PostgreSQL sequences.
+    """
     from services.annotation_service import AnnotationService
-    return AnnotationService()
+    
+    # Reset counters for test isolation
+    reset_sequence_counters()
+    
+    service = AnnotationService()
+    
+    # Patch the model to use TestAnnotation (service now uses self.model everywhere)
+    service.model = TestAnnotation
+    
+    # Patch ID generation methods to work with SQLite
+    def mock_generate_body_id(db: Session) -> int:
+        global _body_id_counter
+        _body_id_counter += 1
+        return _body_id_counter
+    
+    def mock_generate_target_id(db: Session) -> int:
+        global _target_id_counter
+        _target_id_counter += 1
+        return _target_id_counter
+    
+    monkeypatch.setattr(service, "generate_body_id", mock_generate_body_id)
+    monkeypatch.setattr(service, "generate_target_id", mock_generate_target_id)
+    
+    return service

@@ -73,7 +73,7 @@ class AnnotationService(BaseService[AnnotationModel]):
         self._prepare_targets_for_create(db, annotation.target, user)
         annotation.creator_id = user.id
         
-        db_annotation = AnnotationModel(
+        db_annotation = self.model(
             document_collection_id=annotation.document_collection_id,
             document_id=annotation.document_id,
             document_element_id=annotation.document_element_id,
@@ -111,8 +111,8 @@ class AnnotationService(BaseService[AnnotationModel]):
         """
         query = (
             self.get_base_query(db)
-            .options(joinedload(AnnotationModel.creator))
-            .filter(AnnotationModel.id == annotation_id)
+            .options(joinedload(self.model.creator))
+            .filter(self.model.id == annotation_id)
         )
         query = self.apply_classroom_filter(query, classroom_id)
         
@@ -133,7 +133,7 @@ class AnnotationService(BaseService[AnnotationModel]):
         limit: int = 100
     ) -> List[AnnotationModel]:
         """Get annotations with optional filtering and pagination."""
-        query = self.get_base_query(db).options(joinedload(AnnotationModel.creator))
+        query = self.get_base_query(db).options(joinedload(self.model.creator))
         
         # Apply classroom filtering
         query = self.apply_classroom_filter(query, classroom_id)
@@ -143,14 +143,14 @@ class AnnotationService(BaseService[AnnotationModel]):
             classroom = db.query(Group).filter(Group.id == classroom_id).first()
             if classroom:
                 member_ids = [member.id for member in classroom.members]
-                query = query.filter(AnnotationModel.creator_id.in_(member_ids))
+                query = query.filter(self.model.creator_id.in_(member_ids))
         
         # Apply optional filters
         if motivation:
-            query = query.filter(AnnotationModel.motivation == motivation)
+            query = query.filter(self.model.motivation == motivation)
         
         if document_element_id:
-            query = query.filter(AnnotationModel.document_element_id == document_element_id)
+            query = query.filter(self.model.document_element_id == document_element_id)
         
         # Apply pagination
         query = query.offset(skip).limit(limit)
@@ -171,7 +171,7 @@ class AnnotationService(BaseService[AnnotationModel]):
         """
         query = (
             self.get_base_query(db)
-            .filter(AnnotationModel.id == annotation_id)
+            .filter(self.model.id == annotation_id)
         )
         query = self.apply_classroom_filter(query, classroom_id)
         
@@ -208,7 +208,7 @@ class AnnotationService(BaseService[AnnotationModel]):
         """
         query = (
             self.get_base_query(db)
-            .filter(AnnotationModel.id == annotation_id)
+            .filter(self.model.id == annotation_id)
         )
         query = self.apply_classroom_filter(query, classroom_id)
         
@@ -234,8 +234,8 @@ class AnnotationService(BaseService[AnnotationModel]):
         
         Raises HTTPException 404 if annotation not found.
         """
-        db_annotation = db.query(AnnotationModel).filter(
-            AnnotationModel.id == annotation_id
+        db_annotation = db.query(self.model).filter(
+            self.model.id == annotation_id
         ).first()
         
         if not db_annotation:
@@ -249,7 +249,8 @@ class AnnotationService(BaseService[AnnotationModel]):
                 for t in new_targ
             ]
         else:
-            targets_to_add = [new_targ.model_dump(exclude_none=True)]
+            # new_targ is already a dict from model_dump above
+            targets_to_add = [new_targ]
         
         for target in targets_to_add:
             target["id"] = self.generate_target_id(db)
@@ -276,8 +277,8 @@ class AnnotationService(BaseService[AnnotationModel]):
         Raises HTTPException 404 if annotation or target not found.
         Raises HTTPException 403 if user lacks permission.
         """
-        db_annotation = db.query(AnnotationModel).filter(
-            AnnotationModel.id == annotation_id
+        db_annotation = db.query(self.model).filter(
+            self.model.id == annotation_id
         ).first()
         
         if not db_annotation:
