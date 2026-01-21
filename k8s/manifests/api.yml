@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: us-central1-docker.pkg.dev/genji-483414/genji-images/api:v1
+        image: us-central1-docker.pkg.dev/PROJECT/genji-lab-repo/api:v1.0.0
         env:
         - name: POSTGRES_USER
           valueFrom:
@@ -43,7 +43,7 @@ spec:
             configMapKeyRef:
               name: postgresql-config
               key: POSTGRES_DB
-        - name: DATABASE_URL
+        - name: SQLALCHEMY_DATABASE_URL
           value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgresql:5432/$(POSTGRES_DB)
         ports:
         - containerPort: 8000

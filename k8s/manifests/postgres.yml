@@ -68,7 +68,7 @@ spec:
     spec:
       containers:
       - name: postgresql
-        image: us-central1-docker.pkg.dev/genji-483414/genji-images/postgres:v1
+        image: us-central1-docker.pkg.dev/PROJECT/genji-lab-repo/postgres:v1.0.0
         env:
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
