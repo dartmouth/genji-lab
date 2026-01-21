@@ -53,6 +53,8 @@ const JoinClassroomPage: React.FC = () => {
   const classroomsStatus = useAppSelector(selectPublicFetchStatus);
 
   // Helper function to check if join period is still active
+  // FIXME: type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isJoinPeriodActive = (classroom: any) => {
     if (!classroom?.start_date) return true; // If no start date, assume active
     const now = new Date();
@@ -65,6 +67,8 @@ const JoinClassroomPage: React.FC = () => {
   };
 
   // Helper function to check if classroom period is active
+  // FIXME: type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isClassroomPeriodActive = (classroom: any) => {
     if (!classroom?.start_date || !classroom?.end_date) return true; // If no dates, assume active
     const now = new Date();
@@ -98,6 +102,7 @@ const JoinClassroomPage: React.FC = () => {
         
         const data: InstructorInfo = await response.json();
         setInstructorInfo(data);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         setInstructorError('Unable to load instructor information');
       } finally {

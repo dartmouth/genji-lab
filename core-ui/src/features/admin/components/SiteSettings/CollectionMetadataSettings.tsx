@@ -20,7 +20,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip
+  Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { useAuth } from '@hooks/useAuthContext';
@@ -30,11 +34,9 @@ const api: AxiosInstance = axios.create({
   timeout: 10000,
 });
 
-interface MetadataField {
-  key: string;
-  label: string;
-  required: boolean;
-}
+import { MetadataField } from './types';
+
+
 
 const CollectionMetadataSettings: React.FC = () => {
   const { user } = useAuth();
@@ -53,6 +55,7 @@ const CollectionMetadataSettings: React.FC = () => {
   const [currentField, setCurrentField] = useState<MetadataField>({
     key: '',
     label: '',
+    type: '',
     required: false
   });
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -60,6 +63,7 @@ const CollectionMetadataSettings: React.FC = () => {
   // Load schema on mount
   useEffect(() => {
     loadSchema();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadSchema = async () => {
@@ -68,6 +72,7 @@ const CollectionMetadataSettings: React.FC = () => {
       setError(null);
       const response = await api.get('/site-settings/collection-metadata-schema');
       setSchema(response.data || []);
+      console.log(schema)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Failed to load metadata schema:', err);
@@ -114,6 +119,7 @@ const CollectionMetadataSettings: React.FC = () => {
       setCurrentField({
         key: '',
         label: '',
+        type: '',
         required: false
       });
     }
@@ -126,6 +132,7 @@ const CollectionMetadataSettings: React.FC = () => {
     setCurrentField({
       key: '',
       label: '',
+      type: '',
       required: false
     });
     setValidationError(null);
@@ -266,8 +273,8 @@ const CollectionMetadataSettings: React.FC = () => {
               <TableRow>
                 <TableCell>Key</TableCell>
                 <TableCell>Label</TableCell>
-                <TableCell>Type</TableCell>
                 <TableCell>Required</TableCell>
+                <TableCell>Type</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -284,6 +291,9 @@ const CollectionMetadataSettings: React.FC = () => {
                     ) : (
                       <Chip label="Optional" size="small" variant="outlined" />
                     )}
+                  </TableCell>
+                  <TableCell>
+                    {field.type}
                   </TableCell>
                   <TableCell align="right">
                     <IconButton
@@ -341,7 +351,21 @@ const CollectionMetadataSettings: React.FC = () => {
             helperText="Display name shown to users"
             sx={{ mb: 2 }}
           />
-
+          <FormControl fullWidth>
+            <InputLabel id="demo-simple-select-label">Type</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              value={currentField.type}
+              label="Age"
+              onChange={(e) => handleFieldChange('type', e.target.value.toLowerCase())}
+            >
+              <MenuItem value={'text'}>Short Text (text)</MenuItem>
+              <MenuItem value={'textarea'}>Long Text (textarea)</MenuItem>
+              <MenuItem value={'list'}>List of Items (list)</MenuItem>
+              <MenuItem value={'image'}>Uploaded Image (image)</MenuItem>
+            </Select>
+          </FormControl>
           <FormControlLabel
             control={
               <Checkbox

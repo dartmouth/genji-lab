@@ -18,8 +18,8 @@ import { CloudUpload, Delete, Image as ImageIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { fetchSiteSettings, updateSiteSettings, uploadSiteLogo, removeSiteLogo, uploadSiteFavicon, removeSiteFavicon, clearError } from '@store/slice/siteSettingsSlice';
 import { useAuth } from '@hooks/useAuthContext';
-import { updateFavicon, loadFaviconFromAPI } from '../../../utils/favicon';
-import CASAuthSettings from './CASAuthSettings';
+import { updateFavicon, loadFaviconFromAPI } from '../../../../utils/favicon';
+import CASAuthSettings from '../CASAuthSettings';
 import CollectionMetadataSettings from './CollectionMetadataSettings';
 
 // TabPanel for the sub-tabs
