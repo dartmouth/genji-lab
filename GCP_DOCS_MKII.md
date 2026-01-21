@@ -1,8 +1,10 @@
-# Deploying genji-lab to Google Cloud Platform (GKE)
+# Deploying genji-lab to Google Cloud Platform (GCP)
 
 ## Introduction
 
 This guide walks you through deploying **genji-lab** to Google Kubernetes Engine (GKE). While genji-lab can run in various environments, this guide focuses on containerized deployment using Kubernetes—a powerful system for running applications at scale.
+
+Assuming you have a GCP Project with billing enabled, these steps should take less than an hour. Allow more time if you work on the command line infrequently.
 
 ### What We're Actually Doing (The Big Picture)
 
@@ -18,7 +20,7 @@ Deploying a containerized application involves several key concepts:
 
 ### genji-lab Architecture
 
-genji-lab consists of four components [1]:
+genji-lab consists of four components :
 
 | Component | Purpose |
 |-----------|---------|
@@ -27,21 +29,22 @@ genji-lab consists of four components [1]:
 | **API** | Backend service that handles business logic |
 | **UI** | Frontend application served via nginx |
 
-The UI includes an nginx configuration that proxies `/api/v1/` requests to the backend, so users access everything through a single URL [1].
+The UI includes an nginx configuration that proxies `/api/v1/` requests to the backend, so users access everything through a single URL .
 
 ---
 
 ## Prerequisites
 
-- A Google Cloud Platform account with billing enabled
+- A [Google Cloud Platform (GCP) account](https://cloud.google.com/cloud-console) with billing enabled
 - A project created in GCP
 - Basic familiarity with the command line
 
+__NOTE:__ If you get stuck, take a look at the Useful Commands Reference at the end of these docs.
 ---
 
 ## Part 1: Set Up Your Environment
 
-We'll use **Google Cloud Shell**, a browser-based terminal that comes pre-configured with all the tools we need [1].
+We'll use **Google Cloud Shell**, a browser-based terminal that comes pre-configured with all the tools we need .
 
 ### 1.1 Access Cloud Shell
 
@@ -58,11 +61,13 @@ We'll use **Google Cloud Shell**, a browser-based terminal that comes pre-config
 gcloud config get-value project
 ```
 
-This confirms which GCP project will be billed and where resources will be created. If it shows the wrong project, run:
+This confirms which GCP project will be billed and where resources will be created. If it shows the wrong project or no project at all, run:
 
 ```bash
 gcloud config set project <YOUR_PROJECT_ID>
 ```
+
+The project ID will have the format `<NAME>-<GOOGLE-GENERATED-ID-NUMBER>`
 
 ---
 
@@ -86,7 +91,7 @@ cd genji-lab
 ls manifests/
 ```
 
-You should see [1]:
+You should see :
 ```
 postgres.yml
 migrations-job.yml
@@ -108,9 +113,15 @@ Before Kubernetes can run our application, we need somewhere to store our contai
 gcloud services enable artifactregistry.googleapis.com
 ```
 
+After running the enable command, you should see a return a message like, "Operation "operations/acat.XXXXXXX" finished successfully.
+
 **Why?** GCP services must be explicitly enabled before use. This "turns on" Artifact Registry for your project.
 
 ### 3.2 Create a repository
+
+A repository is like a folder in the Artifact Registry that holds data. In the following command, replace `<REGION>` with your preferred region (e.g., `us-central1`, `europe-west1`). Choose a region close to your anticipated users for better performance.
+
+Make a note of the selected region -- you will need it again later!
 
 ```bash
 gcloud artifacts repositories create genji-lab-repo \
@@ -119,7 +130,6 @@ gcloud artifacts repositories create genji-lab-repo \
   --description="Container images for genji-lab"
 ```
 
-Replace `<REGION>` with your preferred region (e.g., `us-central1`, `europe-west1`). Choose a region close to your users for better performance.
 
 **Why?** This creates a "folder" in Artifact Registry specifically for Docker images. You can have multiple repositories for different projects.
 
@@ -138,6 +148,8 @@ gcloud services enable cloudbuild.googleapis.com
 **Why?** Cloud Build is Google's managed service for building container images. It runs the build on Google's infrastructure, which is faster and more reliable than building in Cloud Shell (which has limited resources and can time out).
 
 ### 4.2 Set environment variables for convenience
+
+Replace the `<REGION>` placeholder in the following command with the region you selected in 3.2.
 
 ```bash
 export PROJECT_ID=$(gcloud config get-value project)
@@ -167,7 +179,7 @@ gcloud builds submit \
 
 ```bash
 gcloud builds submit \
-  --config=cloudbuild-migrations.yaml \
+  --config=k8s/cloudbuild-migrations.yaml \
   --substitutions=_TAG=${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/migrations:${TAG} \
   ./api
 ```
@@ -220,6 +232,8 @@ gcloud compute zones list
 
 ### 5.3 Create the cluster
 
+In the following command, replace `<ZONE>` with your chosen zone (e.g., `us-central1-a`).
+
 ```bash
 gcloud container clusters create genji-lab-cluster \
   --zone <ZONE> \
@@ -227,17 +241,17 @@ gcloud container clusters create genji-lab-cluster \
   --machine-type e2-medium
 ```
 
-Replace `<ZONE>` with your chosen zone (e.g., `us-central1-a`).
-
-**Why?** This creates two virtual machines that will run your containers [1]. The `e2-medium` machine type provides a balance of CPU and memory suitable for small deployments. This process takes 3-5 minutes.
+**Why?** This creates two virtual machines that will run your containers . The `e2-medium` machine type provides a balance of CPU and memory suitable for small deployments. This process takes 3-5 minutes.
 
 ### 5.4 Get credentials for kubectl
+
+In the following command, replace `<ZONE>` with your chosen zone (e.g., `us-central1-a`).
 
 ```bash
 gcloud container clusters get-credentials genji-lab-cluster --zone <ZONE>
 ```
 
-**Why?** `kubectl` is the command-line tool for interacting with Kubernetes [1]. This command configures `kubectl` to talk to your new cluster by downloading authentication credentials.
+**Why?** `kubectl` is the command-line tool for interacting with Kubernetes . This command configures `kubectl` to talk to your new cluster by downloading authentication credentials.
 
 ### 5.5 Verify the connection
 
@@ -245,7 +259,7 @@ gcloud container clusters get-credentials genji-lab-cluster --zone <ZONE>
 kubectl get nodes
 ```
 
-**Why?** This confirms `kubectl` can communicate with your cluster. You should see two nodes with status `Ready` [1].
+**Why?** This confirms `kubectl` can communicate with your cluster. You should see two nodes with status `Ready` .
 
 ---
 
@@ -255,7 +269,7 @@ The manifest files in `manifests/` describe your desired deployment, but they ne
 
 ### 6.1 Update image references
 
-Edit each manifest file to point to your Artifact Registry images [1]:
+Edit each manifest file to point to your Artifact Registry images :
 
 ```bash
 cd manifests/
@@ -266,6 +280,7 @@ In `postgres.yml`, `migrations-job.yml`, `api.yml`, and `ui.yml`, update the `im
 ```yaml
 image: <REGION>-docker.pkg.dev/<PROJECT_ID>/genji-lab-repo/<IMAGE_NAME>:<TAG>
 ```
+__NOTE__: If you used a name other than `genji-lab-repo` when you created the Artifact Registry Repository in Step 3.2, substitute that name for `genji-lab-repo` in the above pattern.
 
 For example, in `api.yml`:
 ```yaml
@@ -279,7 +294,7 @@ spec:
 
 ### 6.2 Configure database credentials
 
-Open `postgres.yml` and locate the Secret resource. Update the password [1]:
+Open `postgres.yml` and locate the Secret resource. Update the password :
 
 ```yaml
 apiVersion: v1
@@ -291,11 +306,13 @@ stringData:
   POSTGRES_PASSWORD: <CHOOSE_A_SECURE_PASSWORD>
 ```
 
-**Why?** Secrets store sensitive information separately from your application code. Kubernetes makes this value available to containers that need it without exposing it in logs or environment dumps.
+**Why?** Secrets store sensitive information separately from your application code. Kubernetes makes this value available to containers that need it without exposing it in logs or environment dumps. 
+
+Kubernetes Secrets are not infallible protection for sensitive data. Ensure that this is sufficient security for you and/or your organization before releasing the application publicly.
 
 ### 6.3 Verify the ConfigMap
 
-In `postgres.yml`, check the ConfigMap has appropriate values [1]:
+In `postgres.yml`, check the ConfigMap has appropriate values :
 
 ```yaml
 apiVersion: v1
@@ -311,7 +328,7 @@ data:
 
 ### 6.4 Understand environment variable references
 
-The API and migrations use this pattern to build the database connection string [1]:
+The API and migrations use this pattern to build the database connection string :
 
 ```yaml
 env:
@@ -325,7 +342,7 @@ env:
 
 ## Part 7: Deploy to Kubernetes
 
-Now we'll apply our manifests to the cluster. Order matters here—the database must be running before anything tries to use it [1].
+Now we'll apply our manifests to the cluster. Order matters here—the database must be running before anything tries to use it .
 
 ### 7.1 Deploy PostgreSQL
 
@@ -345,7 +362,7 @@ kubectl apply -f postgres.yml
 kubectl wait --for=condition=ready pod -l app=postgresql --timeout=120s
 ```
 
-**Why?** The database container needs time to start up and initialize [1]. The `wait` command blocks until the pod is healthy, ensuring we don't proceed prematurely.
+**Why?** The database container needs time to start up and initialize . The `wait` command blocks until the pod is healthy, ensuring we don't proceed prematurely.
 
 ### 7.3 Run database migrations
 
@@ -353,7 +370,7 @@ kubectl wait --for=condition=ready pod -l app=postgresql --timeout=120s
 kubectl apply -f migrations-job.yml
 ```
 
-**What this does:** Creates a **Job**—a container that runs once and exits (unlike a Deployment, which keeps containers running forever). The migration job connects to PostgreSQL and creates the necessary tables and schema [1].
+**What this does:** Creates a **Job**—a container that runs once and exits (unlike a Deployment, which keeps containers running forever). The migration job connects to PostgreSQL and creates the necessary tables and schema .
 
 ### 7.4 Wait for migrations to complete
 
@@ -367,7 +384,7 @@ kubectl wait --for=condition=complete job/db-migrations --timeout=120s
 kubectl logs job/db-migrations
 ```
 
-**Why?** Checking logs confirms the migrations ran successfully [1]. Look for success messages; if you see errors, you'll need to troubleshoot before proceeding.
+**Why?** Checking logs confirms the migrations ran successfully . Look for success messages; if you see errors, you'll need to troubleshoot before proceeding.
 
 ### 7.6 Deploy the API
 
@@ -383,7 +400,7 @@ kubectl apply -f api.yml
 kubectl apply -f ui.yml
 ```
 
-**What this does:** Deploys the frontend container and creates a **LoadBalancer Service**. Unlike internal services, a LoadBalancer gets a public IP address so users can access your application from the internet [1].
+**What this does:** Deploys the frontend container and creates a **LoadBalancer Service**. Unlike internal services, a LoadBalancer gets a public IP address so users can access your application from the internet .
 
 ### 7.8 Verify all pods are running
 
@@ -391,7 +408,7 @@ kubectl apply -f ui.yml
 kubectl get pods
 ```
 
-**Why?** This shows the status of all containers [1]. All pods should show `Running` status with `1/1` in the READY column.
+**Why?** This shows the status of all containers . All pods should show `Running` status with `1/1` in the READY column.
 
 Expected output:
 ```
@@ -408,7 +425,7 @@ ui-xxxxxxxxx-xxxxx           1/1     Running     0          1m
 kubectl get svc ui --watch
 ```
 
-**Why?** The LoadBalancer takes 1-2 minutes to provision a public IP [1]. The `--watch` flag shows updates in real-time. Wait until `EXTERNAL-IP` changes from `<pending>` to an actual IP address, then press `Ctrl+C`.
+**Why?** The LoadBalancer takes 1-2 minutes to provision a public IP . The `--watch` flag shows updates in real-time. Wait until `EXTERNAL-IP` changes from `<pending>` to an actual IP address, then press `Ctrl+C`.
 
 ### 7.10 Access your application
 
