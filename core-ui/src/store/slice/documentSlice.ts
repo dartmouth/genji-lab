@@ -51,17 +51,14 @@ const initialState: DocumentState = {
   selectedCollectionId: null,
 };
 
-// Thunk to fetch ALL documents across all collections
 export const fetchAllDocuments = createAsyncThunk(
   "documents/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      // Fetch all documents using your API endpoint with a high limit to get all documents
       const response = await api.get("/documents/", {
         params: {
           skip: 0,
-          limit: 1000, // Set a high limit to get all documents
-          // No collection_id filter to get documents from all collections
+          limit: 1000,
         },
       });
 
@@ -337,7 +334,7 @@ export const {
 
 // Export selectors
 export const selectAllDocuments = (state: RootState) =>
-  state.documents.allDocuments; // Now returns ALL documents
+  state.documents.allDocuments;
 export const selectCollectionDocuments = (state: RootState) =>
   state.documents.documents; // Get documents for current collection
 export const selectDocumentsStatus = (state: RootState) =>
