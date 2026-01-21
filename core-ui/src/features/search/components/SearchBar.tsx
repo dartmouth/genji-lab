@@ -216,13 +216,6 @@ const AnnotationSearchBar: React.FC<SearchBarProps> = ({
     }));
   };
 
-  // const handleSearchTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-  //   setSearchQuery(prev => ({
-  //     ...prev,
-  //     searchType: event.target.value as 'annotations' | 'documents' | 'both'
-  //   }));
-  // };
-
   const toggleSearchType = (type: "documents" | "comments" | "annotations") => {
     setSearchQuery((prev) => {
       const currentTypes = prev.searchTypes;
@@ -259,15 +252,6 @@ const AnnotationSearchBar: React.FC<SearchBarProps> = ({
       return `${searchQuery.searchTypes.length} Types`;
     }
   };
-
-  // const toggleTag = (tag: string) => {
-  //   setSearchQuery(prev => ({
-  //     ...prev,
-  //     tags: prev.tags.includes(tag)
-  //       ? prev.tags.filter(t => t !== tag)
-  //       : [...prev.tags, tag]
-  //   }));
-  // };
 
   const addTag = (tag: string) => {
     const trimmedTag = tag.trim();

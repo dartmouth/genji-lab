@@ -16,15 +16,6 @@ export interface Query {
   limit: number;
 }
 
-// export interface SearchResult {
-//   id: number;
-//   content: string;
-//   motivation: "commenting" | "scholarly" | null;
-//   source: string;
-//   type: "annotation" | "element" | string;
-//   relevance_score: number;
-// }
-
 export interface SearchResult {
   annotation_id: number;
   element_id: number;
