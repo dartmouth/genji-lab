@@ -93,7 +93,7 @@ class SearchQuery(BaseModel):
                 "limit": 50
             }
         }
-        ))
+        )
 
 # Update the forward reference for recursive model
 ParsedSearchTerm.model_rebuild()
