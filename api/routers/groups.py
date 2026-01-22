@@ -2,7 +2,7 @@ from typing import List, Optional
 from datetime import date, datetime
 from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, ConfigDict
 
 from database import get_db
 from models.models import User
@@ -41,8 +41,7 @@ class GroupResponse(BaseModel):
     start_date: date
     end_date: date
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GroupMember(BaseModel):
@@ -53,8 +52,7 @@ class GroupMember(BaseModel):
     email: Optional[str] = None
     joined_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GroupWithMembers(BaseModel):
@@ -67,16 +65,14 @@ class GroupWithMembers(BaseModel):
     start_date: date
     end_date: date
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InstructorInfo(BaseModel):
     name: str
     email: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Routes ====================

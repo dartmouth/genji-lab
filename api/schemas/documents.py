@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from schemas.document_collections import DocumentCollection
 
@@ -25,12 +25,10 @@ class Document(DocumentBase):
     created: datetime
     modified: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentWithDetails(Document):
     collection: Optional[DocumentCollection] = None
     elements_count: Optional[int] = 0
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

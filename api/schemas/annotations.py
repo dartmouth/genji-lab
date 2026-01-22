@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Union
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel, RootModel, ConfigDict
 from datetime import datetime
 from schemas.users import User
 
@@ -62,8 +62,7 @@ class Annotation(AnnotationBase):
     generated: Optional[datetime] = None
     creator: Optional[User]
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentElementAnnotationsResponse(RootModel):
     root: Dict[str, List[Annotation]]

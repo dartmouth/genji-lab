@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any, List, Union
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from schemas.users import User
 
@@ -43,15 +43,13 @@ class DocumentCollection(DocumentCollectionBase):
     created_by_id: int
     modified_by_id: Optional[int] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentCollectionWithUsers(DocumentCollection):
     created_by: Optional[User] = None
     modified_by: Optional[User] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentCollectionWithStats(DocumentCollection):
     document_count: int = 0
@@ -61,5 +59,4 @@ class DocumentCollectionWithStats(DocumentCollection):
     created_by: Optional[User] = None
     modified_by: Optional[User] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

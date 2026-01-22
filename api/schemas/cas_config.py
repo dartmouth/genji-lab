@@ -1,6 +1,6 @@
 
 from typing import Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, ConfigDict
 
 class AttributeMapping(BaseModel):
     username: str = Field(..., min_length=1)
@@ -85,5 +85,4 @@ class CASConfigResponse(BaseModel):
     updated_at: Optional[str]
     updated_by_id: Optional[int]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
