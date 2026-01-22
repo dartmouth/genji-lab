@@ -20,7 +20,7 @@ import {
   fetchDocumentCollections,
   fetchAllDocuments,
   selectAllDocumentCollections,
-  selectAllDocuments,
+  // selectAllDocuments,
 } from "@store";
 import { useNotification } from "@admin/components/ManageCollections/hooks";
 import { useDeleteConfirmation } from "./hooks";
@@ -82,7 +82,7 @@ const ManageDocuments: React.FC = () => {
 
   // Redux data
   const documentCollections = useAppSelector(selectAllDocumentCollections);
-  const documents = useAppSelector(selectAllDocuments);
+  // const documents = useAppSelector(selectAllDocuments);
 
   // Notification hook (shared)
   const { notification, showNotification, hideNotification } = useNotification();
@@ -192,7 +192,7 @@ const ManageDocuments: React.FC = () => {
           <SubTabPanel value={activeSubTab} index={1}>
             <ImportWordTab
               documentCollections={documentCollections}
-              documents={documents}
+              // documents={documents}
               showNotification={showNotification}
             />
           </SubTabPanel>
@@ -208,7 +208,7 @@ const ManageDocuments: React.FC = () => {
           <SubTabPanel value={activeSubTab} index={3}>
             <DeleteContentTab
               documentCollections={documentCollections}
-              documents={documents}
+              // documents={documents}
               showNotification={showNotification}
               requestDeleteConfirmation={handleDeleteConfirmationRequest}
             />
