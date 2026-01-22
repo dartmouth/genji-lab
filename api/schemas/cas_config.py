@@ -1,6 +1,6 @@
 
 from typing import Optional
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 class AttributeMapping(BaseModel):
     username: str = Field(..., min_length=1)
@@ -27,7 +27,7 @@ class CASConfigUpdate(BaseModel):
     email_format: str = "from_cas"
     display_name: str = "CAS Login"
 
-    @validator('server_url')
+    @field_validator('server_url')
     def validate_server_url(cls, v, values):
         if values.get('enabled') and not v:
             raise ValueError('Server URL is required when CAS is enabled')
@@ -35,31 +35,31 @@ class CASConfigUpdate(BaseModel):
             raise ValueError('Server URL must start with http:// or https://')
         return v
 
-    @validator('attribute_mapping')
+    @field_validator('attribute_mapping')
     def validate_attribute_mapping(cls, v, values):
         if values.get('enabled') and not v:
             raise ValueError('Attribute mapping is required when CAS is enabled')
         return v
 
-    @validator('protocol_version')
+    @field_validator('protocol_version')
     def validate_protocol_version(cls, v):
         if v not in ['2.0', '3.0']:
             raise ValueError('Protocol version must be either "2.0" or "3.0"')
         return v
 
-    @validator('email_format')
+    @field_validator('email_format')
     def validate_email_format(cls, v):
         if v not in ['from_cas', 'construct']:
             raise ValueError('Email format must be either "from_cas" or "construct"')
         return v
 
-    @validator('email_domain')
+    @field_validator('email_domain')
     def validate_email_domain(cls, v, values):
         if values.get('email_format') == 'construct' and not v:
             raise ValueError('Email domain is required when email format is "construct"')
         return v
 
-    @validator('username_patterns')
+    @field_validator('username_patterns')
     def validate_username_patterns(cls, v):
         if not v or len(v) == 0:
             raise ValueError('At least one username pattern is required')
