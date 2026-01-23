@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Chip,
   TextField,
   Typography,
   FormHelperText,
-} from '@mui/material';
-import { MetadataFieldProps } from './types';
+} from "@mui/material";
+import { MetadataFieldProps } from "./types";
 
 export const ListMetadataField: React.FC<MetadataFieldProps> = ({
   fieldKey,
@@ -17,19 +17,19 @@ export const ListMetadataField: React.FC<MetadataFieldProps> = ({
   disabled,
   error,
 }) => {
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const items = (Array.isArray(value) ? value : []) as string[];
 
   const handleAddItem = (newItem: string) => {
     const trimmed = newItem.trim();
     if (trimmed && !items.includes(trimmed)) {
-      onChange([...items, trimmed]);
+      onChange(fieldKey, [...items, trimmed]);
     }
-    setInputValue('');
+    setInputValue("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleAddItem(inputValue);
     }
@@ -42,20 +42,23 @@ export const ListMetadataField: React.FC<MetadataFieldProps> = ({
   };
 
   const handleDelete = (itemToDelete: string) => {
-    onChange(items.filter((item) => item !== itemToDelete));
+    onChange(
+      fieldKey,
+      items.filter((item) => item !== itemToDelete)
+    );
   };
 
   return (
     <Box>
       <Typography variant="body2" sx={{ mb: 1 }}>
         {label}
-        {required && <span style={{ color: 'red' }}> *</span>}
+        {required && <span style={{ color: "red" }}> *</span>}
       </Typography>
-      
+
       <Box
         sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
+          display: "flex",
+          flexWrap: "wrap",
           gap: 0.5,
           mb: 1,
           minHeight: 32,
@@ -71,7 +74,7 @@ export const ListMetadataField: React.FC<MetadataFieldProps> = ({
           />
         ))}
       </Box>
-      
+
       <TextField
         id={`metadata-${fieldKey}`}
         placeholder="Type and press Enter to add"
@@ -88,7 +91,7 @@ export const ListMetadataField: React.FC<MetadataFieldProps> = ({
           opacity: disabled ? 0.6 : 1,
         }}
       />
-      
+
       {error && <FormHelperText error>{error}</FormHelperText>}
     </Box>
   );

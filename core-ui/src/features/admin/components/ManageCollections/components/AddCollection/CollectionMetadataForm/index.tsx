@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  LinearProgress,
-  Divider,
-} from '@mui/material';
-import axios, { AxiosInstance } from 'axios';
+import React, { useState, useEffect } from "react";
+import { Box, Typography, LinearProgress, Divider } from "@mui/material";
+import axios, { AxiosInstance } from "axios";
 
-import { CollectionMetadataFormProps, MetadataValue, Base64Image } from './types';
-import { MetadataField } from '@admin/components/SiteSettings/types';
-import { TextMetadataField } from './TextMetadataField';
-import { TextareaMetadataField } from './TextareaMetadataField';
-import { ListMetadataField } from './ListMetadataField';
-import { ImageMetadataField } from './ImageMetadataField';
+import { MetadataField } from "@admin/components/SiteSettings/types";
+import { TextMetadataField } from "./TextMetadataField";
+import { TextareaMetadataField } from "./TextareaMetadataField";
+import { ListMetadataField } from "./ListMetadataField";
+import { ImageMetadataField } from "./ImageMetadataField";
+import { CollectionMetadata } from "@/store/slice/documentCollectionSlice";
+import {
+  CollectionMetadataFormProps,
+  MetadataValue,
+  Base64Image,
+} from "./types";
 
 const api: AxiosInstance = axios.create({
-  baseURL: '/api/v1',
+  baseURL: "/api/v1",
   timeout: 10000,
 });
 
@@ -33,39 +33,41 @@ export const CollectionMetadataForm: React.FC<CollectionMetadataFormProps> = ({
     const fetchMetadataSchema = async () => {
       setIsLoading(true);
       try {
-        const response = await api.get('/site-settings/collection-metadata-schema');
+        const response = await api.get(
+          "/site-settings/collection-metadata-schema"
+        );
         const schema = response.data || [];
         setMetadataSchema(schema);
-        
-        const initialValues: Record<string, MetadataValue> = { ...values };
+
+        const initialValues: CollectionMetadata = { ...values };
         schema.forEach((field: MetadataField) => {
           if (!(field.key in initialValues)) {
             initialValues[field.key] = getDefaultValue(field.type);
           }
         });
-        
+
         if (Object.keys(initialValues).length !== Object.keys(values).length) {
           onChange(initialValues);
         }
       } catch (error) {
-        console.error('Failed to fetch metadata schema:', error);
+        console.error("Failed to fetch metadata schema:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchMetadataSchema();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getDefaultValue = (type: MetadataField['type']): MetadataValue => {
+  const getDefaultValue = (type: MetadataField["type"]): MetadataValue => {
     switch (type) {
-      case 'list':
+      case "list":
         return [];
-      case 'image':
-        return { mime_type: '', img_base64: '' };
+      case "image":
+        return { mime_type: "", img_base64: "" };
       default:
-        return '';
+        return "";
     }
   };
 
@@ -82,32 +84,32 @@ export const CollectionMetadataForm: React.FC<CollectionMetadataFormProps> = ({
     }
   };
 
-const validate = (): boolean => {
-  const newErrors: Record<string, string> = {};
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
-  metadataSchema.forEach((field) => {
-    if (field.required) {
-      const value = values[field.key];
-      let isEmpty = false;
+    metadataSchema.forEach((field) => {
+      if (field.required) {
+        const value = values[field.key];
+        let isEmpty = false;
 
-      switch (field.type) {
-        case 'list':
-          isEmpty = !Array.isArray(value) || value.length === 0;
-          break;
-        case 'image': {
-          const imgValue = value as Base64Image;
-          isEmpty = !imgValue?.img_base64;
-          break;
+        switch (field.type) {
+          case "list":
+            isEmpty = !Array.isArray(value) || value.length === 0;
+            break;
+          case "image": {
+            const imgValue = value as Base64Image;
+            isEmpty = !imgValue?.img_base64;
+            break;
+          }
+          default:
+            isEmpty = typeof value !== "string" || !value.trim();
         }
-        default:
-          isEmpty = typeof value !== 'string' || !value.trim();
-      }
 
-      if (isEmpty) {
-        newErrors[field.key] = `${field.label} is required`;
+        if (isEmpty) {
+          newErrors[field.key] = `${field.label} is required`;
+        }
       }
-    }
-  });
+    });
 
     onErrorsChange(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -116,7 +118,7 @@ const validate = (): boolean => {
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (CollectionMetadataForm as any).validate = validate;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadataSchema, values]);
 
   const renderField = (field: MetadataField) => {
@@ -125,19 +127,19 @@ const validate = (): boolean => {
       label: field.label,
       required: field.required,
       value: values[field.key],
-      onChange: (value: MetadataValue) => handleFieldChange(field.key, value),
+      onChange: handleFieldChange,
       disabled,
       error: errors[field.key],
     };
 
     switch (field.type) {
-      case 'textarea':
+      case "textarea":
         return <TextareaMetadataField {...commonProps} />;
-      case 'list':
+      case "list":
         return <ListMetadataField {...commonProps} />;
-      case 'image':
+      case "image":
         return <ImageMetadataField {...commonProps} />;
-      case 'text':
+      case "text":
       default:
         return <TextMetadataField {...commonProps} />;
     }
@@ -167,7 +169,7 @@ const validate = (): boolean => {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Please provide the following information about this collection.
       </Typography>
-      
+
       {metadataSchema.map((field) => (
         <Box key={field.key} sx={{ mb: 2 }}>
           {renderField(field)}

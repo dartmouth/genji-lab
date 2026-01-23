@@ -21,7 +21,7 @@ import { CollectionDetailsModal } from "./CollectionDetailsModal";
 import {
   DocumentCollection,
   NotificationState,
-//   CollectionDetails,
+  //   CollectionDetails,
   OverviewSortOrder,
   SortDirection,
 } from "../../types";
@@ -39,11 +39,11 @@ export interface CollectionOverviewProps {
 /**
  * Helper function to display user name
  */
-const getUserDisplayName = (user: { 
-  id: number; 
-  username: string; 
-  first_name?: string; 
-  last_name?: string; 
+const getUserDisplayName = (user: {
+  id: number;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
 }): string => {
   if (user.first_name || user.last_name) {
     return `${user.first_name || ""} ${user.last_name || ""}`.trim();
@@ -64,7 +64,9 @@ export const CollectionOverview: React.FC<CollectionOverviewProps> = ({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Modal state
-  const [selectedCollection, setSelectedCollection] = useState<number | null>(null);
+  const [selectedCollection, setSelectedCollection] = useState<number | null>(
+    null
+  );
   const [detailsModalOpen, setDetailsModalOpen] = useState<boolean>(false);
 
   // Sort handler
