@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import {
   ThumbUp,
@@ -311,26 +312,37 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
           )}
         </div>
 
-        <Menu
-          anchorEl={menuAnchor}
-          open={Boolean(menuAnchor)}
-          onClose={closeMenu}
-          disableScrollLock
-        >
-          {user && user.id === annotation.creator.id && (
-            <MenuItem onClick={handleEditClick}>Edit</MenuItem>
-          )}
-          {user && user.id === annotation.creator.id && (
-            <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
-          )}
-          {/* Add Link option in menu - only for annotation creators */}
-          {onLinkClick && user && user.id === annotation.creator.id && (
-            <MenuItem onClick={handleLinkClick}>
-              <LinkIcon sx={{ fontSize: "1rem", marginRight: "8px" }} />
-              Add Link
-            </MenuItem>
-          )}
-        </Menu>
+        {/* Render Menu using Portal to avoid aria-hidden conflicts */}
+        {createPortal(
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={closeMenu}
+            disableScrollLock
+            slotProps={{
+              root: {
+                sx: {
+                  zIndex: 99999,
+                },
+              },
+            }}
+          >
+            {user && user.id === annotation.creator.id && (
+              <MenuItem onClick={handleEditClick}>Edit</MenuItem>
+            )}
+            {user && user.id === annotation.creator.id && (
+              <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
+            )}
+            {/* Add Link option in menu - only for annotation creators */}
+            {onLinkClick && user && user.id === annotation.creator.id && (
+              <MenuItem onClick={handleLinkClick}>
+                <LinkIcon sx={{ fontSize: "1rem", marginRight: "8px" }} />
+                Add Link
+              </MenuItem>
+            )}
+          </Menu>,
+          document.body
+        )}
       </>
     );
   }

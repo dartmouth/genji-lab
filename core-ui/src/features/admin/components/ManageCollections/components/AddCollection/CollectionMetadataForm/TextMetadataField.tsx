@@ -1,6 +1,6 @@
-import React from 'react';
-import { TextField } from '@mui/material';
-import { MetadataFieldProps } from './types';
+import React from "react";
+import { TextField } from "@mui/material";
+import { MetadataFieldProps } from "./types";
 
 export const TextMetadataField: React.FC<MetadataFieldProps> = ({
   fieldKey,
@@ -17,11 +17,11 @@ export const TextMetadataField: React.FC<MetadataFieldProps> = ({
       label={
         <>
           {label}
-          {required && <span style={{ color: 'red' }}> *</span>}
+          {required && <span style={{ color: "red" }}> *</span>}
         </>
       }
-      value={(value as string) || ''}
-      onChange={(e) => onChange(e.target.value)}
+      value={(value as string) || ""}
+      onChange={(e) => onChange(fieldKey, e.target.value)}
       disabled={disabled}
       error={!!error}
       helperText={error}

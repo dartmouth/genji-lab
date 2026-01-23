@@ -289,37 +289,112 @@ const AppHeader: React.FC = () => {
                     top: "60px",
                     right: "10px",
                     zIndex: 10000,
+                    backgroundColor: "#fff",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    padding: "16px",
+                    minWidth: "240px",
                   }}
                 >
-                  <div className="user-info">
+                  <div
+                    className="user-info"
+                    style={{
+                      padding: "8px 0 12px 0",
+                      borderBottom: "1px solid #e0e0e0",
+                      marginBottom: "12px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#333",
+                    }}
+                  >
                     {`Welcome, ${user.first_name} ${user.last_name}`}
                   </div>
 
                   {/* View Tutorial Button */}
                   <button
-                    className="admin-button"
                     onClick={handleOpenTutorialFromMenu}
+                    style={{
+                      width: "100%",
+                      padding: "10px 16px",
+                      marginBottom: "8px",
+                      backgroundColor: "#f5f5f5",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "6px",
+                      color: "#555",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      textAlign: "left",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#e8e8e8";
+                      e.currentTarget.style.borderColor = "#d0d0d0";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f5f5f5";
+                      e.currentTarget.style.borderColor = "#e0e0e0";
+                    }}
                   >
-                    View Tutorial
+                    📚 View Tutorial
                   </button>
 
+                  {/* Administration Button - Only for admin/instructor */}
                   {user?.roles &&
-                  (user.roles.includes("admin") ||
-                    user.roles.includes("instructor")) ? (
-                    <button
-                      className="admin-button"
-                      onClick={() => (window.location.href = "/admin")}
+                    (user.roles.includes("admin") ||
+                      user.roles.includes("instructor")) && (
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          navigate("/admin");
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "10px 16px",
+                          marginBottom: "12px",
+                          backgroundColor: "#f5f5f5",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: "6px",
+                          color: "#555",
+                          fontSize: "14px",
+                          fontWeight: 500,
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          textAlign: "left",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#e8e8e8";
+                          e.currentTarget.style.borderColor = "#d0d0d0";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "#f5f5f5";
+                          e.currentTarget.style.borderColor = "#e0e0e0";
+                        }}
+                      >
+                        ⚙️ Administration
+                      </button>
+                    )}
+
+                  {/* Classroom Section */}
+                  {user?.groups && user.groups.length > 0 && (
+                    <div
+                      style={{
+                        padding: "12px 0",
+                        borderTop: "1px solid #e0e0e0",
+                        borderBottom: "1px solid #e0e0e0",
+                        marginBottom: "12px",
+                      }}
                     >
-                      Administration
-                    </button>
-                  ) : (
-                    <div></div>
-                  )}
-                  <br />
-                  <br />
-                  {user?.groups && user.groups.length > 0 ? (
-                    <div>
-                      <div>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: "#666",
+                          marginBottom: "8px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
                         {isOptedOut === "true"
                           ? "Select Classroom"
                           : "Active Classroom"}
@@ -330,9 +405,18 @@ const AppHeader: React.FC = () => {
                         onChange={(e) => {
                           const newValue = e.target.value;
                           if (newValue) {
-                            // Only set if truthy
                             setActiveClassroomValue(newValue);
                           }
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          marginBottom: "10px",
+                          border: "1px solid #e0e0e0",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          backgroundColor: "#fff",
+                          cursor: "pointer",
                         }}
                       >
                         {user.groups.map((group) => (
@@ -341,31 +425,34 @@ const AppHeader: React.FC = () => {
                           </option>
                         ))}
                       </select>
-                      <br />
-                      <br />
-                      <button
-                        className="logout-button"
-                        onClick={() => {
-                          // Check current opted-out state
-                          const currentOptedOut = isOptedOut === "true";
 
-                          if (currentOptedOut) {
-                            // User is clicking "Enter Classroom"
-                            setIsOptedOut("false");
-                            setDropdownOpen(false); // Close dropdown after entering
-                          } else {
-                            // User is clicking "Exit Classroom"
-                            setIsOptedOut("true");
-                            setDropdownOpen(false); // Close dropdown after exiting
-                          }
+                      <button
+                        onClick={() => {
+                          const currentOptedOut = isOptedOut === "true";
+                          setIsOptedOut(currentOptedOut ? "false" : "true");
+                          setDropdownOpen(false);
                         }}
                         disabled={!activeClassroomValue && !user.groups[0]?.id}
                         style={{
+                          width: "100%",
+                          padding: "10px 16px",
                           backgroundColor:
                             isOptedOut === "true" ? "#2C656B" : "#1976d2",
-                          color: "white",
                           border: "none",
-                          transition: "background-color 0.3s ease",
+                          borderRadius: "6px",
+                          color: "#fff",
+                          fontSize: "14px",
+                          fontWeight: 500,
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!e.currentTarget.disabled) {
+                            e.currentTarget.style.opacity = "0.9";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = "1";
                         }}
                       >
                         {isOptedOut === "true"
@@ -373,19 +460,31 @@ const AppHeader: React.FC = () => {
                           : "Exit Classroom"}
                       </button>
                     </div>
-                  ) : (
-                    <div>No groups</div>
                   )}
-                  <br />
-                  <br />
+
+                  {/* Logout Button */}
                   <button
-                    className="logout-button"
                     onClick={() => {
                       toggleDropdown();
                       logout();
                     }}
                     style={{
+                      width: "100%",
+                      padding: "10px 16px",
                       backgroundColor: "#DC267F",
+                      border: "none",
+                      borderRadius: "6px",
+                      color: "#fff",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = "0.9";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = "1";
                     }}
                   >
                     Logout
