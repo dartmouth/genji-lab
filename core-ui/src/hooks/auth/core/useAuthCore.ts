@@ -49,7 +49,10 @@ export const useAuthCore = (config: AuthCoreConfig): UseAuthCoreReturn => {
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      console.error("Session check error:", e);
+      // 401 errors are expected when not authenticated - don't log them
+      if (!axios.isAxiosError(e) || e.response?.status !== 401) {
+        console.error("Session check error:", e);
+      }
       setAuthState({ isAuthenticated: false, user: null });
     }
   }, [sessionExpirationHours]);

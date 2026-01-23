@@ -161,3 +161,101 @@
   color: #6b7280;
   text-align: center;
 }
+
+/* Page wrapper for background */
+.document-gallery-wrapper {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Page background image */
+.page-background-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  opacity: 0.30; /* Low opacity for subtle background */
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Collection metadata section */
+.collection-metadata-section {
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Full synopsis (not truncated) */
+.collection-synopsis-full {
+  color: #374151;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  max-width: 900px;
+}
+
+/* Metadata details container */
+.metadata-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Individual metadata item */
+.metadata-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* Metadata label */
+.metadata-label {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.95rem;
+  min-width: 90px;
+}
+
+/* Metadata value */
+.metadata-value {
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+/* Character chips container */
+.character-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Character chip styling */
+.character-chip {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+  font-weight: 500 !important;
+}
+
+/* Update collection header to have semi-transparent background */
+.collection-header {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure container has slight background for readability */
+.collection-container {
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.7);
+  min-height: 100vh;
+}
