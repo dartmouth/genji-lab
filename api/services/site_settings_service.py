@@ -33,7 +33,59 @@ class SiteSettingsService(BaseService[SiteSettings]):
         super().__init__(SiteSettings)
     
     # ==================== Helper Methods ====================
-    
+    def _validate_metadata_schema(self, schema: List[Dict[str, Any]]) -> None:
+        """
+        Validate the structure of a metadata schema.
+        
+        Raises HTTPException 400 if invalid.
+        """
+        if not isinstance(schema, list):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Schema must be a list"
+            )
+        
+        required_keys = {'key', 'label'}
+        seen_keys = set()
+        
+        for field in schema:
+            if not isinstance(field, dict):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Each schema field must be a dictionary"
+                )
+            
+            # Check required keys
+            if not required_keys.issubset(field.keys()):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Each field must have 'key' and 'label' properties"
+                )
+            
+            # Check for duplicate keys
+            field_key = field.get('key')
+            if field_key in seen_keys:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Duplicate field key: '{field_key}'"
+                )
+            seen_keys.add(field_key)
+    def _verify_user_exists(self, db: Session, user_id: int) -> User:
+        """
+        Verify a user exists by ID.
+        
+        Raises HTTPException 404 if not found.
+        """
+        user = db.execute(
+            select(User).filter(User.id == user_id)
+        ).scalar_one_or_none()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with ID {user_id} not found"
+            )
+        return user
     def _get_current_settings(self, db: Session) -> Optional[SiteSettings]:
         """Get the most recent site settings."""
         return (

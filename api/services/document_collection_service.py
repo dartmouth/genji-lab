@@ -226,43 +226,7 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
                     detail=f"Required metadata field '{field.get('label', field.get('key'))}' is missing"
                 )
 
-    def _validate_metadata_schema(self, schema: List[Dict[str, Any]]) -> None:
-        """
-        Validate the structure of a metadata schema.
-        
-        Raises HTTPException 400 if invalid.
-        """
-        if not isinstance(schema, list):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Schema must be a list"
-            )
-        
-        required_keys = {'key', 'label'}
-        seen_keys = set()
-        
-        for field in schema:
-            if not isinstance(field, dict):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Each schema field must be a dictionary"
-                )
-            
-            # Check required keys
-            if not required_keys.issubset(field.keys()):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Each field must have 'key' and 'label' properties"
-                )
-            
-            # Check for duplicate keys
-            field_key = field.get('key')
-            if field_key in seen_keys:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Duplicate field key: '{field_key}'"
-                )
-            seen_keys.add(field_key)
+
     # ==================== CRUD Operations ====================
     
     def create(
