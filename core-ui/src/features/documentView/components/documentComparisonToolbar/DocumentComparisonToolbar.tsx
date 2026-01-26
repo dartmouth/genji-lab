@@ -23,6 +23,7 @@ import {
 } from "@mui/icons-material";
 import HighlightingHelpIcon from "@/features/documentView/components/highlightedContent/HighlightingHelpIcon";
 import ViewToggleButton from "./ViewToggleButton";
+import { useAuth } from "@hooks/useAuthContext";
 
 interface DocumentInfo {
   id: number;
@@ -83,6 +84,12 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
   handleAddComparisonDocument,
 }) => {
   const theme = useTheme();
+  const { user } = useAuth();
+
+  // Check if user has permission to create intertext links
+  const canCreateIntertextLinks =
+    user?.roles?.includes("admin") || user?.roles?.includes("verified_scholar");
+
   // Responsive breakpoints
   const isExtraSmall = useMediaQuery(theme.breakpoints.down("sm")); // < 600px
   const isSmall = useMediaQuery(theme.breakpoints.down("md")); // < 900px
@@ -252,8 +259,8 @@ const DocumentComparisonToolbar: React.FC<DocumentComparisonToolbarProps> = ({
             </Tooltip>
           )}
 
-          {/* Link Documents Button - Show in both single and multi-document views */}
-          {viewedDocuments.length >= 1 && (
+          {/* Link Documents Button - Only show for admins and verified scholars */}
+          {viewedDocuments.length >= 1 && canCreateIntertextLinks && (
             <Tooltip
               title={
                 viewedDocuments.length === 1

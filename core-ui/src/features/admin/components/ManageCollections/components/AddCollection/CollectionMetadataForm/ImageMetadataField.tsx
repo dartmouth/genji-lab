@@ -1,13 +1,8 @@
-import React, { useRef } from 'react';
-import {
-  Box,
-  Button,
-  Typography,
-  FormHelperText,
-} from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { MetadataFieldProps, Base64Image } from './types';
+import React, { useRef } from "react";
+import { Box, Button, Typography, FormHelperText } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import { MetadataFieldProps, Base64Image } from "./types";
 
 const MAX_FILE_SIZE_MB = 2;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -34,8 +29,8 @@ export const ImageMetadataField: React.FC<MetadataFieldProps> = ({
     if (!file) return;
 
     // Validate file type
-    if (file.type !== 'image/png') {
-      alert('Please select a PNG image file.');
+    if (file.type !== "image/png") {
+      alert("Please select a PNG image file.");
       return;
     }
 
@@ -49,43 +44,43 @@ export const ImageMetadataField: React.FC<MetadataFieldProps> = ({
     reader.onload = () => {
       const dataUrl = reader.result as string;
       // dataUrl format: "data:image/png;base64,<base64string>"
-      const base64String = dataUrl.split(',')[1];
-      
-      onChange({
-        mime_type: 'image/png',
+      const base64String = dataUrl.split(",")[1];
+
+      onChange(fieldKey, {
+        mime_type: file.type,
         img_base64: base64String,
       });
     };
     reader.onerror = () => {
-      alert('Failed to read file. Please try again.');
+      alert("Failed to read file. Please try again.");
     };
     reader.readAsDataURL(file);
 
     // Reset input so same file can be selected again
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleClear = () => {
-    onChange(undefined as unknown as Base64Image);
+    onChange(fieldKey, { mime_type: "", img_base64: "" });
   };
 
   return (
     <Box>
       <Typography variant="body2" sx={{ mb: 1 }}>
         {label}
-        {required && <span style={{ color: 'red' }}> *</span>}
+        {required && <span style={{ color: "red" }}> *</span>}
       </Typography>
-      
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <input
           ref={fileInputRef}
           type="file"
           accept="image/png"
           onChange={handleFileChange}
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
           id={`metadata-${fieldKey}`}
         />
-        
+
         <Button
           variant="outlined"
           onClick={handleButtonClick}
@@ -96,18 +91,18 @@ export const ImageMetadataField: React.FC<MetadataFieldProps> = ({
             opacity: disabled ? 0.6 : 1,
           }}
         >
-          {hasImage ? 'Replace Image' : 'Upload PNG'}
+          {hasImage ? "Replace Image" : "Upload PNG"}
         </Button>
-        
+
         {hasImage && (
           <>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               <CheckCircleIcon color="success" fontSize="small" />
               <Typography variant="body2" color="success.main">
                 Image uploaded
               </Typography>
             </Box>
-            
+
             <Button
               variant="text"
               onClick={handleClear}
@@ -120,7 +115,7 @@ export const ImageMetadataField: React.FC<MetadataFieldProps> = ({
           </>
         )}
       </Box>
-      
+
       {error && <FormHelperText error>{error}</FormHelperText>}
     </Box>
   );

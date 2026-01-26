@@ -17,10 +17,7 @@ import { CollectionMetadataForm } from "./CollectionMetadataForm";
 
 import { DocumentCollection } from "@/store/slice/documentCollectionSlice";
 
-import {
-  NotificationState,
-  CreateCollectionFormData,
-} from "../../types";
+import { NotificationState, CreateCollectionFormData } from "../../types";
 
 export interface AddCollectionProps {
   collections: DocumentCollection[];
@@ -96,7 +93,9 @@ export const AddCollection: React.FC<AddCollectionProps> = ({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
     if (isCreating) {
@@ -137,14 +136,14 @@ export const AddCollection: React.FC<AddCollectionProps> = ({
     resetMetadata();
 
     try {
-    const payload = {
-      title: submittedData.title,
-      visibility: submittedData.visibility,
-      text_direction: submittedData.text_direction,
-      language: submittedData.language,
-      hierarchy: { chapter: 1, paragraph: 2 },
-      collection_metadata: submittedMetadata, 
-      created_by_id: user?.id || 1,
+      const payload = {
+        title: submittedData.title,
+        visibility: submittedData.visibility,
+        text_direction: submittedData.text_direction,
+        language: submittedData.language,
+        hierarchy: { chapter: 1, paragraph: 2 },
+        collection_metadata: submittedMetadata,
+        created_by_id: user?.id || 1,
       };
 
       await dispatch(createDocumentCollection(payload)).unwrap();
@@ -161,14 +160,10 @@ export const AddCollection: React.FC<AddCollectionProps> = ({
     } catch (error: unknown) {
       setFormData(submittedData);
       setMetadataValues(submittedMetadata);
-      
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "Unknown error";
-      showNotification(
-        `Failed to create collection: ${errorMessage}`,
-        "error"
-      );
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      showNotification(`Failed to create collection: ${errorMessage}`, "error");
     } finally {
       setTimeout(() => {
         setIsCreating(false);
@@ -274,11 +269,21 @@ export const AddCollection: React.FC<AddCollectionProps> = ({
       {submitted && (
         <div className="submitted-data">
           <h2>A new Document Collection has been added:</h2>
-          <p><strong>Title:</strong> {formData.title}</p>
-          <p><strong>Visibility:</strong> {formData.visibility}</p>
-          <p><strong>Text Direction:</strong> {formData.text_direction}</p>
-          <p><strong>Language:</strong> {formData.language}</p>
-          <p><strong>User:</strong> {user?.first_name} {user?.last_name}</p>
+          <p>
+            <strong>Title:</strong> {formData.title}
+          </p>
+          <p>
+            <strong>Visibility:</strong> {formData.visibility}
+          </p>
+          <p>
+            <strong>Text Direction:</strong> {formData.text_direction}
+          </p>
+          <p>
+            <strong>Language:</strong> {formData.language}
+          </p>
+          <p>
+            <strong>User:</strong> {user?.first_name} {user?.last_name}
+          </p>
         </div>
       )}
     </>
