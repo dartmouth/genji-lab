@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { SearchResult } from "../types/query";
 import { useAppSelector } from "@store/hooks";
 import {
-  RootState,
-  selectAllDocuments,
-  selectAllDocumentCollections,
+  RootState
 } from "@/store";
 import AdvancedSettings from "./AdvancedSettings";
 import { useLocation, useNavigate } from "react-router-dom";
