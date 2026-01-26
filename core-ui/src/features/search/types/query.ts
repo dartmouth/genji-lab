@@ -22,6 +22,8 @@ export interface SearchResult {
   document_id: number;
   collection_id: number;
   content: string;
+  document_title: string;
+  collection_title: string;
   type: "annotation" | "element" | string;
   source: string;
   motivation: "commenting" | "scholarly" | null;

@@ -104,6 +104,8 @@ class SearchResult(BaseModel):
     document_id: int = Field(..., description="ID of the document")
     collection_id: int = Field(..., description="ID of the collection")
     content: str = Field(..., description="The text content of the result")
+    document_title: str = Field(..., description="Title of the parent document")
+    collection_title: str = Field(..., description="Title of the parent document collection")
     type: str = Field(..., description="Type of result (annotation, element, etc.)")
     source: str = Field(..., description="Source reference/path")
     motivation: Optional[str] = Field(None, description="Motivation for annotations (e.g., 'commenting')")

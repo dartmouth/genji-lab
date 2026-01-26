@@ -89,8 +89,10 @@ class SearchService(BaseService[AnnotationModel]):
             null as annotation_id,
             de.id as element_id,
             de.document_id,
-            d.id as collection_id,
+            d.document_collection_id as collection_id,
             de.content ->> 'text' as content,
+            d.title as document_title,
+            dc.title as collection_title,
             'element' as type,
             null as motivation,
             'DocumentElements/' || de.id as source,
@@ -98,6 +100,7 @@ class SearchService(BaseService[AnnotationModel]):
             pgroonga_score(de.tableoid, de.ctid) as relevance_score
         FROM app.document_elements de
         JOIN app.documents d ON de.document_id = d.id
+        JOIN app.document_collections dc on d.document_collection_id = dc.id
         WHERE (de.content->>'text') &@~ :query
     )
     SELECT * FROM ranked_elements
@@ -115,8 +118,10 @@ class SearchService(BaseService[AnnotationModel]):
             a.id as annotation_id,
             split_part(a.target -> 0 ->> 'source', '/', 2)::int as element_id,
             d.id as document_id,
-            d.id as collection_id,
+            d.document_collection_id as collection_id,
             a.body ->> 'value' as content,
+            d.title as document_title,
+            dc.title as collection_title,
             'annotation' as type,
             a.target -> 0 ->> 'source' as source,
             motivation,
@@ -124,6 +129,7 @@ class SearchService(BaseService[AnnotationModel]):
             pgroonga_score(a.tableoid, a.ctid) as relevance_score
         FROM app.annotations a 
         JOIN app.documents d ON split_part(a.target -> 0 ->> 'source', '/', 2)::int = d.id
+        JOIN app.document_collections dc on d.document_collection_id = dc.id
         WHERE (a.body->>'value') &@~ :query
         AND a.motivation IN ('commenting')
     )
@@ -142,8 +148,10 @@ class SearchService(BaseService[AnnotationModel]):
             a.id as annotation_id,
             split_part(a.target -> 0 ->> 'source', '/', 2)::int as element_id,
             d.id as document_id,
-            d.id as collection_id,
+            d.document_collection_id as collection_id,
             a.body ->> 'value' as content,
+            d.title as document_title,
+            dc.title as collection_title,
             'annotation' as type,
             a.target -> 0 ->> 'source' as source,
             motivation,
@@ -151,6 +159,7 @@ class SearchService(BaseService[AnnotationModel]):
             pgroonga_score(a.tableoid, a.ctid) as relevance_score
         FROM app.annotations a 
         JOIN app.documents d ON split_part(a.target -> 0 ->> 'source', '/', 2)::int = d.id
+        JOIN app.document_collections dc on d.document_collection_id = dc.id
         WHERE (a.body->>'value') &@~ :query
         AND a.motivation IN ('scholarly')
     )

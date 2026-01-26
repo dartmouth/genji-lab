@@ -289,18 +289,6 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
   const maxLength = 200;
   const shouldTruncate = result.content.length > maxLength;
 
-  // Get all documents and collections from Redux using selectors
-  const allDocuments = useAppSelector(selectAllDocuments);
-  const allCollections = useAppSelector(selectAllDocumentCollections);
-
-  // Find the specific document and collection for this result
-  const resultDocument = allDocuments.find(
-    (doc) => doc.id === result.document_id
-  );
-  const resultCollection = allCollections.find(
-    (coll) => coll.id === result.collection_id
-  );
-
   const displayContent =
     expanded || !shouldTruncate
       ? result.content
@@ -593,12 +581,9 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, searchQuery }) => {
 
       {/* Footer */}
       <div style={styles.cardFooter}>
-        <span style={styles.sourceText}>
-          Source:{" "}
-          {resultDocument && resultCollection
-            ? `${resultCollection.title} / ${resultDocument.title}`
-            : result.source}
-        </span>
+      <span style={styles.sourceText}>
+        Source: {result.collection_title} / {result.document_title}
+      </span>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           {shouldTruncate && (
             <button
