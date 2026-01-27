@@ -28,9 +28,10 @@ export const ImageMetadataField: React.FC<MetadataFieldProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (file.type !== "image/png") {
-      alert("Please select a PNG image file.");
+    // Validate file type - accept PNG and JPEG
+    const validTypes = ["image/png", "image/jpeg"];
+    if (!validTypes.includes(file.type)) {
+      alert("Please select a PNG or JPG image file.");
       return;
     }
 
@@ -75,7 +76,7 @@ export const ImageMetadataField: React.FC<MetadataFieldProps> = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/png"
+          accept="image/png, image/jpg"
           onChange={handleFileChange}
           style={{ display: "none" }}
           id={`metadata-${fieldKey}`}
@@ -91,7 +92,7 @@ export const ImageMetadataField: React.FC<MetadataFieldProps> = ({
             opacity: disabled ? 0.6 : 1,
           }}
         >
-          {hasImage ? "Replace Image" : "Upload PNG"}
+          {hasImage ? "Replace Image" : "Upload Image"}
         </Button>
 
         {hasImage && (
