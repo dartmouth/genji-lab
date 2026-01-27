@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MetadataField } from "@admin/components/SiteSettings/types";
 import {
   MetadataValue,
@@ -14,12 +14,22 @@ const api: AxiosInstance = axios.create({
 });
 
 export const useCollectionMetadata = () => {
-  // Change this type:
-  const [metadataValues, setMetadataValues] = useState<CollectionMetadata>({});
-  const [metadataErrors, setMetadataErrors] = useState<Record<string, string>>(
-    {}
-  );
+  const [metadataValues, setMetadataValuesState] = useState<CollectionMetadata>({});
+  const [metadataErrors, setMetadataErrors] = useState<Record<string, string>>({});
   const [metadataSchema, setMetadataSchema] = useState<MetadataField[]>([]);
+
+  const setMetadataValues = useCallback((values: CollectionMetadata) => {
+    setMetadataValuesState(values);
+  }, []);
+
+  const resetMetadata = useCallback(() => {
+    const resetValues: CollectionMetadata = {};
+    metadataSchema.forEach((field) => {
+      resetValues[field.key] = getDefaultValue(field.type);
+    });
+    setMetadataValuesState(resetValues);
+    setMetadataErrors({});
+  }, [metadataSchema]);
 
   // Fetch schema for validation purposes
   useEffect(() => {
@@ -78,14 +88,14 @@ export const useCollectionMetadata = () => {
     }
   };
 
-  const resetMetadata = () => {
-    const resetValues: CollectionMetadata = {}; // Change this type
-    metadataSchema.forEach((field) => {
-      resetValues[field.key] = getDefaultValue(field.type);
-    });
-    setMetadataValues(resetValues);
-    setMetadataErrors({});
-  };
+  // const resetMetadata = () => {
+  //   const resetValues: CollectionMetadata = {}; // Change this type
+  //   metadataSchema.forEach((field) => {
+  //     resetValues[field.key] = getDefaultValue(field.type);
+  //   });
+  //   setMetadataValues(resetValues);
+  //   setMetadataErrors({});
+  // };
 
   return {
     metadataValues,
