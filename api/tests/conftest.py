@@ -85,6 +85,38 @@ class TestGroup(TestBase):
     created_by = relationship("TestUser", foreign_keys=[created_by_id])
 
 
+class TestDocumentCollection(TestBase):
+    """Test-specific DocumentCollection model without PostgreSQL-specific features."""
+    __tablename__ = "document_collections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255))
+    visibility = Column(String(50))
+    text_direction = Column(String(50))
+    created = Column(DateTime, default=datetime.now)
+    modified = Column(DateTime, default=datetime.now)
+    created_by_id = Column(Integer, ForeignKey("users.id"))
+    modified_by_id = Column(Integer, ForeignKey("users.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    language = Column(String(50))
+    hierarchy = Column(JSON)  # JSON instead of JSONB
+    collection_metadata = Column(JSON)  # JSON instead of JSONB
+
+    # Relationships
+    created_by = relationship(
+        "TestUser",
+        foreign_keys=[created_by_id]
+    )
+    modified_by = relationship(
+        "TestUser",
+        foreign_keys=[modified_by_id]
+    )
+    owner = relationship(
+        "TestUser",
+        foreign_keys=[owner_id]
+    )
+
+
 class TestAnnotation(TestBase):
     """Test-specific Annotation model without PostgreSQL-specific features."""
     __tablename__ = "annotations"
@@ -171,6 +203,12 @@ def Group():
 def AnnotationModel():
     """Provide TestAnnotation as AnnotationModel for tests."""
     return TestAnnotation
+
+
+@pytest.fixture
+def DocumentCollectionModel():
+    """Provide TestDocumentCollection as DocumentCollectionModel for tests."""
+    return TestDocumentCollection
 
 
 # ==================== User Fixtures ====================
@@ -557,5 +595,89 @@ def annotation_service(db_session, monkeypatch):
     
     monkeypatch.setattr(service, "generate_body_id", mock_generate_body_id)
     monkeypatch.setattr(service, "generate_target_id", mock_generate_target_id)
+    
+    return service
+
+
+# ==================== Document Collection Fixtures ====================
+
+@pytest.fixture
+def test_document_collection(db_session, test_user) -> TestDocumentCollection:
+    """Create a test document collection in the database."""
+    collection = TestDocumentCollection(
+        id=1,
+        title="Test Collection",
+        visibility="public",
+        text_direction="ltr",
+        language="en",
+        created_by_id=test_user.id,
+        owner_id=test_user.id,
+        hierarchy={"type": "sequence", "elements": []},
+        collection_metadata={"description": "A test collection"}
+    )
+    db_session.add(collection)
+    db_session.commit()
+    db_session.refresh(collection)
+    return collection
+
+
+@pytest.fixture
+def multiple_test_document_collections(
+    db_session,
+    test_user
+) -> list[TestDocumentCollection]:
+    """Create multiple test document collections."""
+    collections = [
+        TestDocumentCollection(
+            id=10,
+            title="Collection 1",
+            visibility="public",
+            text_direction="ltr",
+            language="en",
+            created_by_id=test_user.id,
+            owner_id=test_user.id
+        ),
+        TestDocumentCollection(
+            id=11,
+            title="Collection 2",
+            visibility="private",
+            text_direction="rtl",
+            language="ar",
+            created_by_id=test_user.id,
+            owner_id=test_user.id
+        ),
+        TestDocumentCollection(
+            id=12,
+            title="Collection 3",
+            visibility="public",
+            text_direction="ltr",
+            language="es",
+            created_by_id=test_user.id,
+            owner_id=test_user.id
+        )
+    ]
+    
+    for collection in collections:
+        db_session.add(collection)
+    
+    db_session.commit()
+    
+    for collection in collections:
+        db_session.refresh(collection)
+    
+    return collections
+
+
+@pytest.fixture
+def document_collection_service(db_session, monkeypatch):
+    """
+    Create DocumentCollectionService instance configured for SQLite testing.
+    """
+    from services.document_collection_service import DocumentCollectionService
+    
+    service = DocumentCollectionService()
+    
+    # Patch the model to use TestDocumentCollection
+    service.model = TestDocumentCollection
     
     return service

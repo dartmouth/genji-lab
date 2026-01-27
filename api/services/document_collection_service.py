@@ -57,12 +57,12 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         
         Raises HTTPException 400 if duplicate found.
         """
-        query = select(DocumentCollectionModel).filter(
-            func.lower(DocumentCollectionModel.title) == title.lower().strip()
+        query = select(self.model).filter(
+            func.lower(self.model.title) == title.lower().strip()
         )
         
         if exclude_id is not None:
-            query = query.filter(DocumentCollectionModel.id != exclude_id)
+            query = query.filter(self.model.id != exclude_id)
         
         existing = db.execute(query).scalar_one_or_none()
         
@@ -83,14 +83,14 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         
         Raises HTTPException 404 if not found.
         """
-        query = select(DocumentCollectionModel).filter(
-            DocumentCollectionModel.id == collection_id
+        query = select(self.model).filter(
+            self.model.id == collection_id
         )
         
         if with_users:
             query = query.options(
-                joinedload(DocumentCollectionModel.created_by),
-                joinedload(DocumentCollectionModel.modified_by)
+                joinedload(self.model.created_by),
+                joinedload(self.model.modified_by)
             )
         
         collection = db.execute(query).scalar_one_or_none()
@@ -202,7 +202,7 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         self._verify_user_exists(db, collection.created_by_id)
         
         # Create the collection
-        db_collection = DocumentCollectionModel(**collection.model_dump())
+        db_collection = self.model(**collection.model_dump())
         db_collection.modified_by_id = collection.created_by_id
         
         db.add(db_collection)
@@ -243,24 +243,24 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         include_users: bool = False
     ) -> List[DocumentCollectionModel]:
         """Get collections with optional filtering and pagination."""
-        query = select(DocumentCollectionModel)
+        query = select(self.model)
         
         # Optionally include user relationships
         if include_users:
             query = query.options(
-                joinedload(DocumentCollectionModel.created_by),
-                joinedload(DocumentCollectionModel.modified_by)
+                joinedload(self.model.created_by),
+                joinedload(self.model.modified_by)
             )
         
         # Apply filters
         if title:
-            query = query.filter(DocumentCollectionModel.title.ilike(f"%{title}%"))
+            query = query.filter(self.model.title.ilike(f"%{title}%"))
         if visibility:
-            query = query.filter(DocumentCollectionModel.visibility == visibility)
+            query = query.filter(self.model.visibility == visibility)
         if language:
-            query = query.filter(DocumentCollectionModel.language == language)
+            query = query.filter(self.model.language == language)
         if created_by_id:
-            query = query.filter(DocumentCollectionModel.created_by_id == created_by_id)
+            query = query.filter(self.model.created_by_id == created_by_id)
         
         # Apply pagination
         query = query.offset(skip).limit(limit)
