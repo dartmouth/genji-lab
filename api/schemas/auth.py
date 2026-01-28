@@ -2,7 +2,7 @@
 Authentication schemas with consistent UserResponse for both basic and CAS auth.
 """
 
-from pydantic import BaseModel, EmailStr, Field, validator, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 from typing import Optional, Dict, Any, List
 
 
@@ -45,7 +45,8 @@ class UserRegister(BaseModel):
     username: str = Field(..., min_length=3, max_length=255)
     password: str = Field(..., min_length=8, max_length=128)
 
-    @validator("username")
+    @field_validator("username")
+    @classmethod
     def validate_username(cls, v):
         if not v.replace("_", "").replace("-", "").replace(".", "").isalnum():
             raise ValueError(
@@ -53,7 +54,8 @@ class UserRegister(BaseModel):
             )
         return v
 
-    @validator("password")
+    @field_validator("password")
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -88,7 +90,8 @@ class PasswordChange(BaseModel):
     current_password: str
     new_password: str = Field(..., min_length=8, max_length=128)
 
-    @validator("new_password")
+    @field_validator("new_password")
+    @classmethod
     def validate_new_password(cls, v):
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
