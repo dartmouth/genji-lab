@@ -1,7 +1,16 @@
-from typing import Optional, Dict, Any, List
-from pydantic import BaseModel
+from typing import Optional, Dict, Any, List, Union
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from schemas.users import User
+
+
+class Base64Image(BaseModel):
+    mime_type: str
+    img_base64: str
+
+class CollectionMetadata(BaseModel):
+    title: Optional[str]
+    content: Optional[Dict[str, Union[str, List[str], Base64Image]]]
 
 class DocumentCollectionBase(BaseModel):
     title: Optional[str] = None
@@ -9,7 +18,7 @@ class DocumentCollectionBase(BaseModel):
     text_direction: Optional[str] = None
     language: Optional[str] = None
     hierarchy: Optional[Dict[str, Any]] = None
-    collection_metadata: Optional[Dict[str, Any]] = None
+    collection_metadata: Optional[Dict[str, Union[str, List[str], Base64Image]]] = None
 
 class DocumentCollectionCreate(DocumentCollectionBase):
     created_by_id: int
@@ -34,15 +43,13 @@ class DocumentCollection(DocumentCollectionBase):
     created_by_id: int
     modified_by_id: Optional[int] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentCollectionWithUsers(DocumentCollection):
     created_by: Optional[User] = None
     modified_by: Optional[User] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentCollectionWithStats(DocumentCollection):
     document_count: int = 0
@@ -52,5 +59,4 @@ class DocumentCollectionWithStats(DocumentCollection):
     created_by: Optional[User] = None
     modified_by: Optional[User] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

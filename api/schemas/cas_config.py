@@ -1,6 +1,6 @@
-
 from typing import Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+
 
 class AttributeMapping(BaseModel):
     username: str = Field(..., min_length=1)
@@ -27,39 +27,44 @@ class CASConfigUpdate(BaseModel):
     email_format: str = "from_cas"
     display_name: str = "CAS Login"
 
-    @validator('server_url')
-    def validate_server_url(cls, v, values):
-        if values.get('enabled') and not v:
-            raise ValueError('Server URL is required when CAS is enabled')
+    # Cross-field validation using model_validator
+    @model_validator(mode='after')
+    def validate_enabled_requirements(self):
+        if self.enabled:
+            if not self.server_url:
+                raise ValueError('Server URL is required when CAS is enabled')
+            if not self.attribute_mapping:
+                raise ValueError('Attribute mapping is required when CAS is enabled')
+        
+        if self.email_format == 'construct' and not self.email_domain:
+            raise ValueError('Email domain is required when email format is "construct"')
+        
+        return self
+
+    # Single-field validators (no cross-field dependencies)
+    @field_validator('server_url')
+    @classmethod
+    def validate_server_url_format(cls, v):
         if v and not (v.startswith('http://') or v.startswith('https://')):
             raise ValueError('Server URL must start with http:// or https://')
         return v
 
-    @validator('attribute_mapping')
-    def validate_attribute_mapping(cls, v, values):
-        if values.get('enabled') and not v:
-            raise ValueError('Attribute mapping is required when CAS is enabled')
-        return v
-
-    @validator('protocol_version')
+    @field_validator('protocol_version')
+    @classmethod
     def validate_protocol_version(cls, v):
         if v not in ['2.0', '3.0']:
             raise ValueError('Protocol version must be either "2.0" or "3.0"')
         return v
 
-    @validator('email_format')
+    @field_validator('email_format')
+    @classmethod
     def validate_email_format(cls, v):
         if v not in ['from_cas', 'construct']:
             raise ValueError('Email format must be either "from_cas" or "construct"')
         return v
 
-    @validator('email_domain')
-    def validate_email_domain(cls, v, values):
-        if values.get('email_format') == 'construct' and not v:
-            raise ValueError('Email domain is required when email format is "construct"')
-        return v
-
-    @validator('username_patterns')
+    @field_validator('username_patterns')
+    @classmethod
     def validate_username_patterns(cls, v):
         if not v or len(v) == 0:
             raise ValueError('At least one username pattern is required')
@@ -85,5 +90,4 @@ class CASConfigResponse(BaseModel):
     updated_at: Optional[str]
     updated_by_id: Optional[int]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -18,8 +18,9 @@ import { CloudUpload, Delete, Image as ImageIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '@store/hooks';
 import { fetchSiteSettings, updateSiteSettings, uploadSiteLogo, removeSiteLogo, uploadSiteFavicon, removeSiteFavicon, clearError } from '@store/slice/siteSettingsSlice';
 import { useAuth } from '@hooks/useAuthContext';
-import { updateFavicon, loadFaviconFromAPI } from '../../../utils/favicon';
-import CASAuthSettings from './CASAuthSettings';
+import { updateFavicon, loadFaviconFromAPI } from '../../../../utils/favicon';
+import CASAuthSettings from '../CASAuthSettings';
+import CollectionMetadataSettings from './CollectionMetadataSettings';
 
 // TabPanel for the sub-tabs
 interface SubTabPanelProps {
@@ -457,6 +458,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
         <Tab label="Site Logo" {...a11yPropsSubTab(2)} />
         <Tab label="Site Favicon" {...a11yPropsSubTab(3)} />
         <Tab label="CAS Authentication" {...a11yPropsSubTab(4)} />
+        <Tab label="Collection Metadata" {...a11yPropsSubTab(5)} />
       </Tabs>
         
         {/* Sub-tab content */}
@@ -752,6 +754,9 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
         </SubTabPanel>
         <SubTabPanel value={activeSubTab} index={4}>
           <CASAuthSettings />
+        </SubTabPanel>
+        <SubTabPanel value={activeSubTab} index={5}>
+          <CollectionMetadataSettings />
         </SubTabPanel>
       </Box>
     </Box>

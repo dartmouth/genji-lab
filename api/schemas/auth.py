@@ -2,7 +2,7 @@
 Authentication schemas with consistent UserResponse for both basic and CAS auth.
 """
 
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, validator, ConfigDict
 from typing import Optional, Dict, Any, List
 
 
@@ -33,8 +33,7 @@ class UserResponse(BaseModel):
     user_metadata: Optional[Dict[str, Any]] = None
     ttl: str  # ISO format timestamp for when the authentication expires
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserRegister(BaseModel):

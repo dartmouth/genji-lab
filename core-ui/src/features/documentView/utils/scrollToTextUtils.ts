@@ -218,7 +218,6 @@ const waitForRedHighlightsAndEnhance = (
       element.hasAttribute("data-debug-linked");
 
     if (existingHighlights.length > 0) {
-      // 🎯 CHANGE: Pass start/end parameters
       const result = enhanceExistingLinkedTextHighlights(element, start, end);
       resolve(result);
       return;
@@ -279,7 +278,6 @@ const enhanceExistingLinkedTextHighlights = (
     // First pass: find matching highlights
     existingHighlights.forEach((highlight) => {
       if (highlight instanceof HTMLElement) {
-        // 🎯 Filter by exact position if provided
         if (targetStart !== undefined && targetEnd !== undefined) {
           const highlightStart = parseInt(
             highlight.getAttribute("data-start") || "-1"

@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from schemas.documents import Document
 from schemas.annotations import Annotation
@@ -27,19 +27,16 @@ class DocumentElement(DocumentElementBase):
     created: datetime
     modified: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DocumentElementWithDocument(DocumentElement):
     document: Optional[Document] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 
 class DocumentElementWithAnnotations(DocumentElement):
     annotations: Optional[List[Annotation]]
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

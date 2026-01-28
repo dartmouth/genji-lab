@@ -10,7 +10,7 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: migrations
-        image: us-central1-docker.pkg.dev/genji-483414/genji-images/migrations:latest
+        image: us-central1-docker.pkg.dev/PROJECT/genji-lab-repo/migrations:v1.0.0
         command: ["alembic", "upgrade", "head"]
         env:
         - name: POSTGRES_USER

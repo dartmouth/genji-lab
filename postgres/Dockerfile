@@ -18,7 +18,6 @@ RUN apt-get update && \
     # Install PGroonga for PostgreSQL 17
     apt-get update && \
     apt-get install -y -V postgresql-17-pgdg-pgroonga && \
-    # Optional: Install MeCab tokenizer for full-text search
     apt-get install -y -V groonga-tokenizer-mecab && \
     # Cleanup
     apt-get clean && \

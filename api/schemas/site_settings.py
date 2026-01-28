@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -17,5 +17,20 @@ class SiteSettingsResponse(SiteSettingsBase):
     updated_by_id: int
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+class CollectionMetadataFieldBase(BaseModel):
+    key: str
+    label: str
+    required: bool = False
+    type: str
+
+class CollectionMetadataField(CollectionMetadataFieldBase):
+    pass
+
+class CollectionMetadataFieldCreate(CollectionMetadataFieldBase):
+    pass
+
+
+class CollectionMetadataFieldUpdate(CollectionMetadataFieldBase):
+    pass

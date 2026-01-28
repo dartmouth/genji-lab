@@ -473,7 +473,7 @@ class CASAuthService(BaseService[models.User]):
             raise
         except Exception as e:
             detail = f"CAS validation failed: {str(e)}"
-        logger.error(detail)
-        raise HTTPException(status_code=500, detail=detail)
+            logger.error(detail)
+            raise HTTPException(status_code=500, detail=detail)
 
 cas_auth_service = CASAuthService()

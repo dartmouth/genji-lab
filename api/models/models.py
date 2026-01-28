@@ -336,6 +336,12 @@ class SiteSettings(Base):
     site_logo_mime_type = Column(String(50), nullable=True)
     site_favicon_data = Column(Text, nullable=True)
     site_favicon_mime_type = Column(String(50), nullable=True)
+    collection_metadata_schema = Column(JSONB, default=[
+        {"key": "synopsis", "label": "Synopsis", "required": True},
+        {"key": "character_list", "label": "Character List", "required": True},
+        {"key": "timeline", "label": "Timeline", "required": False},
+        {"key": "image_url", "label": "Background Image", "required": False},
+    ])
 
     # Relationships
     updated_by = relationship("User")

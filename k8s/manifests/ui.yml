@@ -27,6 +27,6 @@ spec:
     spec:
       containers:
       - name: ui
-        image: us-central1-docker.pkg.dev/genji-483414/genji-images/core-ui:v1
+        image: us-central1-docker.pkg.dev/PROJECT/genji-lab-repo/core-ui:v1.0.0
         ports:
         - containerPort: 80

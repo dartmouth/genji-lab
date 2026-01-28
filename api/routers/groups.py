@@ -2,7 +2,7 @@ from typing import List, Optional
 from datetime import date, datetime
 from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, ConfigDict
 
 from database import get_db
 from models.models import User
@@ -24,7 +24,7 @@ class GroupCreate(BaseModel):
     start_date: date
     end_date: date
     
-    @validator('end_date')
+    @field_validator('end_date')
     def validate_end_date_after_start_date(cls, v, values):
         if 'start_date' in values and v <= values['start_date']:
             raise ValueError('end_date must be after start_date')
@@ -41,8 +41,7 @@ class GroupResponse(BaseModel):
     start_date: date
     end_date: date
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GroupMember(BaseModel):
@@ -53,8 +52,7 @@ class GroupMember(BaseModel):
     email: Optional[str] = None
     joined_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class GroupWithMembers(BaseModel):
@@ -67,16 +65,14 @@ class GroupWithMembers(BaseModel):
     start_date: date
     end_date: date
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InstructorInfo(BaseModel):
     name: str
     email: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Routes ====================

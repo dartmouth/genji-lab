@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Literal
 from enum import Enum
 from datetime import datetime
@@ -25,9 +25,7 @@ class ParsedSearchTerm(BaseModel):
     group: Optional[List["ParsedSearchTerm"]] = None
     operator: Optional[Literal["AND", "OR"]] = None
 
-    class Config:
-        # Allow forward references for recursive model
-        arbitrary_types_allowed = True
+    model_config= ConfigDict(arbitrary_types_allowed = True)
 
 class SearchQuery(BaseModel):
     query: str = Field(..., description="The raw search query string")
@@ -58,9 +56,9 @@ class SearchQuery(BaseModel):
         description="Maximum number of results to return"
     )
 
-    class Config:
+    model_config = ConfigDict(
         # Use enum values in JSON output
-        use_enum_values = True
+        use_enum_values = True,
         # Example of the expected JSON structure
         json_schema_extra = {
             "example": {
@@ -95,6 +93,7 @@ class SearchQuery(BaseModel):
                 "limit": 50
             }
         }
+        )
 
 # Update the forward reference for recursive model
 ParsedSearchTerm.model_rebuild()
@@ -105,6 +104,8 @@ class SearchResult(BaseModel):
     document_id: int = Field(..., description="ID of the document")
     collection_id: int = Field(..., description="ID of the collection")
     content: str = Field(..., description="The text content of the result")
+    document_title: str = Field(..., description="Title of the parent document")
+    collection_title: str = Field(..., description="Title of the parent document collection")
     type: str = Field(..., description="Type of result (annotation, element, etc.)")
     source: str = Field(..., description="Source reference/path")
     motivation: Optional[str] = Field(None, description="Motivation for annotations (e.g., 'commenting')")

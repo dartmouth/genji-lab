@@ -20,4 +20,4 @@ router = APIRouter(prefix="/api/v1", tags=["authentication"])
 async def validate_cas_ticket(
     data: TicketValidation, request: Request, db: Session = Depends(get_db)
 ):
-    return cas_auth_service.validate_cas_ticket(db=db, data=data, request=request)
+    return await cas_auth_service.validate_cas_ticket(db=db, data=data, request=request)

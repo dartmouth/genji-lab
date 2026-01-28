@@ -181,7 +181,52 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         db.execute(
             delete(Document).where(Document.id.in_(document_ids))
         )
-    
+
+# ==================== Collection Metadata Schema Operations ====================
+
+    def get_metadata_schema(self, db: Session) -> List[Dict[str, Any]]:
+        """
+        Get the collection metadata schema from site settings.
+        
+        Returns an empty list if no schema is configured.
+        Raises HTTPException 404 if site settings not found.
+        """
+        from models.models import SiteSettings
+        
+        site_settings = db.execute(
+            select(SiteSettings).limit(1)
+        ).scalar_one_or_none()
+        
+        if not site_settings:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Site settings not found"
+            )
+        
+        return site_settings.collection_metadata_schema or []
+
+
+    def validate_collection_metadata(
+        self,
+        db: Session,
+        metadata: Dict[str, Any]
+    ) -> None:
+        """
+        Validate collection metadata against the schema.
+        
+        Raises HTTPException 400 if validation fails.
+        """
+        schema = self.get_metadata_schema(db)
+        
+        # Check required fields
+        for field in schema:
+            if field.get('required') and not metadata.get(field.get('key')):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Required metadata field '{field.get('label', field.get('key'))}' is missing"
+                )
+
+
     # ==================== CRUD Operations ====================
     
     def create(
@@ -200,6 +245,9 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         
         # Verify user exists
         self._verify_user_exists(db, collection.created_by_id)
+
+        if collection.collection_metadata:
+            self.validate_collection_metadata(db, collection.collection_metadata)
         
         # Create the collection
         db_collection = self.model(**collection.model_dump())
@@ -264,7 +312,7 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         
         # Apply pagination
         query = query.offset(skip).limit(limit)
-        
+
         return db.execute(query).scalars().all()
     
     def update(

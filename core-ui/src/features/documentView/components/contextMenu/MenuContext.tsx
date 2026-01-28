@@ -541,7 +541,7 @@ const MenuContext: React.FC<MenuContextProps> = ({ viewedDocuments = [] }) => {
                   dispatch(setMotivation("linking"));
                 }}
               >
-                Add Content to Link
+                Add Content to Intertext Link
               </ContextButton>
             )}
 
