@@ -134,7 +134,7 @@ class TestDocumentCollectionUpdate:
             text_direction="rtl",
             language="es",
             hierarchy={"updated": True},
-            collection_metadata={"version": 2},
+            collection_metadata={"version": "2"},
             created_by_id=1,
             modified_by_id=2
         )

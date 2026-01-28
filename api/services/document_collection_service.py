@@ -340,7 +340,7 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
             self._check_duplicate_title(db, collection.title, exclude_id=collection_id)
         
         # Update attributes
-        update_data = collection.dict(exclude_unset=True)
+        update_data = collection.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_collection, key, value)
         
@@ -374,7 +374,7 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
             self._check_duplicate_title(db, collection.title, exclude_id=collection_id)
         
         # Update only provided fields
-        update_data = collection.dict(exclude_unset=True, exclude_none=True)
+        update_data = collection.model_dump(exclude_unset=True, exclude_none=True)
         for key, value in update_data.items():
             setattr(db_collection, key, value)
         

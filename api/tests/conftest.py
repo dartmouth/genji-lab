@@ -117,6 +117,44 @@ class TestDocumentCollection(TestBase):
     )
 
 
+class TestDocument(TestBase):
+    """Test-specific Document model without PostgreSQL-specific features."""
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255))
+    description = Column(Text)
+    document_collection_id = Column(Integer, ForeignKey("document_collections.id"))
+    created = Column(DateTime, default=datetime.now)
+    modified = Column(DateTime, default=datetime.now)
+
+
+class TestDocumentElement(TestBase):
+    """Test-specific DocumentElement model without PostgreSQL-specific features."""
+    __tablename__ = "document_elements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(Integer, ForeignKey("documents.id"))
+    element_type = Column(String(100))
+    content = Column(Text)
+
+
+class TestSiteSettings(TestBase):
+    """Test-specific SiteSettings model without PostgreSQL-specific features."""
+    __tablename__ = "site_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    site_title = Column(String(255))
+    site_logo_enabled = Column(Boolean, default=False)
+    updated_by_id = Column(Integer)
+    updated_at = Column(DateTime)
+    site_logo_data = Column(Text)
+    site_logo_mime_type = Column(String(100))
+    site_favicon_data = Column(Text)
+    site_favicon_mime_type = Column(String(100))
+    collection_metadata_schema = Column(JSON)
+
+
 class TestAnnotation(TestBase):
     """Test-specific Annotation model without PostgreSQL-specific features."""
     __tablename__ = "annotations"
@@ -669,11 +707,36 @@ def multiple_test_document_collections(
 
 
 @pytest.fixture
+def test_site_settings(db_session) -> TestSiteSettings:
+    """Create test site settings with empty metadata schema."""
+    settings = TestSiteSettings(
+        id=1,
+        site_title="Test Site",
+        collection_metadata_schema=[]  # Empty schema means no validation
+    )
+    db_session.add(settings)
+    db_session.commit()
+    db_session.refresh(settings)
+    return settings
+
+
+@pytest.fixture
 def document_collection_service(db_session, monkeypatch):
     """
     Create DocumentCollectionService instance configured for SQLite testing.
     """
+    import services.document_collection_service as dc_service_module
     from services.document_collection_service import DocumentCollectionService
+    
+    # Patch models in the service module's namespace (before creating service)
+    monkeypatch.setattr(dc_service_module, 'User', TestUser)
+    monkeypatch.setattr(dc_service_module, 'Document', TestDocument)
+    monkeypatch.setattr(dc_service_module, 'DocumentElement', TestDocumentElement)
+    monkeypatch.setattr(dc_service_module, 'AnnotationModel', TestAnnotation)
+    
+    # Need to patch SiteSettings in the models.models module since it's imported there
+    import models.models
+    monkeypatch.setattr(models.models, 'SiteSettings', TestSiteSettings)
     
     service = DocumentCollectionService()
     
