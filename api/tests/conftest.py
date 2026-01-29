@@ -9,6 +9,9 @@ sys.path.insert(0, project_root)
 # Set test environment variables
 os.environ.setdefault("DB_SCHEMA", "test_schema")
 
+# Configure pytest-asyncio
+pytest_plugins = ('pytest_asyncio',)
+
 import pytest
 from datetime import datetime
 from sqlalchemy import (
@@ -232,6 +235,54 @@ class TestAnnotation(TestBase):
         back_populates="annotations"
     )
     classroom = relationship("TestGroup", foreign_keys=[classroom_id])
+
+
+class CASConfigurationModel(TestBase):
+    """Test-specific CASConfiguration model without PostgreSQL-specific features."""
+    __tablename__ = "cas_configuration"
+
+    id = Column(Integer, primary_key=True, index=True)
+    enabled = Column(Boolean, default=False)
+
+    # Core CAS settings
+    server_url = Column(String(255), nullable=False)
+    validation_endpoint = Column(String(100), default="/serviceValidate")
+    protocol_version = Column(String(10), default="2.0")
+
+    # XML parsing configuration
+    xml_namespace = Column(String(255), default="http://www.yale.edu/tp/cas")
+
+    # Attribute mapping (JSON instead of JSONB)
+    attribute_mapping = Column(
+        JSON,
+        default={
+            "username": "netid",
+            "email": "email",
+            "first_name": "givenName",
+            "last_name": "sn",
+            "full_name": "name",
+        },
+    )
+
+    # Username extraction patterns
+    username_patterns = Column(
+        JSON,
+        default=[
+            '<cas:attribute name="{attr}" value="([^"]+)"',
+            "<cas:{attr}>([^<]+)</cas:{attr}>",
+            "<cas:user>([^<]+)</cas:user>",
+        ],
+    )
+
+    # Additional metadata fields to extract
+    metadata_attributes = Column(JSON, default=["uid", "netid", "did", "affil"])
+
+    # Email handling
+    email_domain = Column(String(255), nullable=True)
+    email_format = Column(String(50), default="from_cas")
+
+    # Display settings
+    display_name = Column(String(100), default="CAS Login")
 
 
 # ==================== Database Fixtures ====================
@@ -481,6 +532,36 @@ def valid_annotation_create_data(valid_body_data, valid_text_target_data):
         "body": valid_body_data,
         "target": [valid_text_target_data]
     }
+
+
+@pytest.fixture
+def cas_config():
+    """Sample CAS configuration for testing."""
+    config = CASConfigurationModel(
+        id=1,
+        enabled=True,
+        server_url="https://login.example.edu/cas",
+        validation_endpoint="/serviceValidate",
+        protocol_version="2.0",
+        xml_namespace="http://www.yale.edu/tp/cas",
+        attribute_mapping={
+            "username": "netid",
+            "email": "email",
+            "first_name": "givenName",
+            "last_name": "sn",
+            "full_name": "name",
+        },
+        username_patterns=[
+            '<cas:attribute name="{attr}" value="([^"]+)"',
+            "<cas:{attr}>([^<]+)</cas:{attr}>",
+            "<cas:user>([^<]+)</cas:user>",
+        ],
+        metadata_attributes=["uid", "netid", "did", "affil"],
+        email_domain="dartmouth.edu",
+        email_format="from_cas",
+        display_name="CAS Login"
+    )
+    return config
 
 
 # ==================== Database Annotation Fixtures ====================
