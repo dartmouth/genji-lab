@@ -174,6 +174,10 @@ class TestDocument(TestBase):
     document_collection_id = Column(Integer, ForeignKey("document_collections.id"))
     created = Column(DateTime, default=datetime.now)
     modified = Column(DateTime, default=datetime.now)
+    
+    # Relationships
+    collection = relationship("TestDocumentCollection")
+    elements = relationship("TestDocumentElement", back_populates="document")
 
 
 class TestDocumentElement(TestBase):
@@ -184,6 +188,10 @@ class TestDocumentElement(TestBase):
     document_id = Column(Integer, ForeignKey("documents.id"))
     element_type = Column(String(100))
     content = Column(Text)
+    hierarchy = Column(JSON)
+    
+    # Relationships
+    document = relationship("TestDocument", back_populates="elements")
 
 
 class TestSiteSettings(TestBase):
@@ -882,6 +890,54 @@ def multiple_test_document_collections(
         db_session.refresh(collection)
     
     return collections
+
+
+@pytest.fixture
+def test_document(db_session, test_document_collection) -> TestDocument:
+    """Create a test document in the database."""
+    document = TestDocument(
+        id=1,
+        title="Test Document",
+        description="This is a test document",
+        document_collection_id=test_document_collection.id
+    )
+    db_session.add(document)
+    db_session.commit()
+    db_session.refresh(document)
+    return document
+
+
+@pytest.fixture
+def test_document_with_elements(db_session, test_document_collection) -> dict:
+    """Create a test document with elements in the database."""
+    document = TestDocument(
+        id=2,
+        title="Document with Elements",
+        description="This document has elements",
+        document_collection_id=test_document_collection.id
+    )
+    db_session.add(document)
+    db_session.commit()
+    db_session.refresh(document)
+    
+    # Create elements
+    elements = []
+    for i in range(3):
+        element = TestDocumentElement(
+            id=i + 1,
+            document_id=document.id,
+            element_type="paragraph",
+            content=f"Element {i+1} content"
+        )
+        db_session.add(element)
+        elements.append(element)
+    
+    db_session.commit()
+    
+    for element in elements:
+        db_session.refresh(element)
+    
+    return {"document": document, "elements": elements}
 
 
 @pytest.fixture
