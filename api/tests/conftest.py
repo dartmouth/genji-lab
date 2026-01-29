@@ -39,6 +39,14 @@ test_group_members = Table(
     Column("user_id", Integer, ForeignKey("users.id")),
 )
 
+# Association table for user roles (no schema)
+test_user_roles = Table(
+    "user_roles",
+    TestBase.metadata,
+    Column("user_id", Integer, ForeignKey("users.id")),
+    Column("role_id", Integer, ForeignKey("roles.id")),
+)
+
 
 class TestUser(TestBase):
     """Test-specific User model without PostgreSQL-specific features."""
@@ -64,6 +72,12 @@ class TestUser(TestBase):
         secondary=test_group_members,
         back_populates="members"
     )
+    roles = relationship(
+        "TestRole",
+        secondary=test_user_roles,
+        back_populates="users"
+    )
+    password_auth = relationship("UserPasswordModel", back_populates="user", uselist=False)
 
 
 class TestGroup(TestBase):
@@ -83,6 +97,36 @@ class TestGroup(TestBase):
         back_populates="groups"
     )
     created_by = relationship("TestUser", foreign_keys=[created_by_id])
+
+
+class TestRole(TestBase):
+    """Test-specific Role model without PostgreSQL-specific features."""
+    __tablename__ = "roles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), unique=True)
+    description = Column(String(255))
+
+    # Relationships
+    users = relationship(
+        "TestUser",
+        secondary=test_user_roles,
+        back_populates="roles"
+    )
+
+
+class UserPasswordModel(TestBase):
+    """Test-specific UserPassword model without PostgreSQL-specific features."""
+    __tablename__ = "user_passwords"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    hashed_password = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    # Relationships
+    user = relationship("TestUser", back_populates="password_auth")
 
 
 class TestDocumentCollection(TestBase):
@@ -249,6 +293,18 @@ def DocumentCollectionModel():
     return TestDocumentCollection
 
 
+@pytest.fixture
+def Role():
+    """Provide TestRole as Role for tests."""
+    return TestRole
+
+
+@pytest.fixture
+def UserPassword():
+    """Provide TestUserPassword as UserPassword for tests."""
+    return TestUserPassword
+
+
 # ==================== User Fixtures ====================
 
 @pytest.fixture
@@ -265,9 +321,6 @@ def test_user(db_session) -> TestUser:
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-    
-    # Add roles attribute for permission checks (not a DB column)
-    user.roles = ["user"]
     return user
 
 
@@ -285,8 +338,6 @@ def admin_user(db_session) -> TestUser:
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-    
-    user.roles = ["admin", "user"]
     return user
 
 
@@ -304,9 +355,51 @@ def verified_scholar_user(db_session) -> TestUser:
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-    
-    user.roles = ["verified_scholar", "user"]
     return user
+
+
+# ==================== Role Fixtures ====================
+
+@pytest.fixture
+def test_role_user(db_session) -> TestRole:
+    """Create a 'user' role in the database."""
+    role = TestRole(
+        id=1,
+        name="user",
+        description="Regular user"
+    )
+    db_session.add(role)
+    db_session.commit()
+    db_session.refresh(role)
+    return role
+
+
+@pytest.fixture
+def test_role_admin(db_session) -> TestRole:
+    """Create an 'admin' role in the database."""
+    role = TestRole(
+        id=2,
+        name="admin",
+        description="System administrator"
+    )
+    db_session.add(role)
+    db_session.commit()
+    db_session.refresh(role)
+    return role
+
+
+@pytest.fixture
+def test_role_verified_scholar(db_session) -> TestRole:
+    """Create a 'verified_scholar' role in the database."""
+    role = TestRole(
+        id=3,
+        name="verified_scholar",
+        description="Verified scholar"
+    )
+    db_session.add(role)
+    db_session.commit()
+    db_session.refresh(role)
+    return role
 
 
 # ==================== Classroom/Group Fixtures ====================
