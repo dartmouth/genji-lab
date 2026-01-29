@@ -245,7 +245,7 @@ class CASConfigurationModel(TestBase):
     enabled = Column(Boolean, default=False)
 
     # Core CAS settings
-    server_url = Column(String(255), nullable=False)
+    server_url = Column(String(255), nullable=True)
     validation_endpoint = Column(String(100), default="/serviceValidate")
     protocol_version = Column(String(10), default="2.0")
 
@@ -283,6 +283,10 @@ class CASConfigurationModel(TestBase):
 
     # Display settings
     display_name = Column(String(100), default="CAS Login")
+    
+    # Audit fields
+    updated_at = Column(DateTime, nullable=True)
+    updated_by_id = Column(Integer, nullable=True)
 
 
 # ==================== Database Fixtures ====================
