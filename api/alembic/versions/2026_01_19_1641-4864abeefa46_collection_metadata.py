@@ -32,17 +32,6 @@ def upgrade() -> None:
         schema='app'
     )
     
-    # Optional: Set a default schema for existing rows
-    op.execute("""
-        UPDATE app.site_settings 
-        SET collection_metadata_schema = '[
-            {"key": "synopsis", "label": "Synopsis", "required": true, "type": "textarea"},
-            {"key": "character_list", "label": "Character List", "required": true, "type": "list"},
-            {"key": "timeline", "label": "Timeline", "required": false, "type": "text"},
-            {"key": "background_image", "label": "Backlground Image", "required": false, "type": "image"}
-        ]'::jsonb
-        WHERE collection_metadata_schema IS NULL
-    """)
     # ### end Alembic commands ###
 
 
