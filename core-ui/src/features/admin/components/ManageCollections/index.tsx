@@ -21,6 +21,7 @@ import { UpdateVisibility } from "./components/UpdateVisibility";
 import { useNotification } from "./hooks/useNotification";
 import { DocumentCollection } from "@/store/slice/documentCollectionSlice";
 import { UpdateMetadata } from "./components/UpdateMetadata"
+import { ReorderCollections } from './components/ReorderCollections'
 
 interface SubTabPanelProps {
   children?: React.ReactNode;
@@ -107,6 +108,7 @@ const ManageCollections: React.FC = () => {
           <Tab label="Rename" {...a11yPropsSubTab(3)} />
           <Tab label="Update Visibility" {...a11yPropsSubTab(4)} />
           <Tab label="Update Metadata" {...a11yPropsSubTab(5)} />
+          <Tab label="Sort Collections" {...a11yPropsSubTab(6)} />
         </Tabs>
 
         {/* Sub-tab content */}
@@ -150,6 +152,13 @@ const ManageCollections: React.FC = () => {
         </SubTabPanel>
         <SubTabPanel value={activeSubTab} index={5}>
           <UpdateMetadata
+            collections={documentCollections}
+            onSuccess={refreshOverviewData}
+            showNotification={showNotification}
+          />
+        </SubTabPanel>
+        <SubTabPanel value={activeSubTab} index={6}>
+          <ReorderCollections
             collections={documentCollections}
             onSuccess={refreshOverviewData}
             showNotification={showNotification}

@@ -1,3 +1,5 @@
+import type { DocumentCollection } from "@/store/slice/documentCollectionSlice";
+
 /**
  * Reference to a user (creator or modifier)
  */
@@ -139,4 +141,40 @@ export interface UpdateCollectionPayload {
     visibility?: string;
     modified_by_id: number;
   };
+}
+
+/**
+ * Item for batch reorder API request
+ */
+export interface ReorderCollectionItem {
+  collection_id: number;
+  display_order: number;
+}
+
+/**
+ * Batch reorder API payload
+ */
+export interface ReorderCollectionsPayload {
+  collections: ReorderCollectionItem[];
+}
+
+/**
+ * Props for ReorderCollections component
+ */
+export interface ReorderCollectionsProps {
+  collections: DocumentCollection[];
+  onSuccess: () => void;
+  showNotification: (
+    message: string,
+    severity: NotificationState["severity"]
+  ) => void;
+}
+
+/**
+ * Props for DraggableCollectionCard component
+ */
+export interface DraggableCollectionCardProps {
+  collection: DocumentCollection;
+  index: number;
+  isDragging?: boolean;
 }

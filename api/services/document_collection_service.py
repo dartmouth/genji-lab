@@ -16,7 +16,8 @@ from models.models import (
 from schemas.document_collections import (
     DocumentCollectionCreate,
     DocumentCollectionUpdate,
-    DocumentCollectionPartialUpdate
+    DocumentCollectionPartialUpdate,
+    CollectionDisplayOrderItem
 )
 from services.base_service import BaseService
 
@@ -324,7 +325,7 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
     def batch_update_display_order(
         self,
         db: Session,
-        updates: List[Dict[str, int]]
+        updates: List[CollectionDisplayOrderItem]
     ) -> None:
         """
         Batch update display_order for multiple collections.
@@ -343,7 +344,7 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
                 detail="No updates provided"
             )
         
-        collection_ids = [item['collection_id'] for item in updates]
+        collection_ids = [item.collection_id for item in updates]
         
         # Verify all collections exist
         collections = db.execute(
@@ -365,8 +366,8 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         collection_map = {c.id: c for c in collections}
         
         for item in updates:
-            collection_id = item['collection_id']
-            display_order = item['display_order']
+            collection_id = item.collection_id
+            display_order = item.display_order
             if display_order < 0:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

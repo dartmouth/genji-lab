@@ -35,6 +35,7 @@ interface DocumentCollection {
   document_count?: number;
   text_direction?: string;
   collection_metadata?: CollectionMetadata;
+  display_order: number;
   created_by?: {
     id: number;
     first_name?: string;
@@ -171,6 +172,31 @@ export const updateDocumentCollection = createAsyncThunk(
   }
 );
 
+export const batchReorderCollections = createAsyncThunk(
+  "documentCollections/batchReorder",
+  async (
+    payload: { collections: Array<{ collection_id: number; display_order: number }> },
+    { rejectWithValue }
+  ) => {
+    try {
+      console.log(payload)
+      const response = await api.patch("/collections/display-order", payload);
+
+      if (!(response.status === 200)) {
+        return rejectWithValue(
+          `Failed to reorder collections: ${response.statusText}`
+        );
+      }
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
+  }
+);
+
 // Slice
 const documentCollectionSlice = createSlice({
   name: "documentCollections",
@@ -224,6 +250,18 @@ const documentCollectionSlice = createSlice({
         }
       )
       .addCase(updateDocumentCollection.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+      .addCase(batchReorderCollections.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(batchReorderCollections.fulfilled, (state) => {
+        state.status = "succeeded";
+        // Collections will be refreshed via fetchDocumentCollections
+      })
+      .addCase(batchReorderCollections.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       });
