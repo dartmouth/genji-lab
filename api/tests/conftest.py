@@ -187,8 +187,10 @@ class TestDocumentElement(TestBase):
     id = Column(Integer, primary_key=True, index=True)
     document_id = Column(Integer, ForeignKey("documents.id"))
     element_type = Column(String(100))
-    content = Column(Text)
+    content = Column(JSON)  # Changed from Text to JSON for proper serialization
     hierarchy = Column(JSON)
+    created = Column(DateTime, default=datetime.now)
+    modified = Column(DateTime, default=datetime.now)
     
     # Relationships
     document = relationship("TestDocument", back_populates="elements")
@@ -978,3 +980,107 @@ def document_collection_service(db_session, monkeypatch):
     service.model = TestDocumentCollection
     
     return service
+
+
+# ==================== .docx Test Fixtures ====================
+
+@pytest.fixture
+def create_simple_docx():
+    """Create a simple .docx file with plain text paragraphs."""
+    from docx import Document
+    from io import BytesIO
+    
+    def _create():
+        doc = Document()
+        doc.add_paragraph("First paragraph with plain text.")
+        doc.add_paragraph("Second paragraph with more content.")
+        doc.add_paragraph("Third paragraph to test multiple elements.")
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    return _create
+
+
+@pytest.fixture
+def create_empty_docx():
+    """Create an empty .docx file with no paragraphs."""
+    from docx import Document
+    from io import BytesIO
+    
+    def _create():
+        doc = Document()
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    return _create
+
+
+@pytest.fixture
+def create_formatted_docx():
+    """Create a .docx file with formatted text (bold, italic, links)."""
+    from docx import Document
+    from docx.shared import RGBColor
+    from io import BytesIO
+    
+    def _create():
+        doc = Document()
+        
+        # Paragraph with bold and italic
+        p1 = doc.add_paragraph()
+        run1 = p1.add_run("This is ")
+        run2 = p1.add_run("bold text")
+        run2.bold = True
+        run3 = p1.add_run(" and this is ")
+        run4 = p1.add_run("italic text")
+        run4.italic = True
+        
+        # Paragraph with hyperlink
+        p2 = doc.add_paragraph()
+        p2.add_run("Check out ")
+        hyperlink_run = p2.add_run("this link")
+        hyperlink_run.font.color.rgb = RGBColor(0, 0, 255)
+        hyperlink_run.font.underline = True
+        
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    return _create
+
+
+@pytest.fixture
+def create_indented_docx():
+    """Create a .docx file with indented paragraphs to test hierarchy."""
+    from docx import Document
+    from docx.shared import Pt
+    from io import BytesIO
+    
+    def _create():
+        doc = Document()
+        
+        # Top level paragraph
+        p1 = doc.add_paragraph("Top level item")
+        
+        # Indented paragraph (level 1)
+        p2 = doc.add_paragraph("First level indent")
+        p2.paragraph_format.left_indent = Pt(36)  # 0.5 inch
+        
+        # More indented (level 2)
+        p3 = doc.add_paragraph("Second level indent")
+        p3.paragraph_format.left_indent = Pt(72)  # 1 inch
+        
+        # Back to level 1
+        p4 = doc.add_paragraph("Back to first level")
+        p4.paragraph_format.left_indent = Pt(36)
+        
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue()
+    
+    return _create

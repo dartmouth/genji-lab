@@ -336,3 +336,167 @@ class TestGetDocumentElements:
         
         assert response.status_code == 200
         assert mock_service.get_elements.called
+
+
+class TestGetDocumentsWithStats:
+    """Test GET /collection/{collection_id}/with-stats endpoint."""
+    
+    @patch('routers.documents.get_db')
+    @patch('routers.documents.document_service')
+    def test_get_documents_with_stats_success(self, mock_service, mock_get_db, client, mock_db_session, mock_current_user):
+        """Should return documents with annotation stats."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.get_by_collection_with_stats.return_value = [
+            {
+                "id": 1,
+                "title": "Test Document",
+                "description": "Test Description",
+                "created": datetime.now(),
+                "modified": datetime.now(),
+                "scholarly_annotation_count": 5,
+                "comment_count": 3,
+                "element_count": 10,
+                "total_annotation_count": 8
+            }
+        ]
+        
+        response = client.get(
+            "/api/v1/documents/collection/1/with-stats",
+            headers={"X-User-ID": str(mock_current_user.id)}
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["scholarly_annotation_count"] == 5
+        assert data[0]["comment_count"] == 3
+        assert data[0]["total_annotation_count"] == 8
+        assert mock_service.get_by_collection_with_stats.called
+    
+    @patch('routers.documents.get_db')
+    @patch('routers.documents.document_service')
+    def test_get_documents_with_stats_pagination(self, mock_service, mock_get_db, client, mock_db_session, mock_current_user):
+        """Should pass pagination parameters to service."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.get_by_collection_with_stats.return_value = []
+        
+        response = client.get(
+            "/api/v1/documents/collection/1/with-stats?skip=10&limit=20",
+            headers={"X-User-ID": str(mock_current_user.id)}
+        )
+        
+        assert response.status_code == 200
+        mock_service.get_by_collection_with_stats.assert_called_once()
+        call_args = mock_service.get_by_collection_with_stats.call_args
+        assert call_args.kwargs["skip"] == 10
+        assert call_args.kwargs["limit"] == 20
+    
+    @patch('routers.documents.get_db')
+    @patch('routers.documents.document_service')
+    def test_get_documents_with_stats_collection_not_found(self, mock_service, mock_get_db, client, mock_db_session, mock_current_user):
+        """Should return 404 for non-existent collection."""
+        from fastapi import HTTPException
+        
+        mock_get_db.return_value = mock_db_session
+        mock_service.get_by_collection_with_stats.side_effect = HTTPException(
+            status_code=404, 
+            detail="Collection not found"
+        )
+        
+        response = client.get(
+            "/api/v1/documents/collection/9999/with-stats",
+            headers={"X-User-ID": str(mock_current_user.id)}
+        )
+        
+        assert response.status_code == 404
+
+
+class TestImportWordDocument:
+    """Test POST /import-word-doc endpoint."""
+    
+    @patch('routers.documents.get_db')
+    @patch('routers.documents.document_service')
+    def test_import_word_document_success(self, mock_service, mock_get_db, client, mock_db_session, mock_current_user, create_simple_docx):
+        """Should successfully import Word document."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.import_word_document.return_value = {
+            "document": {
+                "id": 1,
+                "title": "Imported Doc",
+                "description": "Test",
+                "document_collection_id": 1,
+                "created": datetime.now().isoformat(),
+                "modified": datetime.now().isoformat()
+            },
+            "import_results": {
+                "filename": "test.docx",
+                "paragraph_count": 3,
+                "elements_created": 3,
+                "message": "Document created and Word content imported successfully"
+            }
+        }
+        
+        docx_bytes = create_simple_docx()
+        
+        response = client.post(
+            "/api/v1/documents/import-word-doc?document_collection_id=1&title=Imported Doc&description=Test",
+            files={"file": ("test.docx", docx_bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+            headers={"X-User-ID": str(mock_current_user.id)}
+        )
+        
+        assert response.status_code == 201
+        data = response.json()
+        assert "document" in data
+        assert "import_results" in data
+        assert data["import_results"]["elements_created"] == 3
+        assert mock_service.import_word_document.called
+    
+    @patch('routers.documents.get_db')
+    @patch('routers.documents.document_service')
+    def test_import_word_document_invalid_extension(self, mock_service, mock_get_db, client, mock_db_session, mock_current_user):
+        """Should return 400 for non-.docx files."""
+        from fastapi import HTTPException
+        
+        mock_get_db.return_value = mock_db_session
+        mock_service.import_word_document.side_effect = HTTPException(
+            status_code=400,
+            detail="File must be a .docx document"
+        )
+        
+        response = client.post(
+            "/api/v1/documents/import-word-doc?document_collection_id=1&title=Test&description=",
+            files={"file": ("test.txt", b"fake content", "text/plain")},
+            headers={"X-User-ID": str(mock_current_user.id)}
+        )
+        
+        assert response.status_code == 400
+    
+    @patch('routers.documents.get_db')
+    @patch('routers.documents.document_service')
+    def test_import_word_document_no_file(self, mock_service, mock_get_db, client, mock_db_session, mock_current_user):
+        """Should return 422 if file is missing."""
+        mock_get_db.return_value = mock_db_session
+        
+        response = client.post(
+            "/api/v1/documents/import-word-doc?document_collection_id=1&title=Test&description=",
+            headers={"X-User-ID": str(mock_current_user.id)}
+        )
+        
+        assert response.status_code == 422  # FastAPI validation error
+    
+    @patch('routers.documents.get_db')
+    @patch('routers.documents.document_service')
+    def test_import_word_document_form_data_validation(self, mock_service, mock_get_db, client, mock_db_session, mock_current_user, create_simple_docx):
+        """Should validate required form data fields."""
+        mock_get_db.return_value = mock_db_session
+        
+        docx_bytes = create_simple_docx()
+        
+        # Missing title parameter
+        response = client.post(
+            "/api/v1/documents/import-word-doc?document_collection_id=1",
+            files={"file": ("test.docx", docx_bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+            headers={"X-User-ID": str(mock_current_user.id)}
+        )
+        
+        assert response.status_code == 422  # FastAPI validation error

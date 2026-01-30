@@ -627,7 +627,7 @@ class DocumentService(BaseService[DocumentModel]):
                 document_collection_id=collection_id
             )
             
-            db_document = DocumentModel(**document_data.dict())
+            db_document = DocumentModel(**document_data.model_dump())
             db.add(db_document)
             db.flush()
             

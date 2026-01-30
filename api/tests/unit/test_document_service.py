@@ -728,3 +728,300 @@ class TestBulkDelete:
         
         assert exc_info.value.status_code == 404
         assert "9999" in exc_info.value.detail
+
+
+class TestGetByCollectionWithStats:
+    """Test get_by_collection_with_stats method."""
+    
+    def test_get_by_collection_with_stats_success(self, db_session, test_document_collection, test_document, monkeypatch):
+        """Should return documents with annotation stats."""
+        from conftest import TestDocument, TestDocumentCollection, TestAnnotation, TestDocumentElement
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        monkeypatch.setattr(doc_service_module, 'AnnotationModel', TestAnnotation)
+        monkeypatch.setattr(doc_service_module, 'DocumentElement', TestDocumentElement)
+        
+        service = DocumentService()
+        
+        # Create annotations for the document
+        scholarly_annotation = TestAnnotation(
+            document_id=test_document.id,
+            motivation="scholarly",
+            creator_id=1
+        )
+        comment_annotation = TestAnnotation(
+            document_id=test_document.id,
+            motivation="commenting",
+            creator_id=1
+        )
+        db_session.add_all([scholarly_annotation, comment_annotation])
+        db_session.commit()
+        
+        result = service.get_by_collection_with_stats(db_session, test_document_collection.id)
+        
+        assert len(result) == 1
+        assert result[0]["id"] == test_document.id
+        assert result[0]["title"] == test_document.title
+        assert result[0]["scholarly_annotation_count"] == 1
+        assert result[0]["comment_count"] == 1
+        assert result[0]["total_annotation_count"] == 2
+        assert result[0]["element_count"] == 0
+    
+    def test_get_by_collection_with_stats_pagination(self, db_session, test_document_collection, monkeypatch):
+        """Should respect pagination parameters."""
+        from conftest import TestDocument, TestDocumentCollection, TestAnnotation, TestDocumentElement
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        monkeypatch.setattr(doc_service_module, 'AnnotationModel', TestAnnotation)
+        monkeypatch.setattr(doc_service_module, 'DocumentElement', TestDocumentElement)
+        
+        service = DocumentService()
+        
+        # Create multiple documents
+        for i in range(5):
+            doc = TestDocument(
+                title=f"Document {i}",
+                document_collection_id=test_document_collection.id
+            )
+            db_session.add(doc)
+        db_session.commit()
+        
+        # Test pagination
+        result = service.get_by_collection_with_stats(db_session, test_document_collection.id, skip=1, limit=2)
+        
+        assert len(result) == 2
+    
+    def test_get_by_collection_with_stats_empty_collection(self, db_session, test_document_collection, monkeypatch):
+        """Should return empty list for collection with no documents."""
+        from conftest import TestDocument, TestDocumentCollection
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        
+        service = DocumentService()
+        
+        result = service.get_by_collection_with_stats(db_session, test_document_collection.id)
+        
+        assert result == []
+    
+    def test_get_by_collection_with_stats_collection_not_found(self, db_session, monkeypatch):
+        """Should raise 404 for non-existent collection."""
+        from conftest import TestDocumentCollection
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        
+        service = DocumentService()
+        
+        with pytest.raises(HTTPException) as exc_info:
+            service.get_by_collection_with_stats(db_session, 9999)
+        
+        assert exc_info.value.status_code == 404
+    
+    def test_get_by_collection_with_stats_no_annotations(self, db_session, test_document_collection, test_document, monkeypatch):
+        """Should return zero counts for documents with no annotations."""
+        from conftest import TestDocument, TestDocumentCollection, TestAnnotation, TestDocumentElement
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        monkeypatch.setattr(doc_service_module, 'AnnotationModel', TestAnnotation)
+        monkeypatch.setattr(doc_service_module, 'DocumentElement', TestDocumentElement)
+        
+        service = DocumentService()
+        
+        result = service.get_by_collection_with_stats(db_session, test_document_collection.id)
+        
+        assert len(result) == 1
+        assert result[0]["scholarly_annotation_count"] == 0
+        assert result[0]["comment_count"] == 0
+        assert result[0]["total_annotation_count"] == 0
+
+
+class TestImportWordDocument:
+    """Test import_word_document method."""
+    
+    def test_import_word_document_success(self, db_session, test_document_collection, create_simple_docx, monkeypatch):
+        """Should create document and import Word content."""
+        from conftest import TestDocument, TestDocumentCollection, TestDocumentElement
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        monkeypatch.setattr(doc_service_module, 'DocumentElement', TestDocumentElement)
+        
+        service = DocumentService()
+        
+        docx_bytes = create_simple_docx()
+        
+        result = service.import_word_document(
+            db_session,
+            collection_id=test_document_collection.id,
+            title="Imported Document",
+            description="Test import",
+            file_content=docx_bytes,
+            filename="test.docx"
+        )
+        
+        assert "document" in result
+        assert "import_results" in result
+        assert result["document"]["title"] == "Imported Document"
+        assert result["import_results"]["filename"] == "test.docx"
+        assert result["import_results"]["elements_created"] == 3  # 3 paragraphs
+        
+        # Verify document was created
+        doc = db_session.query(TestDocument).filter_by(title="Imported Document").first()
+        assert doc is not None
+        assert doc.document_collection_id == test_document_collection.id
+    
+    def test_import_word_document_invalid_file_type(self, db_session, test_document_collection, monkeypatch):
+        """Should raise 400 for non-.docx files."""
+        from conftest import TestDocumentCollection
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        
+        service = DocumentService()
+        
+        with pytest.raises(HTTPException) as exc_info:
+            service.import_word_document(
+                db_session,
+                collection_id=test_document_collection.id,
+                title="Test",
+                description="",
+                file_content=b"fake content",
+                filename="test.txt"
+            )
+        
+        assert exc_info.value.status_code == 400
+        assert ".docx" in exc_info.value.detail
+    
+    def test_import_word_document_collection_not_found(self, db_session, create_simple_docx, monkeypatch):
+        """Should raise 404 for non-existent collection."""
+        from conftest import TestDocumentCollection
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        
+        service = DocumentService()
+        
+        docx_bytes = create_simple_docx()
+        
+        with pytest.raises(HTTPException) as exc_info:
+            service.import_word_document(
+                db_session,
+                collection_id=9999,
+                title="Test",
+                description="",
+                file_content=docx_bytes,
+                filename="test.docx"
+            )
+        
+        assert exc_info.value.status_code == 404
+    
+    def test_import_word_document_empty_document(self, db_session, test_document_collection, create_empty_docx, monkeypatch):
+        """Should handle empty .docx files."""
+        from conftest import TestDocument, TestDocumentCollection, TestDocumentElement
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        monkeypatch.setattr(doc_service_module, 'DocumentElement', TestDocumentElement)
+        
+        service = DocumentService()
+        
+        docx_bytes = create_empty_docx()
+        
+        result = service.import_word_document(
+            db_session,
+            collection_id=test_document_collection.id,
+            title="Empty Document",
+            description="",
+            file_content=docx_bytes,
+            filename="empty.docx"
+        )
+        
+        assert result["import_results"]["elements_created"] == 0
+        assert result["import_results"]["paragraph_count"] == 0
+    
+    def test_import_word_document_with_formatting(self, db_session, test_document_collection, create_formatted_docx, monkeypatch):
+        """Should preserve text formatting."""
+        from conftest import TestDocument, TestDocumentCollection, TestDocumentElement
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        monkeypatch.setattr(doc_service_module, 'DocumentElement', TestDocumentElement)
+        
+        service = DocumentService()
+        
+        docx_bytes = create_formatted_docx()
+        
+        result = service.import_word_document(
+            db_session,
+            collection_id=test_document_collection.id,
+            title="Formatted Document",
+            description="",
+            file_content=docx_bytes,
+            filename="formatted.docx"
+        )
+        
+        assert result["import_results"]["elements_created"] == 2  # 2 paragraphs
+        
+        # Verify elements were created with content
+        doc = db_session.query(TestDocument).filter_by(title="Formatted Document").first()
+        elements = db_session.query(TestDocumentElement).filter_by(document_id=doc.id).all()
+        assert len(elements) == 2
+        assert elements[0].content is not None
+    
+    def test_import_word_document_with_indentation(self, db_session, test_document_collection, create_indented_docx, monkeypatch):
+        """Should preserve hierarchy/indentation."""
+        from conftest import TestDocument, TestDocumentCollection, TestDocumentElement
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        monkeypatch.setattr(doc_service_module, 'DocumentElement', TestDocumentElement)
+        
+        service = DocumentService()
+        
+        docx_bytes = create_indented_docx()
+        
+        result = service.import_word_document(
+            db_session,
+            collection_id=test_document_collection.id,
+            title="Indented Document",
+            description="",
+            file_content=docx_bytes,
+            filename="indented.docx"
+        )
+        
+        assert result["import_results"]["elements_created"] == 4  # 4 paragraphs
+        
+        # Verify hierarchy was preserved
+        doc = db_session.query(TestDocument).filter_by(title="Indented Document").first()
+        elements = db_session.query(TestDocumentElement).filter_by(document_id=doc.id).all()
+        assert len(elements) == 4
+        # Elements should have hierarchy values
+        for element in elements:
+            assert element.hierarchy is not None
+    
+    def test_import_word_document_rollback_on_error(self, db_session, test_document_collection, monkeypatch):
+        """Should rollback transaction on error."""
+        from conftest import TestDocument, TestDocumentCollection
+        import services.document_service as doc_service_module
+        monkeypatch.setattr(doc_service_module, 'DocumentModel', TestDocument)
+        monkeypatch.setattr(doc_service_module, 'DocumentCollection', TestDocumentCollection)
+        
+        service = DocumentService()
+        
+        # Invalid docx content will cause error during processing
+        with pytest.raises(HTTPException) as exc_info:
+            service.import_word_document(
+                db_session,
+                collection_id=test_document_collection.id,
+                title="Will Fail",
+                description="",
+                file_content=b"not a valid docx",
+                filename="bad.docx"
+            )
+        
+        assert exc_info.value.status_code == 500
+        
+        # Verify document was not created
+        doc = db_session.query(TestDocument).filter_by(title="Will Fail").first()
+        assert doc is None
