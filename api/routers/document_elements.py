@@ -152,7 +152,7 @@ def get_elements_by_document(
     document_id: int,
     skip: int = 0,
     limit: int = 10000,  # Increased to support large documents
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
     """
     Get all elements for a specific document

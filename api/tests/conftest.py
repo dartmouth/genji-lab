@@ -194,6 +194,11 @@ class TestDocumentElement(TestBase):
     
     # Relationships
     document = relationship("TestDocument", back_populates="elements")
+    annotations = relationship(
+        "TestAnnotation",
+        primaryjoin="TestDocumentElement.id == foreign(TestAnnotation.document_element_id)",
+        viewonly=True
+    )
 
 
 class TestSiteSettings(TestBase):
@@ -978,6 +983,27 @@ def document_collection_service(db_session, monkeypatch):
     
     # Patch the model to use TestDocumentCollection
     service.model = TestDocumentCollection
+    
+    return service
+
+
+@pytest.fixture
+def document_element_service(db_session, monkeypatch):
+    """
+    Create DocumentElementService instance configured for SQLite testing.
+    """
+    import services.document_element_service as de_service_module
+    from services.document_element_service import DocumentElementService
+    
+    # Patch models in the service module's namespace
+    monkeypatch.setattr(de_service_module, 'DocumentElementModel', TestDocumentElement)
+    monkeypatch.setattr(de_service_module, 'Document', TestDocument)
+    monkeypatch.setattr(de_service_module, 'AnnotationModel', TestAnnotation)
+    
+    service = DocumentElementService()
+    
+    # Patch the model to use TestDocumentElement
+    service.model = TestDocumentElement
     
     return service
 
