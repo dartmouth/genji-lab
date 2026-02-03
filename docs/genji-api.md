@@ -55,7 +55,7 @@ flowchart TD
     M4 --> DB
 ```
 
-## 4. Validation & Documentation
+## 3. Validation & Documentation
 
 ```mermaid
 flowchart TD
@@ -72,8 +72,8 @@ flowchart TD
     I --> J[HTTP Response]
     
     API[FastAPI App] -.->|Auto-generates| K[OpenAPI Spec]
-    K --> L[/docs - Swagger UI]
-    K --> M[/redoc - ReDoc UI]
+    K --> L[Swagger UI]
+    K --> M[ReDoc UI]
 ```
 3. Validation & Documentation
 
