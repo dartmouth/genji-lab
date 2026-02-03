@@ -19,30 +19,7 @@ flowchart TD
     B -->|Update Redux| A
 ```
 
-## 2. API Routers (13 total)
-
-```mermaid
-flowchart TB
-    API[FastAPI Application]
-    
-    API --> R1["Router: /annotations"]
-    API --> R2["Router: /document-collections"]
-    API --> R3["Router: /documents"]
-    API --> R4["Router: /document-elements"]
-    API --> R5["Router: /users"]
-    API --> R6["Router: /groups"]
-    API --> R7["Router: /roles"]
-    API --> R8["Router: /flags"]
-    API --> R9["Router: /search"]
-    API --> R10["Router: /site-settings"]
-    API --> R11["Router: /auth"]
-    API --> R12["Router: /cas-config"]
-    
-    R11 -.-> Auth[Authentication Middleware]
-    Auth -.-> CAS[CAS Server]
-```
-
-## 3. Service & Data Layer
+## 2. Service & Data Layer
 
 ```mermaid
 flowchart TD
@@ -98,3 +75,22 @@ flowchart TD
     K --> L[/docs - Swagger UI]
     K --> M[/redoc - ReDoc UI]
 ```
+3. Validation & Documentation
+
+```mermaid
+flowchart TD
+    A[Incoming Request] --> B{Request Validation}
+    B -->|Invalid| C[422 Validation Error]
+    B -->|Valid| D[Pydantic Schema]
+    
+    D --> E[Router Handler]
+    E --> F[Service Logic]
+    F --> G[Database Operation]
+    
+    G --> H[Pydantic Response Model]
+    H --> I[JSON Serialization]
+    I --> J[HTTP Response]
+    
+    API[FastAPI App] -.->|Auto-generates| K[OpenAPI Spec]
+    K --> L["Swagger UI at /docs"]
+    K --> M["ReDoc UI at /redoc"
