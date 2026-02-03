@@ -1,28 +1,3 @@
-# services:
-#   ui:
-#     build:
-#       context: ./core-ui
-#       dockerfile: Dockerfile.dev
-#     ports:
-#       - "5173:5173"
-#     volumes:
-#       - ./core-ui/src:/app/src
-#       - ./core-ui/vite.config.ts:/app/vite.config.ts
-#   api:
-#     build:
-#       context: ./api
-#       dockerfile: Dockerfile
-#     platform: linux/arm64
-#     ports:
-#       - "8000:8000"
-#     volumes:
-#       - ./api:/app
-#   migrations:
-#     build:
-#       context: ./api
-#       dockerfile: Dockerfile.migrations
-#     volumes:
-#       - ./api:/app
 services:
   postgres:
     build:
@@ -62,7 +37,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    platform: linux/arm64
+    #platform: linux/arm64
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-myapp}
       ENVIRONMENT: development
