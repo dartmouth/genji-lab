@@ -127,11 +127,13 @@ def remove_target_from_annotation(
     db: Session = Depends(get_db),
 ):
     """Remove a specific target from a linking annotation."""
-    result = annotation_service.remove_target(db, annotation_id, target_id, current_user)
-    
+    result = annotation_service.remove_target(
+        db, annotation_id, target_id, current_user
+    )
+
     if result is None:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    
+
     return result
 
 
@@ -147,7 +149,9 @@ def read_annotations_by_motivation(
     db: Session = Depends(get_db),
 ):
     """Get annotations grouped by motivation for a document element."""
-    return annotation_query_service.get_by_motivation(db, document_element_id, classroom_id)
+    return annotation_query_service.get_by_motivation(
+        db, document_element_id, classroom_id
+    )
 
 
 @router.get(
@@ -157,12 +161,13 @@ def read_annotations_by_motivation(
 )
 def fetch_links(
     document_element_id: int,
-    classroom_id: Optional[int] = Depends(get_classroom_context),
     current_user: User = Depends(get_current_user_sync),
     db: Session = Depends(get_db),
 ):
     """Get linking annotations that reference a specific document element."""
-    return annotation_query_service.get_links_for_element(db, document_element_id, classroom_id)
+    return annotation_query_service.get_links_for_element(
+        db, document_element_id, classroom_id=None
+    )
 
 
 @router.get(

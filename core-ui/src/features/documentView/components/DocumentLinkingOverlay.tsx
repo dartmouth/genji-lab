@@ -493,14 +493,13 @@ const DocumentLinkingOverlay: React.FC<DocumentLinkingOverlayProps> = ({
       description || "Document link",
       segments
     );
-    const classroomId =
-      activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
+    // const classroomId =
+    //   activeClassroomValue && !isOptedOut ? activeClassroomValue : undefined;
 
     // Save the annotation
     await dispatch(
       linkingAnnotations.thunks.saveAnnotation({
         annotation: annoBody,
-        classroomId: classroomId,
       })
     ).unwrap();
 

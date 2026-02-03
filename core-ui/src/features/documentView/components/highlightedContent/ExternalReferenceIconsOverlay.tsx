@@ -8,7 +8,7 @@ import { ExternalReferenceIcon } from "../externalReferences";
 import ExternalReferencePreviewModal from "../externalReferences/ExternalReferencePreviewModal";
 import { getTextTargets } from "./utils";
 import { Annotation } from "@documentView/types";
-import useLocalStorage from "@/hooks/useLocalStorage";
+// import useLocalStorage from "@/hooks/useLocalStorage";
 import { parseURI } from "@documentView/utils";
 
 interface ExternalReferenceIconsOverlayProps {
@@ -34,11 +34,10 @@ const ExternalReferenceIconsOverlay: React.FC<
 > = ({ text, paragraphId, containerRef }) => {
   const dispatch = useAppDispatch();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [activeClassroomValue, _setActiveClassroomValue] =
-    useLocalStorage("active_classroom");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
+  // const [activeClassroomValue, _setActiveClassroomValue] =
+  //   useLocalStorage("active_classroom");
+  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
 
   const [previewState, setPreviewState] = useState<{
     open: boolean;
@@ -146,16 +145,12 @@ const ExternalReferenceIconsOverlay: React.FC<
 
   const handleDeleteSuccess = useCallback(() => {
     // Refetch external references for this paragraph after successful deletion
-    const params: { documentElementId: string; classroomId?: string } = {
-      documentElementId: String(parseURI(paragraphId)),
-    };
-
-    if (activeClassroomValue && isOptedOut !== "true") {
-      params.classroomId = String(activeClassroomValue);
-    }
-
-    dispatch(externalReferenceAnnotations.thunks.fetchAnnotations(params));
-  }, [dispatch, paragraphId, activeClassroomValue, isOptedOut]);
+    dispatch(
+      externalReferenceAnnotations.thunks.fetchAnnotations({
+        documentElementId: String(parseURI(paragraphId)),
+      })
+    );
+  }, [dispatch, paragraphId]);
 
   if (iconPositions.length === 0) {
     return null;

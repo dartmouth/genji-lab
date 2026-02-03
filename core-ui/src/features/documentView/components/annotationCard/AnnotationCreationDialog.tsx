@@ -98,23 +98,11 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
   // Fetch all linking annotations when dialog opens with linking motivation
   useEffect(() => {
     if (annotationCreate.motivation === "linking" && isAuthenticated) {
-      // Fetch all linking annotations regardless of document
-      // This ensures the dropdown has all available links
       const fetchAllLinks = async () => {
         try {
-          // Get classroom context
-          const classroomParams =
-            activeClassroomValue && isOptedOut !== "true"
-              ? { classroom_id: activeClassroomValue }
-              : {};
-
-          // Make direct API call to get all linking annotations
+          // Linking annotations are GLOBAL - don't pass classroom_id
           const response = await fetch(
-            `/api/v1/annotations/?motivation=linking${
-              classroomParams.classroom_id
-                ? `&classroom_id=${classroomParams.classroom_id}`
-                : ""
-            }`,
+            `/api/v1/annotations/?motivation=linking`,
             {
               headers: {
                 Authorization: `Bearer ${
@@ -128,7 +116,6 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
           if (response.ok) {
             const allLinkingAnnotations =
               (await response.json()) as Annotation[];
-            // Add them all to Redux
             allLinkingAnnotations.forEach((annotation) => {
               dispatch(linkingAnnotations.actions.addAnnotation(annotation));
             });
@@ -143,9 +130,7 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
   }, [
     annotationCreate.motivation,
     isAuthenticated,
-    activeClassroomValue,
-    isOptedOut,
-    dispatch,
+    dispatch, // Remove activeClassroomValue and isOptedOut from dependencies
   ]);
 
   const onTextChange = (value: string) => {
@@ -299,7 +284,6 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
       }
     } catch (error) {
       console.error("Failed to add content to link:", error);
-      // Optionally show an error message to the user
     }
   };
 
@@ -326,10 +310,21 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
       newAnno.target.segments
     );
 
+    // Only comments should have classroom context
+    const isComment = newAnno.motivation === "commenting";
+
+    // Parse classroom ID and convert to string for the API
+    let classroomId: string | undefined = undefined;
+    if (isComment && activeClassroomValue && isOptedOut !== "true") {
+      const parsed = parseInt(activeClassroomValue as string, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        classroomId = String(parsed);
+      }
+    }
+
     const saveParams = {
       annotation: annoBody,
-      ...(activeClassroomValue &&
-        isOptedOut !== "true" && { classroomId: activeClassroomValue }),
+      ...(classroomId ? { classroomId } : {}),
     };
 
     dispatch(slice.thunks.saveAnnotation(saveParams));
@@ -358,8 +353,6 @@ const AnnotationCreationDialog: React.FC<AnnotationCreationDialogProps> = ({
   const handleLogin = () => {
     login();
   };
-
-  // const onTextChangeDebounce = debounce(onTextChange, 10);
 
   if (!newAnno || !newAnno.motivation) {
     return null;
