@@ -20,6 +20,7 @@
 | 9 | `document_elements` | Content units | 1000s-10000s | → annotations |
 | 10 | `annotations` | User annotations | 1000s-100000s | → elements, users |
 | 11 | `site_settings` | Platform config | 1 | Singleton |
+| 12 | `cas_configuration` | CAS/SSO config | 1 | Singleton |
 
 ---
 
@@ -221,6 +222,27 @@ CREATE TABLE app.site_settings (
 );
 ```
 **Pattern**: Singleton table (typically 1 row)
+
+---
+
+#### cas_configuration
+```sql
+CREATE TABLE app.cas_configuration (
+    id                      INTEGER PRIMARY KEY,
+    enabled                 BOOLEAN DEFAULT FALSE,
+    server_url              VARCHAR(255) NOT NULL,  -- e.g., https://login.dartmouth.edu/cas
+    validation_endpoint     VARCHAR(100) DEFAULT '/serviceValidate',
+    protocol_version        VARCHAR(10) DEFAULT '2.0',
+    xml_namespace           VARCHAR(255) DEFAULT 'http://www.yale.edu/tp/cas',
+    attribute_mapping       JSONB,         -- Map CAS attrs to user fields
+    username_patterns       TEXT[],        -- Extraction patterns
+    display_name            VARCHAR(100) DEFAULT 'Institutional Login',
+    created_at              TIMESTAMP DEFAULT NOW(),
+    updated_at              TIMESTAMP DEFAULT NOW(),
+    updated_by_id           INTEGER REFERENCES app.users(id)
+);
+```
+**Pattern**: Singleton table (typically 1 row) for CAS/SSO authentication settings
 
 ---
 

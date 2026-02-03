@@ -6,44 +6,58 @@ flowchart TD
     %% ---------- API core ----------
     B --> C[FastAPI Application]
 
-    %% ---------- Routers ----------
-    C --> D[Router: /items]
-    C --> E[Router: /collections]
+    %% ---------- Routers (13 total) ----------
+    C --> D[Router: /annotations]
+    C --> E[Router: /document-collections]
     C --> F[Router: /documents]
-    C --> G[Router: /users]
-    C --> H[Router: /classrooms]
-    C --> I[Router: /flags]
-    C --> J["Router: /auth (CAS)"]
+    C --> G[Router: /document-elements]
+    C --> H[Router: /users]
+    C --> I[Router: /groups]
+    C --> J[Router: /roles]
+    C --> K[Router: /flags]
+    C --> L[Router: /search]
+    C --> M[Router: /site-settings]
+    C --> N["Router: /auth (local & CAS)"]
+    C --> O[Router: /cas-config]
 
     %% ---------- Security ----------
-    J --> K[APIKeyQuery / APIKeyHeader]
-    K --> C
+    N --> P[Session Auth / CAS]
+    P --> C
+
+    %% ---------- Services Layer ----------
+    D --> Q[Service: AnnotationService]
+    E --> R[Service: CollectionService]
+    F --> S[Service: DocumentService]
+    G --> T[Service: ElementService]
 
     %% ---------- Validation & Serialization ----------
-    D --> L[Pydantic Model: Item]
-    E --> M[Pydantic Model: DocumentCollection]
-    F --> N[Pydantic Model: Document]
-    G --> O[Pydantic Model: User]
-    H --> P[Pydantic Model: Classroom]
-    I --> Q[Pydantic Model: Flag]
+    Q --> U[Pydantic Model: Annotation]
+    R --> V[Pydantic Model: DocumentCollection]
+    S --> W[Pydantic Model: Document]
+    T --> X[Pydantic Model: DocumentElement]
+    H --> Y[Pydantic Model: User]
+    I --> Z[Pydantic Model: Group]
+    M --> AA[Pydantic Model: SiteSettings]
 
     %% ---------- Database ----------
-    L --> R["Database (SQLAlchemy / ORM)"]
-    M --> R
-    N --> R
-    O --> R
-    P --> R
-    Q --> R
+    U --> AB["Database (PostgreSQL via SQLAlchemy)"]
+    V --> AB
+    W --> AB
+    X --> AB
+    Y --> AB
+    Z --> AB
+    AA --> AB
 
     %% ---------- Response flow ----------
-    R --> S[Raw DB rows]
-    S --> T["FastAPI Response (JSON)"]
-    T --> C
+    AB --> AC[Raw DB rows]
+    AC --> AD["FastAPI Response (JSON)"]
+    AD --> C
 
     %% ---------- OpenAPI / Docs ----------
-    C --> U["OpenAPI generator (get_openapi ...)"]
-    U --> V["/docs & /redoc (Swagger UI)"]
+    C --> AE["OpenAPI generator (automatic)"]
+    AE --> AF["/docs & /redoc (Swagger UI)"]
 
     %% ---------- UI receives data ----------
-    T --> B
+    AD --> B
     B -->|data → Redux store| A
+```

@@ -3,8 +3,7 @@
 **Project**: Genji Document Annotation Platform  
 **API Framework**: FastAPI 0.104+  
 **Python Version**: 3.12  
-**Database**: PostgreSQL with SQLAlchemy ORM  
-**Last Updated**: October 22, 2025
+**Database**: PostgreSQL with SQLAlchemy ORM
 
 ---
 
@@ -113,6 +112,7 @@ api/
 │   ├── annotations.py          # Annotation CRUD & queries (514 lines)
 │   ├── auth.py                 # Local authentication
 │   ├── cas_auth.py             # CAS authentication
+│   ├── cas_config.py           # CAS configuration management
 │   ├── auth_utils.py           # Shared auth utilities
 │   ├── documents.py            # Document management
 │   ├── document_collections.py # Collection management
@@ -124,6 +124,24 @@ api/
 │   ├── site_settings.py        # Site configuration
 │   └── users.py                # User management
 │
+├── services/                    # Business logic layer
+│   ├── annotation_service.py   # Annotation business logic
+│   ├── annotation_query_service.py # Annotation query helpers
+│   ├── auth_service.py         # Authentication logic
+│   ├── cas_auth_service.py     # CAS authentication logic
+│   ├── cas_config_service.py   # CAS configuration logic
+│   ├── classroom_service.py    # Classroom business logic
+│   ├── document_service.py     # Document business logic
+│   ├── document_collection_service.py # Collection logic
+│   ├── document_element_service.py # Element logic
+│   ├── flag_service.py         # Flag management logic
+│   ├── group_service.py        # Group management logic
+│   ├── role_service.py         # Role management logic
+│   ├── search_service.py       # Search logic
+│   ├── site_settings_service.py # Settings logic
+│   ├── user_service.py         # User management logic
+│   └── base_service.py         # Base service patterns
+│
 ├── dependencies/                # FastAPI dependencies
 │   └── classroom.py            # Classroom context & auth helpers
 │
@@ -131,7 +149,15 @@ api/
 │   ├── versions/               # Migration files
 │   └── env.py                  # Alembic environment config
 │
-├── tests/                       # Test suite (TODO: needs implementation)
+├── tests/                       # Test suite
+│   ├── conftest.py             # Pytest fixtures & configuration
+│   ├── pytest.ini              # Pytest settings
+│   ├── unit/                   # Unit tests
+│   │   ├── test_*_schemas.py  # Schema validation tests
+│   │   ├── test_*_service.py  # Service layer tests
+│   │   └── test_auth_utils.py # Auth utility tests
+│   └── integration/            # Integration tests
+│       └── test_*_endpoints.py # API endpoint tests
 │
 ├── data/                        # Data files
 │   ├── *.json                  # Sample documents (p0-p117)
@@ -416,6 +442,7 @@ Each router handles a specific resource or feature:
 | **annotations.py** | `/api/v1/annotations` | 514 | Annotation CRUD, queries by element/motivation |
 | **auth.py** | `/api/v1/` | ~200 | Local authentication (register, login, logout) |
 | **cas_auth.py** | `/api/v1/` | ~250 | CAS authentication integration |
+| **cas_config.py** | `/api/v1/cas-config` | ~50 | CAS configuration management |
 | **documents.py** | `/api/v1/documents` | ~530 | Document upload, CRUD, element extraction |
 | **document_collections.py** | `/api/v1/document-collections` | ~410 | Collection management |
 | **document_elements.py** | `/api/v1/document-elements` | ~450 | Element CRUD, content queries |
@@ -487,7 +514,10 @@ def list_resources(
 | POST | `/api/v1/register` | Create new user account | No |
 | POST | `/api/v1/login` | Authenticate with password | No |
 | POST | `/api/v1/validate-cas-ticket` | Validate CAS ticket | No |
+| GET | `/api/v1/cas-config/public` | Get public CAS config | No |
 | GET | `/api/v1/me` | Get current user info | Yes |
+| GET | `/api/v1/cas-config` | Get CAS configuration | Yes |
+| PUT | `/api/v1/cas-config` | Update CAS configuration | Yes (Admin) |
 | POST | `/api/v1/change-password` | Update password | Yes |
 | POST | `/api/v1/logout` | End session | Yes |
 
@@ -552,6 +582,22 @@ def list_resources(
 | GET | `/api/v1/users/{id}` | Get user | Yes |
 | POST | `/api/v1/users/{id}/roles` | Assign role | Yes (Admin) |
 | DELETE | `/api/v1/users/{id}/roles/{role_id}` | Remove role | Yes (Admin) |
+
+### Site Settings Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/v1/site-settings/` | Get site settings | Yes |
+| PUT | `/api/v1/site-settings/` | Update site settings | Yes (Admin) |
+| GET | `/api/v1/site-settings/logo` | Serve logo file | Yes |
+| HEAD | `/api/v1/site-settings/logo` | Check logo status | Yes |
+| GET | `/api/v1/site-settings/favicon` | Serve favicon file | Yes |
+| HEAD | `/api/v1/site-settings/favicon` | Check favicon status | Yes |
+| POST | `/api/v1/site-settings/upload-logo` | Upload new logo | Yes (Admin) |
+| POST | `/api/v1/site-settings/upload-favicon` | Upload new favicon | Yes (Admin) |
+| DELETE | `/api/v1/site-settings/remove-logo` | Remove logo | Yes (Admin) |
+| DELETE | `/api/v1/site-settings/remove-favicon` | Remove favicon | Yes (Admin) |
+| GET | `/api/v1/site-settings/cache-buster` | Get cache buster timestamp | No |
 
 ---
 
@@ -715,8 +761,3 @@ app.include_router(resource.router)
 - **[Frontend Architecture](../frontend/OVERVIEW.md)** - React application structure
 - **[Development Setup](../guides/DEVELOPMENT_SETUP.md)** - Get started with local development
 - **[Deployment Guide](../guides/DEPLOYMENT.md)** - Production deployment procedures
-
----
-
-**Last Updated**: October 22, 2025  
-**Contributors**: Development Team

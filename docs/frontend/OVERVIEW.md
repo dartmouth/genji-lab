@@ -1264,7 +1264,3 @@ if (isAdmin || isInstructor) {
 3. **State management?** Use Redux Toolkit with normalized state
 4. **Need types?** Add to `src/types/` or feature-specific `types/` directory
 5. **API calls?** Create thunks in Redux slices
-
----
-
-**Maintainers:** Dartmouth ITC Genji Team

@@ -956,7 +956,3 @@ const sortedDocs = documents.sort(...);
 
 - **[Frontend Overview](OVERVIEW.md)** - Complete frontend architecture
 - **[Frontend Audit](../audits/FRONTEND_AUDIT.md)** - Redux-related issues
-
----
-
-**Maintainers:** Dartmouth ITC Genji Team

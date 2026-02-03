@@ -30,9 +30,9 @@ The Genji database uses a **single PostgreSQL schema** named `app` to organize a
 
 | Metric | Count |
 |--------|-------|
-| **Tables** | 11 |
+| **Tables** | 12 |
 | **Association Tables** | 3 |
-| **Total Entities** | 14 |
+| **Total Entities** | 15 |
 | **Foreign Keys** | 18+ |
 | **Indexes** | 30+ |
 | **JSONB Columns** | 7 |
@@ -56,8 +56,9 @@ The Genji database uses a **single PostgreSQL schema** named `app` to organize a
 - `groups` - Classrooms/teams
 - `object_sharing` - Sharing permissions
 
-**Configuration (1 table)**:
+**Configuration (2 tables)**:
 - `site_settings` - Platform configuration
+- `cas_configuration` - CAS/SSO authentication settings
 
 **Association Tables (3)**:
 - `user_roles` - User-role mapping
@@ -96,6 +97,7 @@ erDiagram
     users ||--o{ groups : "creates"
     users ||--o{ object_sharing : "creates"
     users ||--o{ site_settings : "updates"
+    users ||--o{ cas_configuration : "updates"
     
     users {
         int id PK
@@ -663,6 +665,36 @@ VALUES
 **Notes**:
 - Typically only one row exists (singleton pattern)
 - Images stored as base64-encoded text
+- Updated via admin panel
+
+---
+
+### 12. cas_configuration
+
+**Purpose**: CAS/SSO authentication configuration (singleton table)
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | INTEGER | PK, AUTO | Config ID |
+| `enabled` | BOOLEAN | DEFAULT FALSE | CAS authentication enabled |
+| `server_url` | VARCHAR(255) | NOT NULL | CAS server URL |
+| `validation_endpoint` | VARCHAR(100) | DEFAULT '/serviceValidate' | Validation endpoint path |
+| `protocol_version` | VARCHAR(10) | DEFAULT '2.0' | CAS protocol version |
+| `xml_namespace` | VARCHAR(255) | DEFAULT 'http://www.yale.edu/tp/cas' | XML namespace |
+| `attribute_mapping` | JSONB | NULL | CAS attribute to user field mapping |
+| `username_patterns` | TEXT[] | NULL | Username extraction patterns |
+| `display_name` | VARCHAR(100) | DEFAULT 'Institutional Login' | Button display text |
+| `created_at` | TIMESTAMP | AUTO | Creation timestamp |
+| `updated_at` | TIMESTAMP | AUTO UPDATE | Last update timestamp |
+| `updated_by_id` | INTEGER | FK, NULL | Last updater user ID |
+
+**Relationships**:
+- Belongs to `users` (updated_by)
+
+**Notes**:
+- Typically only one row exists (singleton pattern)
+- Controls CAS/SSO authentication behavior
+- Attribute mapping stored as JSONB for flexibility
 - Updated via admin panel
 
 ---

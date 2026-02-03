@@ -59,7 +59,8 @@ graph TB
     subgraph "Application Tier"
         FastAPI[FastAPI Server]
         Auth[Auth Middleware]
-        Routers[12 Router Modules]
+        Routers[13 Router Modules]
+        Services[Service Layer]
         ORM[SQLAlchemy ORM]
     end
     
@@ -79,7 +80,8 @@ graph TB
     FastAPI --> Auth
     Auth --> CAS
     Auth --> Routers
-    Routers --> ORM
+    Routers --> Services
+    Services --> ORM
     ORM --> PostgreSQL
     PostgreSQL --> Schema
     Schema --> Tables
@@ -125,8 +127,9 @@ graph TB
             J[Session Middleware]
         end
         
-        subgraph "Routers - 12 Modules"
+        subgraph "Routers - 13 Modules"
             K[Authentication]
+            K1[CAS Config]
             L[Collections]
             M[Documents]
             N[Document Elements]
@@ -134,10 +137,16 @@ graph TB
             P[Search]
             Q[Users]
             R[Roles]
-            S[Classrooms]
+            S[Groups/Classrooms]
             T[Site Settings]
-            U[Groups]
-            V[Object Sharing]
+            U[Flags]
+        end
+        
+        subgraph "Services - 16 Modules"
+            SV1[Business Logic Layer]
+            SV2[Annotation Service]
+            SV3[Auth Service]
+            SV4[Document Service]
         end
         
         subgraph "Data Access"
@@ -181,7 +190,8 @@ graph TB
     M --> N
     N --> O
     O --> P
-    P --> W
+    P --> SV1
+    SV1 --> W
     W --> X
     X --> Y
     Y --> Z1
@@ -201,7 +211,8 @@ graph TB
 #### Backend Components (FastAPI)
 - **FastAPI App** - ASGI application with automatic OpenAPI docs
 - **Middleware** - CORS (allows all origins), Session management
-- **Routers** - 12 modules handling different domains
+- **Routers** - 13 modules handling different domains
+- **Services** - 16 service modules for business logic
 - **Models** - 11 SQLAlchemy models
 - **Migrations** - Alembic for schema versioning
 
@@ -1345,7 +1356,3 @@ graph TB
 - **[API Overview](../api/OVERVIEW.md)** - Backend architecture
 - **[Database Schema](../database/SCHEMA.md)** - Database design
 - **[Deployment Guide](../guides/DEPLOYMENT.md)** - Production deployment
-
----
-
-**Maintainers:** Dartmouth ITC Genji Team

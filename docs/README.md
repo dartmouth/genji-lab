@@ -1,6 +1,6 @@
 # Genji Project Documentation
 
-Welcome to the Genji documentation! This directory contains comprehensive documentation for developers, contributors, and maintainers.
+Welcome to the Genji documentation! This directory contains comprehensive documentation for developers and contributors.
 
 > **🚀 New here?** Start with the [Quick Start Guide](QUICK_START.md) to get up and running in minutes!
 
