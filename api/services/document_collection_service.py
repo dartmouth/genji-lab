@@ -16,7 +16,8 @@ from models.models import (
 from schemas.document_collections import (
     DocumentCollectionCreate,
     DocumentCollectionUpdate,
-    DocumentCollectionPartialUpdate
+    DocumentCollectionPartialUpdate,
+    CollectionDisplayOrderItem
 )
 from services.base_service import BaseService
 
@@ -310,10 +311,73 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         if created_by_id:
             query = query.filter(self.model.created_by_id == created_by_id)
         
+        # Order by display_order (ascending), then by created date as fallback
+        query = query.order_by(
+            DocumentCollectionModel.display_order.asc(),
+            DocumentCollectionModel.created.asc()
+        )
+        
         # Apply pagination
         query = query.offset(skip).limit(limit)
-
+    
         return db.execute(query).scalars().all()
+
+    def batch_update_display_order(
+        self,
+        db: Session,
+        updates: List[CollectionDisplayOrderItem]
+    ) -> None:
+        """
+        Batch update display_order for multiple collections.
+        
+        Args:
+            db: Database session
+            updates: List of dicts with 'collection_id' and 'display_order'
+        
+        Raises:
+            HTTPException 404 if any collection not found
+            HTTPException 400 if invalid data
+        """
+        if not updates:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No updates provided"
+            )
+        
+        collection_ids = [item.collection_id for item in updates]
+        
+        # Verify all collections exist
+        collections = db.execute(
+            select(DocumentCollectionModel).filter(
+                DocumentCollectionModel.id.in_(collection_ids)
+            )
+        ).scalars().all()
+        
+        found_ids = {c.id for c in collections}
+        missing_ids = set(collection_ids) - found_ids
+        
+        if missing_ids:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Collections not found: {sorted(missing_ids)}"
+            )
+        
+        # Map for quick lookup
+        collection_map = {c.id: c for c in collections}
+        
+        for item in updates:
+            collection_id = item.collection_id
+            display_order = item.display_order
+            if display_order < 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"display_order must be non-negative, got {display_order} for collection {collection_id}"
+                )
+            collection = collection_map[collection_id]
+            collection.display_order = display_order
+            collection.modified = datetime.now()
+        
+        db.commit()
     
     def update(
         self,

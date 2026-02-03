@@ -11,7 +11,8 @@ from schemas.document_collections import (
     DocumentCollectionUpdate,
     DocumentCollectionPartialUpdate,
     DocumentCollectionWithStats,
-    DocumentCollectionWithUsers
+    DocumentCollectionWithUsers,
+    CollectionDisplayOrderBatchUpdate
 )
 from services.document_collection_service import document_collection_service
 
@@ -81,6 +82,20 @@ def update_collection(
     """
     return document_collection_service.update(db, collection_id, collection)
 
+# Batch update display order endpoint
+@router.patch("/display-order", status_code=status.HTTP_200_OK)
+def batch_update_display_order(
+    update_request: CollectionDisplayOrderBatchUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Batch update the display_order for multiple collections.
+    Accepts a list of objects with collection_id and display_order.
+    """
+    print("in!")
+    document_collection_service.batch_update_display_order(db, update_request.collections)
+    return {"message": f"Successfully updated display order."}
+
 
 @router.patch("/{collection_id}", response_model=DocumentCollection)
 def partial_update_collection(
@@ -92,7 +107,6 @@ def partial_update_collection(
     Partially update a document collection
     """
     return document_collection_service.partial_update(db, collection_id, collection)
-
 
 @router.delete("/{collection_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_collection(

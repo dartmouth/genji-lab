@@ -1,5 +1,7 @@
 FROM python:3.10-slim
 
+RUN apt update -qq && apt upgrade -y
+
 WORKDIR /app
 
 # Install dependencies first (for better caching)

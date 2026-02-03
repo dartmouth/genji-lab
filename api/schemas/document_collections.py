@@ -19,6 +19,7 @@ class DocumentCollectionBase(BaseModel):
     language: Optional[str] = None
     hierarchy: Optional[Dict[str, Any]] = None
     collection_metadata: Optional[Dict[str, Union[str, List[str], Base64Image]]] = None
+    display_order: Optional[int] = None  # NEW FIELD
 
 class DocumentCollectionCreate(DocumentCollectionBase):
     created_by_id: int
@@ -42,8 +43,17 @@ class DocumentCollection(DocumentCollectionBase):
     modified: datetime
     created_by_id: int
     modified_by_id: Optional[int] = None
+    display_order: int  # NEW FIELD (required in response)
     
     model_config = ConfigDict(from_attributes=True)
+
+# Schema for batch display order update request
+class CollectionDisplayOrderItem(BaseModel):
+    collection_id: int
+    display_order: int
+
+class CollectionDisplayOrderBatchUpdate(BaseModel):
+    collections: List[CollectionDisplayOrderItem]
 
 class DocumentCollectionWithUsers(DocumentCollection):
     created_by: Optional[User] = None

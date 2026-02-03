@@ -219,7 +219,8 @@ class DocumentCollection(Base):
     language = Column(String(50))
     hierarchy = Column(JSONB)
     collection_metadata = Column(JSONB)
-
+    display_order = Column(Integer, nullable=False, default=0)  # NEW FIELD
+    
     # Relationships
     created_by = relationship(
         "User", foreign_keys=[created_by_id], back_populates="created_collections"
@@ -415,6 +416,8 @@ Index("idx_user_passwords_user_id", UserPassword.user_id)
 Index("idx_document_collections_created_by", DocumentCollection.created_by_id)
 Index("idx_document_collections_modified_by", DocumentCollection.modified_by_id)
 Index("idx_document_collections_owner", DocumentCollection.owner_id)
+# Index for display_order to enable fast sorting
+Index("idx_document_collections_display_order", DocumentCollection.display_order)
 Index("idx_documents_collection_id", Document.document_collection_id)
 Index("idx_documents_owner", Document.owner_id)
 Index("idx_document_elements_document_id", DocumentElement.document_id)
