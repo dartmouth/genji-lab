@@ -106,28 +106,36 @@ core-ui/
 │   │
 │   ├── components/           # Shared components
 │   │   ├── AppHeader.tsx
+│   │   ├── AboutPage.tsx
 │   │   ├── AuthContext.tsx
 │   │   ├── ErrorBoundary.tsx
+│   │   ├── GetStartedPage.tsx
+│   │   ├── LandingPage.tsx
 │   │   ├── LoginForm.tsx
-│   │   └── RegisterForm.tsx
+│   │   ├── RegisterForm.tsx
+│   │   ├── ProtectedRoute.tsx
+│   │   └── TutorialModal.tsx
 │   │
 │   ├── contexts/             # React contexts
 │   │   └── contextDefinition.ts
 │   │
 │   ├── features/             # Feature modules (domain-driven)
 │   │   ├── admin/           # Admin panel feature
+│   │   ├── canonicalLink/   # Canonical linking views
 │   │   ├── documentGallery/ # Collection & document browsing
 │   │   ├── documentView/    # Document reading & annotation
+│   │   ├── linkView/        # Intertext links gallery
 │   │   └── search/          # Search functionality
 │   │
 │   ├── hooks/               # Custom React hooks
-│   │   ├── useApi.ts
 │   │   ├── useAuth.ts
 │   │   ├── useAuthContext.ts
 │   │   ├── useCasAuth.ts
-│   │   ├── useIAM.tsx
 │   │   ├── useLocalStorage.ts
-│   │   └── useVisibilityWithPrefetch.ts
+│   │   ├── usePagination.ts
+│   │   ├── useTutorial.ts
+│   │   ├── useVisibilityWithPrefetch.ts
+│   │   └── auth/            # Auth strategy hooks
 │   │
 │   ├── store/               # Redux store
 │   │   ├── index.ts         # Store configuration
