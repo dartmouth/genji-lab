@@ -5,7 +5,7 @@
 ```mermaid
 flowchart TD
     A[React UI] -->|HTTP Request via Axios| B[API Client]
-    B -->|"/api/v1/*"| C[FastAPI Application]
+    B --> C[FastAPI Application]
     C -->|Route to appropriate handler| D[Router Layer]
     D -->|Business logic| E[Service Layer]
     E -->|Data access| F[SQLAlchemy ORM]
@@ -75,22 +75,3 @@ flowchart TD
     K --> L[Swagger UI]
     K --> M[ReDoc UI]
 ```
-3. Validation & Documentation
-
-```mermaid
-flowchart TD
-    A[Incoming Request] --> B{Request Validation}
-    B -->|Invalid| C[422 Validation Error]
-    B -->|Valid| D[Pydantic Schema]
-    
-    D --> E[Router Handler]
-    E --> F[Service Logic]
-    F --> G[Database Operation]
-    
-    G --> H[Pydantic Response Model]
-    H --> I[JSON Serialization]
-    I --> J[HTTP Response]
-    
-    API[FastAPI App] -.->|Auto-generates| K[OpenAPI Spec]
-    K --> L["Swagger UI at /docs"]
-    K --> M["ReDoc UI at /redoc"
