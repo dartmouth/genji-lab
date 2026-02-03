@@ -1,63 +1,98 @@
+# API Architecture Diagrams
+
+## 1. Request Flow Overview
+
 ```mermaid
 flowchart TD
-    %% ---------- UI → API ----------
-    A[React UI] -->|Axios| B["API Client (axios.create /api/v1)"]
+    A[React UI] -->|HTTP Request via Axios| B[API Client]
+    B -->|"/api/v1/*"| C[FastAPI Application]
+    C -->|Route to appropriate handler| D[Router Layer]
+    D -->|Business logic| E[Service Layer]
+    E -->|Data access| F[SQLAlchemy ORM]
+    F -->|SQL queries| G[(PostgreSQL Database)]
+    
+    G -->|Result set| F
+    F -->|Python objects| E
+    E -->|Validated data| D
+    D -->|Pydantic serialization| C
+    C -->|JSON response| B
+    B -->|Update Redux| A
+```
 
-    %% ---------- API core ----------
-    B --> C[FastAPI Application]
+## 2. API Routers (13 total)
 
-    %% ---------- Routers (13 total) ----------
-    C --> D[Router: /annotations]
-    C --> E[Router: /document-collections]
-    C --> F[Router: /documents]
-    C --> G[Router: /document-elements]
-    C --> H[Router: /users]
-    C --> I[Router: /groups]
-    C --> J[Router: /roles]
-    C --> K[Router: /flags]
-    C --> L[Router: /search]
-    C --> M[Router: /site-settings]
-    C --> N["Router: /auth (local & CAS)"]
-    C --> O[Router: /cas-config]
+```mermaid
+flowchart LR
+    API[FastAPI Application] --> R1[/annotations]
+    API --> R2[/document-collections]
+    API --> R3[/documents]
+    API --> R4[/document-elements]
+    API --> R5[/users]
+    API --> R6[/groups]
+    API --> R7[/roles]
+    API --> R8[/flags]
+    API --> R9[/search]
+    API --> R10[/site-settings]
+    API --> R11[/auth]
+    API --> R12[/cas-config]
+    
+    R11 -.->|Session/Cookie| Auth[Authentication Middleware]
+    Auth -.->|CAS validation| CAS[CAS Server]
+```
 
-    %% ---------- Security ----------
-    N --> P[Session Auth / CAS]
-    P --> C
+## 3. Service & Data Layer
 
-    %% ---------- Services Layer ----------
-    D --> Q[Service: AnnotationService]
-    E --> R[Service: CollectionService]
-    F --> S[Service: DocumentService]
-    G --> T[Service: ElementService]
+```mermaid
+flowchart TD
+    subgraph Routers
+        R1[Annotations Router]
+        R2[Collections Router]
+        R3[Documents Router]
+        R4[Elements Router]
+    end
+    
+    subgraph Services
+        S1[AnnotationService]
+        S2[CollectionService]
+        S3[DocumentService]
+        S4[ElementService]
+    end
+    
+    subgraph Models
+        M1[Annotation Model]
+        M2[Collection Model]
+        M3[Document Model]
+        M4[Element Model]
+    end
+    
+    R1 --> S1 --> M1
+    R2 --> S2 --> M2
+    R3 --> S3 --> M3
+    R4 --> S4 --> M4
+    
+    M1 --> DB[(PostgreSQL)]
+    M2 --> DB
+    M3 --> DB
+    M4 --> DB
+```
 
-    %% ---------- Validation & Serialization ----------
-    Q --> U[Pydantic Model: Annotation]
-    R --> V[Pydantic Model: DocumentCollection]
-    S --> W[Pydantic Model: Document]
-    T --> X[Pydantic Model: DocumentElement]
-    H --> Y[Pydantic Model: User]
-    I --> Z[Pydantic Model: Group]
-    M --> AA[Pydantic Model: SiteSettings]
+## 4. Validation & Documentation
 
-    %% ---------- Database ----------
-    U --> AB["Database (PostgreSQL via SQLAlchemy)"]
-    V --> AB
-    W --> AB
-    X --> AB
-    Y --> AB
-    Z --> AB
-    AA --> AB
-
-    %% ---------- Response flow ----------
-    AB --> AC[Raw DB rows]
-    AC --> AD["FastAPI Response (JSON)"]
-    AD --> C
-
-    %% ---------- OpenAPI / Docs ----------
-    C --> AE["OpenAPI generator (automatic)"]
-    AE --> AF["/docs & /redoc (Swagger UI)"]
-
-    %% ---------- UI receives data ----------
-    AD --> B
-    B -->|data → Redux store| A
+```mermaid
+flowchart TD
+    A[Incoming Request] --> B{Request Validation}
+    B -->|Invalid| C[422 Validation Error]
+    B -->|Valid| D[Pydantic Schema]
+    
+    D --> E[Router Handler]
+    E --> F[Service Logic]
+    F --> G[Database Operation]
+    
+    G --> H[Pydantic Response Model]
+    H --> I[JSON Serialization]
+    I --> J[HTTP Response]
+    
+    API[FastAPI App] -.->|Auto-generates| K[OpenAPI Spec]
+    K --> L[/docs - Swagger UI]
+    K --> M[/redoc - ReDoc UI]
 ```

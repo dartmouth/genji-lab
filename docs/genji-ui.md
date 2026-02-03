@@ -1,49 +1,131 @@
+# Frontend UI Architecture Diagrams
+
+## 1. Application Structure
+
 ```mermaid
 flowchart TD
-    %% ---------- Top‑level application ----------
-    A[App] --> B["AuthProvider (React context)"]
-    B --> C[React Router]
-    C --> D[Main Layout]
+    A[Browser] --> B[App Component]
+    B --> C[Redux Provider]
+    C --> D[AuthProvider]
+    D --> E[ErrorBoundary]
+    E --> F[React Router]
+    
+    F --> G[CollectionsView]
+    F --> H[DocumentsView]
+    F --> I[DocumentContentView]
+    F --> J[AdminPanel]
+    F --> K[SearchResultsApp]
+    
+    D -.->|Auth State| G
+    D -.->|Auth State| H
+    D -.->|Auth State| I
+    D -.->|Auth State| J
+```
 
-    %% ---------- Global data stores ----------
-    D --> E[Redux Store]
-    E --> F["API Client (axios.create /api/v1)"]
+## 2. Redux Store & API Integration
 
-    %% ---------- Admin section (vertical tabs) ----------
-    D --> G["AdminPanel (vertical tabs)"]
-    G --> H["ManageCollections (table + dialogs)"]
-    G --> I["ManageDocuments (table + editor)"]
-    G --> J["ManageUsers (table + role chips)"]
-    G --> K["ManageClassrooms (list + dialogs)"]
-    G --> L["ManageFlags (review board)"]
-    G --> M["SiteSettings (form + preview)"]
+```mermaid
+flowchart TD
+    A[UI Components] -->|dispatch actions| B[Redux Store]
+    B -->|thunks| C[Axios Client]
+    C -->|HTTP requests| D[FastAPI Backend]
+    
+    D -->|JSON responses| C
+    C -->|update state| B
+    B -->|selectors| A
+    
+    subgraph Redux Slices
+        S1[annotations]
+        S2[documentElements]
+        S3[documentCollections]
+        S4[documents]
+        S5[users]
+        S6[classrooms]
+        S7[searchResults]
+    end
+    
+    B --> S1
+    B --> S2
+    B --> S3
+    B --> S4
+    B --> S5
+    B --> S6
+    B --> S7
+```
 
-    %% ---------- Document view ----------
-    D --> N["DocumentView (DocumentContentPanel + DocumentComparisonContainer)"]
-    N --> O["AnnotationCard (edit / reply / tag UI)"]
-    O --> P["ExternalReferenceIcon (tooltip & click)"]
-    P --> Q[ExternalReferencePreviewModal]
+## 3. Admin Panel Components
 
-    %% ---------- Data‑flow arrows ----------
-    %% UI components dispatch actions → Redux → API
-    H -->|dispatch fetch / create / update| E
-    I -->|dispatch fetch / create / update| E
-    J -->|dispatch fetch / update| E
-    K -->|dispatch fetch / update| E
-    L -->|dispatch fetch / resolve| E
-    M -->|dispatch fetch / save| E
-    O -->|dispatch add / edit annotation| E
+```mermaid
+flowchart TD
+    A[AdminPanel] -->|Tabs| B[ManageCollections]
+    A --> C[ManageDocuments]
+    A --> D[ManageUsers]
+    A --> E[ManageClassrooms]
+    A --> F[ManageFlags]
+    A --> G[SiteSettings]
+    
+    B -->|CRUD operations| Redux[Redux Store]
+    C -->|Upload/Edit/Delete| Redux
+    D -->|User/Role management| Redux
+    E -->|Create/Join| Redux
+    F -->|Flag review| Redux
+    G -->|Config updates| Redux
+    
+    Redux -->|API calls| API[Backend API]
+```
 
-    %% API client calls backend → receives JSON → Redux updates
-    F -->|"HTTP request (GET/POST/PUT/DELETE)"| R[FastAPI Backend]
-    R -->|JSON response| E
+## 4. Document View Components
 
-    %% Redux store feeds data back to UI components
-    E -->|state selectors| H
-    E -->|state selectors| I
-    E -->|state selectors| J
-    E -->|state selectors| K
-    E -->|state selectors| L
-    E -->|state selectors| M
-    E -->|state selectors| N
-    E -->|state selectors| O
+```mermaid
+flowchart TD
+    A[DocumentContentView] --> B[DocumentContentPanel]
+    A --> C[TabbedAnnotationsPanel]
+    
+    B --> D[HighlightedText]
+    D --> E[Highlight Overlay]
+    D --> F[Text Selection]
+    
+    F -->|User selects text| G[AnnotationCreationDialog]
+    G -->|Save annotation| Redux[Redux Store]
+    
+    C --> H[Annotation Tabs]
+    H --> I1[Comments Tab]
+    H --> I2[Scholarly Tab]
+    H --> I3[Links Tab]
+    H --> I4[References Tab]
+    
+    I1 --> J[AnnotationCard]
+    I2 --> J
+    I3 --> J
+    I4 --> J
+    
+    J -->|Edit/Reply/Delete| Redux
+```
+
+## 5. Authentication Flow
+
+```mermaid
+flowchart TD
+    A[Login Page] --> B{Auth Method?}
+    
+    B -->|CAS/SSO| C[Redirect to CAS]
+    C --> D[CAS Login]
+    D --> E[Redirect with ticket]
+    E --> F[Validate ticket]
+    
+    B -->|Local| G[Username/Password]
+    G --> H[POST /auth/login]
+    
+    F --> I[Set session]
+    H --> I
+    
+    I --> J[AuthProvider updates]
+    J --> K[Store user in context]
+    K --> L[Redirect to app]
+    
+    L --> M{Protected Route?}
+    M -->|Yes| N{Has permission?}
+    M -->|No| O[Render component]
+    N -->|Yes| O
+    N -->|No| P[Redirect to home]
+```
