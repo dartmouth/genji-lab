@@ -955,4 +955,3 @@ const sortedDocs = documents.sort(...);
 ## Related Documentation
 
 - **[Frontend Overview](OVERVIEW.md)** - Complete frontend architecture
-- **[Frontend Audit](../audits/FRONTEND_AUDIT.md)** - Redux-related issues

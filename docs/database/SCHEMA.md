@@ -1137,7 +1137,6 @@ ORDER BY idx_scan DESC;
 
 - **[API Overview](../api/OVERVIEW.md)** - API endpoint reference
 - **[Migrations Guide](MIGRATIONS.md)** - Detailed migration workflows
-- **[Backend Audit](../audits/BACKEND_AUDIT.md)** - Code quality findings
 
 ---
 

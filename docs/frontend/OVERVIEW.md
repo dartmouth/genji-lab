@@ -263,7 +263,7 @@ graph TD
 }
 ```
 
-**Note:** Route protection is inline and could be improved with a `ProtectedRoute` component (see [Frontend Audit](../audits/FRONTEND_AUDIT.md#1-routing--navigation-issues)).
+**Note:** Route protection is inline and could be improved with a `ProtectedRoute` component.
 
 ### URL Parameters
 
@@ -1204,7 +1204,7 @@ interface AuthContextType {
 }
 ```
 
-**Known Issue:** `login` and `logout` have inconsistent return types (`Promise<void> | void`) - see [Frontend Audit](../audits/FRONTEND_AUDIT.md#4-authentication--security).
+**Known Issue:** `login` and `logout` have inconsistent return types (`Promise<void> | void`).
 
 ### Session Management
 
@@ -1263,7 +1263,6 @@ if (isAdmin || isInstructor) {
 ### Related Documentation
 
 - **[Redux Store](REDUX_STORE.md)** - Detailed Redux architecture
-- **[Frontend Audit](../audits/FRONTEND_AUDIT.md)** - Code quality analysis ✅
 
 ### For Developers
 
