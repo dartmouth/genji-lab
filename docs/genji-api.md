@@ -22,8 +22,10 @@ flowchart TD
 ## 2. API Routers (13 total)
 
 ```mermaid
-flowchart LR
-    API[FastAPI Application] --> R1[/annotations]
+flowchart TB
+    API[FastAPI Application]
+    
+    API --> R1[/annotations]
     API --> R2[/document-collections]
     API --> R3[/documents]
     API --> R4[/document-elements]
@@ -36,8 +38,8 @@ flowchart LR
     API --> R11[/auth]
     API --> R12[/cas-config]
     
-    R11 -.->|Session/Cookie| Auth[Authentication Middleware]
-    Auth -.->|CAS validation| CAS[CAS Server]
+    R11 -.-> Auth[Authentication Middleware]
+    Auth -.-> CAS[CAS Server]
 ```
 
 ## 3. Service & Data Layer
