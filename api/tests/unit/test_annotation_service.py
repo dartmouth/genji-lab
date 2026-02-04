@@ -1010,7 +1010,8 @@ class TestAnnotationServiceRemoveTarget:
         annotation_service,
         db_session,
         test_annotation,
-        test_user
+        test_user,
+        test_role_user
     ):
         """Should raise 403 when user is not creator, admin, or verified scholar."""
         annotation = test_annotation
@@ -1019,7 +1020,8 @@ class TestAnnotationServiceRemoveTarget:
         db_session.commit()
         
         # Regular user without special roles
-        test_user.roles = ["user"]
+        test_user.roles = [test_role_user]
+        db_session.commit()
         
         target_id = annotation.target[0]["id"]
         
@@ -1038,11 +1040,16 @@ class TestAnnotationServiceRemoveTarget:
         annotation_service,
         db_session,
         annotation_with_multiple_targets,
-        admin_user
+        admin_user,
+        test_role_admin
     ):
         """Should allow admin to remove target from any annotation."""
         annotation = annotation_with_multiple_targets
         annotation.creator_id = 999  # Different creator
+        db_session.commit()
+        
+        # Assign admin role to admin_user
+        admin_user.roles = [test_role_admin]
         db_session.commit()
         
         target_id = annotation.target[0]["id"]
@@ -1061,11 +1068,16 @@ class TestAnnotationServiceRemoveTarget:
         annotation_service,
         db_session,
         annotation_with_multiple_targets,
-        verified_scholar_user
+        verified_scholar_user,
+        test_role_verified_scholar
     ):
         """Should allow verified scholar to remove target from any annotation."""
         annotation = annotation_with_multiple_targets
         annotation.creator_id = 999  # Different creator
+        db_session.commit()
+        
+        # Assign verified_scholar role to verified_scholar_user
+        verified_scholar_user.roles = [test_role_verified_scholar]
         db_session.commit()
         
         target_id = annotation.target[0]["id"]

@@ -54,6 +54,7 @@ def sample_collection_response():
     mock_collection.modified = datetime.now()
     mock_collection.created_by_id = 1
     mock_collection.modified_by_id = None
+    mock_collection.display_order = 0
     mock_collection.created_by = mock_creator
     mock_collection.modified_by = None
     mock_collection.document_count = 0
@@ -540,3 +541,181 @@ class TestDeleteCollectionDocumentsEndpoint:
         mock_service.delete_all_documents.assert_called_once_with(
             ANY, 1, force=False
         )
+
+
+class TestBatchUpdateDisplayOrderEndpoint:
+    """Test PATCH /api/v1/collections/display-order"""
+    
+    @patch("routers.document_collections.document_collection_service")
+    @patch("routers.document_collections.get_db")
+    def test_batch_update_display_order_success(
+        self,
+        mock_get_db,
+        mock_service,
+        client,
+        mock_db_session
+    ):
+        """Should update display order for multiple collections and return 200."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.batch_update_display_order.return_value = None
+        
+        payload = {
+            "collections": [
+                {"collection_id": 1, "display_order": 10},
+                {"collection_id": 2, "display_order": 20},
+                {"collection_id": 3, "display_order": 30}
+            ]
+        }
+        
+        response = client.patch("/api/v1/collections/display-order", json=payload)
+        
+        assert response.status_code == status.HTTP_200_OK
+        assert "Successfully updated" in response.json()["message"]
+        mock_service.batch_update_display_order.assert_called_once()
+    
+    @patch("routers.document_collections.document_collection_service")
+    @patch("routers.document_collections.get_db")
+    def test_batch_update_display_order_single_item(
+        self,
+        mock_get_db,
+        mock_service,
+        client,
+        mock_db_session
+    ):
+        """Should handle single collection update."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.batch_update_display_order.return_value = None
+        
+        payload = {
+            "collections": [
+                {"collection_id": 1, "display_order": 100}
+            ]
+        }
+        
+        response = client.patch("/api/v1/collections/display-order", json=payload)
+        
+        assert response.status_code == status.HTTP_200_OK
+        mock_service.batch_update_display_order.assert_called_once()
+    
+    @patch("routers.document_collections.document_collection_service")
+    @patch("routers.document_collections.get_db")
+    def test_batch_update_display_order_empty_list(
+        self,
+        mock_get_db,
+        mock_service,
+        client,
+        mock_db_session
+    ):
+        """Should handle empty list (service will raise 400)."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.batch_update_display_order.side_effect = HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No updates provided"
+        )
+        
+        payload = {"collections": []}
+        
+        response = client.patch("/api/v1/collections/display-order", json=payload)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+    
+    @patch("routers.document_collections.document_collection_service")
+    @patch("routers.document_collections.get_db")
+    def test_batch_update_display_order_collection_not_found(
+        self,
+        mock_get_db,
+        mock_service,
+        client,
+        mock_db_session
+    ):
+        """Should return 404 when collection doesn't exist."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.batch_update_display_order.side_effect = HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Collections not found: [999]"
+        )
+        
+        payload = {
+            "collections": [
+                {"collection_id": 999, "display_order": 10}
+            ]
+        }
+        
+        response = client.patch("/api/v1/collections/display-order", json=payload)
+        
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "not found" in response.json()["detail"].lower()
+    
+    @patch("routers.document_collections.document_collection_service")
+    @patch("routers.document_collections.get_db")
+    def test_batch_update_display_order_negative_value(
+        self,
+        mock_get_db,
+        mock_service,
+        client,
+        mock_db_session
+    ):
+        """Should return 400 when display_order is negative."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.batch_update_display_order.side_effect = HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="display_order must be non-negative, got -1 for collection 1"
+        )
+        
+        payload = {
+            "collections": [
+                {"collection_id": 1, "display_order": -1}
+            ]
+        }
+        
+        response = client.patch("/api/v1/collections/display-order", json=payload)
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "non-negative" in response.json()["detail"]
+    
+    @patch("routers.document_collections.document_collection_service")
+    @patch("routers.document_collections.get_db")
+    def test_batch_update_display_order_missing_fields(
+        self,
+        mock_get_db,
+        mock_service,
+        client,
+        mock_db_session
+    ):
+        """Should return 422 when required fields are missing."""
+        mock_get_db.return_value = mock_db_session
+        
+        payload = {
+            "collections": [
+                {"collection_id": 1}  # Missing display_order
+            ]
+        }
+        
+        response = client.patch("/api/v1/collections/display-order", json=payload)
+        
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        mock_service.batch_update_display_order.assert_not_called()
+    
+    @patch("routers.document_collections.document_collection_service")
+    @patch("routers.document_collections.get_db")
+    def test_batch_update_display_order_zero_value(
+        self,
+        mock_get_db,
+        mock_service,
+        client,
+        mock_db_session
+    ):
+        """Should accept zero as valid display_order."""
+        mock_get_db.return_value = mock_db_session
+        mock_service.batch_update_display_order.return_value = None
+        
+        payload = {
+            "collections": [
+                {"collection_id": 1, "display_order": 0}
+            ]
+        }
+        
+        response = client.patch("/api/v1/collections/display-order", json=payload)
+        
+        assert response.status_code == status.HTTP_200_OK
+        mock_service.batch_update_display_order.assert_called_once()
