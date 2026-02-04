@@ -8,6 +8,7 @@ sys.path.insert(0, project_root)
 
 # Set test environment variables
 os.environ.setdefault("DB_SCHEMA", "test_schema")
+os.environ.setdefault("SQLALCHEMY_DATABASE_URL", "sqlite:///:memory:")
 
 # Configure pytest-asyncio
 pytest_plugins = ('pytest_asyncio',)
