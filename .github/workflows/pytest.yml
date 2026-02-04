@@ -13,7 +13,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+    env:
+      SQLALCHEMY_DATABASE_URL: "sqlite:///:memory:"
     strategy:
       matrix:
         python-version: ['3.12']
@@ -36,8 +37,6 @@ jobs:
           pip install pytest pytest-cov pytest-asyncio
 
       - name: Run tests with coverage
-        env:
-          SQLALCHEMY_DATABASE_URL: "sqlite:///:memory:"
         run: |
           cd api
           pytest -v --cov=. --cov-report=xml --cov-report=term-missing
