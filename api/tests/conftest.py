@@ -142,13 +142,14 @@ class TestDocumentCollection(TestBase):
     visibility = Column(String(50))
     text_direction = Column(String(50))
     created = Column(DateTime, default=datetime.now)
-    modified = Column(DateTime, default=datetime.now)
+    modified = Column(DateTime, default=datetime.now, onupdate=lambda: datetime.now())
     created_by_id = Column(Integer, ForeignKey("users.id"))
     modified_by_id = Column(Integer, ForeignKey("users.id"))
     owner_id = Column(Integer, ForeignKey("users.id"))
     language = Column(String(50))
     hierarchy = Column(JSON)  # JSON instead of JSONB
     collection_metadata = Column(JSON)  # JSON instead of JSONB
+    display_order = Column(Integer, nullable=False, default=0)
 
     # Relationships
     created_by = relationship(
@@ -840,7 +841,8 @@ def test_document_collection(db_session, test_user) -> TestDocumentCollection:
         created_by_id=test_user.id,
         owner_id=test_user.id,
         hierarchy={"type": "sequence", "elements": []},
-        collection_metadata={"description": "A test collection"}
+        collection_metadata={"description": "A test collection"},
+        display_order=0
     )
     db_session.add(collection)
     db_session.commit()
@@ -862,7 +864,8 @@ def multiple_test_document_collections(
             text_direction="ltr",
             language="en",
             created_by_id=test_user.id,
-            owner_id=test_user.id
+            owner_id=test_user.id,
+            display_order=10
         ),
         TestDocumentCollection(
             id=11,
@@ -871,7 +874,8 @@ def multiple_test_document_collections(
             text_direction="rtl",
             language="ar",
             created_by_id=test_user.id,
-            owner_id=test_user.id
+            owner_id=test_user.id,
+            display_order=5
         ),
         TestDocumentCollection(
             id=12,
@@ -880,7 +884,8 @@ def multiple_test_document_collections(
             text_direction="ltr",
             language="es",
             created_by_id=test_user.id,
-            owner_id=test_user.id
+            owner_id=test_user.id,
+            display_order=15
         )
     ]
     
