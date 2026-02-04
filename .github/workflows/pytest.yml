@@ -37,7 +37,7 @@ jobs:
 
       - name: Run tests with coverage
         env:
-            SQLALCHEMY_DATABASE_URL: "sqlite:///:memory:"
+          SQLALCHEMY_DATABASE_URL: "sqlite:///:memory:"
         run: |
           cd api
           pytest -v --cov=. --cov-report=xml --cov-report=term-missing
