@@ -38,6 +38,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           cd api
+          export SQLALCHEMY_DATABASE_URL="sqlite:///:memory:"
           pytest -v --cov=. --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report
