@@ -2,13 +2,13 @@
 import os
 import sys
 
-# Add project root to Python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
-
 # Set test environment variables
 os.environ.setdefault("DB_SCHEMA", "test_schema")
 os.environ.setdefault("SQLALCHEMY_DATABASE_URL", "sqlite:///:memory:")
+
+# Add project root to Python path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
 # Configure pytest-asyncio
 pytest_plugins = ('pytest_asyncio',)
