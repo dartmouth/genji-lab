@@ -10,7 +10,9 @@ from schemas.document_collections import (
     DocumentCollectionPartialUpdate,
     DocumentCollection,
     DocumentCollectionWithUsers,
-    DocumentCollectionWithStats
+    DocumentCollectionWithStats,
+    CollectionDisplayOrderItem,
+    CollectionDisplayOrderBatchUpdate
 )
 
 
@@ -221,6 +223,7 @@ class TestDocumentCollection:
             created=datetime.now(),
             modified=datetime.now(),
             created_by_id=1,
+            display_order=0,
             modified_by_id=None
         )
         assert collection.modified_by_id is None
@@ -239,12 +242,14 @@ class TestDocumentCollection:
             created=now,
             modified=now,
             created_by_id=1,
-            modified_by_id=2
+            modified_by_id=2,
+            display_order=5
         )
         assert collection.id == 1
         assert collection.title == "Test Collection"
         assert collection.created_by_id == 1
         assert collection.modified_by_id == 2
+        assert collection.display_order == 5
     
     def test_id_must_be_integer(self):
         """Should reject non-integer id."""
@@ -253,7 +258,8 @@ class TestDocumentCollection:
                 id="not_an_int",
                 created=datetime.now(),
                 modified=datetime.now(),
-                created_by_id=1
+                created_by_id=1,
+                display_order=0
             )
 
 
@@ -271,6 +277,7 @@ class TestDocumentCollectionWithUsers:
             modified=now,
             created_by_id=1,
             modified_by_id=2,
+            display_order=0,
             created_by=None,
             modified_by=None
         )
@@ -284,7 +291,8 @@ class TestDocumentCollectionWithUsers:
             id=1,
             created=now,
             modified=now,
-            created_by_id=1
+            created_by_id=1,
+            display_order=0
         )
         assert collection.created_by is None
         assert collection.modified_by is None
@@ -298,7 +306,8 @@ class TestDocumentCollectionWithUsers:
             visibility="public",
             created=now,
             modified=now,
-            created_by_id=1
+            created_by_id=1,
+            display_order=0
         )
         assert collection.title == "With Users"
         assert collection.visibility == "public"
@@ -315,6 +324,7 @@ class TestDocumentCollectionWithStats:
             created=now,
             modified=now,
             created_by_id=1,
+            display_order=0,
             document_count=5,
             element_count=20,
             scholarly_annotation_count=10
@@ -330,7 +340,8 @@ class TestDocumentCollectionWithStats:
             id=1,
             created=now,
             modified=now,
-            created_by_id=1
+            created_by_id=1,
+            display_order=0
         )
         assert collection.document_count == 0
         assert collection.element_count == 0
@@ -346,6 +357,7 @@ class TestDocumentCollectionWithStats:
             created=now,
             modified=now,
             created_by_id=1,
+            display_order=0,
             document_count=3
         )
         assert collection.title == "With Stats"
@@ -361,5 +373,90 @@ class TestDocumentCollectionWithStats:
                 created=now,
                 modified=now,
                 created_by_id=1,
+                display_order=0,
                 document_count="not_an_int"
             )
+
+
+class TestCollectionDisplayOrderItem:
+    """Test CollectionDisplayOrderItem schema validation."""
+    
+    def test_valid_display_order_item(self):
+        """Should accept valid collection_id and display_order."""
+        item = CollectionDisplayOrderItem(
+            collection_id=1,
+            display_order=10
+        )
+        assert item.collection_id == 1
+        assert item.display_order == 10
+    
+    def test_missing_required_fields(self):
+        """Should reject missing required fields."""
+        with pytest.raises(ValidationError) as exc_info:
+            CollectionDisplayOrderItem(collection_id=1)
+        
+        errors = exc_info.value.errors()
+        error_fields = [e["loc"][0] for e in errors]
+        assert "display_order" in error_fields
+    
+    def test_fields_must_be_integers(self):
+        """Should reject non-integer values."""
+        with pytest.raises(ValidationError):
+            CollectionDisplayOrderItem(
+                collection_id="not_an_int",
+                display_order=10
+            )
+        
+        with pytest.raises(ValidationError):
+            CollectionDisplayOrderItem(
+                collection_id=1,
+                display_order="not_an_int"
+            )
+    
+    def test_display_order_can_be_zero(self):
+        """Should accept zero as valid display_order."""
+        item = CollectionDisplayOrderItem(
+            collection_id=1,
+            display_order=0
+        )
+        assert item.display_order == 0
+
+
+class TestCollectionDisplayOrderBatchUpdate:
+    """Test CollectionDisplayOrderBatchUpdate schema validation."""
+    
+    def test_valid_batch_update(self):
+        """Should accept valid list of display order items."""
+        batch = CollectionDisplayOrderBatchUpdate(
+            collections=[
+                CollectionDisplayOrderItem(collection_id=1, display_order=10),
+                CollectionDisplayOrderItem(collection_id=2, display_order=20),
+                CollectionDisplayOrderItem(collection_id=3, display_order=30)
+            ]
+        )
+        assert len(batch.collections) == 3
+        assert batch.collections[0].collection_id == 1
+        assert batch.collections[0].display_order == 10
+    
+    def test_empty_list(self):
+        """Should accept empty list."""
+        batch = CollectionDisplayOrderBatchUpdate(collections=[])
+        assert batch.collections == []
+    
+    def test_missing_collections_field(self):
+        """Should reject missing collections field."""
+        with pytest.raises(ValidationError) as exc_info:
+            CollectionDisplayOrderBatchUpdate()
+        
+        errors = exc_info.value.errors()
+        error_fields = [e["loc"][0] for e in errors]
+        assert "collections" in error_fields
+    
+    def test_single_item(self):
+        """Should accept single item in list."""
+        batch = CollectionDisplayOrderBatchUpdate(
+            collections=[
+                CollectionDisplayOrderItem(collection_id=1, display_order=5)
+            ]
+        )
+        assert len(batch.collections) == 1

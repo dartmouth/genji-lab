@@ -313,8 +313,8 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         
         # Order by display_order (ascending), then by created date as fallback
         query = query.order_by(
-            DocumentCollectionModel.display_order.asc(),
-            DocumentCollectionModel.created.asc()
+            self.model.display_order.asc(),
+            self.model.created.asc()
         )
         
         # Apply pagination
@@ -348,8 +348,8 @@ class DocumentCollectionService(BaseService[DocumentCollectionModel]):
         
         # Verify all collections exist
         collections = db.execute(
-            select(DocumentCollectionModel).filter(
-                DocumentCollectionModel.id.in_(collection_ids)
+            select(self.model).filter(
+                self.model.id.in_(collection_ids)
             )
         ).scalars().all()
         

@@ -207,7 +207,7 @@ class TestCreateAnnotationEndpoint:
             json=invalid_payload
         )
         
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     
     def test_create_annotation_invalid_body_format(self, client):
         """Should return 422 when body format is invalid."""
@@ -223,7 +223,7 @@ class TestCreateAnnotationEndpoint:
             json=invalid_payload
         )
         
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     
     def test_create_annotation_with_classroom_context(
         self, 
@@ -582,7 +582,7 @@ class TestAddTargetEndpoint:
             }
         )
         
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class TestRemoveTargetEndpoint:
@@ -660,4 +660,4 @@ class TestRemoveTargetEndpoint:
         """Should return 422 when target_id query param is missing."""
         response = client.patch("/api/v1/annotations/remove-target/1")
         
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT

@@ -290,7 +290,8 @@ class TestDocumentWithDetails:
                 "created": datetime(2026, 1, 29, 10, 0, 0),
                 "modified": datetime(2026, 1, 29, 12, 0, 0),
                 "created_by_id": 1,
-                "modified_by_id": None
+                "modified_by_id": None,
+                "display_order": 0
             },
             "elements_count": 25
         }

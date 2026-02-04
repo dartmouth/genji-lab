@@ -285,8 +285,9 @@ class AnnotationService(BaseService[AnnotationModel]):
             raise HTTPException(status_code=404, detail="Annotation not found")
         
         # Permission check
-        is_admin = "admin" in (user.roles or [])
-        is_verified_scholar = "verified_scholar" in (user.roles or [])
+        user_role_names = [r.name for r in user.roles] if user.roles else []
+        is_admin = "admin" in user_role_names
+        is_verified_scholar = "verified_scholar" in user_role_names
         is_annotation_creator = db_annotation.creator_id == user.id
         
         if not (is_admin or is_verified_scholar or is_annotation_creator):

@@ -1,5 +1,6 @@
 # tests/unit/test_document_collections_service.py
 import pytest
+import time
 from datetime import datetime, timedelta
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -7,7 +8,8 @@ from sqlalchemy import select
 from schemas.document_collections import (
     DocumentCollectionCreate,
     DocumentCollectionUpdate,
-    DocumentCollectionPartialUpdate
+    DocumentCollectionPartialUpdate,
+    CollectionDisplayOrderItem
 )
 
 
@@ -264,8 +266,19 @@ class TestList:
         """Should filter by created_by_id."""
         results = document_collection_service.list(db_session, created_by_id=test_user.id)
         
-        assert len(results) == 3  # All created by test_user
-    
+        assert len(results) == 3  # All created by test_user    
+    def test_list_ordered_by_display_order(self, document_collection_service, db_session, multiple_test_document_collections):
+        """Should return collections ordered by display_order ascending."""
+        results = document_collection_service.list(db_session)
+        
+        # Expected order: Collection 2 (5), Collection 1 (10), Collection 3 (15)
+        assert len(results) == 3
+        assert results[0].title == "Collection 2"
+        assert results[0].display_order == 5
+        assert results[1].title == "Collection 1"
+        assert results[1].display_order == 10
+        assert results[2].title == "Collection 3"
+        assert results[2].display_order == 15    
     def test_list_empty_database(self, document_collection_service, db_session):
         """Should return empty list when no collections exist."""
         results = document_collection_service.list(db_session)
@@ -324,6 +337,7 @@ class TestUpdate:
         """Should update modified timestamp."""
         original_modified = test_document_collection.modified
         
+        time.sleep(0.01)  # Ensure timestamp will be different
         update_data = DocumentCollectionUpdate(title="Updated")
         
         result = document_collection_service.update(db_session, test_document_collection.id, update_data)
@@ -412,6 +426,7 @@ class TestPartialUpdate:
         """Should update modified timestamp."""
         original_modified = test_document_collection.modified
         
+        time.sleep(0.01)  # Ensure timestamp will be different
         update_data = DocumentCollectionPartialUpdate(visibility="private")
         
         result = document_collection_service.partial_update(db_session, test_document_collection.id, update_data)
@@ -472,3 +487,122 @@ class TestDelete:
         """Should default to force=True."""
         # Should not raise even if collection has documents (none in this test though)
         document_collection_service.delete(db_session, test_document_collection.id)
+
+
+class TestBatchUpdateDisplayOrder:
+    """Test batch_update_display_order method."""
+    
+    def test_batch_update_single_collection(self, document_collection_service, db_session, test_document_collection):
+        """Should update display_order for a single collection."""
+        updates = [
+            CollectionDisplayOrderItem(collection_id=test_document_collection.id, display_order=100)
+        ]
+        
+        document_collection_service.batch_update_display_order(db_session, updates)
+        
+        db_session.refresh(test_document_collection)
+        assert test_document_collection.display_order == 100
+    
+    def test_batch_update_multiple_collections(self, document_collection_service, db_session, multiple_test_document_collections):
+        """Should update display_order for multiple collections."""
+        updates = [
+            CollectionDisplayOrderItem(collection_id=10, display_order=30),
+            CollectionDisplayOrderItem(collection_id=11, display_order=20),
+            CollectionDisplayOrderItem(collection_id=12, display_order=10)
+        ]
+        
+        document_collection_service.batch_update_display_order(db_session, updates)
+        
+        # Refresh and verify
+        db_session.refresh(multiple_test_document_collections[0])
+        db_session.refresh(multiple_test_document_collections[1])
+        db_session.refresh(multiple_test_document_collections[2])
+        
+        assert multiple_test_document_collections[0].display_order == 30
+        assert multiple_test_document_collections[1].display_order == 20
+        assert multiple_test_document_collections[2].display_order == 10
+    
+    def test_batch_update_zero_display_order(self, document_collection_service, db_session, test_document_collection):
+        """Should accept zero as valid display_order."""
+        updates = [
+            CollectionDisplayOrderItem(collection_id=test_document_collection.id, display_order=0)
+        ]
+        
+        document_collection_service.batch_update_display_order(db_session, updates)
+        
+        db_session.refresh(test_document_collection)
+        assert test_document_collection.display_order == 0
+    
+    def test_batch_update_updates_modified_timestamp(self, document_collection_service, db_session, test_document_collection):
+        """Should update modified timestamp when updating display_order."""
+        original_modified = test_document_collection.modified
+        
+        time.sleep(0.01)  # Ensure timestamp will be different
+        updates = [
+            CollectionDisplayOrderItem(collection_id=test_document_collection.id, display_order=50)
+        ]
+        
+        document_collection_service.batch_update_display_order(db_session, updates)
+        
+        db_session.refresh(test_document_collection)
+        assert test_document_collection.modified > original_modified
+    
+    def test_batch_update_empty_list_raises_400(self, document_collection_service, db_session):
+        """Should raise 400 when updates list is empty."""
+        with pytest.raises(HTTPException) as exc_info:
+            document_collection_service.batch_update_display_order(db_session, [])
+        
+        assert exc_info.value.status_code == 400
+        assert "No updates provided" in exc_info.value.detail
+    
+    def test_batch_update_nonexistent_collection_raises_404(self, document_collection_service, db_session):
+        """Should raise 404 when collection doesn't exist."""
+        updates = [
+            CollectionDisplayOrderItem(collection_id=999, display_order=10)
+        ]
+        
+        with pytest.raises(HTTPException) as exc_info:
+            document_collection_service.batch_update_display_order(db_session, updates)
+        
+        assert exc_info.value.status_code == 404
+        assert "Collections not found" in exc_info.value.detail
+        assert "999" in exc_info.value.detail
+    
+    def test_batch_update_some_nonexistent_collections_raises_404(self, document_collection_service, db_session, test_document_collection):
+        """Should raise 404 when some collections don't exist."""
+        updates = [
+            CollectionDisplayOrderItem(collection_id=test_document_collection.id, display_order=10),
+            CollectionDisplayOrderItem(collection_id=999, display_order=20),
+            CollectionDisplayOrderItem(collection_id=888, display_order=30)
+        ]
+        
+        with pytest.raises(HTTPException) as exc_info:
+            document_collection_service.batch_update_display_order(db_session, updates)
+        
+        assert exc_info.value.status_code == 404
+        assert "888" in exc_info.value.detail
+        assert "999" in exc_info.value.detail
+    
+    def test_batch_update_negative_display_order_raises_400(self, document_collection_service, db_session, test_document_collection):
+        """Should raise 400 when display_order is negative."""
+        updates = [
+            CollectionDisplayOrderItem(collection_id=test_document_collection.id, display_order=-1)
+        ]
+        
+        with pytest.raises(HTTPException) as exc_info:
+            document_collection_service.batch_update_display_order(db_session, updates)
+        
+        assert exc_info.value.status_code == 400
+        assert "must be non-negative" in exc_info.value.detail
+    
+    def test_batch_update_duplicate_collection_ids(self, document_collection_service, db_session, test_document_collection):
+        """Should handle duplicate collection IDs (last one wins)."""
+        updates = [
+            CollectionDisplayOrderItem(collection_id=test_document_collection.id, display_order=10),
+            CollectionDisplayOrderItem(collection_id=test_document_collection.id, display_order=50)
+        ]
+        
+        document_collection_service.batch_update_display_order(db_session, updates)
+        
+        db_session.refresh(test_document_collection)
+        assert test_document_collection.display_order == 50
