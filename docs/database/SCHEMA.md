@@ -585,8 +585,3 @@ VACUUM ANALYZE app.annotations;
 - **[Database Models](../../api/models/models.py)** - Source of truth for all table definitions
 - **[Migrations Guide](MIGRATIONS.md)** - Alembic workflow and commands
 - **[API Overview](../api/OVERVIEW.md)** - How the API uses these models
-
----
-
-**Last Updated**: February 2026  
-**Schema Version**: See latest Alembic migration in `api/alembic/versions/`
