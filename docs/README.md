@@ -31,7 +31,6 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 
 ### 🗄️ Database Documentation
 - **[Schema Overview](database/SCHEMA.md)** - ERD diagrams, all tables, JSONB fields, indexes
-- **[Tables Reference](database/TABLES.md)** - Quick reference with SQL examples
 - **[Migrations](database/MIGRATIONS.md)** - Alembic guide
 
 ### � Deployment

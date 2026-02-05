@@ -751,7 +751,6 @@ def upgrade():
 ## See Also
 
 - **[Database Schema](SCHEMA.md)** - Complete schema documentation
-- **[Tables Reference](TABLES.md)** - Quick table reference
 - **[Alembic Documentation](https://alembic.sqlalchemy.org/)** - Official docs
 
 ---
