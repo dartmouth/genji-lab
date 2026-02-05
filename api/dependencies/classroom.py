@@ -46,11 +46,24 @@ def get_current_user_sync(request: Request, db: Session = Depends(get_db)) -> Us
     return user
 
 
+def get_current_user_optional(
+    request: Request, db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Get the current authenticated user from session, or None if not authenticated.
+    Used for endpoints that should work for both authenticated and unauthenticated users.
+    """
+    try:
+        return get_current_user_sync(request, db)
+    except HTTPException:
+        return None
+
+
 def get_classroom_context(
     classroom_id: Optional[int] = Query(
         None, description="ID of the classroom context"
     ),
-    current_user: User = Depends(get_current_user_sync),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ) -> Optional[int]:
     """
@@ -58,7 +71,7 @@ def get_classroom_context(
 
     Args:
         classroom_id: Optional classroom ID from query parameter
-        current_user: Current authenticated user
+        current_user: Current authenticated user (None if not logged in)
         db: Database session
 
     Returns:
@@ -69,6 +82,10 @@ def get_classroom_context(
     """
     if classroom_id is None:
         # Global context - no classroom filtering
+        return None
+
+    if current_user is None:
+        # Unauthenticated users cannot access classroom-specific content
         return None
 
     # Check if user is an admin - admins can access any classroom
