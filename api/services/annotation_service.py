@@ -3,7 +3,7 @@
 import os
 from typing import List, Optional
 from datetime import datetime
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
 
@@ -77,7 +77,7 @@ class AnnotationService(BaseService[AnnotationModel]):
         self._prepare_targets_for_create(db, annotation.target, user)
         annotation.creator_id = user.id
 
-        db_annotation = AnnotationModel(
+        db_annotation = self.model(
             document_collection_id=annotation.document_collection_id,
             document_id=annotation.document_id,
             document_element_id=annotation.document_element_id,
@@ -112,8 +112,8 @@ class AnnotationService(BaseService[AnnotationModel]):
         """
         query = (
             self.get_base_query(db)
-            .options(joinedload(AnnotationModel.creator))
-            .filter(AnnotationModel.id == annotation_id)
+            .options(joinedload(self.model.creator))
+            .filter(self.model.id == annotation_id)
         )
         query = self.apply_classroom_filter(query, classroom_id)
 
@@ -180,7 +180,7 @@ class AnnotationService(BaseService[AnnotationModel]):
 
         Raises HTTPException 404 if not found.
         """
-        query = self.get_base_query(db).filter(AnnotationModel.id == annotation_id)
+        query = self.get_base_query(db).filter(self.model.id == annotation_id)
         query = self.apply_classroom_filter(query, classroom_id)
 
         db_annotation = query.first()
@@ -211,7 +211,7 @@ class AnnotationService(BaseService[AnnotationModel]):
 
         Raises HTTPException 404 if not found.
         """
-        query = self.get_base_query(db).filter(AnnotationModel.id == annotation_id)
+        query = self.get_base_query(db).filter(self.model.id == annotation_id)
         query = self.apply_classroom_filter(query, classroom_id)
 
         db_annotation = query.first()
@@ -233,9 +233,7 @@ class AnnotationService(BaseService[AnnotationModel]):
         Raises HTTPException 404 if annotation not found.
         """
         db_annotation = (
-            db.query(AnnotationModel)
-            .filter(AnnotationModel.id == annotation_id)
-            .first()
+            db.query(self.model).filter(self.model.id == annotation_id).first()
         )
 
         if not db_annotation:
@@ -249,7 +247,8 @@ class AnnotationService(BaseService[AnnotationModel]):
                 for t in new_targ
             ]
         else:
-            targets_to_add = [new_targ.model_dump(exclude_none=True)]
+            # new_targ is already a dict from model_dump above
+            targets_to_add = [new_targ]
 
         for target in targets_to_add:
             target["id"] = self.generate_target_id(db)
@@ -273,17 +272,16 @@ class AnnotationService(BaseService[AnnotationModel]):
         Raises HTTPException 403 if user lacks permission.
         """
         db_annotation = (
-            db.query(AnnotationModel)
-            .filter(AnnotationModel.id == annotation_id)
-            .first()
+            db.query(self.model).filter(self.model.id == annotation_id).first()
         )
 
         if not db_annotation:
             raise HTTPException(status_code=404, detail="Annotation not found")
 
         # Permission check
-        is_admin = "admin" in (user.roles or [])
-        is_verified_scholar = "verified_scholar" in (user.roles or [])
+        user_role_names = [r.name for r in user.roles] if user.roles else []
+        is_admin = "admin" in user_role_names
+        is_verified_scholar = "verified_scholar" in user_role_names
         is_annotation_creator = db_annotation.creator_id == user.id
 
         if not (is_admin or is_verified_scholar or is_annotation_creator):

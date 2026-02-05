@@ -128,7 +128,7 @@ class CASConfigService(BaseService[CASConfiguration]):
         
         # Convert attribute mapping to dict
         attribute_mapping_dict = (
-            config_update.attribute_mapping.dict() 
+            config_update.attribute_mapping.model_dump() 
             if config_update.attribute_mapping 
             else self._get_default_attribute_mapping()
         )

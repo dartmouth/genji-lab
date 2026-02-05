@@ -352,7 +352,7 @@ class DocumentService(BaseService[DocumentModel]):
         self._verify_collection_exists(db, document.document_collection_id)
         self._check_duplicate_title(db, document.title, document.document_collection_id)
         
-        db_document = DocumentModel(**document.dict())
+        db_document = DocumentModel(**document.model_dump())
         
         db.add(db_document)
         db.commit()
@@ -418,7 +418,7 @@ class DocumentService(BaseService[DocumentModel]):
             collection_id = document.document_collection_id or db_document.document_collection_id
             self._check_duplicate_title(db, document.title, collection_id, exclude_id=document_id)
         
-        update_data = document.dict(exclude_unset=True)
+        update_data = document.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_document, key, value)
         
@@ -448,7 +448,7 @@ class DocumentService(BaseService[DocumentModel]):
             collection_id = document.document_collection_id or db_document.document_collection_id
             self._check_duplicate_title(db, document.title, collection_id, exclude_id=document_id)
         
-        update_data = document.dict(exclude_unset=True, exclude_none=True)
+        update_data = document.model_dump(exclude_unset=True, exclude_none=True)
         for key, value in update_data.items():
             setattr(db_document, key, value)
         
@@ -627,7 +627,7 @@ class DocumentService(BaseService[DocumentModel]):
                 document_collection_id=collection_id
             )
             
-            db_document = DocumentModel(**document_data.dict())
+            db_document = DocumentModel(**document_data.model_dump())
             db.add(db_document)
             db.flush()
             
