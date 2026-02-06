@@ -465,6 +465,7 @@ const AppHeader: React.FC = () => {
                   {/* Logout Button */}
                   <button
                     onClick={() => {
+                      setIsOptedOut("true");
                       toggleDropdown();
                       logout();
                     }}

@@ -37,6 +37,7 @@ interface AnnotationCardProps {
   documentTitle?: string;
   showDocumentInfo?: boolean;
   position?: "bottom" | "right" | "left";
+  parentIsScholarly?: boolean;
 }
 
 const AnnotationCard: React.FC<AnnotationCardProps> = ({
@@ -48,6 +49,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
   documentTitle = `Document ${annotation.document_id}`,
   showDocumentInfo = false,
   position = "bottom",
+  parentIsScholarly = false,
 }) => {
   const { user, isAuthenticated } = useAuth();
   const dispatch = useAppDispatch();
@@ -71,6 +73,17 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
   // Ref for the action button to calculate position
   const actionButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Check if user is a verified scholar or admin
+  const isVerifiedScholar =
+    user?.roles?.includes("verified_scholar") || user?.roles?.includes("admin");
+
+  // Check if this is a scholarly annotation
+  const isScholarlyAnnotation = annotation.motivation === "scholarly";
+
+  // Determine if user can interact with this annotation
+  const canInteract =
+    (!isScholarlyAnnotation && !parentIsScholarly) || isVerifiedScholar;
+
   // Custom hooks
   const { tags, isTagging, setIsTagging, handleRemoveTag, handleTagSubmit } =
     useAnnotationTags(annotation, user?.id);
@@ -82,6 +95,10 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
       `Annotation/${id}`
     )
   );
+
+  if (isScholarlyAnnotation && replies) {
+    console.log(`Replies for scholarly annotation ${id}:`, replies);
+  }
 
   const upvotes = useAppSelector((state: RootState) =>
     upvoteAnnotations.selectors.selectAnnotationsByParent(
@@ -177,10 +194,12 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
   };
 
   const handleReplyClick = () => {
+    if (!canInteract) return; // Don't allow replies on scholarly annotations for non-scholars
     setIsReplying(!isReplying);
   };
 
   const handleFlagClick = () => {
+    if (!canInteract) return; // Don't allow flagging scholarly annotations for non-scholars
     setIsFlagging(true);
   };
 
@@ -220,6 +239,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
   const handleUpvote = () => {
     if (!user) return;
     if (!user.id) return;
+    if (!canInteract) return; // Don't allow upvoting scholarly annotations for non-scholars
 
     const deId =
       typeof annotation.document_element_id === "string"
@@ -271,92 +291,114 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Upvote */}
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!hasUserUpvoted) {
-            handleUpvote();
-          }
-          closeActionMenu();
-        }}
-        style={{
-          padding: "10px 12px",
-          cursor: hasUserUpvoted ? "not-allowed" : "pointer",
-          opacity: hasUserUpvoted ? 0.5 : 1,
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "14px",
-          borderBottom: "1px solid #f0f0f0",
-        }}
-        onMouseEnter={(e) => {
-          if (!hasUserUpvoted)
-            e.currentTarget.style.backgroundColor = "#f5f5f5";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
-      >
-        <ThumbUp
-          sx={{ fontSize: "1rem", color: hasUserUpvoted ? "#aaa" : "#34A853" }}
-        />
-        <span>Upvote ({upvotes?.length || 0})</span>
-      </div>
+      {/* Only show interactive options if user can interact */}
+      {canInteract ? (
+        <>
+          {/* Upvote */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!hasUserUpvoted) {
+                handleUpvote();
+              }
+              closeActionMenu();
+            }}
+            style={{
+              padding: "10px 12px",
+              cursor: hasUserUpvoted ? "not-allowed" : "pointer",
+              opacity: hasUserUpvoted ? 0.5 : 1,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+              borderBottom: "1px solid #f0f0f0",
+            }}
+            onMouseEnter={(e) => {
+              if (!hasUserUpvoted)
+                e.currentTarget.style.backgroundColor = "#f5f5f5";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+          >
+            <ThumbUp
+              sx={{
+                fontSize: "1rem",
+                color: hasUserUpvoted ? "#aaa" : "#34A853",
+              }}
+            />
+            <span>Upvote ({upvotes?.length || 0})</span>
+          </div>
 
-      {/* Reply */}
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsReplying(!isReplying);
-          closeActionMenu();
-        }}
-        style={{
-          padding: "10px 12px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "14px",
-          borderBottom: "1px solid #f0f0f0",
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = "#f5f5f5")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.backgroundColor = "transparent")
-        }
-      >
-        <ChatBubbleOutline sx={{ fontSize: "1rem" }} />
-        <span>Reply</span>
-      </div>
+          {/* Reply */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsReplying(!isReplying);
+              closeActionMenu();
+            }}
+            style={{
+              padding: "10px 12px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+              borderBottom: "1px solid #f0f0f0",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "#f5f5f5")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
+          >
+            <ChatBubbleOutline sx={{ fontSize: "1rem" }} />
+            <span>Reply</span>
+          </div>
 
-      {/* Flag */}
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsFlagging(true);
-          closeActionMenu();
-        }}
-        style={{
-          padding: "10px 12px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "14px",
-          borderBottom: "1px solid #f0f0f0",
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = "#f5f5f5")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.backgroundColor = "transparent")
-        }
-      >
-        <Flag sx={{ fontSize: "1rem" }} />
-        <span>Flag</span>
-      </div>
+          {/* Flag */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsFlagging(true);
+              closeActionMenu();
+            }}
+            style={{
+              padding: "10px 12px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+              borderBottom: "1px solid #f0f0f0",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "#f5f5f5")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
+          >
+            <Flag sx={{ fontSize: "1rem" }} />
+            <span>Flag</span>
+          </div>
+        </>
+      ) : (
+        /* Show info message for non-scholars on scholarly annotations */
+        <div
+          style={{
+            padding: "10px 12px",
+            fontSize: "12px",
+            color: "#666",
+            fontStyle: "italic",
+            textAlign: "center",
+            borderBottom: "1px solid #f0f0f0",
+          }}
+        >
+          Only verified scholars can interact with scholarly annotations
+        </div>
+      )}
 
       {/* Add Link - Show when user owns annotation */}
       {user && user.id === annotation.creator.id && (
@@ -387,7 +429,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         </div>
       )}
 
-      {/* Edit/Delete/Tags (if user owns annotation) */}
+      {/* Edit/Delete (if user owns annotation) */}
       {user && user.id === annotation.creator.id && (
         <>
           <div
@@ -444,31 +486,33 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         </>
       )}
 
-      {/* Tags */}
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsTagging(true);
-          closeActionMenu();
-        }}
-        style={{
-          padding: "10px 12px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          fontSize: "14px",
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = "#f5f5f5")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.backgroundColor = "transparent")
-        }
-      >
-        <Settings sx={{ fontSize: "1rem" }} />
-        <span>Tags</span>
-      </div>
+      {/* Tags - Only show if user can interact OR owns the annotation */}
+      {(canInteract || (user && user.id === annotation.creator.id)) && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsTagging(true);
+            closeActionMenu();
+          }}
+          style={{
+            padding: "10px 12px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "14px",
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor = "#f5f5f5")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = "transparent")
+          }
+        >
+          <Settings sx={{ fontSize: "1rem" }} />
+          <span>Tags</span>
+        </div>
+      )}
     </div>
   );
 
@@ -501,7 +545,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.08)";
       }}
     >
-      {/* Header: Document info, type badge, and author */}
       <AnnotationCardHeader
         annotation={annotation}
         documentColor={documentColor}
@@ -509,7 +552,6 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         showDocumentInfo={showDocumentInfo}
       />
 
-      {/* Toolbar: Only show for authenticated users */}
       {isAuthenticated && (
         <AnnotationCardToolbar
           annotation={annotation}
@@ -529,6 +571,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
           position={position}
           onActionMenuOpen={handleActionMenuOpen}
           actionButtonRef={actionButtonRef}
+          canInteract={canInteract}
         />
       )}
 
@@ -572,7 +615,9 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
               color: "#999",
             }}
           >
-            Login to interact
+            {isScholarlyAnnotation
+              ? "Verified scholars can interact"
+              : "Login to interact"}
           </span>
         </div>
       )}
@@ -586,15 +631,15 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         />
       )}
 
-      {/* Reply/Flag forms - Only for authenticated users */}
-      {isAuthenticated && isFlagging && !isReplying && (
+      {/* Reply/Flag forms - Only for authenticated users who can interact */}
+      {isAuthenticated && isFlagging && !isReplying && canInteract && (
         <ReplyForm
           annotation={annotation}
           motivation="flagging"
           onSave={handleFlagSave}
         />
       )}
-      {isAuthenticated && isReplying && !isFlagging && (
+      {isAuthenticated && isReplying && !isFlagging && canInteract && (
         <ReplyForm
           annotation={annotation}
           motivation="replying"
@@ -610,6 +655,7 @@ const AnnotationCard: React.FC<AnnotationCardProps> = ({
         documentTitle={documentTitle}
         AnnotationCardComponent={AnnotationCard}
         position={position}
+        parentIsScholarly={isScholarlyAnnotation}
       />
 
       {/* Action menu for side panels - Only for authenticated users */}

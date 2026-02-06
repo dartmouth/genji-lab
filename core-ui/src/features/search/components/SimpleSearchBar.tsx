@@ -110,7 +110,7 @@ const SimpleSearchBar: React.FC = () => {
             operator,
           });
 
-          i = groupResult.endIndex + 1; // Skip past the closing parenthesis
+          i = groupResult.endIndex + 1;
         } else if (
           token.toUpperCase() === "AND" ||
           token.toUpperCase() === "OR"
@@ -205,7 +205,20 @@ const SimpleSearchBar: React.FC = () => {
     const queryStructure = createQueryStructure(query);
 
     try {
-      const response = await api.post("/search/", queryStructure);
+      // Get classroom context from localStorage
+      const activeClassroom = localStorage.getItem("active_classroom");
+      const isOptedOut = localStorage.getItem("classroom_opted_out");
+
+      // Build URL with classroom_id param if needed
+      const params = new URLSearchParams();
+      if (activeClassroom && isOptedOut !== "true") {
+        params.append("classroom_id", activeClassroom);
+      }
+
+      // Construct the full URL with query params
+      const url = `/search/${params.toString() ? `?${params}` : ""}`;
+
+      const response = await api.post(url, queryStructure);
       dispatch(setResults(response.data));
       navigate("/search");
     } catch (error) {

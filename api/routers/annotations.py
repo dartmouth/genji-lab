@@ -14,6 +14,7 @@ from schemas.annotations import (
 from dependencies.classroom import (
     get_classroom_context,
     get_current_user_sync,
+    get_current_user_optional,
     get_user_classrooms,
 )
 from services.annotation_service import annotation_service
@@ -127,11 +128,13 @@ def remove_target_from_annotation(
     db: Session = Depends(get_db),
 ):
     """Remove a specific target from a linking annotation."""
-    result = annotation_service.remove_target(db, annotation_id, target_id, current_user)
-    
+    result = annotation_service.remove_target(
+        db, annotation_id, target_id, current_user
+    )
+
     if result is None:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    
+
     return result
 
 
@@ -143,11 +146,13 @@ def remove_target_from_annotation(
 def read_annotations_by_motivation(
     document_element_id: int,
     classroom_id: Optional[int] = Depends(get_classroom_context),
-    current_user: User = Depends(get_current_user_sync),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """Get annotations grouped by motivation for a document element."""
-    return annotation_query_service.get_by_motivation(db, document_element_id, classroom_id)
+    return annotation_query_service.get_by_motivation(
+        db, document_element_id, classroom_id
+    )
 
 
 @router.get(
@@ -157,12 +162,13 @@ def read_annotations_by_motivation(
 )
 def fetch_links(
     document_element_id: int,
-    classroom_id: Optional[int] = Depends(get_classroom_context),
-    current_user: User = Depends(get_current_user_sync),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """Get linking annotations that reference a specific document element."""
-    return annotation_query_service.get_links_for_element(db, document_element_id, classroom_id)
+    return annotation_query_service.get_links_for_element(
+        db, document_element_id, classroom_id=None
+    )
 
 
 @router.get(
@@ -172,7 +178,7 @@ def fetch_links(
 )
 def get_linked_text_info(
     document_element_id: int,
-    current_user: User = Depends(get_current_user_sync),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """Returns only the specific documents and elements that are linked."""

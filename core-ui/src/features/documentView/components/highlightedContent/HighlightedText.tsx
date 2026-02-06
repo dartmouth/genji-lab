@@ -8,7 +8,10 @@ import { debounce } from "lodash";
 import { TextFormatting } from "@documentView/types";
 import { useVisibilityWithPrefetch } from "@/hooks/useVisibilityWithPrefetch";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import { linkingAnnotations as linkAnnotations } from "@store";
+import {
+  linkingAnnotations as linkAnnotations,
+  commentingAnnotations,
+} from "@store";
 
 import { getTextTargets, findTargetForParagraph } from "./utils";
 
@@ -212,10 +215,43 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({
     }
   }, [annotationCreate, paragraphId]);
 
+  // Reset fetch flag when classroom context changes
   useEffect(() => {
     notFetched.current = true;
-  }, [dispatch, activeClassroomValue, isOptedOut]);
+  }, [activeClassroomValue, isOptedOut]);
 
+  // Fetch annotations when visible
+  useEffect(() => {
+    if ((shouldPrefetch || isVisible) && notFetched.current) {
+      notFetched.current = false;
+
+      const params: { documentElementId: number; classroomID?: number } = {
+        documentElementId: parseURI(paragraphId) as unknown as number,
+      };
+
+      if (activeClassroomValue && isOptedOut !== "true") {
+        params.classroomID = activeClassroomValue as unknown as number;
+      }
+
+      dispatch(fetchAnnotationByMotivation(params));
+    }
+  }, [
+    dispatch,
+    activeClassroomValue,
+    isOptedOut,
+    paragraphId,
+    isVisible,
+    shouldPrefetch,
+  ]);
+
+  useEffect(() => {
+    dispatch(commentingAnnotations.actions.clearAnnotations());
+
+    // Mark as not fetched so the next useEffect will trigger
+    notFetched.current = true;
+  }, [activeClassroomValue, isOptedOut, dispatch]);
+
+  // Fetch annotations when visible
   useEffect(() => {
     if ((shouldPrefetch || isVisible) && notFetched.current) {
       notFetched.current = false;
