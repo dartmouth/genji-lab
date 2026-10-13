@@ -1,4 +1,5 @@
 FROM python:3.10-slim
+ARG DEBIAN_FRONTEND=noninteractive
 RUN apt update -qq && apt upgrade -y
 WORKDIR /app
 COPY requirements.txt requirements.txt
