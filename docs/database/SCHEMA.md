@@ -1,9 +1,11 @@
-# Database Schema Documentation
+# Database Schema Overview
 
 **Project**: Genji Document Annotation Platform  
 **Database**: PostgreSQL 15+  
 **ORM**: SQLAlchemy 2.0  
 **Schema**: `app`
+
+> **📌 For detailed table definitions, fields, and constraints**, see the source of truth: [api/models/models.py](../../api/models/models.py)
 
 ---
 
@@ -11,28 +13,25 @@
 
 1. [Schema Overview](#schema-overview)
 2. [Entity Relationship Diagram](#entity-relationship-diagram)
-3. [Tables Reference](#tables-reference)
-4. [Association Tables](#association-tables)
-5. [Relationships](#relationships)
-6. [Indexes](#indexes)
-7. [JSONB Fields](#jsonb-fields)
-8. [Sequences](#sequences)
-9. [Constraints](#constraints)
-10. [Migration Guide](#migration-guide)
+3. [Key Design Patterns](#key-design-patterns)
+4. [Data Flow](#data-flow)
+5. [JSONB Usage](#jsonb-usage)
+6. [Indexes & Performance](#indexes--performance)
+7. [Database Operations](#database-operations)
 
 ---
 
 ## Schema Overview
 
-The Genji database uses a **single PostgreSQL schema** named `app` to organize all tables. This approach provides namespace isolation while keeping the structure simple.
+The Genji database uses a **single PostgreSQL schema** named `app` to organize all tables. This provides namespace isolation while keeping the structure simple.
 
 ### Database Statistics
 
 | Metric | Count |
 |--------|-------|
-| **Tables** | 11 |
+| **Tables** | 12 |
 | **Association Tables** | 3 |
-| **Total Entities** | 14 |
+| **Total Entities** | 15 |
 | **Foreign Keys** | 18+ |
 | **Indexes** | 30+ |
 | **JSONB Columns** | 7 |
@@ -41,28 +40,29 @@ The Genji database uses a **single PostgreSQL schema** named `app` to organize a
 ### Table Categories
 
 **User Management (4 tables)**:
-- `users` - User accounts
-- `user_passwords` - Password storage
-- `roles` - User roles
-- `permissions` - Permission definitions
+- `users` - User accounts and profiles
+- `user_passwords` - Secure password storage (1:1 with users)
+- `roles` - User roles (admin, instructor, student)
+- `permissions` - Granular permission definitions
 
 **Content Management (4 tables)**:
-- `document_collections` - Collections of documents
-- `documents` - Individual documents
-- `document_elements` - Granular content units
-- `annotations` - User annotations
+- `document_collections` - Top-level containers for documents
+- `documents` - Individual documents within collections
+- `document_elements` - Granular content units (paragraphs, sections)
+- `annotations` - User-generated annotations on content
 
 **Collaboration (2 tables)**:
-- `groups` - Classrooms/teams
-- `object_sharing` - Sharing permissions
+- `groups` - Classrooms/teams for organizing users
+- `object_sharing` - Sharing permissions (⚠️ defined but no API yet)
 
-**Configuration (1 table)**:
-- `site_settings` - Platform configuration
+**Configuration (2 tables)**:
+- `site_settings` - Platform configuration (singleton)
+- `cas_configuration` - CAS/SSO authentication settings (singleton)
 
 **Association Tables (3)**:
-- `user_roles` - User-role mapping
-- `role_permissions` - Role-permission mapping
-- `group_members` - Group membership
+- `user_roles` - User ↔ Role mapping (many-to-many)
+- `role_permissions` - Role ↔ Permission mapping (many-to-many)
+- `group_members` - User ↔ Group membership (many-to-many)
 
 ---
 
@@ -96,6 +96,7 @@ erDiagram
     users ||--o{ groups : "creates"
     users ||--o{ object_sharing : "creates"
     users ||--o{ site_settings : "updates"
+    users ||--o{ cas_configuration : "updates"
     
     users {
         int id PK
@@ -237,876 +238,350 @@ graph LR
 
 ---
 
-## Tables Reference
+## Key Design Patterns
 
-### 1. users
+### Soft Deletes
 
-**Purpose**: Store user account information
+Users are soft-deleted using the `is_active` flag rather than hard deletion:
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | User ID |
-| `first_name` | VARCHAR(255) | | User's first name |
-| `last_name` | VARCHAR(255) | | User's last name |
-| `email` | VARCHAR(255) | UNIQUE, INDEX | Email address |
-| `username` | VARCHAR(255) | UNIQUE, INDEX | Username for login |
-| `is_active` | BOOLEAN | DEFAULT TRUE | Account status |
-| `user_metadata` | JSONB | | Additional user data |
+```python
+# In User model
+is_active = Column(Boolean, default=True)
 
-**Indexes**:
-- `idx_users_metadata` (GIN) - For JSONB queries
-
-**Relationships**:
-- Has one `user_passwords` (1:1)
-- Has many `document_collections` (owner, creator, modifier)
-- Has many `documents` (owner)
-- Has many `annotations` (creator, owner)
-- Has many `groups` (creator, member)
-- Belongs to many `roles` (via user_roles)
-- Belongs to many `groups` (via group_members)
-
-**Notes**:
-- Email and username must be unique
-- Soft delete via `is_active` flag
-- No password stored here (see user_passwords)
-
----
-
-### 2. user_passwords
-
-**Purpose**: Securely store user passwords
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Password record ID |
-| `user_id` | INTEGER | FK, UNIQUE | User reference |
-| `hashed_password` | VARCHAR(255) | NOT NULL | Bcrypt hashed password |
-| `created_at` | TIMESTAMP | DEFAULT NOW | Password creation time |
-| `updated_at` | TIMESTAMP | AUTO UPDATE | Last password change |
-
-**Indexes**:
-- `idx_user_passwords_user_id` - Foreign key index
-
-**Relationships**:
-- Belongs to `users` (1:1)
-
-**Security Notes**:
-- Passwords hashed with bcrypt (cost factor 12)
-- `updated_at` tracks password changes
-- One password per user (1:1 relationship)
-- Users with CAS auth have no password record
-
----
-
-### 3. roles
-
-**Purpose**: Define user roles (admin, instructor, student)
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Role ID |
-| `name` | VARCHAR(50) | UNIQUE | Role name |
-| `description` | VARCHAR(255) | | Role description |
-
-**Relationships**:
-- Belongs to many `users` (via user_roles)
-- Has many `permissions` (via role_permissions)
-
-**Typical Roles**:
-```sql
--- Common role setup
-INSERT INTO app.roles (name, description) VALUES
-  ('admin', 'Full system access'),
-  ('instructor', 'Classroom and content management'),
-  ('student', 'Document viewing and annotation');
+# Disable a user instead of deleting
+user.is_active = False
 ```
 
----
+**Rationale**: Preserves data integrity and allows for user reactivation.
 
-### 4. permissions
+### Audit Trail
 
-**Purpose**: Define granular permissions
+Major entities track creation and modification:
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Permission ID |
-| `name` | VARCHAR(100) | UNIQUE | Permission name |
-| `description` | VARCHAR(255) | | Permission description |
-
-**Relationships**:
-- Belongs to many `roles` (via role_permissions)
-
----
-
-### 5. groups
-
-**Purpose**: Organize users into classrooms or teams
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Group ID |
-| `name` | VARCHAR(100) | | Group name |
-| `description` | VARCHAR(255) | | Group description |
-| `created_at` | TIMESTAMP | DEFAULT NOW | Creation timestamp |
-| `created_by_id` | INTEGER | FK | Creator user ID |
-| `start_date` | DATE | NULLABLE | Group start date (e.g., semester start) |
-| `end_date` | DATE | NULLABLE | Group end date (e.g., semester end) |
-
-**Indexes**:
-- Foreign key indexes on `created_by_id`
-
-**Relationships**:
-- Belongs to `users` (creator)
-- Has many `users` (via group_members)
-- Has many `annotations` (classroom context)
-
-**Notes**:
-- `start_date` and `end_date` currently nullable (TODO: make required)
-- Used for semester-based classroom organization
-- Enables instructor oversight of student annotations
-
----
-
-### 6. object_sharing
-
-**Purpose**: Manage sharing permissions for documents and collections
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Sharing record ID |
-| `object_id` | INTEGER | INDEX | ID of shared object |
-| `object_type` | VARCHAR(50) | INDEX | Type (document, collection) |
-| `shared_with_id` | INTEGER | INDEX | User or group ID |
-| `shared_with_type` | VARCHAR(10) | | 'user' or 'group' |
-| `access_level` | VARCHAR(20) | | 'view', 'edit', 'manage' |
-| `created_at` | TIMESTAMP | DEFAULT NOW | Share creation time |
-| `created_by_id` | INTEGER | FK | Creator user ID |
-
-**Indexes**:
-- `idx_object_sharing_object` - Composite (object_id, object_type)
-- `idx_object_sharing_shared_with` - Composite (shared_with_id, shared_with_type)
-
-**Relationships**:
-- Belongs to `users` (creator)
-
-**Status**: ⚠️ **Defined but no API endpoints yet**
-
-**Access Levels**:
-- `view` - Read-only access
-- `edit` - Can modify content
-- `manage` - Can share with others
-
-**Example**:
-```sql
--- Share collection 5 with group 10 (view access)
-INSERT INTO app.object_sharing 
-  (object_id, object_type, shared_with_id, shared_with_type, access_level, created_by_id)
-VALUES 
-  (5, 'collection', 10, 'group', 'view', 1);
+```python
+# Common pattern across models
+created = Column(DateTime, default=func.current_timestamp())
+modified = Column(DateTime, onupdate=func.current_timestamp())
+created_by_id = Column(Integer, ForeignKey('app.users.id'))
+modified_by_id = Column(Integer, ForeignKey('app.users.id'))
 ```
 
----
+**Applies to**: `document_collections`, `documents`, `document_elements`, `annotations`
 
-### 7. document_collections
+### Ownership Model
 
-**Purpose**: Container for related documents
+Content ownership is explicit and trackable:
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Collection ID |
-| `title` | VARCHAR(255) | | Collection title |
-| `visibility` | VARCHAR(50) | | public, private, shared |
-| `text_direction` | VARCHAR(50) | | ltr, rtl |
-| `created` | TIMESTAMP | DEFAULT NOW | Creation time |
-| `modified` | TIMESTAMP | AUTO UPDATE | Last modification |
-| `created_by_id` | INTEGER | FK | Creator user ID |
-| `modified_by_id` | INTEGER | FK | Last modifier user ID |
-| `owner_id` | INTEGER | FK | Owner user ID |
-| `language` | VARCHAR(50) | | Language code (en, es, etc.) |
-| `hierarchy` | JSONB | | Hierarchical structure definition |
-| `collection_metadata` | JSONB | | Additional metadata |
+- **Collections**: `owner_id`, `created_by_id`, `modified_by_id`
+- **Documents**: `owner_id`
+- **Annotations**: `creator_id` (who made it), `owner_id` (who controls it)
 
-**Indexes**:
-- `idx_document_collections_created_by`
-- `idx_document_collections_modified_by`
-- `idx_document_collections_owner`
-- `idx_document_collections_hierarchy` (GIN)
-- `idx_document_collections_metadata` (GIN)
+### Flexible Metadata with JSONB
 
-**Relationships**:
-- Belongs to `users` (owner, creator, modifier)
-- Has many `documents`
-- Has many `annotations`
+Structured data that needs flexibility uses PostgreSQL's JSONB type:
 
-**JSONB Examples**:
+- **User metadata**: Custom user attributes
+- **Collection hierarchy**: Custom document structure definitions
+- **Element content**: Rich text with formatting
+- **Annotations**: W3C Web Annotation standard format
 
-**hierarchy**:
-```json
-{
-  "type": "book",
-  "levels": ["chapter", "section", "paragraph"],
-  "chapter_count": 10
-}
+**Benefits**:
+- Schema flexibility without migrations
+- Efficient querying with GIN indexes
+- Native JSON operators in PostgreSQL
+
+### Role-Based Access Control (RBAC)
+
+Permissions managed through a three-tier system:
+
+```
+Users ↔ Roles ↔ Permissions
 ```
 
-**collection_metadata**:
-```json
-{
-  "author": "F. Scott Fitzgerald",
-  "year": 1925,
-  "genre": "Novel",
-  "tags": ["american-literature", "1920s", "classic"]
-}
-```
+**Example flow**:
+1. User assigned "instructor" role
+2. "instructor" role has multiple permissions (manage_classrooms, view_annotations, etc.)
+3. Single role change updates all user permissions
+
+### Classroom Context
+
+Annotations can belong to a classroom (`classroom_id`), enabling:
+- Instructor oversight of student work
+- Classroom-specific annotation views
+- Semester-based organization via group `start_date`/`end_date`
 
 ---
 
-### 8. documents
-
-**Purpose**: Individual documents within a collection
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Document ID |
-| `document_collection_id` | INTEGER | FK | Parent collection |
-| `owner_id` | INTEGER | FK | Owner user ID |
-| `title` | VARCHAR(255) | | Document title |
-| `description` | TEXT | | Document description |
-| `created` | TIMESTAMP | DEFAULT NOW | Creation time |
-| `modified` | TIMESTAMP | AUTO UPDATE | Last modification |
-
-**Indexes**:
-- `idx_documents_collection_id`
-- `idx_documents_owner`
-
-**Relationships**:
-- Belongs to `document_collections`
-- Belongs to `users` (owner)
-- Has many `document_elements`
-- Has many `annotations`
-
-**Notes**:
-- Documents must belong to exactly one collection
-- Actual content stored in document_elements
-
----
-
-### 9. document_elements
-
-**Purpose**: Granular content units (paragraphs, sections, etc.)
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Element ID |
-| `document_id` | INTEGER | FK | Parent document |
-| `created` | TIMESTAMP | DEFAULT NOW | Creation time |
-| `modified` | TIMESTAMP | AUTO UPDATE | Last modification |
-| `hierarchy` | JSONB | | Position in document |
-| `content` | JSONB | | Text and formatting |
-
-**Indexes**:
-- `idx_document_elements_document_id`
-- `idx_document_elements_hierarchy` (GIN)
-- `idx_document_elements_content` (GIN)
-
-**Relationships**:
-- Belongs to `documents`
-- Has many `annotations`
-
-**JSONB Structure**:
-
-**hierarchy**:
-```json
-{
-  "chapter": 1,
-  "section": 2,
-  "paragraph": 5,
-  "element_order": 15
-}
-```
-
-**content**:
-```json
-{
-  "text": "In my younger and more vulnerable years...",
-  "formatting": {
-    "alignment": "left",
-    "indent": 0,
-    "text_styles": {
-      "is_bold": false,
-      "is_italic": false,
-      "formatting": [
-        {
-          "start": 10,
-          "end": 20,
-          "type": ["italic"]
-        }
-      ]
-    }
-  }
-}
-```
-
----
-
-### 10. annotations
-
-**Purpose**: User-generated content attached to document elements
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Annotation ID |
-| `document_collection_id` | INTEGER | FK | Collection reference |
-| `document_id` | INTEGER | FK | Document reference |
-| `document_element_id` | INTEGER | FK | Element reference |
-| `creator_id` | INTEGER | FK | Creator user ID |
-| `owner_id` | INTEGER | FK | Owner user ID |
-| `classroom_id` | INTEGER | FK, NULL | Classroom scope |
-| `type` | VARCHAR(100) | | Annotation type |
-| `created` | TIMESTAMP | | Creation time |
-| `modified` | TIMESTAMP | | Last modification |
-| `generator` | VARCHAR(255) | | Generating application |
-| `generated` | TIMESTAMP | | Generation timestamp |
-| `motivation` | VARCHAR(100) | INDEX | Purpose (commenting, tagging, etc.) |
-| `body` | JSONB | | Annotation content |
-| `target` | JSONB | | Target specification |
-| `status` | VARCHAR(50) | | Status (active, deleted, etc.) |
-| `annotation_type` | VARCHAR(100) | | Additional type info |
-| `context` | VARCHAR(255) | | Contextual information |
-
-**Indexes**:
-- `idx_annotations_document_id`
-- `idx_annotations_document_element_id`
-- `idx_annotations_creator_id`
-- `idx_annotations_owner_id`
-- `idx_annotations_collection_id`
-- `idx_annotations_classroom_id`
-- `idx_annotations_type`
-- `idx_annotations_created`
-- `idx_annotations_motivation`
-- `idx_annotations_body` (GIN)
-- `idx_annotations_target` (GIN)
-
-**Relationships**:
-- Belongs to `document_collections`
-- Belongs to `documents`
-- Belongs to `document_elements`
-- Belongs to `users` (creator, owner)
-- Belongs to `groups` (classroom)
-
-**Motivation Values**:
-- `commenting` - User comments
-- `highlighting` - Text highlights
-- `tagging` - Content tags
-- `questioning` - Questions
-- `replying` - Responses
-- `linking` - Cross-references
-
-**JSONB Examples**:
-
-**body** (comment):
-```json
-{
-  "type": "TextualBody",
-  "value": "This passage demonstrates the theme of the American Dream.",
-  "format": "text/plain",
-  "language": "en"
-}
-```
-
-**body** (tag):
-```json
-{
-  "type": "TextualBody",
-  "value": "symbolism",
-  "purpose": "tagging"
-}
-```
-
-**target**:
-```json
-{
-  "source": "document_element:42",
-  "selector": {
-    "type": "TextQuoteSelector",
-    "exact": "the green light",
-    "prefix": "Gatsby believed in ",
-    "suffix": ", the orgastic future"
-  }
-}
-```
-
----
-
-### 11. site_settings
-
-**Purpose**: Platform configuration (singleton table)
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PK, AUTO | Settings ID |
-| `site_title` | VARCHAR(50) | NOT NULL | Site title |
-| `site_logo_enabled` | BOOLEAN | DEFAULT FALSE | Show logo flag |
-| `updated_by_id` | INTEGER | FK, NOT NULL | Last updater user ID |
-| `updated_at` | TIMESTAMP | AUTO UPDATE | Last update time |
-| `site_logo_data` | TEXT | NULL | Base64 logo data |
-| `site_logo_mime_type` | VARCHAR(50) | NULL | Logo MIME type |
-| `site_favicon_data` | TEXT | NULL | Base64 favicon data |
-| `site_favicon_mime_type` | VARCHAR(50) | NULL | Favicon MIME type |
-
-**Indexes**:
-- `idx_site_settings_updated_by`
-
-**Relationships**:
-- Belongs to `users` (updated_by)
-
-**Notes**:
-- Typically only one row exists (singleton pattern)
-- Images stored as base64-encoded text
-- Updated via admin panel
-
----
-
-## Association Tables
-
-### user_roles
-
-**Purpose**: Many-to-many relationship between users and roles
-
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `user_id` | INTEGER | FK → users.id |
-| `role_id` | INTEGER | FK → roles.id |
-
-**Composite Primary Key**: (user_id, role_id)
-
-**Example**:
-```sql
--- Assign admin role to user 1
-INSERT INTO app.user_roles (user_id, role_id) VALUES (1, 1);
-```
-
----
-
-### role_permissions
-
-**Purpose**: Many-to-many relationship between roles and permissions
-
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `role_id` | INTEGER | FK → roles.id |
-| `permission_id` | INTEGER | FK → permissions.id |
-
-**Composite Primary Key**: (role_id, permission_id)
-
----
-
-### group_members
-
-**Purpose**: Many-to-many relationship between users and groups
-
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `group_id` | INTEGER | FK → groups.id |
-| `user_id` | INTEGER | FK → users.id |
-| `joined_at` | TIMESTAMP | DEFAULT NOW |
-
-**Composite Primary Key**: (group_id, user_id)
-
-**Notes**:
-- Tracks when user joined group
-- Used for classroom rosters
-
----
-
-## Relationships
-
-### User Relationships
-
-```mermaid
-graph TB
-    User[User] --> UserPassword[User Password<br/>1:1]
-    User --> Roles[Roles<br/>M:N via user_roles]
-    User --> Groups[Groups<br/>M:N via group_members]
-    User --> OwnedCollections[Owned Collections<br/>1:M]
-    User --> CreatedCollections[Created Collections<br/>1:M]
-    User --> OwnedDocuments[Owned Documents<br/>1:M]
-    User --> CreatedAnnotations[Created Annotations<br/>1:M]
-    User --> CreatedGroups[Created Groups<br/>1:M]
-    
-    style User fill:#4CAF50
-```
+## Data Flow
 
 ### Content Hierarchy
 
 ```mermaid
 graph LR
-    Collection[Document Collection] --> Document[Document]
-    Document --> Element[Document Element]
-    Element --> Annotation[Annotation]
+    User[👤 User] --> Collection[📚 Collection]
+    Collection --> Document[📄 Document]
+    Document --> Element[📝 Element]
+    Element --> Annotation[💬 Annotation]
+    User -.creates.-> Annotation
+    Group[🏫 Group] -.scope.-> Annotation
     
-    Collection -.-> Annotation
-    Document -.-> Annotation
-    
+    style User fill:#4CAF50
     style Collection fill:#2196F3
     style Document fill:#2196F3
     style Element fill:#2196F3
     style Annotation fill:#FF9800
+    style Group fill:#9C27B0
 ```
 
-### Ownership Model
+**Key relationships**:
+- **Collections** contain multiple **Documents**
+- **Documents** contain multiple **Elements** (paragraphs, sections)
+- **Elements** receive multiple **Annotations** from users
+- **Annotations** can reference Collection, Document, and Element
+- **Groups** provide classroom context for Annotations
 
-Every major content object has ownership tracking:
+### User Relationships
 
+```mermaid
+graph TB
+    User[👤 User] --> Password[🔐 Password<br/>1:1]
+    User --> Roles[👔 Roles<br/>M:N]
+    Roles --> Permissions[✓ Permissions<br/>M:N]
+    User --> Groups[🏫 Groups<br/>M:N]
+    User --> Content[📚 Owned Content<br/>1:M]
+    User --> Annotations[💬 Annotations<br/>1:M]
+    
+    style User fill:#4CAF50
+    style Password fill:#F44336
+    style Roles fill:#9C27B0
+    style Groups fill:#9C27B0
 ```
-DocumentCollection
-├── owner_id → User (who controls it)
-├── created_by_id → User (who created it)
-└── modified_by_id → User (who last modified it)
 
-Document
-└── owner_id → User
+### Cascade Behavior
 
-Annotation
-├── creator_id → User (who created it)
-└── owner_id → User (who owns it)
-```
+Understanding deletion behavior:
+
+| If you delete... | Then... | Behavior |
+|-----------------|---------|----------|
+| **User** | ❌ Restricted | Cannot delete if owns content |
+| **Collection** | 🗑️ Cascades | Documents deleted |
+| **Document** | 🗑️ Cascades | Elements deleted |
+| **Element** | 🗑️ Cascades | Annotations on that element deleted |
+| **Group** | ⚠️ SET NULL | Annotations remain but `classroom_id` → NULL |
 
 ---
 
-## Indexes
+## JSONB Usage
 
-### Index Strategy
+### Fields Using JSONB
 
-The database uses three types of indexes:
+| Table | Field | Purpose | Example |
+|-------|-------|---------|---------|
+| `users` | `user_metadata` | Custom user attributes | `{"institution": "MIT", "department": "CS"}` |
+| `document_collections` | `hierarchy` | Document structure definition | `{"type": "book", "levels": ["chapter", "section"]}` |
+| `document_collections` | `collection_metadata` | Custom collection metadata | `{"author": "Fitzgerald", "year": 1925}` |
+| `document_elements` | `hierarchy` | Position in document | `{"chapter": 1, "paragraph": 5}` |
+| `document_elements` | `content` | Text and rich formatting | `{"text": "...", "formatting": {...}}` |
+| `annotations` | `body` | Annotation content (W3C standard) | `{"type": "TextualBody", "value": "comment"}` |
+| `annotations` | `target` | Target specification | `{"source": "element:42", "selector": {...}}` |
 
-1. **B-tree indexes** (default) - Foreign keys, primary keys, unique constraints
-2. **GIN indexes** - JSONB fields for fast containment queries
-3. **Composite indexes** - Multiple columns (e.g., object_id + object_type)
+### Query Patterns
 
-### Index Performance
-
-| Index Type | Use Case | Example Query |
-|------------|----------|---------------|
-| **Foreign Key** | Join optimization | `SELECT * FROM annotations WHERE document_id = 42` |
-| **GIN (JSONB)** | JSON queries | `SELECT * FROM elements WHERE content @> '{"text": "search"}'` |
-| **Composite** | Multi-column filters | `SELECT * FROM object_sharing WHERE object_id = 5 AND object_type = 'collection'` |
-
-### Critical Indexes
-
-**Most Used**:
-- `idx_annotations_document_element_id` - Annotation queries (heavily used)
-- `idx_document_elements_document_id` - Element retrieval
-- `idx_documents_collection_id` - Document listing
-
-**Performance Critical**:
-- `idx_annotations_body` (GIN) - Annotation search
-- `idx_document_elements_content` (GIN) - Full-text search
-- `idx_annotations_motivation` - Filtering by purpose
-
----
-
-## JSONB Fields
-
-### Why JSONB?
-
-The database uses JSONB (binary JSON) for flexible, schema-less data storage:
-
-**Advantages**:
-- Flexible schema evolution
-- Rich querying capabilities
-- Good performance with GIN indexes
-- Native JSON operators
-
-**Fields Using JSONB**:
-1. `users.user_metadata` - Extra user attributes
-2. `document_collections.hierarchy` - Structure definition
-3. `document_collections.collection_metadata` - Custom metadata
-4. `document_elements.hierarchy` - Position tracking
-5. `document_elements.content` - Text and formatting
-6. `annotations.body` - Annotation content
-7. `annotations.target` - Target specification
-
-### JSONB Query Examples
-
-**Containment** (`@>`):
+**Containment queries** (uses GIN indexes):
 ```sql
--- Find elements with specific text
-SELECT * FROM app.document_elements 
-WHERE content @> '{"text": "American Dream"}';
+-- Find specific content
+WHERE content @> '{"text": "American Dream"}'
 
--- Find annotations with specific motivation
-SELECT * FROM app.annotations 
-WHERE body @> '{"purpose": "tagging"}';
+-- Find specific tag
+WHERE body @> '{"purpose": "tagging"}'
 ```
 
-**Key Existence** (`?`):
+**Path extraction**:
 ```sql
--- Find users with metadata
-SELECT * FROM app.users 
-WHERE user_metadata ? 'institution';
-```
-
-**Path Extraction** (`->>`, `->>`):
-```sql
--- Extract text from elements
-SELECT id, content->>'text' as text 
+-- Extract nested values
+SELECT id, content->>'text' as text
 FROM app.document_elements;
-
--- Extract annotation motivation
-SELECT id, body->>'value' as comment_text
-FROM app.annotations 
-WHERE motivation = 'commenting';
 ```
 
----
-
-## Sequences
-
-### Custom Sequences
-
+**Key existence**:
 ```sql
--- Annotation body ID sequence
-CREATE SEQUENCE app.annotation_body_id_seq;
-
--- Annotation target ID sequence  
-CREATE SEQUENCE app.annotation_target_id_seq;
+-- Check for key
+WHERE user_metadata ? 'institution'
 ```
 
-**Purpose**: Generate unique IDs for annotation body and target objects
+### Best Practices
 
-**Usage** (in application):
-```python
-body_id = db.execute(text("SELECT nextval('app.annotation_body_id_seq')")).scalar_one()
-```
+✅ **DO**:
+- Use containment operators (`@>`) for filtered queries
+- Create GIN indexes on frequently queried JSONB fields
+- Keep JSONB structures consistent within a field
 
-**Note**: These sequences are used by the application but not as table primary keys.
+❌ **DON'T**:
+- Use function calls on JSONB in WHERE clauses (bypasses indexes)
+- Store highly relational data in JSONB
+- Nest more than 3-4 levels deep
 
 ---
 
-## Constraints
+## Indexes & Performance
 
-### Primary Keys
+### Index Types
 
-All tables have an `id` column as primary key (auto-incrementing integer).
+**B-tree (default)**: Primary keys, foreign keys, unique constraints
+- Fast equality and range queries
+- Used automatically for FK joins
 
-### Foreign Keys
+**GIN (Generalized Inverted Index)**: JSONB fields
+- Enables fast containment queries (`@>`)
+- Required for efficient JSONB filtering
+- Slightly slower writes, much faster reads
 
-| From Table | Column | References | On Delete |
-|------------|--------|------------|-----------|
-| user_passwords | user_id | users.id | CASCADE |
-| document_collections | owner_id | users.id | RESTRICT |
-| document_collections | created_by_id | users.id | RESTRICT |
-| document_collections | modified_by_id | users.id | RESTRICT |
-| documents | document_collection_id | document_collections.id | CASCADE |
-| documents | owner_id | users.id | RESTRICT |
-| document_elements | document_id | documents.id | CASCADE |
-| annotations | document_collection_id | document_collections.id | SET NULL |
-| annotations | document_id | documents.id | SET NULL |
-| annotations | document_element_id | document_elements.id | CASCADE |
-| annotations | creator_id | users.id | RESTRICT |
-| annotations | owner_id | users.id | RESTRICT |
-| annotations | classroom_id | groups.id | SET NULL |
-| groups | created_by_id | users.id | RESTRICT |
-| object_sharing | created_by_id | users.id | RESTRICT |
-| site_settings | updated_by_id | users.id | RESTRICT |
+**Composite**: Multiple columns together
+- `idx_object_sharing_object` → (object_id, object_type)
+- Optimizes queries filtering on both columns
 
-### Unique Constraints
+### Most Critical Indexes
 
-- `users.email` - Unique email addresses
-- `users.username` - Unique usernames
-- `user_passwords.user_id` - One password per user
-- `roles.name` - Unique role names
-- `permissions.name` - Unique permission names
-
----
-
-## Migration Guide
-
-### Alembic Configuration
-
-Migrations managed via Alembic in `api/alembic/` directory.
-
-**Configuration** (`alembic.ini`):
-```ini
-[alembic]
-script_location = alembic
-sqlalchemy.url = postgresql://...
-```
-
-### Common Migration Commands
-
-**Generate Migration**:
-```bash
-docker compose run --remove-orphans migrations revision --autogenerate -m "Description"
-```
-
-**Apply Migrations**:
-```bash
-docker compose run --remove-orphans migrations upgrade head
-```
-
-**Rollback**:
-```bash
-docker compose run --remove-orphans migrations downgrade -1
-```
-
-**Check Status**:
-```bash
-docker compose run --remove-orphans migrations current
-docker compose run --remove-orphans migrations history
-```
-
-### Migration Best Practices
-
-1. **Always review auto-generated migrations** - Alembic may miss complex changes
-2. **Test migrations on development database first**
-3. **Include both upgrade and downgrade** operations
-4. **Don't modify existing migrations** - Create new ones instead
-5. **Back up production database** before major migrations
-
-### Example Migration
-
+**Heavily used**:
 ```python
-"""Add indexes for performance
-
-Revision ID: abc123
-Revises: xyz456
-Create Date: 2025-10-22 10:30:00
-"""
-from alembic import op
-import sqlalchemy as sa
-
-def upgrade():
-    op.create_index(
-        'idx_annotations_created',
-        'annotations',
-        ['created'],
-        schema='app'
-    )
-
-def downgrade():
-    op.drop_index('idx_annotations_created', schema='app')
+idx_annotations_document_element_id  # Annotation retrieval
+idx_document_elements_document_id    # Element listing
+idx_documents_collection_id          # Document listing
 ```
 
----
-
-## Database Queries - Common Patterns
-
-### Efficient Queries
-
-**Get annotations with user info**:
+**Search performance**:
 ```python
-from sqlalchemy.orm import joinedload
+idx_annotations_body (GIN)        # Annotation search
+idx_document_elements_content (GIN)  # Content search
+idx_annotations_motivation        # Filter by type
+```
 
+### Query Optimization Tips
+
+1. **Use eager loading** to avoid N+1 queries:
+```python
+# ✅ Good - one query with joins
 annotations = db.query(Annotation).options(
     joinedload(Annotation.creator),
     joinedload(Annotation.document_element)
-).filter(Annotation.document_id == doc_id).all()
+).all()
+
+# ❌ Bad - N+1 queries
+annotations = db.query(Annotation).all()
+for ann in annotations:
+    creator = ann.creator  # Separate query each time!
 ```
 
-**Search JSONB content**:
+2. **Limit and paginate** large result sets:
 ```python
-from sqlalchemy import text
+.limit(50).offset(page * 50)
+```
 
-elements = db.query(DocumentElement).filter(
-    DocumentElement.content.op('@>')({"text": "search term"})
+3. **Use indexes in WHERE clauses**:
+```python
+# ✅ Indexed
+.filter(Annotation.document_id == 42)
+
+# ✅ Indexed GIN
+.filter(Annotation.body.op('@>')({"purpose": "tagging"}))
+```
+
+4. **Monitor slow queries**:
+```sql
+-- Enable query logging in PostgreSQL
+ALTER DATABASE genji SET log_min_duration_statement = 1000; -- log queries > 1s
+```
+
+---
+
+## Database Operations
+
+### Common Patterns
+
+**Get user with roles and permissions** (eager loading):
+```python
+from sqlalchemy.orm import joinedload
+
+user = db.query(User).options(
+    joinedload(User.roles).joinedload(Role.permissions)
+).filter(User.id == user_id).first()
+
+# Access without additional queries
+user.roles[0].permissions
+```
+
+**Search annotations by content**:
+```python
+# Find annotations containing specific text
+annotations = db.query(Annotation).filter(
+    Annotation.body.op('@>')({"value": "symbolism"})
 ).all()
 ```
 
-**Count annotations by motivation**:
+**Count by group**:
 ```python
 from sqlalchemy import func
 
 stats = db.query(
     Annotation.motivation,
-    func.count(Annotation.id)
+    func.count(Annotation.id).label('count')
 ).group_by(Annotation.motivation).all()
-```
 
----
-
-## Performance Considerations
-
-### Query Optimization
-
-1. **Use eager loading** for relationships to avoid N+1 queries
-2. **Limit result sets** with `.limit()` and `.offset()`
-3. **Use indexes** for filter conditions
-4. **Defer large JSONB fields** when not needed
-
-### JSONB Performance
-
-**Good**:
-```sql
--- Indexed containment query
-WHERE content @> '{"key": "value"}'
-```
-
-**Bad**:
-```sql
--- Function call on every row (no index)
-WHERE json_extract_path_text(content, 'key') = 'value'
+# [('commenting', 150), ('tagging', 75), ...]
 ```
 
 ### Connection Pooling
 
-Database connections managed by SQLAlchemy's connection pool:
+SQLAlchemy manages a connection pool to avoid overhead:
 
 ```python
 # In database.py
 engine = create_engine(
     DATABASE_URL,
-    pool_size=5,          # Number of connections to keep
-    max_overflow=10,      # Additional connections allowed
+    pool_size=5,          # Keep 5 connections open
+    max_overflow=10,      # Allow 10 additional connections
     pool_pre_ping=True    # Verify connections before use
 )
 ```
 
----
+**Best practices**:
+- Connection is automatically returned to pool after request
+- Don't hold connections open unnecessarily
+- Monitor pool utilization in production
 
-## Database Maintenance
+### Maintenance
 
-### Regular Tasks
-
-1. **Vacuum** - Reclaim storage (PostgreSQL auto-vacuum enabled)
-2. **Analyze** - Update statistics for query planner
-3. **Reindex** - Rebuild indexes if performance degrades
-4. **Backup** - Regular database dumps
-
-### Monitoring Queries
-
-**Table sizes**:
+**Monitor table sizes**:
 ```sql
 SELECT 
-    schemaname,
     tablename,
-    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
+    pg_size_pretty(pg_total_relation_size('app.'||tablename)) AS size
 FROM pg_tables
 WHERE schemaname = 'app'
-ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+ORDER BY pg_total_relation_size('app.'||tablename) DESC;
 ```
 
-**Index usage**:
+**Check index usage**:
 ```sql
 SELECT 
-    schemaname,
     tablename,
     indexname,
-    idx_scan
+    idx_scan as scans,
+    idx_tup_read as tuples_read
 FROM pg_stat_user_indexes
 WHERE schemaname = 'app'
 ORDER BY idx_scan DESC;
+```
+
+**Vacuum and analyze** (PostgreSQL auto-vacuum is enabled):
+```sql
+VACUUM ANALYZE app.annotations;
 ```
 
 ---
 
 ## Related Documentation
 
-- **[API Overview](../api/OVERVIEW.md)** - API endpoint reference
-- **[Migrations Guide](MIGRATIONS.md)** - Detailed migration workflows
-- **[Backend Audit](../audits/BACKEND_AUDIT.md)** - Code quality findings
-
----
-
-**Schema Version**: See latest Alembic migration
+- **[Database Models](../../api/models/models.py)** - Source of truth for all table definitions
+- **[Migrations Guide](MIGRATIONS.md)** - Alembic workflow and commands
+- **[API Overview](../api/OVERVIEW.md)** - How the API uses these models

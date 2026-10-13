@@ -41,6 +41,7 @@ interface AnnotationCardToolbarProps {
   position?: "bottom" | "right" | "left";
   onActionMenuOpen: (event: React.MouseEvent<HTMLButtonElement>) => void;
   actionButtonRef?: React.RefObject<HTMLButtonElement | null>;
+  canInteract?: boolean;
 }
 
 const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
@@ -57,9 +58,11 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
   position = "bottom",
   onActionMenuOpen,
   actionButtonRef,
+  canInteract: canInteractProp,
 }) => {
   const { user } = useAuth();
   const dispatch = useAppDispatch();
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeClassroomValue, _setActiveClassroomValue] =
     useLocalStorage("active_classroom");
@@ -67,6 +70,16 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isOptedOut, _setIsOptedOut] = useLocalStorage("classroom_opted_out");
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+
+  // If parent passes canInteract, use that. Otherwise calculate it.
+  const isVerifiedScholar =
+    user?.roles?.includes("verified_scholar") || user?.roles?.includes("admin");
+  const isScholarlyAnnotation = annotation.motivation === "scholarly";
+
+  const canInteract =
+    canInteractProp !== undefined
+      ? canInteractProp
+      : !isScholarlyAnnotation || isVerifiedScholar;
 
   // Get upvotes for this annotation
   const upvotes = useAppSelector((state: RootState) =>
@@ -83,6 +96,7 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
   const handleUpvote = () => {
     if (!user) return;
     if (!user.id) return;
+    if (!canInteract) return;
 
     const deId =
       typeof annotation.document_element_id === "string"
@@ -164,111 +178,145 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
             maxWidth: "calc(100% - 24px)",
           }}
         >
-          <Tooltip
-            title={
-              hasUserUpvoted ? "You've already liked this" : "Like this comment"
-            }
-            arrow
-            placement="top"
-            slotProps={{
-              popper: {
-                sx: {
-                  zIndex: 99999,
-                },
-              },
-            }}
-          >
-            <span style={{ display: "inline-flex" }}>
-              <IconButton
-                onClick={hasUserUpvoted ? undefined : handleUpvote}
-                disabled={hasUserUpvoted}
-                size="small"
-                sx={{
-                  color: hasUserUpvoted ? "#aaa" : "#34A853",
-                  "&:hover": {
-                    backgroundColor: hasUserUpvoted
-                      ? "transparent"
-                      : "rgba(0, 0, 0, 0.04)",
+          {/* Only show interactive buttons if user can interact */}
+          {canInteract ? (
+            <>
+              <Tooltip
+                title={
+                  hasUserUpvoted
+                    ? "You've already liked this"
+                    : "Like this comment"
+                }
+                arrow
+                placement="top"
+                slotProps={{
+                  popper: {
+                    sx: {
+                      zIndex: 99999,
+                    },
                   },
                 }}
               >
-                <ThumbUp sx={{ fontSize: "1rem" }} />
-              </IconButton>
-            </span>
-          </Tooltip>
+                <span style={{ display: "inline-flex" }}>
+                  <IconButton
+                    onClick={hasUserUpvoted ? undefined : handleUpvote}
+                    disabled={hasUserUpvoted}
+                    size="small"
+                    sx={{
+                      color: hasUserUpvoted ? "#aaa" : "#34A853",
+                      "&:hover": {
+                        backgroundColor: hasUserUpvoted
+                          ? "transparent"
+                          : "rgba(0, 0, 0, 0.04)",
+                      },
+                    }}
+                  >
+                    <ThumbUp sx={{ fontSize: "1rem" }} />
+                  </IconButton>
+                </span>
+              </Tooltip>
 
-          <Tooltip
-            title={
-              upvotes && upvotes.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                  {upvotes?.map((upvote) => (
-                    <Chip
-                      key={upvote.id}
-                      avatar={
-                        <Avatar>
-                          {`${upvote.creator.first_name.charAt(
-                            0
-                          )}${upvote.creator.last_name.charAt(
-                            0
-                          )}`.toUpperCase()}
-                        </Avatar>
-                      }
-                      label={`${upvote.creator.first_name} ${upvote.creator.last_name}`}
-                      size="small"
-                      color="primary"
-                    />
-                  ))}
-                </div>
-              ) : (
-                ""
-              )
-            }
-            arrow
-            placement="bottom-start"
-          >
-            <Chip
-              label={upvotes?.length || 0}
-              size="small"
-              sx={{
-                backgroundColor: "#e0f2f1",
-                fontWeight: "bold",
-                height: "24px",
-                minWidth: "28px",
+              <Tooltip
+                title={
+                  upvotes && upvotes.length > 0 ? (
+                    <div
+                      style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}
+                    >
+                      {upvotes?.map((upvote) => (
+                        <Chip
+                          key={upvote.id}
+                          avatar={
+                            <Avatar>
+                              {`${upvote.creator.first_name.charAt(
+                                0
+                              )}${upvote.creator.last_name.charAt(
+                                0
+                              )}`.toUpperCase()}
+                            </Avatar>
+                          }
+                          label={`${upvote.creator.first_name} ${upvote.creator.last_name}`}
+                          size="small"
+                          color="primary"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    ""
+                  )
+                }
+                arrow
+                placement="bottom-start"
+              >
+                <Chip
+                  label={upvotes?.length || 0}
+                  size="small"
+                  sx={{
+                    backgroundColor: "#e0f2f1",
+                    fontWeight: "bold",
+                    height: "24px",
+                    minWidth: "28px",
+                  }}
+                />
+              </Tooltip>
+
+              <button
+                title="Reply"
+                onClick={onReplyClick}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: isReplying ? "#1976d2" : "#6c757d",
+                  padding: "4px",
+                  borderRadius: "4px",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <ChatBubbleOutline sx={{ fontSize: "1rem" }} />
+              </button>
+
+              <button
+                title="Flag"
+                onClick={onFlagClick}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: isFlagging ? "#f44336" : "#6c757d",
+                  padding: "4px",
+                  borderRadius: "4px",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <Flag sx={{ fontSize: "1rem" }} />
+              </button>
+            </>
+          ) : (
+            // Show read-only counts for non-scholars on scholarly annotations
+            <Tooltip
+              title="Only verified scholars can interact with scholarly annotations"
+              arrow
+              placement="bottom"
+              slotProps={{
+                popper: {
+                  sx: {
+                    zIndex: 99999,
+                  },
+                },
               }}
-            />
-          </Tooltip>
-
-          <button
-            title="Reply"
-            onClick={onReplyClick}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: isReplying ? "#1976d2" : "#6c757d",
-              padding: "4px",
-              borderRadius: "4px",
-              transition: "all 0.2s ease",
-            }}
-          >
-            <ChatBubbleOutline sx={{ fontSize: "1rem" }} />
-          </button>
-
-          <button
-            title="Flag"
-            onClick={onFlagClick}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: isFlagging ? "#f44336" : "#6c757d",
-              padding: "4px",
-              borderRadius: "4px",
-              transition: "all 0.2s ease",
-            }}
-          >
-            <Flag sx={{ fontSize: "1rem" }} />
-          </button>
+            >
+              <Chip
+                label={`${upvotes?.length || 0} upvotes`}
+                size="small"
+                sx={{
+                  backgroundColor: "#f5f5f5",
+                  color: "#666",
+                  height: "24px",
+                  cursor: "help",
+                }}
+              />
+            </Tooltip>
+          )}
 
           {/* Add Link button - only show for annotation creators when editing */}
           {isEditing &&
@@ -347,7 +395,6 @@ const AnnotationCardToolbar: React.FC<AnnotationCardToolbarProps> = ({
     );
   }
 
-  // Side panels: Single menu button with everything inside
   return (
     <div
       style={{

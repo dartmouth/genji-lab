@@ -10,6 +10,7 @@ import httpx
 from fastapi import HTTPException, Request
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm.attributes import flag_modified
 
 from models import models
 from schemas.auth import TicketValidation
@@ -309,6 +310,8 @@ class CASAuthService(BaseService[models.User]):
             }
         )
         user.user_metadata = current_metadata
+        # Flag the JSON column as modified so SQLAlchemy knows to update it
+        flag_modified(user, "user_metadata")
         db.commit()
 
         # Ensure user has default role

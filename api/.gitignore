@@ -1,4 +1,21 @@
 *.docx
 routers/__pycache__/*
 schemas/__pycache__/*
+services/__pycache__/*
+tests/__pycache__/*
 __pycache__/
+
+# Virtual environments
+venv/
+.venv/
+env/
+tests/venv
+
+# Pytest
+.pytest_cache/
+*.pyc
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml

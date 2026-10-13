@@ -165,7 +165,7 @@ class DocumentElementService(BaseService[DocumentElementModel]):
         if element.document_id:
             self._verify_document_exists(db, element.document_id)
         
-        update_data = element.dict(exclude_unset=True)
+        update_data = element.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_element, key, value)
         
@@ -192,7 +192,7 @@ class DocumentElementService(BaseService[DocumentElementModel]):
         if element.document_id:
             self._verify_document_exists(db, element.document_id)
         
-        update_data = element.dict(exclude_unset=True, exclude_none=True)
+        update_data = element.model_dump(exclude_unset=True, exclude_none=True)
         for key, value in update_data.items():
             setattr(db_element, key, value)
         

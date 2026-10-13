@@ -1,6 +1,6 @@
 # Genji Project Documentation
 
-Welcome to the Genji documentation! This directory contains comprehensive documentation for developers, contributors, and maintainers.
+Welcome to the Genji documentation! This directory contains comprehensive documentation for developers and contributors.
 
 > **🚀 New here?** Start with the [Quick Start Guide](QUICK_START.md) to get up and running in minutes!
 
@@ -31,10 +31,7 @@ Welcome to the Genji documentation! This directory contains comprehensive docume
 
 ### 🗄️ Database Documentation
 - **[Schema Overview](database/SCHEMA.md)** - ERD diagrams, all tables, JSONB fields, indexes
-- **[Tables Reference](database/TABLES.md)** - Quick reference with SQL examples
 - **[Migrations](database/MIGRATIONS.md)** - Alembic guide
 
-### 🔍 Code Quality & Audits
-- **[Backend Audit](audits/BACKEND_AUDIT.md)** - Backend code analysis: 33 issues identified (0 critical, 6 high, 15 medium, 12 low)
-- **[Frontend Audit](audits/FRONTEND_AUDIT.md)** - Frontend code analysis: 36 issues identified (0 critical, 8 high, 17 medium, 11 low)
-- **[Deprecated Code Audit](audits/DEPRECATED_CODE_AUDIT.md)** - Code cleanup analysis: 18 items requiring action
+### � Deployment
+- **[Deploy Containerized Application](deploy/DEPLOY_CONTAINERIZED_APPLICATION.md)** - Docker deployment guide

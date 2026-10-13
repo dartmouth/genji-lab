@@ -91,8 +91,7 @@ class AuthService(BaseService[models.User]):
 
         existing_admin = (
             db.query(models.User)
-            .join(models.user_roles)
-            .join(models.Role)
+            .join(models.User.roles)
             .filter(models.Role.name == "admin")
             .first()
         )

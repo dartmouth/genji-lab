@@ -78,6 +78,7 @@ def get_cache_buster_endpoint():
 
 
 @router.get("/logo")
+@router.head("/logo")
 def serve_logo(db: Session = Depends(get_db)):
     """Serve the current logo file from database."""
     logo_data = site_settings_service.get_logo(db)
@@ -93,6 +94,7 @@ def serve_logo(db: Session = Depends(get_db)):
 
 
 @router.get("/favicon")
+@router.head("/favicon")
 def serve_favicon(db: Session = Depends(get_db)):
     """Serve the current favicon file from database."""
     favicon_data = site_settings_service.get_favicon(db)

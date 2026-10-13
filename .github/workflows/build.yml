@@ -3,8 +3,12 @@ name: Build Check
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'core-ui/**' 
   pull_request:
     branches: [ main ]
+    paths:
+      - 'core-ui/**' 
 jobs:
   build:
     runs-on: ubuntu-latest

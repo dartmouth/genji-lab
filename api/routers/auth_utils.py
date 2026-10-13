@@ -7,6 +7,7 @@ to ensure consistency in user handling, session management, and responses.
 from fastapi import Request, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
+from sqlalchemy.orm.attributes import flag_modified
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 import os
@@ -230,4 +231,6 @@ def update_user_last_login(user: models.User, db_session: Session) -> None:
     else:
         user.user_metadata = {"last_login": datetime.now().isoformat()}
 
+    # Flag the JSON column as modified so SQLAlchemy knows to update it
+    flag_modified(user, "user_metadata")
     db_session.commit()

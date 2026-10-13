@@ -26,7 +26,6 @@ interface PreviewState {
 const ExternalReferencesSection: React.FC<ExternalReferencesSectionProps> = ({
   references,
   documentElementId,
-  classroomId,
 }) => {
   const dispatch = useAppDispatch();
   const [expanded, setExpanded] = useState(false);
@@ -73,7 +72,6 @@ const ExternalReferencesSection: React.FC<ExternalReferencesSectionProps> = ({
     dispatch(
       externalReferenceThunks.fetchAnnotations({
         documentElementId: documentElementId,
-        classroomId: classroomId,
       })
     );
   };

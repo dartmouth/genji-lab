@@ -68,6 +68,22 @@ def read_documents(
     )
 
 
+@router.delete("/bulk-delete", status_code=status.HTTP_204_NO_CONTENT)
+def bulk_delete_documents(
+    request: BulkDeleteRequest,
+    force: bool = True,
+    db: Session = Depends(get_db),
+):
+    """
+    Bulk delete multiple documents with cascading delete
+
+    - force=True (default): Delete documents and all associated elements/annotations
+    - This operation cascades through: Documents -> Elements -> Annotations
+    """
+    document_service.bulk_delete(db, request.document_ids, force=force)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get("/{document_id}", response_model=DocumentWithDetails)
 def read_document(
     document_id: int,
@@ -115,22 +131,6 @@ def delete_document(
     - force=True (default): Delete the document and all associated elements/annotations
     """
     document_service.delete(db, document_id, force=force)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.delete("/bulk-delete", status_code=status.HTTP_204_NO_CONTENT)
-def bulk_delete_documents(
-    request: BulkDeleteRequest,
-    force: bool = True,
-    db: Session = Depends(get_db),
-):
-    """
-    Bulk delete multiple documents with cascading delete
-
-    - force=True (default): Delete documents and all associated elements/annotations
-    - This operation cascades through: Documents -> Elements -> Annotations
-    """
-    document_service.bulk_delete(db, request.document_ids, force=force)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

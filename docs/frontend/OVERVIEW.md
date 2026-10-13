@@ -106,28 +106,36 @@ core-ui/
 │   │
 │   ├── components/           # Shared components
 │   │   ├── AppHeader.tsx
+│   │   ├── AboutPage.tsx
 │   │   ├── AuthContext.tsx
 │   │   ├── ErrorBoundary.tsx
+│   │   ├── GetStartedPage.tsx
+│   │   ├── LandingPage.tsx
 │   │   ├── LoginForm.tsx
-│   │   └── RegisterForm.tsx
+│   │   ├── RegisterForm.tsx
+│   │   ├── ProtectedRoute.tsx
+│   │   └── TutorialModal.tsx
 │   │
 │   ├── contexts/             # React contexts
 │   │   └── contextDefinition.ts
 │   │
 │   ├── features/             # Feature modules (domain-driven)
 │   │   ├── admin/           # Admin panel feature
+│   │   ├── canonicalLink/   # Canonical linking views
 │   │   ├── documentGallery/ # Collection & document browsing
 │   │   ├── documentView/    # Document reading & annotation
+│   │   ├── linkView/        # Intertext links gallery
 │   │   └── search/          # Search functionality
 │   │
 │   ├── hooks/               # Custom React hooks
-│   │   ├── useApi.ts
 │   │   ├── useAuth.ts
 │   │   ├── useAuthContext.ts
 │   │   ├── useCasAuth.ts
-│   │   ├── useIAM.tsx
 │   │   ├── useLocalStorage.ts
-│   │   └── useVisibilityWithPrefetch.ts
+│   │   ├── usePagination.ts
+│   │   ├── useTutorial.ts
+│   │   ├── useVisibilityWithPrefetch.ts
+│   │   └── auth/            # Auth strategy hooks
 │   │
 │   ├── store/               # Redux store
 │   │   ├── index.ts         # Store configuration
@@ -255,7 +263,7 @@ graph TD
 }
 ```
 
-**Note:** Route protection is inline and could be improved with a `ProtectedRoute` component (see [Frontend Audit](../audits/FRONTEND_AUDIT.md#1-routing--navigation-issues)).
+**Note:** Route protection is inline and could be improved with a `ProtectedRoute` component.
 
 ### URL Parameters
 
@@ -1196,7 +1204,7 @@ interface AuthContextType {
 }
 ```
 
-**Known Issue:** `login` and `logout` have inconsistent return types (`Promise<void> | void`) - see [Frontend Audit](../audits/FRONTEND_AUDIT.md#4-authentication--security).
+**Known Issue:** `login` and `logout` have inconsistent return types (`Promise<void> | void`).
 
 ### Session Management
 
@@ -1255,7 +1263,6 @@ if (isAdmin || isInstructor) {
 ### Related Documentation
 
 - **[Redux Store](REDUX_STORE.md)** - Detailed Redux architecture
-- **[Frontend Audit](../audits/FRONTEND_AUDIT.md)** - Code quality analysis ✅
 
 ### For Developers
 
@@ -1264,7 +1271,3 @@ if (isAdmin || isInstructor) {
 3. **State management?** Use Redux Toolkit with normalized state
 4. **Need types?** Add to `src/types/` or feature-specific `types/` directory
 5. **API calls?** Create thunks in Redux slices
-
----
-
-**Maintainers:** Dartmouth ITC Genji Team
