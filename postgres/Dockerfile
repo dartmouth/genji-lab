@@ -1,7 +1,7 @@
 FROM postgres:17.7
 
 RUN apt-get update && \
-    apt-get upgrade && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
     lsb-release \

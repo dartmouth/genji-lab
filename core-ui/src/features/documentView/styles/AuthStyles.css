@@ -57,6 +57,14 @@
   .login-button.register-button:hover:not(:disabled) {
     background-color: #ffaf028a !important;
   }
+
+  .login-button.oidc-login {
+    background-color: #2C656B !important; /* Primary Dartmouth green for OIDC/SSO */
+  }
+
+  .login-button.oidc-login:hover:not(:disabled) {
+    background-color: #2c656bcf !important;
+  }
   
   .auth-error {
     font-size: 12px;

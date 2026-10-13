@@ -20,6 +20,7 @@ import { fetchSiteSettings, updateSiteSettings, uploadSiteLogo, removeSiteLogo, 
 import { useAuth } from '@hooks/useAuthContext';
 import { updateFavicon, loadFaviconFromAPI } from '../../../../utils/favicon';
 import CASAuthSettings from '../CASAuthSettings';
+import OIDCAuthSettings from '../OIDCAuthSettings';
 import CollectionMetadataSettings from './CollectionMetadataSettings';
 
 // TabPanel for the sub-tabs
@@ -459,6 +460,7 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
         <Tab label="Site Favicon" {...a11yPropsSubTab(3)} />
         <Tab label="CAS Authentication" {...a11yPropsSubTab(4)} />
         <Tab label="Collection Metadata" {...a11yPropsSubTab(5)} />
+        <Tab label="OIDC Authentication" {...a11yPropsSubTab(6)} />
       </Tabs>
         
         {/* Sub-tab content */}
@@ -757,6 +759,9 @@ const SiteSettings: React.FC<SiteSettingsProps> = () => {
         </SubTabPanel>
         <SubTabPanel value={activeSubTab} index={5}>
           <CollectionMetadataSettings />
+        </SubTabPanel>
+        <SubTabPanel value={activeSubTab} index={6}>
+          <OIDCAuthSettings />
         </SubTabPanel>
       </Box>
     </Box>
