@@ -25,6 +25,11 @@ interface CASPublicConfig {
   display_name: string;
 }
 
+interface OIDCPublicConfig {
+  enabled: boolean;
+  button_label: string;
+}
+
 const AppHeader: React.FC = () => {
   const { user, isAuthenticated, logout, login, isLoading } = useAuth();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -48,6 +53,12 @@ const AppHeader: React.FC = () => {
     display_name: "CAS Login",
   });
 
+  // OIDC public config state
+  const [oidcConfig, setOidcConfig] = useState<OIDCPublicConfig>({
+    enabled: false,
+    button_label: "Sign in with Dartmouth",
+  });
+
   // Load site settings on component mount
   useEffect(() => {
     dispatch(fetchSiteSettings());
@@ -65,6 +76,20 @@ const AppHeader: React.FC = () => {
     };
 
     fetchCASConfig();
+  }, []);
+
+  // Load OIDC public config on component mount
+  useEffect(() => {
+    const fetchOIDCConfig = async () => {
+      try {
+        const response = await axios.get("/api/v1/oauth2/config/public");
+        setOidcConfig(response.data);
+      } catch (error) {
+        console.error("Failed to load OIDC config:", error);
+      }
+    };
+
+    fetchOIDCConfig();
   }, []);
 
   useEffect(() => {
@@ -179,6 +204,12 @@ const AppHeader: React.FC = () => {
 
   const handleCasLogin = () => {
     login(); // Call without parameters for CAS authentication
+  };
+
+  // OIDC login is a full-page browser redirect (Authorization Code flow).
+  // Do NOT use the CAS login() hook — it posts a CAS ticket via XHR.
+  const handleOidcLogin = () => {
+    window.location.href = "/api/v1/oauth2/login";
   };
 
   const handleTitleClick = () => {
@@ -517,6 +548,15 @@ const AppHeader: React.FC = () => {
                 disabled={isLoading}
               >
                 {isLoading ? "Authenticating..." : casConfig.display_name}
+              </button>
+            )}
+            {oidcConfig.enabled && (
+              <button
+                onClick={handleOidcLogin}
+                className="login-button oidc-login"
+                disabled={isLoading}
+              >
+                {isLoading ? "Authenticating..." : oidcConfig.button_label}
               </button>
             )}
             <button

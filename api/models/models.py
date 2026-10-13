@@ -410,6 +410,29 @@ class CASConfiguration(Base):
     updated_by = relationship("User")
 
 
+class OIDCConfiguration(Base):
+    __tablename__ = "oidc_configuration"
+    __table_args__ = {"schema": "app"}
+
+    id = Column(Integer, primary_key=True, index=True)
+    enabled = Column(Boolean, default=False)
+
+    # Display settings
+    button_label = Column(
+        String(100), default="Sign in with Dartmouth"
+    )  # What to show on login button
+
+    # Audit fields
+    created_at = Column(DateTime, default=func.current_timestamp())
+    updated_at = Column(
+        DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp()
+    )
+    updated_by_id = Column(Integer, ForeignKey(f"{'app'}.users.id"))
+
+    # Relationships
+    updated_by = relationship("User")
+
+
 # Indices
 # Foreign key indices
 Index("idx_user_passwords_user_id", UserPassword.user_id)

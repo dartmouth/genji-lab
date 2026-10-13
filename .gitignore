@@ -1,4 +1,6 @@
 *.docx
+.claude/*
+.kilo/*
 api/__pycache__/*
 schemas/__pycache__/*
 models/__pycache__/*
