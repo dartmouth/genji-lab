@@ -14,5 +14,5 @@ python-jose[cryptography]
 itsdangerous
 pydantic[email]
 requests
-Authlib==1.5.2
+Authlib==1.6.9
 
